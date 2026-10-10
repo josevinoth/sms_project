@@ -200,13 +200,8 @@ def pms_petty_cash_list(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(ppc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
@@ -443,13 +438,8 @@ def pms_petty_cash_export_tally(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(ppc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',

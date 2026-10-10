@@ -486,38 +486,41 @@
         </div>
 
 
-        <!-- CHECKED -->
-
+                <!-- CHECKED -->
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if ppc.ppc_is_checked %}
+                <span class="prepared-name">
+                    {{ ppc.ppc_checked_by.first_name|default_if_none:ppc.ppc_checked_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Checked
-
         </div>
-
 
         <!-- VERIFIED -->
-
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if ppc.ppc_is_verified %}
+                <span class="prepared-name">
+                    {{ ppc.ppc_verified_by.first_name|default_if_none:ppc.ppc_verified_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Verified
-
         </div>
-
 
         <!-- APPROVED -->
-
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if ppc.ppc_is_approved %}
+                <span class="prepared-name">
+                    {{ ppc.ppc_approved_by.first_name|default_if_none:ppc.ppc_approved_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Approved
-
         </div>
-
 
         <!-- RECEIVER -->
 

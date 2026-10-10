@@ -493,35 +493,39 @@
 
 
         <!-- CHECKED -->
-
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if tpc.tpc_is_checked %}
+                <span class="prepared-name">
+                    {{ tpc.tpc_checked_by.first_name|default_if_none:tpc.tpc_checked_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Checked
-
         </div>
-
 
         <!-- VERIFIED -->
-
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if tpc.tpc_is_verified %}
+                <span class="prepared-name">
+                    {{ tpc.tpc_verified_by.first_name|default_if_none:tpc.tpc_verified_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Verified
-
         </div>
 
-
         <!-- APPROVED -->
-
         <div class="signature-box">
-
-            <div class="signature-space"></div>
-
+            <div class="signature-space">
+                {% if tpc.tpc_is_approved %}
+                <span class="prepared-name">
+                    {{ tpc.tpc_approved_by.first_name|default_if_none:tpc.tpc_approved_by.username }}
+                </span>
+                {% endif %}
+            </div>
             Approved
-
         </div>
 
 

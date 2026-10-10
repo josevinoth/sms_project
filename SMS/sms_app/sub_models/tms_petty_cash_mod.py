@@ -34,6 +34,19 @@ class TMSPettyCashInfo(models.Model):
     tpc_source_driver_expense_id = models.IntegerField(null=True, blank=True)
 
 
+    
+    tpc_is_checked = models.BooleanField(default=False)
+    tpc_checked_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='tpc_checked_by_user')
+    tpc_checked_at = models.DateTimeField(null=True, blank=True)
+    
+    tpc_is_verified = models.BooleanField(default=False)
+    tpc_verified_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='tpc_verified_by_user')
+    tpc_verified_at = models.DateTimeField(null=True, blank=True)
+    
+    tpc_is_approved = models.BooleanField(default=False)
+    tpc_approved_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='tpc_approved_by_user')
+    tpc_approved_at = models.DateTimeField(null=True, blank=True)
+
     tpc_created_on = models.DateTimeField(null=True, auto_now_add=True)
     tpc_created_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='tms_petty_cash_created_by')
     tpc_updated_at = models.DateTimeField(null=True, auto_now=True)

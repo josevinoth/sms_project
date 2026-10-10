@@ -1,0 +1,226 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+
+{% block title %}Petty Cash Approvals | BVM Management System{% endblock %}
+
+{% block content %}
+<style>
+    /* Custom styling to increase spacing between rows */
+    .table.modern-table {
+        border-spacing: 0 12px !important;
+    }
+    .table.modern-table tbody td {
+        padding: 0.8rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    .table.modern-table thead th {
+        padding: 0.8rem 1rem !important;
+        font-size: 0.8rem !important;
+    }
+    .dataTables_info, .dataTables_length label {
+        color: #000000 !important;
+        font-weight: 500;
+    }
+</style>
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-check-circle mr-2"></i> Petty Cash Approvals
+        </h3>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn btn-outline-light" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none; color:#ffffff !important;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px;">
+                <i class="fas fa-info-circle mr-2"></i>{{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <ul class="nav nav-tabs mb-4" id="pcTab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="tms-tab" data-toggle="tab" href="#tms" role="tab" aria-controls="tms" aria-selected="true">TMS Petty Cash</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="wms-tab" data-toggle="tab" href="#wms" role="tab" aria-controls="wms" aria-selected="false">WMS Petty Cash</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="pms-tab" data-toggle="tab" href="#pms" role="tab" aria-controls="pms" aria-selected="false">PMS Petty Cash</a>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="pcTabContent">
+      
+      <!-- TMS Tab -->
+      <div class="tab-pane fade show active" id="tms" role="tabpanel" aria-labelledby="tms-tab">
+        <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
+            <div class="table-responsive">
+                <table class="table modern-table mb-0" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pc in tms_list %}
+                        <tr>
+                            <td>
+                                {{ pc.tpc_number }}
+                                <a href="{% url 'tms_petty_cash_voucher_print' pc.id %}" target="_blank" class="text-primary ml-2" title="View Voucher">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                            <td>{{ pc.tpc_amount }}</td>
+                            <td>
+                                {% if pc.tpc_is_checked %}<span class="badge badge-info">Checked</span>{% endif %}
+                                {% if pc.tpc_is_verified %}<span class="badge badge-primary">Verified</span>{% endif %}
+                                {% if pc.tpc_is_approved %}<span class="badge badge-success">Approved</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if user_id == 115 and not pc.tpc_is_checked %}
+                                    <a href="{% url 'approve_petty_cash' 'tms' pc.id 'check' %}" class="btn btn-sm btn-info">Check</a>
+                                {% endif %}
+                                {% if user_id == 28 and pc.tpc_is_checked and not pc.tpc_is_verified %}
+                                    <a href="{% url 'approve_petty_cash' 'tms' pc.id 'verify' %}" class="btn btn-sm btn-primary">Verify</a>
+                                {% endif %}
+                                {% if user_id == 27 and pc.tpc_is_verified and not pc.tpc_is_approved %}
+                                    <a href="{% url 'approve_petty_cash' 'tms' pc.id 'approve' %}" class="btn btn-sm btn-success">Approve</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <!-- WMS Tab -->
+      <div class="tab-pane fade" id="wms" role="tabpanel" aria-labelledby="wms-tab">
+        <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
+            <div class="table-responsive">
+                <table class="table modern-table mb-0" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pc in wms_list %}
+                        <tr>
+                            <td>
+                                {{ pc.wpc_number }}
+                                <a href="{% url 'wms_petty_cash_voucher_print' pc.id %}" target="_blank" class="text-primary ml-2" title="View Voucher">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                            <td>{{ pc.wpc_amount }}</td>
+                            <td>
+                                {% if pc.wpc_is_checked %}<span class="badge badge-info">Checked</span>{% endif %}
+                                {% if pc.wpc_is_verified %}<span class="badge badge-primary">Verified</span>{% endif %}
+                                {% if pc.wpc_is_approved %}<span class="badge badge-success">Approved</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if user_id == 115 and not pc.wpc_is_checked %}
+                                    <a href="{% url 'approve_petty_cash' 'wms' pc.id 'check' %}" class="btn btn-sm btn-info">Check</a>
+                                {% endif %}
+                                <!-- no specific verified user for wms based on prompt, leaving it accessible to 28 for now -->
+                                {% if user_id == 28 and pc.wpc_is_checked and not pc.wpc_is_verified %}
+                                    <a href="{% url 'approve_petty_cash' 'wms' pc.id 'verify' %}" class="btn btn-sm btn-primary">Verify</a>
+                                {% endif %}
+                                {% if user_id == 27 and pc.wpc_is_verified and not pc.wpc_is_approved %}
+                                    <a href="{% url 'approve_petty_cash' 'wms' pc.id 'approve' %}" class="btn btn-sm btn-success">Approve</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <!-- PMS Tab -->
+      <div class="tab-pane fade" id="pms" role="tabpanel" aria-labelledby="pms-tab">
+        <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
+            <div class="table-responsive">
+                <table class="table modern-table mb-0" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pc in pms_list %}
+                        <tr>
+                            <td>
+                                {{ pc.ppc_number }}
+                                <a href="{% url 'pms_petty_cash_voucher_print' pc.id %}" target="_blank" class="text-primary ml-2" title="View Voucher">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                            <td>{{ pc.ppc_amount }}</td>
+                            <td>
+                                {% if pc.ppc_is_checked %}<span class="badge badge-info">Checked</span>{% endif %}
+                                {% if pc.ppc_is_verified %}<span class="badge badge-primary">Verified</span>{% endif %}
+                                {% if pc.ppc_is_approved %}<span class="badge badge-success">Approved</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if user_id == 115 and not pc.ppc_is_checked %}
+                                    <a href="{% url 'approve_petty_cash' 'pms' pc.id 'check' %}" class="btn btn-sm btn-info">Check</a>
+                                {% endif %}
+                                {% if user_id == 28 or user_id == 74 %}
+                                    {% if pc.ppc_is_checked and not pc.ppc_is_verified %}
+                                    <a href="{% url 'approve_petty_cash' 'pms' pc.id 'verify' %}" class="btn btn-sm btn-primary">Verify</a>
+                                    {% endif %}
+                                {% endif %}
+                                {% if user_id == 27 and pc.ppc_is_verified and not pc.ppc_is_approved %}
+                                    <a href="{% url 'approve_petty_cash' 'pms' pc.id 'approve' %}" class="btn btn-sm btn-success">Approve</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('.modern-table').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search..."
+            },
+            "ordering": false,
+            "scrollX": false
+        });
+    });
+</script>
+{% endblock %}
