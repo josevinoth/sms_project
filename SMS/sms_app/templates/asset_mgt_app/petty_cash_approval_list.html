@@ -47,19 +47,26 @@
     {% endif %}
 
     <ul class="nav nav-tabs mb-4" id="pcTab" role="tablist">
+      {% if show_tms %}
       <li class="nav-item">
         <a class="nav-link active" id="tms-tab" data-toggle="tab" href="#tms" role="tab" aria-controls="tms" aria-selected="true">TMS Petty Cash</a>
       </li>
+      {% endif %}
+      {% if show_wms %}
       <li class="nav-item">
-        <a class="nav-link" id="wms-tab" data-toggle="tab" href="#wms" role="tab" aria-controls="wms" aria-selected="false">WMS Petty Cash</a>
+        <a class="nav-link {% if not show_tms %}active{% endif %}" id="wms-tab" data-toggle="tab" href="#wms" role="tab" aria-controls="wms" aria-selected="{% if not show_tms %}true{% else %}false{% endif %}">WMS Petty Cash</a>
       </li>
+      {% endif %}
+      {% if show_pms %}
       <li class="nav-item">
-        <a class="nav-link" id="pms-tab" data-toggle="tab" href="#pms" role="tab" aria-controls="pms" aria-selected="false">PMS Petty Cash</a>
+        <a class="nav-link {% if not show_tms and not show_wms %}active{% endif %}" id="pms-tab" data-toggle="tab" href="#pms" role="tab" aria-controls="pms" aria-selected="{% if not show_tms and not show_wms %}true{% else %}false{% endif %}">PMS Petty Cash</a>
       </li>
+      {% endif %}
     </ul>
 
     <div class="tab-content" id="pcTabContent">
       
+      {% if show_tms %}
       <!-- TMS Tab -->
       <div class="tab-pane fade show active" id="tms" role="tabpanel" aria-labelledby="tms-tab">
         <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
@@ -106,9 +113,11 @@
             </div>
         </div>
       </div>
+      {% endif %}
 
+      {% if show_wms %}
       <!-- WMS Tab -->
-      <div class="tab-pane fade" id="wms" role="tabpanel" aria-labelledby="wms-tab">
+      <div class="tab-pane fade {% if not show_tms %}show active{% endif %}" id="wms" role="tabpanel" aria-labelledby="wms-tab">
         <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
             <div class="table-responsive">
                 <table class="table modern-table mb-0" style="width: 100%;">
@@ -139,7 +148,6 @@
                                 {% if user_id == 115 and not pc.wpc_is_checked %}
                                     <a href="{% url 'approve_petty_cash' 'wms' pc.id 'check' %}" class="btn btn-sm btn-info">Check</a>
                                 {% endif %}
-                                <!-- no specific verified user for wms based on prompt, leaving it accessible to 28 for now -->
                                 {% if user_id == 28 and pc.wpc_is_checked and not pc.wpc_is_verified %}
                                     <a href="{% url 'approve_petty_cash' 'wms' pc.id 'verify' %}" class="btn btn-sm btn-primary">Verify</a>
                                 {% endif %}
@@ -154,9 +162,11 @@
             </div>
         </div>
       </div>
+      {% endif %}
 
+      {% if show_pms %}
       <!-- PMS Tab -->
-      <div class="tab-pane fade" id="pms" role="tabpanel" aria-labelledby="pms-tab">
+      <div class="tab-pane fade {% if not show_tms and not show_wms %}show active{% endif %}" id="pms" role="tabpanel" aria-labelledby="pms-tab">
         <div class="table-container-modern shadow-sm mb-4" style="border-radius:12px; padding:1rem;">
             <div class="table-responsive">
                 <table class="table modern-table mb-0" style="width: 100%;">
@@ -187,7 +197,7 @@
                                 {% if user_id == 115 and not pc.ppc_is_checked %}
                                     <a href="{% url 'approve_petty_cash' 'pms' pc.id 'check' %}" class="btn btn-sm btn-info">Check</a>
                                 {% endif %}
-                                {% if user_id == 28 or user_id == 74 %}
+                                {% if user_id == 74 %}
                                     {% if pc.ppc_is_checked and not pc.ppc_is_verified %}
                                     <a href="{% url 'approve_petty_cash' 'pms' pc.id 'verify' %}" class="btn btn-sm btn-primary">Verify</a>
                                     {% endif %}
@@ -203,6 +213,7 @@
             </div>
         </div>
       </div>
+      {% endif %}
 
     </div>
 </div>
