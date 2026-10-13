@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance, CustomerInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
+from .pk_needassessment_view import Pkcosting_delete, Pkcostingsummary_delete, Pkpurchaseorder_delete, Pkpurchaseorder_dim_delete, get_tracker_flags
 from django.db.models import Sum, Max, Q
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
@@ -183,8 +183,30 @@ def delete_po_attachment(request, att_id):
 @login_required(login_url='login_page')
 def purchaseorder_list(request):
     first_name = request.session.get('first_name')
-    context = {'purchaseorder_list' : PkpurchaseorderInfo.objects.all().order_by('-id'),'first_name': first_name}
-    return render(request,"asset_mgt_app/pk_purchaseorder_list.html",context)
+    po_list = PkpurchaseorderInfo.objects.all().select_related('po_customer_name', 'po_status', 'po_updated_by').order_by('-id')
+
+    # Collect distinct customers with orders
+    order_customers = set()
+    for po in po_list:
+        cname = str(po.po_customer_name) if po.po_customer_name else (po.po_customer_new_name or '')
+        if cname and cname.strip() and cname.strip() != '-':
+            order_customers.add(cname.strip())
+    order_customers = sorted(list(order_customers), key=lambda s: s.lower())
+
+    # Collect other master customers
+    all_master = CustomerInfo.objects.values_list('cu_name', flat=True).distinct()
+    other_customers = sorted([c.strip() for c in all_master if c and c.strip() and c.strip() not in order_customers], key=lambda s: s.lower())
+
+    selected_customer = request.GET.get('customer', '').strip()
+
+    context = {
+        'purchaseorder_list': po_list,
+        'order_customers': order_customers,
+        'other_customers': other_customers,
+        'selected_customer': selected_customer,
+        'first_name': first_name
+    }
+    return render(request, "asset_mgt_app/pk_purchaseorder_list.html", context)
 
 #Delete purchaseorder
 @login_required(login_url='login_page')

@@ -15,11 +15,40 @@
         </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="mb-3 d-flex justify-content-end">
-        <input type="text" id="purchaseorder_search" class="form-control"
-               placeholder="🔍 Search any column..."
-               style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+    <!-- Filter & Search Bar -->
+    <div class="row align-items-center mb-3">
+        <div class="col-12 col-md-6 col-lg-5 mb-2 mb-md-0">
+            <div class="d-flex align-items-center">
+                <label for="customer_filter" class="mb-0 font-weight-bold mr-2 text-dark" style="white-space: nowrap; font-size: 0.95rem;">
+                    <i class="fas fa-filter text-info mr-1"></i> Customer:
+                </label>
+                <div class="flex-grow-1" style="min-width: 220px;">
+                    <select id="customer_filter" class="form-control form-control-modern select2" style="width: 100%; border-radius: 8px;">
+                        <option value=""></option>
+                        {% for cust in order_customers %}
+                        <option value="{{ cust }}" {% if cust == selected_customer %}selected{% endif %}>{{ cust }}</option>
+                        {% endfor %}
+                        {% if other_customers %}
+                        <option disabled>-- Other Master Customers --</option>
+                        {% for cust in other_customers %}
+                        <option value="{{ cust }}" {% if cust == selected_customer %}selected{% endif %}>{{ cust }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                <button type="button" id="reset_customer_filter" class="btn btn-outline-secondary ml-2 py-1 px-2" style="border-radius: 8px; font-size: 0.85rem;" title="Reset Customer Filter">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-7 d-flex justify-content-md-end align-items-center flex-wrap">
+            <div id="order_count_badge" class="badge badge-light border px-3 py-2 mr-3 font-weight-bold text-muted mb-2 mb-md-0" style="font-size: 0.9rem;">
+                Total Orders: <span id="visible_order_count">{{ purchaseorder_list|length }}</span> / {{ purchaseorder_list|length }}
+            </div>
+            <input type="text" id="purchaseorder_search" class="form-control"
+                   placeholder="🔍 Search any column..."
+                   style="max-width:320px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+        </div>
     </div>
 
     <!-- List Table -->
@@ -46,11 +75,11 @@
                 </thead>
                 <tbody>
                     {% for purchaseorderinfo in purchaseorder_list %}
-                    <tr class="modern-tr">
+                    <tr class="modern-tr" data-customer="{{ purchaseorderinfo.po_customer_name|default:purchaseorderinfo.po_customer_new_name|default:'' }}">
                         <td class="text-muted">{{ purchaseorderinfo.id }}</td>
                         <td>{{ purchaseorderinfo.po_created_at|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold">{{ purchaseorderinfo.po_assessment_num }}</td>
-                        <td class="font-weight-bold text-dark">{{ purchaseorderinfo.po_customer_name|default:purchaseorderinfo.po_customer_new_name|default:"-" }}</td>
+                        <td class="font-weight-bold text-dark po-customer-name">{{ purchaseorderinfo.po_customer_name|default:purchaseorderinfo.po_customer_new_name|default:"-" }}</td>
                         <td><span class="badge badge-light border p-2">{{ purchaseorderinfo.po_num }}</span></td>
                         <td>{{ purchaseorderinfo.po_date|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold text-primary">₹{{ purchaseorderinfo.po_total_value }}</td>
@@ -351,11 +380,79 @@
 </div>
 
 <script>
-    document.getElementById('purchaseorder_search').addEventListener('keyup', function() {
-        var term = this.value.toLowerCase();
-        document.querySelectorAll('#purchaseorder_list tbody tr').forEach(function(row) {
-            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+    function filterOrders() {
+        var selectedCustomer = ($('#customer_filter').val() || '').toLowerCase().trim();
+        var searchTerm = ($('#purchaseorder_search').val() || '').toLowerCase().trim();
+        var visibleCount = 0;
+        var totalCount = 0;
+
+        $('#purchaseorder_list tbody tr.modern-tr').each(function() {
+            totalCount++;
+            var row = $(this);
+            var custName = (row.attr('data-customer') || row.find('.po-customer-name').text() || '').toLowerCase().trim();
+            var rowText = row.text().toLowerCase();
+
+            var matchesCustomer = !selectedCustomer || custName === selectedCustomer || custName.indexOf(selectedCustomer) !== -1;
+            var matchesSearch = !searchTerm || rowText.indexOf(searchTerm) !== -1;
+
+            if (matchesCustomer && matchesSearch) {
+                row.show();
+                visibleCount++;
+            } else {
+                row.hide();
+            }
         });
+
+        // Update count badge
+        $('#visible_order_count').text(visibleCount);
+        if (selectedCustomer || searchTerm) {
+            $('#order_count_badge').removeClass('badge-light text-muted').addClass('badge-info text-white');
+        } else {
+            $('#order_count_badge').removeClass('badge-info text-white').addClass('badge-light text-muted');
+        }
+    }
+
+    $(document).ready(function() {
+        // Fail-safe: if customer_filter has only the blank option, dynamically populate from table rows
+        if ($('#customer_filter option').length <= 1) {
+            let uniqueCusts = new Set();
+            $('#purchaseorder_list tbody tr.modern-tr').each(function() {
+                let c = $(this).attr('data-customer') || $(this).find('.po-customer-name').text().trim();
+                if (c && c !== '-' && c !== 'None') {
+                    uniqueCusts.add(c);
+                }
+            });
+            Array.from(uniqueCusts).sort().forEach(function(cust) {
+                $('#customer_filter').append(new Option(cust, cust));
+            });
+        }
+
+        if ($.fn.select2) {
+            $('#customer_filter').select2({
+                placeholder: "-- All Customers --",
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        $('#customer_filter').on('change', function() {
+            filterOrders();
+        });
+
+        $('#reset_customer_filter').on('click', function() {
+            $('#customer_filter').val('').trigger('change');
+            $('#purchaseorder_search').val('');
+            filterOrders();
+        });
+
+        $('#purchaseorder_search').on('keyup', function() {
+            filterOrders();
+        });
+
+        // If pre-selected customer from query param, run filter on load
+        if ($('#customer_filter').val()) {
+            filterOrders();
+        }
     });
 
     let activePoId = null;
