@@ -223,15 +223,20 @@ def get_cs_kpi_dashboard_data(request):
         enquiries_qs = enquiries_qs.filter(en_created_at__date__lte=to_date)
 
     branch_user_ids = []
+    branch_code = None
+    branch_q = Q()
     if branch_id and branch_id != 'all':
+        branch_loc = Location_info.objects.filter(id=branch_id).first()
+        if branch_loc and branch_loc.loc_name:
+            branch_code = branch_loc.loc_name.split()[-1]
         branch_user_ids = list(User_extInfo.objects.filter(
             emp_branch_id=branch_id,
             user__is_active=True
         ).values_list('user_id', flat=True))
-        enquiries_qs = enquiries_qs.filter(
-            Q(en_assignedto_id__in=branch_user_ids) |
-            Q(en_fromlocaion_id=branch_id)
-        )
+        branch_q = Q(en_assignedto_id__in=branch_user_ids)
+        if branch_code:
+            branch_q |= Q(en_enquirynumber__icontains=branch_code)
+        enquiries_qs = enquiries_qs.filter(branch_q)
 
     if employee_id and employee_id != 'all':
         enquiries_qs = enquiries_qs.filter(en_assignedto_id=employee_id)
@@ -254,6 +259,8 @@ def get_cs_kpi_dashboard_data(request):
     cnotes_qs = ConsignmentdetailInfo.objects.filter(
         co_enquirynumber__in=enquiries_qs
     ).distinct()
+    if branch_code:
+        cnotes_qs = cnotes_qs.filter(co_consignmentnumber__icontains=branch_code)
 
     cnotes_created = cnotes_qs.count()
 
@@ -443,14 +450,40 @@ def get_cs_kpi_dashboard_data(request):
         Q(tc_pod_attachment__isnull=False, tc_pod_attachment__gt='') |
         Q(td_pod__isnull=False, td_pod__gt='')
     ).values_list('tr_tripnumber', flat=True))
-    pod_scanned_count = len(pod_trip_nums_ta | pod_trip_nums_closure | pod_trip_nums_direct)
+    try:
+        from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
+        pod_trip_nums_inv = set(InvoiceDocumentInfo.objects.filter(
+            id_tripnumber__in=trip_numbers
+        ).exclude(id_pod_doc__isnull=True).exclude(id_pod_doc='').values_list('id_tripnumber', flat=True))
+    except Exception:
+        pod_trip_nums_inv = set()
+    all_pod_trip_nums = pod_trip_nums_ta | pod_trip_nums_closure | pod_trip_nums_direct | pod_trip_nums_inv
+    pod_cnotes = set(trips_qs.filter(
+        tr_tripnumber__in=all_pod_trip_nums,
+        tr_consignmentnumber__isnull=False
+    ).values_list('tr_consignmentnumber_id', flat=True))
+    pod_scanned_count = len(pod_cnotes) if pod_cnotes else len(all_pod_trip_nums)
     if is_sample_requested:
         pod_scanned_count = 26
 
-    pod_target_display = str(pod_target_total)
+    pod_base_cnotes = cnotes_created if cnotes_created > 0 else current_day_total_trips
     pod_achieved_display = str(pod_scanned_count)
-    pod_pct = round((pod_scanned_count / pod_target_total) * 100) if pod_target_total > 0 else 0
+    pod_pct = round((pod_scanned_count / pod_base_cnotes) * 100) if pod_base_cnotes > 0 else 0
     pod_code_key, pod_code_color, pod_code_label = get_color_code(pod_pct)
+
+    pending_pods = max(pod_base_cnotes - pod_scanned_count, 0)
+    if pod_base_cnotes > 0 and pending_pods == 0:
+        pod_status = 'met'
+        pod_badge_text = '✅ 100% PODs Scanned<br><span style="font-size:0.63rem; opacity:0.9;">(All C-Notes Scanned)</span>'
+        pod_badge_color = '#10b981'
+    elif pending_pods > 0:
+        pod_status = 'pending'
+        pod_badge_text = f'⚠️ Pending: {pending_pods} Awaiting POD<br><span style="font-size:0.63rem; opacity:0.9;">({pod_scanned_count} of {pod_base_cnotes} Scanned)</span>'
+        pod_badge_color = pod_code_color
+    else:
+        pod_status = 'none'
+        pod_badge_text = '📑 No C-Notes<br><span style="font-size:0.63rem; opacity:0.9;">(No PODs Required)</span>'
+        pod_badge_color = '#38bdf8'
 
     # KPI 4: SOW, SOP, Ratesheet
     sow_achieved = 10 if is_sample_requested else TransInvoiceInfo.objects.filter(ti_trip__in=trips_qs, ti_sow__isnull=False).count()
@@ -501,11 +534,16 @@ def get_cs_kpi_dashboard_data(request):
         },
         {
             'name': 'POD SCAN',
-            'target': pod_target_display,
+            'target': str(pod_base_cnotes),
+            'cnotes_count': pod_base_cnotes,
             'achieved': pod_achieved_display,
             'pct': f"{pod_pct}%",
             'code_color': pod_code_color,
             'code_label': pod_code_label,
+            'pending_count': pending_pods,
+            'pod_badge_text': pod_badge_text,
+            'pod_badge_color': pod_badge_color,
+            'pod_status': pod_status,
             'cs_count': cs_count,
             'days_count': working_days_count,
             'is_header': False
@@ -568,7 +606,7 @@ def get_cs_kpi_dashboard_data(request):
     allotment_pct = round((veh_allotted / veh_requested) * 100, 1) if veh_requested > 0 else 0
     cnote_conv_pct = round((cnotes_created / veh_allotted) * 100, 1) if veh_allotted > 0 else 0
     trip_start_pct = round((trip_started / cnotes_created) * 100, 1) if cnotes_created > 0 else 0
-    pod_comp_pct = round((pod_scanned_count / pod_target_total) * 100, 1) if pod_target_total > 0 else 0
+    pod_comp_pct = round((pod_scanned_count / pod_base_cnotes) * 100, 1) if pod_base_cnotes > 0 else 0
 
     conversion_metrics = {
         'allotment_pct': f"{allotment_pct}%",
@@ -769,10 +807,7 @@ def get_cs_kpi_dashboard_data(request):
         en_created_at__date__lte=month_end
     )
     if branch_id and branch_id != 'all':
-        month_enquiries = month_enquiries.filter(
-            Q(en_assignedto_id__in=branch_user_ids) |
-            Q(en_fromlocaion_id=branch_id)
-        )
+        month_enquiries = month_enquiries.filter(branch_q)
     if employee_id and employee_id != 'all':
         month_enquiries = month_enquiries.filter(en_assignedto_id=employee_id)
 
@@ -789,6 +824,8 @@ def get_cs_kpi_dashboard_data(request):
     month_cnotes = ConsignmentdetailInfo.objects.filter(
         co_enquirynumber__in=month_enquiries
     )
+    if branch_code:
+        month_cnotes = month_cnotes.filter(co_consignmentnumber__icontains=branch_code)
     month_trips = TripdetailInfo.objects.filter(
         tr_consignmentnumber__in=month_cnotes
     )

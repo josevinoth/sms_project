@@ -1234,6 +1234,55 @@ $("#va_vehiclesource").on("change", function () {
                         </select>
                     </div>
 
+                    {% if active_trip %}
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-truck-moving mr-1"></i>
+                        <strong>Active Trip in Progress (Trip #{{ active_trip.tr_tripnumber }}):</strong><br>
+                        <span>Journey started at <strong>{{ active_trip.tr_departedlocation|default:'Origin' }}</strong>{% if active_trip.tr_departedkm is not None %} with Odometer <strong>{{ active_trip.tr_departedkm }} KM</strong>{% endif %}.</span>
+                        <div class="small mt-1 text-muted">
+                            Please provide the handover/breakdown location and current odometer. This active trip will be closed at this location.
+                        </div>
+                    </div>
+                    <input type="hidden" id="modal_has_active_trip" value="1">
+                    <input type="hidden" id="modal_min_trip_km" value="{{ active_trip.tr_departedkm|default:0 }}">
+                    {% else %}
+                    <input type="hidden" id="modal_has_active_trip" value="0">
+                    <input type="hidden" id="modal_min_trip_km" value="0">
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Replacement / Handover Place {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
+                                <select name="va_replacement_place" id="modal_va_replacement_place" class="form-control" {% if active_trip %}required{% endif %}>
+                                    <option value="">--Select Location--</option>
+                                    {% for place in all_places %}
+                                        <option value="{{ place.id }}">{{ place.place_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Odometer KM at Replacement {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
+                                <input type="number" 
+                                       name="va_replacement_km" 
+                                       id="modal_va_replacement_km" 
+                                       class="form-control" 
+                                       placeholder="e.g. {% if active_trip and active_trip.tr_departedkm %}{{ active_trip.tr_departedkm }}{% else %}85140{% endif %}"
+                                       {% if active_trip and active_trip.tr_departedkm %}min="{{ active_trip.tr_departedkm }}"{% else %}min="0"{% endif %}
+                                       {% if active_trip %}required{% endif %}>
+                                <small class="form-text text-muted">
+                                    {% if active_trip and active_trip.tr_departedkm %}
+                                        Must be &ge; {{ active_trip.tr_departedkm }} KM (Trip Departure KM).
+                                    {% else %}
+                                        Current odometer reading of the vehicle being replaced.
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row align-items-center mb-3">
                         <div class="col-md-5">
                             <div class="form-group mb-0">
@@ -1745,6 +1794,20 @@ $("#va_vehiclesource").on("change", function () {
         if (!reason) { alert("Please select a reason."); return; }
         if (!type) { alert("Please select a vehicle type."); return; }
         if (!source) { alert("Please select a vehicle source."); return; }
+
+        var hasActiveTrip = $("#modal_has_active_trip").val() === "1";
+        var repPlace = $("#modal_va_replacement_place").val();
+        var repKm = $("#modal_va_replacement_km").val();
+        var minKm = parseFloat($("#modal_min_trip_km").val() || "0");
+
+        if (hasActiveTrip) {
+            if (!repPlace) { alert("Please select the Replacement / Handover Place for the active trip."); return; }
+            if (!repKm || isNaN(parseFloat(repKm))) { alert("Please enter the Odometer KM at replacement."); return; }
+            if (minKm > 0 && parseFloat(repKm) < minKm) {
+                alert("Replacement KM (" + repKm + ") cannot be less than trip departure KM (" + minKm + ").");
+                return;
+            }
+        }
 
         if (source == "3" || mktVehNo) {
             if (!mktVehNo) {

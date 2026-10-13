@@ -2,7 +2,7 @@ from django.db import models
 
 from .driver_master_mod import DrivermasterInfo
 from .vehicle_replacement_status_mod import Replacementstatus
-from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Vendor_info,StatusList
+from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Vendor_info,StatusList,Places
 
 class Vehicle_allotmentInfo(models.Model):
     va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.PROTECT)
@@ -35,6 +35,8 @@ class Vehicle_allotmentInfo(models.Model):
     va_replacement_reason = models.TextField(null=True, blank=True)
     va_replacement_date = models.DateTimeField(null=True, blank=True)
     va_replaced_allotment = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replacement_chain')
+    va_replacement_place = models.ForeignKey(Places, on_delete=models.SET_NULL, null=True, blank=True, related_name='replaced_allotments')
+    va_replacement_km = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
             if self.va_vehiclenumber and str(self.va_vehiclenumber):

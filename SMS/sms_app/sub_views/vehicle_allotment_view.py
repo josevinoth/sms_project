@@ -13,7 +13,7 @@ from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_ext
     ConsignmentgoodsInfo, \
     VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, \
     DeletionLog, \
-    Trip_approval_info, approval_status_info
+    Trip_approval_info, approval_status_info, Places, Tripstatusinfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
@@ -385,11 +385,26 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         user_ext = User_extInfo.objects.filter(user_id=user_id).first()
         user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
 
+        active_trip = None
+        if va:
+            curr_v_num = str(va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else (va.va_vehiclenumber_mkt or '')).strip()
+            if curr_v_num:
+                active_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_id,
+                    tr_vehiclenumber__iexact=curr_v_num
+                ).exclude(
+                    Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                    Q(tc_financestatus__status__icontains='Closed') |
+                    Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
+                ).select_related('tr_departedlocation', 'tr_reportedlocation').first()
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
             'vehicle_allotment_form': form,
             'va': va,
+            'active_trip': active_trip,
+            'all_places': Places.objects.all().order_by('place_name'),
             'enquiry_num_id': enquiry_id,
             'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber=enquiry_id
@@ -434,7 +449,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             form = VehicleallotmentForm(request.POST)
 
             if not form.is_valid():
-                messages.error(request, "Invalid form data")
+                err_str = "; ".join([f"{k}: {', '.join(v)}" for k, v in form.errors.items()])
+                messages.error(request, f"Invalid form data: {err_str}")
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
@@ -1901,9 +1917,35 @@ def vehicle_allotment_replace(request, allotment_id):
                     new_driver_master_id = None
                 new_vendor_id = request.POST.get('va_vendor')
                 reason = request.POST.get('reason', '')
+                replacement_place_id = request.POST.get('va_replacement_place')
+                replacement_km = request.POST.get('va_replacement_km')
 
                 if not reason:
                     return JsonResponse({'success': False, 'message': 'Reason for replacement is required.'})
+
+                # Check if old vehicle has an active in-transit trip
+                old_v_check_clean = (str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (old_va.va_vehiclenumber_mkt or '')).strip()
+                active_trip_in_transit = TripdetailInfo.objects.filter(
+                    tr_enquirynumber=old_va.va_enquirynumber,
+                    tr_vehiclenumber__iexact=old_v_check_clean,
+                    tr_category_id=1
+                ).exclude(
+                    Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                    Q(tc_financestatus__status__icontains='Closed') |
+                    Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
+                ).first()
+
+                if active_trip_in_transit and (active_trip_in_transit.tr_departedkm or active_trip_in_transit.tr_departeddate or active_trip_in_transit.tc_financestatus_id == 1):
+                    if not replacement_place_id:
+                        return JsonResponse({'success': False, 'message': 'Replacement / Handover Place is required for the active in-transit trip.'})
+                    if not replacement_km or not str(replacement_km).strip():
+                        return JsonResponse({'success': False, 'message': 'Odometer KM at replacement is required for the active in-transit trip.'})
+                    try:
+                        rep_km_val = int(float(replacement_km))
+                    except (ValueError, TypeError):
+                        return JsonResponse({'success': False, 'message': 'Invalid odometer KM entered.'})
+                    if active_trip_in_transit.tr_departedkm and rep_km_val < active_trip_in_transit.tr_departedkm:
+                        return JsonResponse({'success': False, 'message': f'Replacement KM ({rep_km_val}) cannot be less than trip departure KM ({active_trip_in_transit.tr_departedkm})!'})
 
                 # Validate Mandatory Driver License Expiry Date for Own and Attached vehicles
                 if str(new_vehicle_source_id) in ['1', '2']:
@@ -2006,37 +2048,59 @@ def vehicle_allotment_replace(request, allotment_id):
 
                 # Step 2: Mark Old Allotment as Replaced
                 old_va.va_status_id = 2  # Vehicle Replaced
+                old_va.va_replacement_reason = reason
+                old_va.va_replacement_date = timezone.now()
+                if replacement_place_id:
+                    old_va.va_replacement_place_id = replacement_place_id
+                if replacement_km and str(replacement_km).strip().isdigit():
+                    old_va.va_replacement_km = int(replacement_km)
                 old_va.va_updated_by_id = request.session.get('ses_userID')
                 old_va.save()
 
-            # Step 3: Update Active / Linked Trip if exists
+            # Step 3: Handle Active Trip of Old Vehicle (Way A)
             old_vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (
                         old_va.va_vehiclenumber_mkt or '')
             new_vehicle_num = str(new_va.va_vehiclenumber) if new_va.va_vehiclenumber else (
                         new_va.va_vehiclenumber_mkt or '')
 
-            # Only reassign active, non-closed Business trips.
-            # NEVER modify Empty trips (categories 2 and 3) or already closed/settled trips,
-            # as those were physically executed by the old vehicle.
+            # Close active business trips for the old vehicle at the replacement handover point.
+            # DO NOT overwrite vehicle or driver! The old trip was physically executed by the old vehicle.
             trips = TripdetailInfo.objects.filter(
                 tr_enquirynumber=old_va.va_enquirynumber,
-                tr_vehiclenumber__iexact=old_vehicle_num.strip()
+                tr_vehiclenumber__iexact=old_vehicle_num.strip(),
+                tr_category_id=1
             ).exclude(
                 Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
                 Q(tc_financestatus__status__icontains='Closed') |
-                Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
-                Q(tr_category_id__in=[2, 3]) |
-                Q(tr_category__category__icontains='Empty')
+                Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
             )
+
+            status_closed = Tripstatusinfo.objects.filter(
+                Q(status__icontains='Closed') | Q(id=2)
+            ).first()
+
+            rep_place_obj = Places.objects.filter(pk=replacement_place_id).first() if replacement_place_id else None
+            rep_place_name = rep_place_obj.place_name if rep_place_obj else ""
+
             for active_trip in trips:
-                active_trip.tr_vehiclenumber = new_vehicle_num
-                active_trip.tr_drivername = new_va.va_drivername
-                active_trip.tr_drivernumber = new_va.va_drivernumber
-                active_trip.tr_driver_master_id = new_va.va_driver_master_id
+                if replacement_place_id:
+                    active_trip.tr_reportedlocation_id = replacement_place_id
+                if replacement_km and str(replacement_km).strip().isdigit():
+                    r_km = int(replacement_km)
+                    active_trip.tr_reportedkm = r_km
+                    active_trip.tr_reportedkm_delivery = r_km
+                active_trip.tr_reporteddate = timezone.now()
+                if status_closed:
+                    active_trip.tc_financestatus = status_closed
+                    active_trip.tr_operational_status = status_closed
+
                 current_remarks = active_trip.tr_remarks or ""
-                replacement_note = f"\n[AUTO-NOTE] Vehicle replaced from {old_vehicle_num} to {new_vehicle_num} on {timezone.now().strftime('%Y-%m-%d %H:%M')} due to: {reason}"
+                place_str = f" at {rep_place_name}" if rep_place_name else ""
+                km_str = f" at {replacement_km} KM" if replacement_km else ""
+                replacement_note = f"\n[AUTO-NOTE] Journey ended{place_str}{km_str} on {timezone.now().strftime('%Y-%m-%d %H:%M')}. Closed for replacement due to: {reason}."
                 active_trip.tr_remarks = (current_remarks + replacement_note)[:250]
                 active_trip.save()
+
             sync_allotment_rate_to_trips(new_va)
 
             # Step 4: Update Consignment Details if exists & check for E-Way Bill numbers
@@ -2060,8 +2124,13 @@ def vehicle_allotment_replace(request, allotment_id):
 
                 consignments.update(co_vehicelnumber=new_vehicle_num)
 
-                # Reset approval status for linked trips so trip MUST be re-approved after vehicle replacement
-                linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber__in=consignments)
+                # Reset approval status only for any open/pending linked trips (exclude already closed trips)
+                linked_trips = TripdetailInfo.objects.filter(
+                    tr_consignmentnumber__in=consignments
+                ).exclude(
+                    Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                    Q(tc_financestatus__status__icontains='Closed')
+                )
                 if linked_trips.exists():
                     pending_status = approval_status_info.objects.filter(
                         pk=2).first() or approval_status_info.objects.first()
