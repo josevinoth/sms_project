@@ -5,8 +5,11 @@ from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 from .sub_views.ar_receipt_view import ar_receipt_list
+from .sub_views.approval_views import petty_cash_approval_list, approve_petty_cash
 
 urlpatterns = [
+    path('petty_cash_approval_list/', petty_cash_approval_list, name='petty_cash_approval_list'),
+    path('approve_petty_cash/<str:sys_type>/<int:pc_id>/<str:action>/', approve_petty_cash, name='approve_petty_cash'),
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
     path('api/eway_expiry_alerts/', views.get_eway_expiry_alerts, name='get_eway_expiry_alerts'),
     path('api/verify_trip_eway_details/<int:trip_id>/', views.verify_trip_eway_details, name='verify_trip_eway_details'),

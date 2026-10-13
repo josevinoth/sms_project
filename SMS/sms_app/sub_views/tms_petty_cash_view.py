@@ -195,13 +195,8 @@ def tms_petty_cash_list(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(tpc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(tpc_branch__loc_name__icontains=search_branch)
             
             
     tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
@@ -441,13 +436,8 @@ def tms_petty_cash_export_tally(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(tpc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(tpc_branch__loc_name__icontains=search_branch)
         
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 

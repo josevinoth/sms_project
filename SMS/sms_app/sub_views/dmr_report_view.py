@@ -898,8 +898,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
 
                 # --- GENERIC FIELDS ---
                 if "vendor" in hh or "transporter" in hh:
-                    vendor = safe_str(va.va_vendor) if (va and trip.tr_vehiclesource_id in (2, 3)) else "OWN VEHICLE"
-                    row.append(vendor);
+                    row.append("BVM");
                     continue
                 if "driver name" in hh:
                     val = trip.tr_drivername or (va.va_drivername if va else "") or (

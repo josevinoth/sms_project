@@ -52,6 +52,19 @@ class PMSPettyCashInfo(models.Model):
     ppc_receiver_signature = models.TextField(blank=True, null=True)
 
     # Audit Fields
+    
+    ppc_is_checked = models.BooleanField(default=False)
+    ppc_checked_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='ppc_checked_by_user')
+    ppc_checked_at = models.DateTimeField(null=True, blank=True)
+    
+    ppc_is_verified = models.BooleanField(default=False)
+    ppc_verified_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='ppc_verified_by_user')
+    ppc_verified_at = models.DateTimeField(null=True, blank=True)
+    
+    ppc_is_approved = models.BooleanField(default=False)
+    ppc_approved_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='ppc_approved_by_user')
+    ppc_approved_at = models.DateTimeField(null=True, blank=True)
+
     ppc_created_on = models.DateTimeField(null=True, auto_now_add=True)
     ppc_created_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='pms_petty_cash_created_by')
     ppc_updated_at = models.DateTimeField(null=True, auto_now=True)

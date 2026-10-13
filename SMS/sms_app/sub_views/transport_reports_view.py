@@ -6297,6 +6297,26 @@ def pod_pending_report_ajax_view(request):
         tr_category_id=1  # Business trips only
     )
 
+    from ..models import TripAttachmentInfo, Trip_closure_files_Info
+    
+    pod_trip_nums_ta = TripAttachmentInfo.objects.filter(
+        ta_category='POD'
+    ).exclude(ta_file='').exclude(ta_tripnumber__isnull=True).exclude(ta_tripnumber='').values('ta_tripnumber')
+    
+    pod_trip_nums_closure = Trip_closure_files_Info.objects.exclude(
+        tcf_pod__isnull=True
+    ).exclude(tcf_pod='').exclude(tcf_tripnumber__isnull=True).exclude(tcf_tripnumber='').values('tcf_tripnumber')
+
+    trips = trips.exclude(
+        tr_tripnumber__in=pod_trip_nums_ta
+    ).exclude(
+        tr_tripnumber__in=pod_trip_nums_closure
+    ).exclude(
+        Q(tc_pod_attachment__isnull=False) & ~Q(tc_pod_attachment='')
+    ).exclude(
+        Q(td_pod__isnull=False) & ~Q(td_pod='')
+    )
+
     # Apply Custom Filters
     if from_date:
         trips = trips.filter(tr_departeddate_pickup__date__gte=from_date)
