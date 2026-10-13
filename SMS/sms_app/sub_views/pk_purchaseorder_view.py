@@ -409,7 +409,9 @@ def pk_create_batch_job(request):
                 part_code_obj = q.pkqt_part_code
                 part_code_str = part_code_obj.pc_code
                 # Required count = per_item_req * job_qty
-                per_item_req = float(q.pkqt_quantity_req or q.pkqt_quantity or 1.0)
+                per_item_req = float(q.pkqt_quantity_req) if q.pkqt_quantity_req is not None else (float(q.pkqt_quantity) if q.pkqt_quantity is not None else 1.0)
+                if per_item_req <= 0:
+                    continue
                 total_needed = per_item_req * job_qty
                 
                 # Optimised: calculate available stock in 3 bulk queries instead of 3 per batch
@@ -448,6 +450,8 @@ def pk_create_batch_job(request):
                         'part_code': part_code_str,
                         'description': q.pkqt_stock_description.stock_description if q.pkqt_stock_description else '',
                         'needed_qty': round(total_needed, 2),
+                        'per_unit_req': round(per_item_req, 2),
+                        'job_qty': round(job_qty, 2),
                         'available_qty': round(avail_qty, 2),
                         'shortfall': round(total_needed - avail_qty, 2)
                     })
@@ -516,6 +520,21 @@ def pk_create_batch_job(request):
             stock_status_instance = None
 
         cloned_count = 0
+        job_substitutions = data.get('substitutions', {})
+        all_absorbed_ids = set()
+        sub_map = {}
+        if isinstance(job_substitutions, list):
+            for s in job_substitutions:
+                qid_k = str(s.get('quotation_id'))
+                sub_map[qid_k] = s
+                for a_id in s.get('absorbed_quotation_ids', []):
+                    all_absorbed_ids.add(str(a_id))
+        elif isinstance(job_substitutions, dict):
+            for qid_k, s in job_substitutions.items():
+                sub_map[str(qid_k)] = s
+                for a_id in s.get('absorbed_quotation_ids', []):
+                    all_absorbed_ids.add(str(a_id))
+
         for entry in items:
             pod_id = entry['id']
             job_qty = float(entry['qty'])
@@ -528,7 +547,7 @@ def pk_create_batch_job(request):
                 ct_po_dimension=pod,
                 ct_job_no__isnull=False
             ).exclude(ct_job_no='').values('ct_job_no').annotate(
-                job_qty=Max('ct_quantity_req')
+                job_qty=Max('ct_na_quantity')
             ).aggregate(total=Sum('job_qty'))
             
             already_jobbed_qty = jobbed_data['total'] or 0
@@ -543,36 +562,110 @@ def pk_create_batch_job(request):
             quotations = PkquotationInfo.objects.filter(pkqt_requirement=pod.pod_nad)
             
             for q in quotations:
+                str_qid = str(q.id)
+                # If absorbed for this specific job, skip creating costing entry
+                if str_qid in all_absorbed_ids:
+                    continue
+
+                per_req = float(q.pkqt_quantity_req) if q.pkqt_quantity_req is not None else (float(q.pkqt_quantity) if q.pkqt_quantity is not None else 0.0)
+                if q.pkqt_cost_type_id == 8 and per_req <= 0 and str_qid not in sub_map:
+                    continue  # Absorbed / not used in production
+
+                # Check if this quotation has a job-specific substitution
+                sub = sub_map.get(str_qid)
+                part_code_obj = q.pkqt_part_code
+                stock_desc_obj = q.pkqt_stock_description
+                stock_type_obj = q.pkqt_stock_type
+                uom_obj = q.pkqt_uom
+                qty_req_val = float(q.pkqt_quantity_req or 0.0)
+                rate_val = float(q.pkqt_rate or 0.0)
+                total_cost_val = float(q.pkqt_total_cost or 0.0)
+                width_val = q.pkqt_width_req
+                height_val = q.pkqt_height_req
+                length_val = q.pkqt_length_req
+
+                if sub:
+                    new_pc_id = sub.get('new_part_code_id')
+                    if new_pc_id:
+                        from sms_app.models import PkpartcodeInfo
+                        pc_str = str(new_pc_id).strip()
+                        try:
+                            part_code_obj = PkpartcodeInfo.objects.get(pc_code=pc_str)
+                        except PkpartcodeInfo.DoesNotExist:
+                            if pc_str.isdigit():
+                                part_code_obj = PkpartcodeInfo.objects.get(id=int(pc_str))
+                        if part_code_obj:
+                            if part_code_obj.pc_stock_description:
+                                stock_desc_obj = part_code_obj.pc_stock_description
+                            if part_code_obj.pc_stock_type:
+                                stock_type_obj = part_code_obj.pc_stock_type
+                            if part_code_obj.pc_uom:
+                                uom_obj = part_code_obj.pc_uom
+                    if sub.get('new_qty_req') is not None:
+                        try:
+                            qty_req_val = float(sub['new_qty_req'])
+                        except (ValueError, TypeError):
+                            pass
+                    if sub.get('rate') is not None:
+                        try:
+                            rate_val = float(sub['rate'])
+                        except (ValueError, TypeError):
+                            pass
+                    if sub.get('total_cost') is not None:
+                        try:
+                            total_cost_val = float(sub['total_cost'])
+                        except (ValueError, TypeError):
+                            pass
+                    if sub.get('dim_l') is not None:
+                        try:
+                            length_val = float(sub['dim_l'])
+                        except (ValueError, TypeError):
+                            pass
+                    if sub.get('dim_w') is not None:
+                        try:
+                            width_val = float(sub['dim_w'])
+                        except (ValueError, TypeError):
+                            pass
+                    if sub.get('dim_h') is not None:
+                        try:
+                            height_val = float(sub['dim_h'])
+                        except (ValueError, TypeError):
+                            pass
+
                 # Calculate ratio to scale total values based on the PO Job Quantity vs original Need Assessment Quantity
                 old_qty = float(q.pkqt_na_quantity or 1)
                 if old_qty == 0:
                     old_qty = 1
                 ratio = job_qty / old_qty
 
+                # Calculate batch quantity and total cost for this job
+                calculated_qty = round(qty_req_val * job_qty) if sub else round(float(q.pkqt_quantity or 0) * ratio)
+                calculated_box_cost = round(total_cost_val * job_qty, 2) if sub else round(float(q.pkqt_total_cost or 0) * job_qty, 2)
+
                 PkcostingInfo.objects.create(
                     ct_cost_type=q.pkqt_cost_type,
-                    ct_stock_description=q.pkqt_stock_description,
+                    ct_stock_description=stock_desc_obj,
                     ct_width=q.pkqt_width,
                     ct_height=q.pkqt_height,
                     ct_cft=q.pkqt_cft,
-                    ct_rate=q.pkqt_rate,
+                    ct_rate=rate_val,
                     ct_days=q.pkqt_days,
-                    ct_total_cost=q.pkqt_total_cost,
-                    ct_quantity=round(float(q.pkqt_quantity or 0) * ratio),
+                    ct_total_cost=total_cost_val,
+                    ct_quantity=calculated_qty,
                     ct_size=q.pkqt_size,
-                    ct_uom=q.pkqt_uom,
+                    ct_uom=uom_obj,
                     ct_assessment_num=q.pkqt_assessment_num,
                     ct_length=q.pkqt_length,
-                    ct_stock_type=q.pkqt_stock_type,
+                    ct_stock_type=stock_type_obj,
                     ct_stock_purchase_number=q.pkqt_stock_purchase_number,
                     ct_item=q.pkqt_item,
                     ct_itemdescription=q.pkqt_itemdescription,
                     ct_requirement=q.pkqt_requirement,
                     ct_requirement_size=q.pkqt_requirement_size,
-                    ct_width_req=q.pkqt_width_req,
-                    ct_height_req=q.pkqt_height_req,
-                    ct_length_req=q.pkqt_length_req,
-                    ct_quantity_req=q.pkqt_quantity_req,  # Retain per-unit requirement from quotation
+                    ct_width_req=width_val,
+                    ct_height_req=height_val,
+                    ct_length_req=length_val,
+                    ct_quantity_req=qty_req_val,  # Retain per-unit requirement
                     ct_sqrt_req=round(float(q.pkqt_sqrt_req or 0) * ratio, 2),
                     ct_stock_status=stock_status_instance,
                     ct_customer_name=q.pkqt_customer_name,
@@ -580,8 +673,8 @@ def pk_create_batch_job(request):
                     ct_customer_po=po,
                     ct_updated_by=request.user,
                     ct_na_quantity=job_qty,  # The actual PO Job quantity
-                    ct_totalbox_cost=round(float(q.pkqt_total_cost or 0) * job_qty, 2),
-                    ct_part_code=q.pkqt_part_code,
+                    ct_totalbox_cost=calculated_box_cost,
+                    ct_part_code=part_code_obj,
                     ct_total_cft_display=round(float(q.pkqt_total_cft_display or 0) * ratio, 2),
                     ct_po_dimension=pod,
                     ct_job_no=job_no  # Tag with unique job number
@@ -614,7 +707,7 @@ def pk_get_po_items_for_job(request):
                 ct_po_dimension=item,
                 ct_job_no__isnull=False
             ).exclude(ct_job_no='').values('ct_job_no').annotate(
-                job_qty=Max('ct_quantity_req')
+                job_qty=Max('ct_na_quantity')
             ).aggregate(total=Sum('job_qty'))
             
             already_jobbed_qty = jobbed_data['total'] or 0
@@ -640,7 +733,9 @@ def pk_get_po_items_for_job(request):
 @login_required(login_url='login_page')
 def pk_update_quotation_partcode(request):
     """
-    Updates the partcode on a PkquotationInfo record when user selects an alternative partcode.
+    Updates the partcode and quantities on a PkquotationInfo record when user selects an alternative partcode.
+    Supports setting new Qty Req (per unit) and new Batch Qty.
+    Supports absorbing other partcodes into this one (e.g. when one bigger piece is used for multiple parts).
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'POST required'}, status=405)
@@ -648,6 +743,9 @@ def pk_update_quotation_partcode(request):
         data = json.loads(request.body)
         quotation_id = data.get('quotation_id')
         new_part_code_id = data.get('new_part_code_id')
+        new_qty_req = data.get('new_qty_req')
+        new_batch_qty = data.get('new_batch_qty')
+        absorbed_quotation_ids = data.get('absorbed_quotation_ids', [])
         
         if not quotation_id or not new_part_code_id:
             return JsonResponse({'success': False, 'message': 'Missing quotation ID or new part code ID'}, status=400)
@@ -662,12 +760,88 @@ def pk_update_quotation_partcode(request):
                 new_pc = PkpartcodeInfo.objects.get(id=int(pc_str))
             else:
                 raise
+
+        update_master = data.get('update_master', False)
+        if not update_master:
+            msg = f'Part code substituted with {new_pc.pc_code} (Qty Req: {new_qty_req}) for this Job only.'
+            if absorbed_quotation_ids:
+                msg += f' {len(absorbed_quotation_ids)} other partcode(s) absorbed for this Job only.'
+            return JsonResponse({'success': True, 'message': msg, 'is_job_scoped': True})
         
         quotation.pkqt_part_code = new_pc
+        update_fields = ['pkqt_part_code']
         if new_pc.pc_stock_description:
             quotation.pkqt_stock_description = new_pc.pc_stock_description
-        quotation.save(update_fields=['pkqt_part_code', 'pkqt_stock_description'])
-        
-        return JsonResponse({'success': True, 'message': f'Part code updated to {new_pc.pc_code}'})
+            update_fields.append('pkqt_stock_description')
+        if new_pc.pc_stock_type:
+            quotation.pkqt_stock_type = new_pc.pc_stock_type
+            update_fields.append('pkqt_stock_type')
+        if new_pc.pc_uom:
+            quotation.pkqt_uom = new_pc.pc_uom
+            update_fields.append('pkqt_uom')
+
+        if new_qty_req is not None:
+            try:
+                quotation.pkqt_quantity_req = float(new_qty_req)
+                update_fields.append('pkqt_quantity_req')
+            except (ValueError, TypeError):
+                pass
+
+        if new_batch_qty is not None:
+            try:
+                quotation.pkqt_quantity = float(new_batch_qty)
+                update_fields.append('pkqt_quantity')
+            except (ValueError, TypeError):
+                pass
+        elif new_qty_req is not None and quotation.pkqt_na_quantity:
+            quotation.pkqt_quantity = float(new_qty_req) * float(quotation.pkqt_na_quantity)
+            update_fields.append('pkqt_quantity')
+
+        for dim_field, req_key in [('pkqt_length_req', 'dim_l'), ('pkqt_width_req', 'dim_w'), ('pkqt_height_req', 'dim_h')]:
+            if req_key in data and data[req_key] is not None:
+                try:
+                    setattr(quotation, dim_field, float(data[req_key]))
+                    update_fields.append(dim_field)
+                except (ValueError, TypeError):
+                    pass
+
+        if 'rate' in data and data['rate'] is not None:
+            try:
+                quotation.pkqt_rate = float(data['rate'])
+                update_fields.append('pkqt_rate')
+            except (ValueError, TypeError):
+                pass
+
+        if 'total_cost' in data and data['total_cost'] is not None:
+            try:
+                quotation.pkqt_total_cost = float(data['total_cost'])
+                update_fields.append('pkqt_total_cost')
+            except (ValueError, TypeError):
+                pass
+
+        quotation.save(update_fields=list(set(update_fields)))
+
+        # Handle absorbed quotation records (one partcode for multiple partcodes)
+        absorbed_count = 0
+        if absorbed_quotation_ids and isinstance(absorbed_quotation_ids, list):
+            for abs_id in absorbed_quotation_ids:
+                try:
+                    if int(abs_id) == int(quotation_id):
+                        continue
+                    abs_q = PkquotationInfo.objects.get(id=int(abs_id))
+                    abs_q.pkqt_quantity_req = 0.0
+                    abs_q.pkqt_quantity = 0.0
+                    abs_q.pkqt_total_cost = 0.0
+                    abs_q.pkqt_totalbox_cost = 0.0
+                    abs_q.save(update_fields=['pkqt_quantity_req', 'pkqt_quantity', 'pkqt_total_cost', 'pkqt_totalbox_cost'])
+                    absorbed_count += 1
+                except Exception as abs_err:
+                    print(f"Error zeroing absorbed quotation {abs_id}: {abs_err}")
+
+        msg = f'Part code updated to {new_pc.pc_code} (Qty Req: {quotation.pkqt_quantity_req})'
+        if absorbed_count > 0:
+            msg += f', and {absorbed_count} other partcode(s) set to 0 (absorbed into this piece).'
+
+        return JsonResponse({'success': True, 'message': msg})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

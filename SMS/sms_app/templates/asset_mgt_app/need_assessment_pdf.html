@@ -119,7 +119,7 @@
             <td colspan="9">
                 {% for dim in dimensions %}
                     {% if forloop.counter0 == idx %}
-                        {{ dim.nad_item }} - Qty: {{ dim.nad_quantity }}
+                        Qty: {{ dim.nad_quantity }}
                     {% endif %}
                 {% endfor %}
             </td>
@@ -287,7 +287,7 @@
         </tr>
         <tr>
             <td colspan="3">FUMIGATION</td>
-            <td class="text-center">{% if need_assessment.na_wood_treatment_req and 'FUMIG' in need_assessment.na_wood_treatment_req.wood_treatment_req.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td class="text-center">{% if need_assessment.is_fumigation_selected %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="4">BWR PLY</td>
             <td colspan="4" class="text-center">
                 {% if ply_type_list %}
@@ -303,7 +303,7 @@
         </tr>
         <tr>
             <td colspan="3">HT</td>
-            <td class="text-center">{% if need_assessment.na_wood_treatment_req and 'HT' in need_assessment.na_wood_treatment_req.wood_treatment_req.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td class="text-center">{% if need_assessment.is_ht_selected %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="8" class="bg-gray text-center">TYPE OF WOOD</td>
         </tr>
         <tr>
@@ -329,23 +329,21 @@
         </tr>
         <tr>
             <td colspan="2" class="bg-gray">AIR CRACK</td>
-            <td colspan="2">{% if 'AIR' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
+            <td colspan="4">{% if need_assessment.air_crack_norm %}<b>{{ need_assessment.air_crack_norm }}</b>{% else %}-{% endif %}</td>
             <td colspan="2" class="bg-gray">NOTCHES</td>
-            <td colspan="6">{% if 'NOTCH' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
-        </tr>
-        <tr>
-            <td colspan="2"></td><td colspan="2">0 TO 6"</td>
-            <td colspan="2"></td><td colspan="6">0 TO 2"</td>
+            <td colspan="4">{% if need_assessment.notches_norm %}<b>{{ need_assessment.notches_norm }}</b>{% else %}-{% endif %}</td>
         </tr>
         <tr>
             <td colspan="2" class="bg-gray">FUNGUS</td>
-            <td colspan="2">{% if 'FUNG' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
+            <td colspan="4">{% if need_assessment.fungus_norm %}<b>{{ need_assessment.fungus_norm }}</b>{% else %}-{% endif %}</td>
             <td colspan="2" class="bg-gray">TOLERANCE</td>
-            <td colspan="6">{% if 'TOLERANCE' in need_assessment.wood_norms_str %}YES (3MM){% endif %}</td>
+            <td colspan="4">{% if need_assessment.tolerance_norm %}<b>{{ need_assessment.tolerance_norm }}</b>{% else %}-{% endif %}</td>
         </tr>
         <tr>
-            <td colspan="2" class="bg-gray">VEHICLE</td><td colspan="2">BVM</td>
-            <td colspan="8" class="small-text">VEHICLE TYPE: {{ need_assessment.na_vehicle_type|default:"" }}</td>
+            <td colspan="2" class="bg-gray">BARKS</td>
+            <td colspan="4">{% if need_assessment.barks_norm %}<b>{{ need_assessment.barks_norm }}</b>{% else %}-{% endif %}</td>
+            <td colspan="2" class="bg-gray">VEHICLE</td>
+            <td colspan="4">{{ need_assessment.na_delivery_by|default:"BVM" }}{% if need_assessment.na_vehicle_type %} ({{ need_assessment.na_vehicle_type }}){% endif %}</td>
         </tr>
 
         <!-- Type of Access -->
