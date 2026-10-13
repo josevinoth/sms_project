@@ -47,9 +47,24 @@
                     <!-- Group Header Row -->
                     <tr style="background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);">
                         <td colspan="7" class="text-left font-weight-bold py-2 px-3 text-white" style="font-size: 1rem; border-radius: 4px;">
-                            <i class="fas fa-folder-open mr-2"></i> JOB: {{ job.grouper }} 
-                            <span class="mx-3">|</span> 
-                            <i class="fas fa-building mr-2"></i> CUSTOMER: {{ job.list.0.customer_name|default:"-" }}
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <span><i class="fas fa-folder-open mr-2"></i> JOB: <b>{{ job.grouper }}</b></span>
+                                    <span class="mx-3">|</span> 
+                                    <span><i class="fas fa-building mr-2"></i> CUSTOMER: <b>{{ job.list.0.customer_name|default:"-" }}</b></span>
+                                    <a href="{% url 'pk_stock_retrieval_pdf' job.grouper %}" target="_blank" 
+                                       class="btn btn-sm btn-warning text-dark font-weight-bold ml-3 shadow-sm px-3 py-1" 
+                                       style="border-radius: 6px; font-size: 0.85rem;" 
+                                       title="Download / Print Stock Retrieval Slip for Job {{ job.grouper }}">
+                                        <i class="fas fa-file-pdf text-danger mr-1"></i> Stock Retrieval PDF
+                                    </a>
+                                </div>
+                                <div class="small">
+                                    <span class="badge badge-light text-dark font-weight-bold px-2 py-1">
+                                        <i class="fas fa-boxes mr-1"></i> {{ job.list|length }} Materials to Pick
+                                    </span>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <!-- Items for this Job -->

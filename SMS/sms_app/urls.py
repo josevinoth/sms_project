@@ -762,6 +762,7 @@ urlpatterns = [
     # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
+    path('pk_stock_retrieval_pdf/<str:job_no>/', views.pk_stock_retrieval_pdf, name='pk_stock_retrieval_pdf'),
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
     path('pk_retrival_update/<str:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),

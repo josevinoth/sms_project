@@ -54,6 +54,75 @@ class PkneedassessmentInfo(models.Model):
     def wood_norms_str(self):
         return " ".join([str(n.wood_norms).upper() for n in self.na_wood_norms.all()]) if self.pk else ""
 
+    @property
+    def is_ht_selected(self):
+        if not self.pk:
+            return False
+        for t in self.na_wood_treatment_req.all():
+            name = str(t.wood_treatment_req).upper()
+            if 'HT' in name or 'HEAT' in name:
+                return True
+        return False
+
+    @property
+    def is_fumigation_selected(self):
+        if not self.pk:
+            return False
+        for t in self.na_wood_treatment_req.all():
+            name = str(t.wood_treatment_req).upper()
+            if 'FUMIG' in name:
+                return True
+        return False
+
+    @property
+    def air_crack_norm(self):
+        if not self.pk:
+            return ""
+        for n in self.na_wood_norms.all():
+            if 'AIR' in n.wood_norms.upper():
+                return n.wood_norms
+        return ""
+
+    @property
+    def notches_norm(self):
+        if not self.pk:
+            return ""
+        for n in self.na_wood_norms.all():
+            if 'NOTCH' in n.wood_norms.upper():
+                return n.wood_norms
+        return ""
+
+    @property
+    def fungus_norm(self):
+        if not self.pk:
+            return ""
+        for n in self.na_wood_norms.all():
+            if 'FUNG' in n.wood_norms.upper():
+                return n.wood_norms
+        return ""
+
+    @property
+    def tolerance_norm(self):
+        if not self.pk:
+            return ""
+        for n in self.na_wood_norms.all():
+            if 'TOLERANCE' in n.wood_norms.upper():
+                return n.wood_norms
+        return ""
+
+    @property
+    def barks_norm(self):
+        if not self.pk:
+            return ""
+        for n in self.na_wood_norms.all():
+            if 'BARK' in n.wood_norms.upper():
+                return n.wood_norms
+        return ""
+
+    @property
+    def all_wood_norms_display(self):
+        return ", ".join([str(n.wood_norms) for n in self.na_wood_norms.all()]) if self.pk else ""
+
 
 def na_attachment_directory_path(instance, filename):
     na_identifier = instance.na.na_assessment_num if instance.na and instance.na.na_assessment_num else 'common'

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Stock Retrieval Slip - {{ job_no }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0.8cm;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 9pt;
+            color: #111;
+            line-height: 1.25;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        .header-box {
+            border: 1.5pt solid #17a2b8;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background-color: #f8fbfd;
+        }
+        .company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #0b5866;
+            text-align: center;
+            padding-top: 4px;
+        }
+        .company-sub {
+            text-align: center;
+            font-size: 8pt;
+            color: #444;
+            padding-bottom: 4px;
+        }
+        .slip-title-bar {
+            background-color: #17a2b8;
+            color: #ffffff;
+            font-size: 11pt;
+            font-weight: bold;
+            text-align: center;
+            padding: 4px 0;
+            letter-spacing: 0.5px;
+        }
+        .meta-table {
+            border: 0.5pt solid #b6d4db;
+            margin-bottom: 10px;
+        }
+        .meta-table td {
+            padding: 4px 6px;
+            font-size: 8.5pt;
+            border: 0.5pt solid #d1e5ea;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: #0b5866;
+            background-color: #f0f7f9;
+            width: 18%;
+        }
+        .meta-val {
+            color: #000;
+            width: 32%;
+        }
+        .items-table {
+            border: 1pt solid #333;
+            margin-top: 4px;
+        }
+        .items-table th {
+            background-color: #e6f4f7;
+            color: #0b5866;
+            font-weight: bold;
+            font-size: 8pt;
+            border: 0.5pt solid #666;
+            padding: 4px 3px;
+            text-align: center;
+        }
+        .items-table td {
+            border: 0.5pt solid #888;
+            padding: 4px 4px;
+            font-size: 8pt;
+            vertical-align: middle;
+        }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .font-weight-bold { font-weight: bold; }
+        
+        .cat-row {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            color: #333;
+            font-size: 8pt;
+            text-transform: uppercase;
+        }
+        .badge-code {
+            font-family: 'Courier', monospace;
+            font-weight: bold;
+            color: #004085;
+            font-size: 8.5pt;
+        }
+        .checkbox-box {
+            width: 13px;
+            height: 13px;
+            border: 1.2pt solid #444;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .write-cell {
+            width: 50px;
+            text-align: center;
+            border-bottom: 1pt dashed #444;
+        }
+        .footer-note {
+            font-size: 7.5pt;
+            color: #555;
+            margin-top: 6px;
+            margin-bottom: 15px;
+            border-left: 2pt solid #17a2b8;
+            padding-left: 6px;
+        }
+        .sign-table {
+            margin-top: 25px;
+            border: none;
+        }
+        .sign-table td {
+            border: none;
+            padding-top: 30px;
+            text-align: center;
+            font-size: 8.5pt;
+            vertical-align: bottom;
+        }
+        .sign-line {
+            border-top: 1pt solid #333;
+            padding-top: 3px;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Box -->
+    <div class="header-box">
+        <div class="company-name">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
+        <div class="company-sub">
+            No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044 &nbsp;|&nbsp; <b>GSTIN:</b> 33AAKCB6640C1Z0
+        </div>
+        <div class="slip-title-bar">
+            MATERIAL RETRIEVAL SLIP &amp; STOCK PICK LIST
+        </div>
+    </div>
+
+    <!-- Metadata Table -->
+    <table class="meta-table">
+        <tr>
+            <td class="meta-label">JOB CARD NO:</td>
+            <td class="meta-val font-weight-bold" style="color: #0b5866; font-size: 9.5pt;">{{ job_no }}</td>
+            <td class="meta-label">DATE &amp; TIME:</td>
+            <td class="meta-val">{{ current_datetime }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">CUSTOMER NAME:</td>
+            <td class="meta-val font-weight-bold">{{ customer_name }}</td>
+            <td class="meta-label">SALES ORDER (PO):</td>
+            <td class="meta-val font-weight-bold">{{ customer_po|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">FINISHED ITEM:</td>
+            <td class="meta-val">{{ product_item|default:"Industrial Wooden Packaging" }}</td>
+            <td class="meta-label">BATCH JOB QTY:</td>
+            <td class="meta-val font-weight-bold" style="color: #28a745; font-size: 9.5pt;">{{ job_qty|floatformat:0 }} Units</td>
+        </tr>
+        <tr>
+            <td class="meta-label">ASSESSMENT NO:</td>
+            <td class="meta-val">{{ assessment_num|default:"-" }}</td>
+            <td class="meta-label">ISSUED BY:</td>
+            <td class="meta-val">{{ issued_by }}</td>
+        </tr>
+    </table>
+
+    <!-- Retrieval Items Checklist Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 4%;">#</th>
+                <th style="width: 14%;">PART CODE</th>
+                <th style="width: 11%;">TYPE</th>
+                <th style="width: 26%;">DESCRIPTION</th>
+                <th style="width: 16%;">DIMENSIONS (L x W x H)</th>
+                <th style="width: 10%;">REQ. QTY</th>
+                <th style="width: 6%;">UOM</th>
+                <th style="width: 8%;">PICKED</th>
+                <th style="width: 5%;">CHECK</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td class="text-center badge-code">{{ item.part_code }}</td>
+                <td class="text-center">{{ item.stock_type|default:"General" }}</td>
+                <td class="text-left font-weight-bold">{{ item.description }}</td>
+                <td class="text-center">{{ item.dimensions|default:"-" }}</td>
+                <td class="text-center font-weight-bold" style="font-size: 9pt; color: #0b5866;">{{ item.quantity|floatformat:2 }}</td>
+                <td class="text-center">{{ item.uom|default:"Nos" }}</td>
+                <td class="text-center write-cell"></td>
+                <td class="text-center" style="vertical-align: middle;"><div class="checkbox-box"></div></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center py-3">No retrieval items found for this job.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Summary Box -->
+    <table style="width: 100%; margin-top: 4px;">
+        <tr>
+            <td class="text-left font-weight-bold" style="font-size: 8.5pt;">
+                Total Material Types: <b>{{ total_count }}</b> &nbsp;|&nbsp; Total Quantity to Retrieve: <b>{{ total_qty|floatformat:2 }}</b>
+            </td>
+            <td class="text-right" style="font-size: 7.5pt; color: #666;">
+                <i>* All dimensions in standard unit of measure (FT / IN / MM).</i>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Instructions note -->
+    <div class="footer-note">
+        <b>Instructions for Stores / Stock Retrieval Team:</b><br>
+        1. Physically inspect and retrieve the exact part codes and dimensions specified above.<br>
+        2. Fill in the "PICKED" column with the actual count handed over to the production shop floor.<br>
+        3. Check [ &#10003; ] each item upon release and obtain the production supervisor's signature below before moving material.
+    </div>
+
+    <!-- Signatures Table -->
+    <table class="sign-table">
+        <tr>
+            <td style="width: 33%;">
+                <div class="sign-line">Stock Keeper / Retrieved By</div>
+                <div style="font-size: 7.5pt; color: #666; margin-top: 2px;">Name &amp; Signature</div>
+            </td>
+            <td style="width: 34%;">
+                <div class="sign-line">Received By (Production Supervisor)</div>
+                <div style="font-size: 7.5pt; color: #666; margin-top: 2px;">Name &amp; Signature</div>
+            </td>
+            <td style="width: 33%;">
+                <div class="sign-line">Stores / QA In-Charge</div>
+                <div style="font-size: 7.5pt; color: #666; margin-top: 2px;">Verification Stamp &amp; Sign</div>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

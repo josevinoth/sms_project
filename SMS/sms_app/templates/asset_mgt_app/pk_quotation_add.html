@@ -64,7 +64,7 @@
 
             <div class="row row-compact">
                 <!-- Section 1: Basic Info (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_basic">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
                         <div class="form-row-modern">
@@ -76,7 +76,7 @@
                                 <label class="form-label-modern">Customer</label>
                                 {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control form-control-modern disable_a_href" %}
                             </div>
-                            <div class="form-group-modern">
+                            <div class="form-group-modern" id="grp_new_customer">
                                 <label class="form-label-modern">New Customer</label>
                                 {% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control form-control-modern disable_a_href" %}
                             </div>
@@ -107,7 +107,7 @@
                 </div>
 
                 <!-- Section 2: Stock & Part Code (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_part">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock</div>
                         <div class="form-row-modern">
@@ -145,7 +145,7 @@
                 </div>
 
                 <!-- Section 3: Item Specification & Dimensions (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_item">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-box-open"></i> Item Details</div>
                         <div class="form-row-modern">
@@ -196,11 +196,11 @@
                 </div>
 
                 <!-- Section 4: Calculations & Cost Information (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_calc">
                     <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
                         <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Calculations & Cost</div>
                         <div class="form-row-modern">
-                            <div class="row no-gutters">
+                            <div class="row no-gutters" id="grp_uom_row">
                                 <div class="col-6 pr-1">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern">Purch. UOM</label>
@@ -215,21 +215,21 @@
                                 </div>
                             </div>
                             <div class="row no-gutters">
-                                <div class="col-6 pr-1">
+                                <div class="col-6 pr-1" id="grp_qty_req">
                                     <div class="form-group-modern">
-                                        <label class="form-label-modern">Qty Req</label>
+                                        <label class="form-label-modern" id="qty_req_label">Qty Req</label>
                                         {% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
                                     </div>
                                 </div>
-                                <div class="col-6 pl-1">
+                                <div class="col-6 pl-1" id="grp_req_value">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern" id="req_value_label">Req Value <i class="fas fa-info-circle text-info ml-1" id="req_value_icon" data-toggle="tooltip" title="Calculated Volume (CFT) or Area (SQFT) required for calculation"></i></label>
                                         {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="row no-gutters">
-                                <div class="col-6 pr-1">
+                            <div class="row no-gutters" id="row_conv_cft">
+                                <div class="col-6 pr-1" id="grp_conversion">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern">Conversion</label>
                                         {% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
@@ -242,7 +242,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group-modern">
+                            <div class="form-group-modern" id="grp_days">
                                 <label class="form-label-modern">Days/Hours</label>
                                 {% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                             </div>
@@ -546,7 +546,7 @@
                     document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
                     var totalCost = rate * total_sqft * pkqt_weight_sqft * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
                 }
@@ -555,7 +555,7 @@
                     var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
                     var totalCost = rate * pkqt_sqrt_req * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
@@ -563,7 +563,7 @@
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
                     var totalCost = rate * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
@@ -577,7 +577,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -623,7 +623,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -655,7 +655,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var days = parseFloat(document.getElementById("pkqt_days").value) || 1;
             var totalCost = rate * days * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
@@ -672,7 +672,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -777,6 +777,9 @@
                     } else {
                         document.getElementById("pkqt_sqrt_req").value = "0";
                     }
+                }
+                if (typeof change_cost_type === 'function') {
+                    change_cost_type();
                 }
             }
         });
@@ -1062,6 +1065,17 @@
         minimumInputLength: 2
     });
 
+    $('#pkqt_part_code').on('select2:select change', function () {
+        fetchPartCodeDetails();
+    });
+
+    // Real-time calculation on typing / input change
+    $(document).on('input change', '#pkqt_rate, #pkqt_quantity_req, #pkqt_days, #pkqt_length_req, #pkqt_width_req, #pkqt_height_req, #pkqt_weight_sqft, #pkqt_sqrt_req, #pkqt_cost_type', function() {
+        if (typeof change_cost_type === 'function') {
+            change_cost_type();
+        }
+    });
+
 </script>
 
 <!-- Stock Summary Modal -->
@@ -1200,6 +1214,62 @@
             }
         });
     });
+</script>
+
+<script>
+    /*
+     * Cost-type driven layout: show only the fields that matter for the chosen cost type.
+     * Hidden inputs are still submitted, so no data/calculation logic is affected.
+     *   8 = Packing Material  -> Part & Stock + Item Details + stock-type specific fields
+     *   5 = HT Cost           -> Qty, Req Value (CFT), Proj. Total CFT, Rate
+     *   3/9 = Labour          -> Qty, Days/Hours, Rate
+     *   4 = Transport, 6 = Crane, others -> Qty, Rate
+     */
+    function applyCostTypeLayout() {
+        var jn = $('#pkqt_cost_type').val();
+        var st = $('#pkqt_stock_type').val();
+        var isPacking = (jn == '8');
+        var isConsumable = isPacking && st == '2';
+
+        // Whole sections
+        $('#sec_part, #sec_item').toggle(isPacking);
+        if (isPacking) {
+            $('#sec_basic, #sec_calc').removeClass('col-xl-6').addClass('col-xl-3');
+        } else {
+            $('#sec_basic, #sec_calc').removeClass('col-xl-3').addClass('col-xl-6');
+        }
+
+        // New customer only when it actually has a value
+        $('#grp_new_customer').toggle(!!$.trim($('#pkqt_customer_new_name2').val()));
+
+        // Calculation fields
+        $('#grp_uom_row').toggle(isConsumable);
+        $('#grp_conversion').toggle(isConsumable);
+        $('#grp_req_value').toggle(isPacking || jn == '5');
+        $('#grp_days').toggle(jn == '3' || jn == '9');
+        // #total_cft visibility is already handled by change_cost_type (HT only)
+        $('#row_conv_cft').toggle(isConsumable || jn == '5');
+    }
+
+    (function () {
+        if (typeof change_cost_type === 'function') {
+            var _origChangeCostType = change_cost_type;
+            window.change_cost_type = function () {
+                var r = _origChangeCostType.apply(this, arguments);
+                applyCostTypeLayout();
+                return r;
+            };
+        }
+        if (typeof toggleFields === 'function') {
+            var _origToggleFields = toggleFields;
+            window.toggleFields = function () {
+                var r = _origToggleFields.apply(this, arguments);
+                applyCostTypeLayout();
+                return r;
+            };
+        }
+        $(function () { applyCostTypeLayout(); });
+    })();
 </script>
 
 {% endblock extra_js %}

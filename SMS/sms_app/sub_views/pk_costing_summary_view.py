@@ -210,19 +210,23 @@ def costingsummary_add(request,costingsummary_id=0):
                 part_code_id = part_code.id
                 key = f"{part_code_id}"
                 
+                req_qty = float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+                if req_qty <= 0:
+                    continue  # Skip absorbed / zero-quantity parts from Indent
+
                 if key not in grouped_indent:
                     grouped_indent[key] = {
                         'ids': [item.id],
                         'ct_part_code': part_code.pc_code,
                         'ct_part_code_name': part_code.pc_stock_description.stock_description if part_code.pc_stock_description else '',
                         'ct_uom': part_code.pc_uom.unit_of_measure if part_code.pc_uom else '',
-                        'total_quantity_req': float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1),
+                        'total_quantity_req': round(req_qty, 2),
                         'ct_stock_status': item.ct_stock_status.status_name if item.ct_stock_status else '',
                         'status_id': item.ct_stock_status.id if item.ct_stock_status else 1,
                     }
                 else:
                     grouped_indent[key]['ids'].append(item.id)
-                    grouped_indent[key]['total_quantity_req'] += float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+                    grouped_indent[key]['total_quantity_req'] = round(grouped_indent[key]['total_quantity_req'] + req_qty, 2)
             
             indent_summary_list = list(grouped_indent.values())
 
