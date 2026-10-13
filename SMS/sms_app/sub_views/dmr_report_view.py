@@ -3,13 +3,14 @@ import calendar
 from datetime import datetime, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from io import BytesIO
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
+from openpyxl.worksheet.cell_range import CellRange
 from ..models import TripdetailInfo, EnquirynoteInfo, ConsignmentdetailInfo, MyUser, Places, Emailmaster
 from .send_department_email import send_department_email
 from ..sub_forms.dmr_report_form import DmrForm
@@ -17,6 +18,8 @@ from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+from ..sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn
+from .dmr_field_catalog import extract_dmr_cell_value, is_dmr_column_mergeable
 
 # -------------------------------------------------------------------------
 # CONSTANTS & TEMPLATES (Consolidated)
@@ -226,6 +229,12 @@ DMR_TEMPLATES = {
         "CANCELLATION CHARGES", "HALTING CHARGES", "CHARGES", "PARKING / UNLOADING CHARGES",
         "TOTAL CHARGES", "REMARKS"
     ],
+    "HBL wise cost split": [
+        "DATE", "CONSIGNEE NAME", "HBL No", "BE #", "PKGS", "G WEIGHT", "CBM", "FROM",
+        "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED PLANT", "DELIVERY DATE",
+        "HBL WISE SPLIT COST", "LOADING/UNLOADING CHARGES", "HALTING CHARGES",
+        "TRANSPORT COST", "TOTAL COST", "VENDOR CODE", "REMARKS"
+    ],
     "DHL Other": [
         "DATE", "BVM JOB NO", "CONSIGNEE NAME", "HBL NO", "PKGS", "G WEIGHT", "CBM",
         "VENDOR CODE", "FROM", "DELIVERY PLACE", "TRUCK NO", "TRUCK TYPE", "REACHED",
@@ -322,8 +331,11 @@ CUSTOMER_DMR_TEMPLATES = {
     "DHL": {
         "Air Import": DMR_TEMPLATES["DHL Other"],
         "Air Export": DMR_TEMPLATES["DHL Other"],
-        "Sea Import": DMR_TEMPLATES["DHL Sea Import"],
+        "Sea Import": DMR_TEMPLATES["HBL wise cost split"],
+        "Ocean Import": DMR_TEMPLATES["HBL wise cost split"],
         "Sea Export": DMR_TEMPLATES["DHL Other"],
+        "Ocean Export": DMR_TEMPLATES["DHL Other"],
+        "HBL wise cost split": DMR_TEMPLATES["HBL wise cost split"],
     },
     "DSVDD": {
         # Catch-all: if customer is DSVDD, use DSV DD REPORT for any department
@@ -503,7 +515,47 @@ for cust_str in ADDITIONAL_CUSTOMERS:
 # VIEW HELPERS
 # -------------------------------------------------------------------------
 
-def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id):
+def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id, customer_id=None, dept_id=None, template_id=None):
+    # 0. Check for Dynamic Studio Template in Database
+    try:
+        studio_query = DmrTemplateMaster.objects.filter(is_active=True).prefetch_related('columns').order_by('-id')
+        studio_tmpl = None
+        if template_id:
+            try:
+                t_id = int(str(template_id).replace("STUDIO_", ""))
+                studio_tmpl = studio_query.filter(id=t_id).first()
+            except (ValueError, TypeError):
+                studio_tmpl = studio_query.filter(template_name__iexact=str(template_id).strip()).first()
+        if not studio_tmpl and customer_id and dept_id:
+            studio_tmpl = studio_query.filter(customer_id=customer_id, department_id=dept_id).first()
+        if not studio_tmpl and customer_id:
+            # 1. Customer-wide template (no specific department)
+            studio_tmpl = studio_query.filter(customer_id=customer_id, department__isnull=True).first()
+            # 2. Or latest active template for this customer
+            if not studio_tmpl:
+                studio_tmpl = studio_query.filter(customer_id=customer_id).first()
+        if not studio_tmpl and customer_name and dept_name:
+            studio_tmpl = studio_query.filter(
+                customer__cu_name__iexact=str(customer_name).strip(),
+                department__ct_customerdepartment__iexact=str(dept_name).strip()
+            ).first()
+        if not studio_tmpl and customer_name:
+            studio_tmpl = studio_query.filter(
+                customer__cu_name__iexact=str(customer_name).strip(),
+                department__isnull=True
+            ).first()
+            if not studio_tmpl:
+                studio_tmpl = studio_query.filter(
+                    customer__cu_name__iexact=str(customer_name).strip()
+                ).first()
+
+        if studio_tmpl:
+            cols = list(studio_tmpl.columns.all().order_by('column_order'))
+            if cols:
+                return [c.column_header for c in cols], f"STUDIO_{studio_tmpl.id}"
+    except Exception:
+        pass
+
     # 1. Resolve Location Names (for Route matching)
     from_loc_name = ""
     to_loc_name = ""
@@ -595,8 +647,9 @@ def safe_num(v):
         return 0
 
 
-def get_dmr_rows(trips, headers, template_key, customer_name):
+def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, return_groups=False):
     rows = []
+    trip_groups = []
     # Fetch all ConsignmentgoodsInfo and Vehicle_allotmentInfo for the current page in bulk
     trip_cons_nums = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
     trip_enq_nums = [t.tr_enquirynumber_id for t in trips]
@@ -610,10 +663,59 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                                                                                                          'va_driver')}
     cons_detail_map = {c.id: c for c in ConsignmentdetailInfo.objects.filter(id__in=trip_cons_nums)}
 
-    for idx, trip in enumerate(trips, start=1):
+    # DYNAMIC STUDIO TEMPLATE PROCESSING
+    if template_key and str(template_key).startswith("STUDIO_"):
+        try:
+            tmpl_id = int(str(template_key).replace("STUDIO_", ""))
+            studio_cols = list(DmrTemplateColumn.objects.filter(template_id=tmpl_id).order_by('column_order'))
+            studio_rows = []
+            studio_trip_groups = []
+            cur_idx = 0
+            for idx, trip in enumerate(trips, start=start_idx):
+                cons_detail = cons_detail_map.get(trip.tr_consignmentnumber_id)
+                goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
+                va = va_map.get(trip.tr_enquirynumber_id)
+                cancellation_val = safe_num(trip.tc_cancellation)
+                from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
+                effective_tripcost = 0.0 if cancellation_val > 0 else get_tms_report_transport_charge(trip, allotment=va)
+
+                g_len = len(goods_list)
+                studio_trip_groups.append((cur_idx, cur_idx + g_len - 1))
+                cur_idx += g_len
+
+                for cons_goods in goods_list:
+                    row = []
+                    for col in studio_cols:
+                        val = extract_dmr_cell_value(
+                            field_key=col.field_key,
+                            trip=trip,
+                            cons_goods=cons_goods,
+                            cons_detail=cons_detail,
+                            va=va,
+                            effective_tripcost=effective_tripcost,
+                            row_idx=idx,
+                            date_fmt=col.date_format,
+                            included_charges=col.included_charges,
+                            static_val=col.static_value,
+                            goods_count=g_len
+                        )
+                        row.append(val)
+                    studio_rows.append(row)
+            if return_groups:
+                return studio_rows, studio_trip_groups
+            return studio_rows
+        except Exception:
+            pass
+
+    cur_idx = 0
+    for idx, trip in enumerate(trips, start=start_idx):
         cons_detail = cons_detail_map.get(trip.tr_consignmentnumber_id)
         goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
         va = va_map.get(trip.tr_enquirynumber_id)
+
+        g_len = len(goods_list)
+        trip_groups.append((cur_idx, cur_idx + g_len - 1))
+        cur_idx += g_len
 
         # If cancellation charges are applicable for a trip, trip charges should be 0
         from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
@@ -963,8 +1065,18 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 if "halting charges" in hh:
                     row.append(safe_num(trip.tc_haltingcost));
                     continue
-                if hh == "charges":
+                if hh in ("charges", "transport cost", "transport charges", "tripcost", "trip cost"):
                     row.append(effective_tripcost);
+                    continue
+                if hh in ("hbl wise split cost", "hbl split cost", "split cost", "hbl wise split"):
+                    g_cnt = g_len if g_len > 0 else 1
+                    row.append(round(effective_tripcost / g_cnt, 2));
+                    continue
+                if hh in ("loading/unloading charges", "loading & unloading charges", "loading / unloading charges"):
+                    row.append(safe_num(trip.tc_loadingcost) + safe_num(trip.tc_unloadingcost));
+                    continue
+                if hh in ("vendor code", "transporter code"):
+                    row.append(safe_str(va.va_vendor.vm_vendorcode if va and va.va_vendor else ""));
                     continue
                 if "weightment charges" in hh or hh == "weighment pass":
                     row.append(safe_num(trip.tc_weighmentcost));
@@ -1008,6 +1120,8 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
 
                 row.append("")
             rows.append(row)
+    if return_groups:
+        return rows, trip_groups
     return rows
 
 
@@ -1141,8 +1255,16 @@ def trip_report(request):
         except:
             pass
 
-    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc)
+    template_id = request.POST.get('dmr_template') or request.GET.get('dmr_template')
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=customer_id, dept_id=dept_id, template_id=template_id)
     data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name)
+
+    customer_templates = []
+    if customer_id:
+        try:
+            customer_templates = list(DmrTemplateMaster.objects.filter(customer_id=customer_id, is_active=True).values('id', 'template_name'))
+        except Exception:
+            pass
 
     context = {
         'first_name': first_name,
@@ -1152,6 +1274,8 @@ def trip_report(request):
         'data_rows': data_rows,
         'customer_id': customer_id or '',
         'dept_id': dept_id or '',
+        'selected_template_id': str(template_id or ''),
+        'customer_templates': customer_templates,
         'selected_month': int(selected_month) if selected_month else current_month,
         'selected_year': int(selected_year) if selected_year else current_year,
         'years': range(current_year - 5, current_year + 1),
@@ -1218,13 +1342,9 @@ def trip_send_email(request):
 
     trips = list(qs)
 
-    # Identify Template
-    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
-    dept_name = str(department) if department else None
+def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, start_idx=1, template_id=None):
+    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc, customer_id=customer_obj.id, dept_id=dept_id, template_id=template_id)
 
-    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc)
-
-    # Prepare Excel
     wb = Workbook()
     ws = wb.active
     ws.title = "DMR Report"
@@ -1244,76 +1364,63 @@ def trip_send_email(request):
         cell.alignment = center_align
 
     # Write Rows
-    rows = get_dmr_rows(trips, headers, template_key, customer_obj.cu_name)
+    rows, trip_groups = get_dmr_rows(trips, headers, template_key, customer_obj.cu_name, start_idx=start_idx, return_groups=True)
     for row in rows:
         ws.append(row)
 
-    # If customer is EIPL, apply cell merging matching the web/Excel export logic
-    if "EIPL" in (customer_obj.cu_name or "").upper() and len(rows) > 1:
-        # Find key column index (0-based) for grouping (C Note / LLR No / Job No / S.No)
-        job_no_col_idx = 1
-        possible_keys = ['C NOTE', 'LLR NO', 'JOB NO', 'BVM JOB NO', 'REF NUM']
+    data_start_row = 2  # Excel row 2 (1-indexed, header is row 1)
+    total_rows = len(rows)
+
+    # Apply vertical center alignment and thin borders to ALL data cells
+    for r_idx in range(data_start_row, data_start_row + total_rows):
+        for c_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.border = border
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+
+    # Check cell merging rule (Studio template toggle or EIPL fallback)
+    should_merge = False
+    if template_key and str(template_key).startswith("STUDIO_"):
+        try:
+            tmpl_id = int(str(template_key).replace("STUDIO_", ""))
+            tmpl_obj = DmrTemplateMaster.objects.filter(id=tmpl_id).first()
+            if tmpl_obj and tmpl_obj.merge_identical_cells:
+                should_merge = True
+        except Exception:
+            pass
+    elif "EIPL" in (customer_obj.cu_name or "").upper():
+        should_merge = True
+
+    if should_merge and len(rows) > 1:
         upper_headers = [str(h).strip().upper() for h in headers]
-        for pk in possible_keys:
-            if pk in upper_headers:
-                job_no_col_idx = upper_headers.index(pk)
-                break
 
-        never_merge_cols = [
-            'NO OF PIECES', 'ACTUAL WEIGHT', 'ACTUAL WEIGHT (KGS)', 'CHARGEABLE WEIGHT',
-            'CAPACITY', 'CBM', 'SHIPPER SEAL #', 'PKG', 'SHIPPER PKG', 'REFERENCE NO'
-        ]
+        # Check studio columns for exact field_key lookup if applicable
+        studio_col_map = {}
+        if template_key and str(template_key).startswith("STUDIO_"):
+            try:
+                tmpl_id = int(str(template_key).replace("STUDIO_", ""))
+                studio_cols = list(DmrTemplateColumn.objects.filter(template_id=tmpl_id).order_by('column_order'))
+                for idx, sc in enumerate(studio_cols):
+                    studio_col_map[idx] = sc.field_key
+            except Exception:
+                pass
 
-        data_start_row = 2  # Excel row 2 (1-indexed, header is row 1)
-        total_rows = len(rows)
+        # Merge strictly WITHIN each multi-row trip
+        for start_i, end_i in trip_groups:
+            if end_i <= start_i:
+                continue  # Single-row trip, nothing to merge
 
-        for col_idx, h in enumerate(upper_headers):
-            is_charge = 'CHARGE' in h
-            is_never_merge = h in never_merge_cols
-            if is_never_merge:
-                continue
+            for col_idx, h in enumerate(upper_headers):
+                f_key = studio_col_map.get(col_idx)
+                if not is_dmr_column_mergeable(field_key=f_key, column_header=h):
+                    continue  # Cargo line-items NEVER merge (remain individual per package row)
 
-            start_i = 0
-            last_val = str(rows[0][col_idx]) if rows[0][col_idx] is not None else ""
-            last_key = str(rows[0][job_no_col_idx]) if rows[0][job_no_col_idx] is not None else ""
-
-            for i in range(1, total_rows):
-                cur_val = str(rows[i][col_idx]) if rows[i][col_idx] is not None else ""
-                cur_key = str(rows[i][job_no_col_idx]) if rows[i][job_no_col_idx] is not None else ""
-
-                if col_idx == job_no_col_idx or col_idx == 0:
-                    merge = (cur_val == last_val and cur_val != "")
-                elif is_charge:
-                    merge = (cur_key == last_key and cur_key != "")
-                else:
-                    merge = (cur_val == last_val and cur_key == last_key and cur_key != "")
-
-                if not merge:
-                    if (i - 1) > start_i:
-                        ws.merge_cells(
-                            start_row=data_start_row + start_i,
-                            start_column=col_idx + 1,
-                            end_row=data_start_row + i - 1,
-                            end_column=col_idx + 1
-                        )
-                    start_i = i
-                    last_val = cur_val
-                    last_key = cur_key
-
-            if (total_rows - 1) > start_i:
                 ws.merge_cells(
                     start_row=data_start_row + start_i,
+                    end_row=data_start_row + end_i,
                     start_column=col_idx + 1,
-                    end_row=data_start_row + total_rows - 1,
                     end_column=col_idx + 1
                 )
-
-        # Apply vertical center alignment and thin borders to all data cells
-        for r_idx in range(data_start_row, data_start_row + total_rows):
-            for c_idx in range(1, len(headers) + 1):
-                cell = ws.cell(row=r_idx, column=c_idx)
-                cell.border = border
-                cell.alignment = Alignment(vertical="center", wrap_text=True)
 
     # Auto Width
     for col in ws.columns:
@@ -1323,7 +1430,209 @@ def trip_send_email(request):
                 if cell.value: max_len = max(max_len, len(str(cell.value)))
             except:
                 pass
-        ws.column_dimensions[col[0].column_letter].width = max_len + 2
+        ws.column_dimensions[col[0].column_letter].width = max(max_len + 3, 12)
+
+    return wb, template_key
+
+
+@login_required(login_url='login_page')
+def export_dmr_excel(request):
+    customer_id = request.GET.get('customer_id') or request.GET.get('dmr_customer')
+    dept_id = request.GET.get('customer_department') or request.GET.get('dept_id')
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+    from_loc = request.GET.get('from_location')
+    to_loc = request.GET.get('to_location')
+
+    if not customer_id:
+        messages.error(request, "Please select a customer.")
+        return redirect('trip_report')
+
+    try:
+        customer_obj = CustomerInfo.objects.get(id=customer_id)
+    except CustomerInfo.DoesNotExist:
+        messages.error(request, "Customer not found.")
+        return redirect('trip_report')
+
+    qs = TripdetailInfo.objects.filter(
+        tr_enquirynumber__en_customername_id=customer_id,
+        tr_category_id=1
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tr_consignmentnumber',
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tc_financestatus'
+    ).order_by('tr_departeddate')
+
+    if dept_id:
+        try:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
+        except:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
+
+    if month and year:
+        try:
+            m, y = int(month), int(year)
+            if 1 <= m <= 12:
+                first_day = date(y, m, 1)
+                last_day = date(y, m, calendar.monthrange(y, m)[1])
+                qs = qs.filter(
+                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
+                    Q(tr_departeddate__date__range=[first_day, last_day])
+                )
+        except (ValueError, TypeError):
+            pass
+
+    if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
+    if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
+
+    search_value = request.GET.get('search', '').strip()
+    if search_value:
+        qs = qs.filter(
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+            Q(tr_vehiclenumber__icontains=search_value)
+        )
+
+    # Slicing and Ordering based on DataTable view / page length
+    try:
+        start = int(request.GET.get('start', 0))
+    except (ValueError, TypeError):
+        start = 0
+
+    try:
+        length = int(request.GET.get('length', -1))
+    except (ValueError, TypeError):
+        length = -1
+
+    try:
+        order_col_idx = int(request.GET.get('order[0][column]') or 1)
+        order_dir = request.GET.get('order[0][dir]', 'desc')
+    except Exception:
+        order_col_idx, order_dir = 1, 'desc'
+
+    order_map = {
+        1: 'tr_departeddate',
+        2: 'tr_consignmentnumber__co_consignmentnumber',
+        3: 'tr_enquirynumber__en_customername__cu_name',
+        4: 'tr_departedlocation__place_name',
+        5: 'tr_reportedlocation__place_name',
+        6: 'tr_vehiclesource__ow_ownership',
+        7: 'tr_vehiclenumber',
+    }
+    sort_field = order_map.get(order_col_idx)
+    if sort_field:
+        if order_dir == 'desc':
+            qs = qs.order_by('-' + sort_field)
+        else:
+            qs = qs.order_by(sort_field)
+    else:
+        qs = qs.order_by('-tr_tripnumber')
+
+    if length != -1:
+        trips = list(qs[start : start + length])
+        start_idx = start + 1
+    else:
+        trips = list(qs[start:]) if start > 0 else list(qs)
+        start_idx = start + 1 if start > 0 else 1
+
+    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first() if dept_id else None
+    dept_name = str(department) if department else None
+
+    template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
+    wb, template_key = build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, start_idx=start_idx, template_id=template_id)
+
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+
+    filename = f"{customer_obj.cu_name}_DMR_Report.xlsx"
+    response = HttpResponse(
+        excel_file.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required(login_url='login_page')
+def trip_send_email(request):
+    if request.method != 'POST':
+        messages.error(request, "Invalid request.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    customer_id = request.POST.get('customer_id')
+    dept_id = request.POST.get('customer_department') or request.POST.get('dept_id')
+    month = request.POST.get('month')
+    year = request.POST.get('year')
+    from_loc = request.POST.get('from_location')
+    to_loc = request.POST.get('to_location')
+    recipient = request.POST.get('recipient', "")
+    subject = request.POST.get('subject', "")
+    message_body = request.POST.get('message', "")
+
+    if not customer_id:
+        messages.error(request, "Please select a customer.")
+        return redirect('trip_report')
+
+    try:
+        customer_obj = CustomerInfo.objects.get(id=customer_id)
+    except CustomerInfo.DoesNotExist:
+        messages.error(request, "Customer not found.")
+        return redirect('trip_report')
+
+    # Query Trips
+    qs = TripdetailInfo.objects.filter(
+        tr_enquirynumber__en_customername_id=customer_id,
+        tr_category_id=1
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tr_consignmentnumber',
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tc_financestatus'
+    ).order_by('tr_departeddate')  # Date sort
+
+    if dept_id:
+        try:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
+        except:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
+
+    if month and year:
+        try:
+            m, y = int(month), int(year)
+            # Validate month is in valid range
+            if 1 <= m <= 12:
+                first_day = date(y, m, 1)
+                last_day = date(y, m, calendar.monthrange(y, m)[1])
+                qs = qs.filter(
+                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
+                    Q(tr_departeddate__date__range=[first_day, last_day])
+                )
+        except (ValueError, TypeError):
+            pass
+
+    if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
+    if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
+
+    trips = list(qs)
+
+    # Identify Template
+    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
+    dept_name = str(department) if department else None
+
+    template_id = request.POST.get('dmr_template') or request.POST.get('template_id')
+    wb, template_key = build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, template_id=template_id)
 
     excel_file = BytesIO()
     wb.save(excel_file)
@@ -1491,10 +1800,11 @@ def trip_report_ajax(request):
         except Exception:
             dept_name = ''
 
-    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc)
+    template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=customer_id, dept_id=dept_id, template_id=template_id)
 
     # Build rows for current page
-    data_rows = get_dmr_rows(paginated, headers, template_key, cust_name)
+    data_rows = get_dmr_rows(paginated, headers, template_key, cust_name, start_idx=start + 1)
 
     # If client only requested headers (to validate column mapping), return headers without full payload
     if request.GET.get('header_only') in ('1', 'true', 'True'):
@@ -1510,5 +1820,17 @@ def trip_report_ajax(request):
         'data': data_rows,
         'headers': headers,
     })
+
+
+@login_required(login_url='login_page')
+def get_customer_templates_ajax(request):
+    customer_id = request.GET.get('customer_id')
+    if not customer_id:
+        return JsonResponse({'templates': []})
+    try:
+        templates = list(DmrTemplateMaster.objects.filter(customer_id=customer_id, is_active=True).values('id', 'template_name'))
+        return JsonResponse({'templates': templates})
+    except Exception:
+        return JsonResponse({'templates': []})
 
 

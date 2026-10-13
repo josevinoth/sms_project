@@ -169,7 +169,7 @@ from .sub_views.incident_report_view import incident_add,incident_list,incident_
 from .sub_views.customer_claims_view import customer_claims_add,customer_claims_list,customer_claims_delete,customer_claims_report
 from .sub_views.wrong_labelling_view import wrong_labelling_add,wrong_labelling_list,wrong_labelling_delete,wrong_labelling_report
 from .sub_views.DGcargo_add_view import dg_cargo_add,dg_cargo_list,dg_cargo_delete,dg_cargo_approval_view,update_dg_cargo_approval,dg_cargo_report_list
-from .sub_views.dmr_report_view import trip_report, trip_send_email, get_dmr_email_details, trip_report_ajax
+from .sub_views.dmr_report_view import trip_report, trip_send_email, get_dmr_email_details, trip_report_ajax, export_dmr_excel, get_customer_templates_ajax
 from .sub_views.driver_settlement_view import driver_settlement_add,driver_settlement_list,driver_settlement_delete,get_driver_details_from_master,get_trip_totalcost
 from .sub_views.trip_settlement_view import trip_settlement_view, trip_settlement_edit, trip_settlement_list_ajax_view
 from .sub_views.trip_finance_approval_view import trip_finance_approval_view,update_trip_finance_approval
@@ -213,3 +213,7 @@ from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_c
 from .sub_views.cs_kpi_dashboard_view import cs_kpi_dashboard, get_cs_kpi_dashboard_data
 from .sub_views.pk_consumption_report_view import export_consumption_excel, export_consumption_pdf
 from .sub_views.transport_reports_view import vendor_rate_report, customer_rate_report, vendor_rate_report_ajax, customer_rate_report_ajax
+from .sub_views.dmr_template_studio_view import (
+    dmr_template_list, dmr_template_create_or_edit, dmr_template_save_ajax,
+    dmr_template_delete, dmr_template_duplicate, dmr_template_preview_ajax
+)
