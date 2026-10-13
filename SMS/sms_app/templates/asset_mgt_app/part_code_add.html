@@ -295,6 +295,16 @@
             $dropdown.style.display = 'block';
         }
     });
+
+    $('form').on('submit', function(e) {
+        var sdVal = $('#pc_stock_description').val();
+        if (!sdVal || sdVal === '0' || sdVal === '') {
+            e.preventDefault();
+            alert('Please search and select a valid Stock Description from the suggestions dropdown.');
+            $('#sd_search_input').focus();
+            return false;
+        }
+    });
 })();
 </script>
 

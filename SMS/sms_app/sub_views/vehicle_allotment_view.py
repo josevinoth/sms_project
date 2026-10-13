@@ -1251,7 +1251,7 @@ def load_vehicle_number(request):
     # Cutoff date: only allotments created on/after 2026-08-01 are considered for busy status
     from datetime import datetime
     from django.utils.timezone import make_aware
-    cutoff_date = make_aware(datetime(2026, 10, 1))
+    cutoff_date = make_aware(datetime(2026, 10, 7))
 
     # 2) Busy allotments are active allotments created on/after cutoff date
     # Exclude cancelled (4), replaced (2), completed (5) allotments and dead/cancelled enquiries (5, 8)

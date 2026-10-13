@@ -59,8 +59,29 @@ def part_code_add(request, pc_id=0):
             try:
                 form.save()
                 messages.success(request, 'Record Saved Successfully')
-            except IntegrityError:
-                messages.error(request, 'Error: Part Code must be unique.')
+                return redirect('/SMS/part_code_add/')
+            except IntegrityError as e:
+                err_str = str(e)
+                print(f"IntegrityError in part_code_add: {err_str}")
+                if 'sms_app_pkpartcodeinfo_pkey' in err_str:
+                    # Postgres ID sequence out of sync - synchronize and retry
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        cursor.execute("SELECT setval('sms_app_pkpartcodeinfo_id_seq', (SELECT COALESCE(MAX(id), 1) FROM sms_app_pkpartcodeinfo))")
+                    try:
+                        form.save()
+                        messages.success(request, 'Record Saved Successfully')
+                        return redirect('/SMS/part_code_add/')
+                    except Exception as retry_err:
+                        messages.error(request, f'Database Error: {str(retry_err)}')
+                elif 'pc_code' in err_str:
+                    messages.error(request, 'Error: Part Code must be unique. This code is already in use.')
+                elif 'pc_stock_description' in err_str:
+                    messages.error(request, 'Error: Please select a valid Stock Description.')
+                elif 'pc_stock_type' in err_str:
+                    messages.error(request, 'Error: Please select a Stock Type.')
+                else:
+                    messages.error(request, f'Database Error: {err_str}')
         else:
             messages.error(request, 'Record Not Saved Successfully. Please check for errors.')
             for field, errors in form.errors.items():
@@ -68,7 +89,14 @@ def part_code_add(request, pc_id=0):
                     print(f"Error in {field}: {error}")
                     messages.error(request, f"Error in {field}: {error}")
 
-        return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+        return render(request, "asset_mgt_app/part_code_add.html", {
+            'form': form,
+            'user_id': user_id,
+            'first_name': first_name,
+            'part_code_list': part_code_list,
+            'page_obj': page_obj,
+            'part_code': part_code if pc_id != 0 else None
+        })
 
 @login_required(login_url='login_page')
 def part_code_list(request):
