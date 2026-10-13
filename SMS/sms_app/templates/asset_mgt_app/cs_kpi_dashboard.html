@@ -1765,9 +1765,10 @@ $(document).ready(function() {
                 let aVal = row.achieved !== undefined ? row.achieved : '0';
                 subtext = `<span>Total C-Notes: <strong>${totalCnotes}</strong></span><span>Ready: <strong>${aVal}</strong></span>`;
             } else if (idx === 2) {
-                let matchAchieved = row.achieved.match(/\((\d+)\)/);
-                let aVal = matchAchieved ? matchAchieved[1] : row.achieved;
-                subtext = `<span>Target: <strong>${row.target}</strong></span><span>Scanned: <strong>${aVal}</strong></span>`;
+                let totalCnotes = row.cnotes_count !== undefined ? row.cnotes_count : (row.target || '0');
+                let matchAchieved = (typeof row.achieved === 'string') ? row.achieved.match(/\((\d+)\)/) : null;
+                let aVal = matchAchieved ? matchAchieved[1] : (row.achieved !== undefined ? row.achieved : '0');
+                subtext = `<span>Total C-Notes: <strong>${totalCnotes}</strong></span><span>Scanned: <strong>${aVal}</strong></span>`;
             }
 
             let slaBadgeHtml = '';
@@ -1799,24 +1800,37 @@ $(document).ready(function() {
                     </div>
                 `;
             } else if (idx === 2) {
-                let badgeTitle = (row.days_count && row.days_count > 1) ? '📑 Period Submission Target' : '📑 POD Submission Target';
-                let badgeSub = '';
-                if (row.days_count && row.days_count > 1) {
-                    if (row.cs_count && row.cs_count > 1) {
-                        badgeSub = `(${row.cs_count} Reps × ${row.days_count} Days × 30 = ${row.target})`;
-                    } else {
-                        badgeSub = `(${row.days_count} Working Days × 30 = ${row.target})`;
+                if (row.pod_badge_text) {
+                    let borderCol = row.pod_status === 'pending' ? 'rgba(239, 68, 68, 0.5)' : (row.pod_status === 'met' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.4)');
+                    let bgCol = row.pod_status === 'pending' ? 'rgba(239, 68, 68, 0.15)' : (row.pod_status === 'met' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.12)');
+                    if (row.pod_status === 'pending' && row.code_color === '#f59e0b') {
+                        borderCol = 'rgba(245, 158, 11, 0.5)';
+                        bgCol = 'rgba(245, 158, 11, 0.15)';
+                    } else if (row.pod_status === 'pending' && row.code_color === '#10b981') {
+                        borderCol = 'rgba(16, 185, 129, 0.5)';
+                        bgCol = 'rgba(16, 185, 129, 0.15)';
                     }
+                    slaBadgeHtml = `
+                        <div class="kpi-sla-badge" style="background:${bgCol}; color:${row.pod_badge_color}; border:1px solid ${borderCol};" title="POD Submission Status">
+                            ${row.pod_badge_text}
+                        </div>
+                    `;
                 } else {
-                    badgeSub = (row.cs_count && row.cs_count > 1)
-                        ? `(${row.cs_count} Reps × 30 = ${row.target})`
-                        : `(Target: ${row.target} PODs)`;
+                    let totalCnotes = parseInt(row.cnotes_count || row.target) || 0;
+                    let aVal = parseInt(row.achieved) || 0;
+                    let pendingCount = Math.max(totalCnotes - aVal, 0);
+                    let badgeCol = pendingCount > 0 ? (row.code_color || '#ef4444') : '#10b981';
+                    let borderCol = pendingCount > 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)';
+                    let bgCol = pendingCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+                    let badgeText = pendingCount > 0 
+                        ? `⚠️ Pending: ${pendingCount} Awaiting POD<br><span style="font-size:0.63rem; opacity:0.9;">(${aVal} of ${totalCnotes} Scanned)</span>`
+                        : `✅ 100% PODs Scanned<br><span style="font-size:0.63rem; opacity:0.9;">(All C-Notes Scanned)</span>`;
+                    slaBadgeHtml = `
+                        <div class="kpi-sla-badge" style="background:${bgCol}; color:${badgeCol}; border:1px solid ${borderCol};" title="POD Submission Status">
+                            ${badgeText}
+                        </div>
+                    `;
                 }
-                slaBadgeHtml = `
-                    <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="POD Submission Target">
-                        ${badgeTitle}<br><span style="font-size:0.63rem; opacity:0.9;">${badgeSub}</span>
-                    </div>
-                `;
             }
 
             cardsHtml += `

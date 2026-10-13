@@ -471,19 +471,24 @@
 					if (data.error) {
 						alert(data.error);
 					} else {
-						// ⛽ Vehicle auto-filled
-						$("#tr_vehiclenumber").val(data.truck_number);
+						// Only overwrite vehicle and driver details if trip is not closed
+						var currentTripStatus = $("#tc_financestatus").val();
+						var closedStatuses = ["2", "3", "4", "5", "7", "9", "10", "11"];
+						if (!closedStatuses.includes(currentTripStatus)) {
+							// ⛽ Vehicle auto-filled
+							$("#tr_vehiclenumber").val(data.truck_number);
 
-						// 🔹 Trigger Departed-KM auto-fetch
-						fetchLastKM();
+							// 🔹 Trigger Departed-KM auto-fetch
+							fetchLastKM();
 
-						$("#tr_vehiclenumber").val(data.truck_number);
-						$("#tr_drivername").val(data.va_drivername || "");
-						$("#tr_drivernumber").val(data.va_drivernumber || "");
-						$("#tr_vehiclesource").val(data.va_vehiclesource || "");
-						$("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
-						$("#tr_vehicletype").val(data.va_vehicletype || "");
-						$("#tr_driver_lic").val(data.va_driver_lic || "");
+							$("#tr_vehiclenumber").val(data.truck_number);
+							$("#tr_drivername").val(data.va_drivername || "");
+							$("#tr_drivernumber").val(data.va_drivernumber || "");
+							$("#tr_vehiclesource").val(data.va_vehiclesource || "");
+							$("#tr_vehicletype_placed").val(data.va_vehicletype_placed || "");
+							$("#tr_vehicletype").val(data.va_vehicletype || "");
+							$("#tr_driver_lic").val(data.va_driver_lic || "");
+						}
 					}
 				},
 				error: function (xhr, status, error) {
@@ -538,6 +543,9 @@ document.addEventListener("DOMContentLoaded", function () {
 				if (data.reported_date && !$('#tr_departeddate_pickup').val()) {
 					$('#tr_departeddate_pickup').val(data.reported_date).trigger('change');
 				}
+				if (data.last_location_id) {
+					$('#tr_departedlocation').val(data.last_location_id).trigger('change');
+				}
 			})
 			.catch(err => console.error('Error fetching closing KM/Date:', err));
 	}
@@ -549,6 +557,12 @@ document.addEventListener("DOMContentLoaded", function () {
 			$('#tripdetail_id,#tripdetail_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
+
+			// If a vehicle is pre-selected, sync its location and KM
+			var preselectedVeh = $('#tr_vehiclenumber').val();
+			if (preselectedVeh) {
+				onVehicleSelect(preselectedVeh);
+			}
 		}
 		else if (window.location.href.includes("tripdetail_update")) {
 			// Enable fields
@@ -563,10 +577,14 @@ document.addEventListener("DOMContentLoaded", function () {
 			// Keep consignment number interactive but with the color if possible
 			$('#tr_consignmentnumber').css('background-color', '#CCFFCC');
 
-			// ✅ AUTO-REFRESH Truck Details on page load for existing trips
-			setTimeout(function() {
-				$("#tr_consignmentnumber").trigger("change");
-			}, 500);
+			// ✅ AUTO-REFRESH Truck Details on page load for existing active trips (NOT closed trips)
+			var curStatus = $("#tc_financestatus").val();
+			var isTripClosed = ["2", "3", "4", "5", "7", "9", "10", "11"].includes(curStatus);
+			if (!isTripClosed) {
+				setTimeout(function() {
+					$("#tr_consignmentnumber").trigger("change");
+				}, 500);
+			}
 		}
 		else {
 			// Disable fields if on any other page
@@ -596,6 +614,44 @@ document.addEventListener("DOMContentLoaded", function () {
 			$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
+		}
+	}
+
+	function updateWorkInProgressStatus() {
+		var categoryValue = document.getElementById('tr_category') ? document.getElementById('tr_category').value : '';
+		var categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
+		// Empty = Category 2, Business Empty = Category 3, or label containing 'empty'
+		var isEmptyTrip = (categoryValue === "2" || categoryValue === "3" || categoryText.indexOf('empty') !== -1);
+		var $statusSelect = $('#tc_financestatus');
+		var tripStatus = document.getElementById('tc_financestatus');
+
+		if (!window.$wipStatusOption || window.$wipStatusOption.length === 0) {
+			window.$wipStatusOption = $statusSelect.find('option').filter(function() {
+				return $(this).val() == '12' || $(this).text().trim().toLowerCase().indexOf('work in progress') !== -1;
+			});
+		}
+
+		if (isEmptyTrip) {
+			// If Work In Progress is currently selected, reset it to Trip Started (1)
+			if ($statusSelect.val() == '12') {
+				$statusSelect.val('1');
+				if (tripStatus) tripStatus.value = '1';
+			}
+			if (window.$wipStatusOption && window.$wipStatusOption.length > 0) {
+				window.$wipStatusOption.prop('hidden', true).prop('disabled', true).hide().detach();
+			}
+		} else {
+			// For Business trips, make sure Work In Progress status is present in the dropdown
+			if (window.$wipStatusOption && window.$wipStatusOption.length > 0) {
+				var exists = $statusSelect.find('option').filter(function() {
+					return $(this).val() == '12' || $(this).text().trim().toLowerCase().indexOf('work in progress') !== -1;
+				}).length > 0;
+				if (!exists) {
+					$statusSelect.append(window.$wipStatusOption);
+				}
+				window.$wipStatusOption.prop('hidden', false).prop('disabled', false).show();
+			}
 		}
 	}
 
@@ -666,6 +722,9 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		});
 		// ----------------------
+		// 1.6️⃣ Hide "Work In Progress" status for Empty and Business Empty trips
+		// ----------------------
+		updateWorkInProgressStatus();
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
@@ -800,6 +859,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// ✅ Trigger when category changes
 	$("#tr_category").on("change", function () {
+		trip_type();
+		updateWorkInProgressStatus();
 		hideEmptyFields();
 		trip_status_update();
 		// When category changes, try to fetch enquiry locations (same behavior as old UI)
@@ -816,6 +877,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// ✅ Trigger on page load
 	$(document).ready(function () {
+		updateWorkInProgressStatus();
 		hideEmptyFields();
 	});
 </script>
@@ -883,8 +945,9 @@ document.addEventListener("DOMContentLoaded", function () {
 						if (data.error) {
 							alert(data.error);
 						} else {
-							// ✅ Fill only if category is normal
-							if (!g_locationLocked) {
+							// ✅ Fill only if category is normal and From Location is not already set by vehicle
+							var hasFromLoc = Boolean($("#tr_departedlocation").val());
+							if (!g_locationLocked && !hasFromLoc) {
 								$("#tr_departedlocation").val(data.from_location_id).trigger('change');
 							}
 							$("#tr_reportedlocation").val(data.to_location_id).trigger('change');
@@ -898,11 +961,15 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		}
 
-		// 🔹 Fetch when enquiry number changes
+		// 🔹 Fetch when enquiry number changes manually
 		$("#tr_enquirynumber").change(loadEnquiryLocations);
 
-		// 🔹 Also fetch automatically when page loads
-		if (typeof loadEnquiryLocations === 'function') loadEnquiryLocations();
+		// 🔹 Also fetch automatically on page load ONLY for new trips or if locations are not already filled
+		var isNewTrip = !("{{ trip_instance.id|default:'' }}");
+		var hasExistingToLoc = Boolean($("#tr_reportedlocation").val());
+		if (typeof loadEnquiryLocations === 'function' && (isNewTrip || !hasExistingToLoc)) {
+			loadEnquiryLocations();
+		}
 	});
 </script>
 <script>

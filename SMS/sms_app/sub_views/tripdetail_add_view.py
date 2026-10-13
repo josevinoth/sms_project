@@ -197,25 +197,42 @@ def tripdetail_add(request, tripdetail_id=0):
             # Ensure departed location matches the vehicle's last reported location
             location_locked = False
             if vehicle_allotment_id and selected_vehicle_number and va.va_vehiclesource_id != 3:
+                rep_place = None
+                if getattr(va, 'va_replaced_allotment_id', None) and va.va_replaced_allotment:
+                    rep_place = va.va_replaced_allotment.va_replacement_place
+
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
 
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
-                    trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
-                        'style': 'pointer-events: none; background-color: #e9ecef;',
-                        'onmousedown': 'return false;',
-                        'onkeydown': 'return false;',
-                        'readonly': 'readonly'
-                    })
-                    location_locked = True
+                    if rep_place:
+                        if initial_data.get('tr_category') == 1:
+                            trip_det_form.fields['tr_departedlocation'].initial = rep_place
+                        elif initial_data.get('tr_category') in [2, 3]:
+                            trip_det_form.fields['tr_reportedlocation'].initial = rep_place
+
+                    # Only lock location if NOT a replacement allotment (allow dispatcher flexibility to choose handover place)
+                    if not getattr(va, 'va_replaced_allotment_id', None):
+                        trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
+                            'style': 'pointer-events: none; background-color: #e9ecef;',
+                            'onmousedown': 'return false;',
+                            'onkeydown': 'return false;',
+                            'readonly': 'readonly'
+                        })
+                        location_locked = True
                 else:
-                    previous_trip = TripdetailInfo.objects.filter(
-                        tr_enquirynumber_id=enquiry_num_id
-                    ).order_by('-tr_created_at').first()
-                    if previous_trip and previous_trip.tr_reportedlocation:
-                        trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+                    if rep_place and initial_data.get('tr_category') == 1:
+                        trip_det_form.fields['tr_departedlocation'].initial = rep_place
+                    elif rep_place and initial_data.get('tr_category') in [2, 3]:
+                        trip_det_form.fields['tr_reportedlocation'].initial = rep_place
+                    else:
+                        previous_trip = TripdetailInfo.objects.filter(
+                            tr_enquirynumber_id=enquiry_num_id
+                        ).order_by('-tr_created_at').first()
+                        if previous_trip and previous_trip.tr_reportedlocation:
+                            trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
             else:
                 previous_trip = TripdetailInfo.objects.filter(
                     tr_enquirynumber_id=enquiry_num_id
@@ -229,14 +246,34 @@ def tripdetail_add(request, tripdetail_id=0):
             ).filter(tr_enquirynumber=enquiry_num_id)
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11, 12])
 
-            # ✅ Exclude already-used consignments for this enquiry
+            # ✅ Exclude already-used consignments, EXCEPT those whose trips were closed for vehicle replacement
             used_consignments = TripdetailInfo.objects.filter(
                 tr_enquirynumber=enquiry_num_id
-            ).exclude(tr_consignmentnumber__isnull=True).values_list('tr_consignmentnumber_id', flat=True)
+            ).exclude(tr_consignmentnumber__isnull=True).exclude(
+                Q(tr_remarks__icontains="Closed for replacement") |
+                Q(tc_financestatus__status__icontains="Replaced")
+            ).values_list('tr_consignmentnumber_id', flat=True)
 
             consignment_list = ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=enquiry_num_id
             ).exclude(id__in=used_consignments)
+
+            # Auto-assign consignment for replacement vehicles on Business trip creation
+            if vehicle_allotment_id and getattr(va, 'va_replaced_allotment_id', None) and initial_data.get('tr_category') == 1:
+                rep_cnote = ConsignmentdetailInfo.objects.filter(
+                    co_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(id__in=TripdetailInfo.objects.filter(
+                        tr_enquirynumber=enquiry_num_id,
+                        tr_consignmentnumber__isnull=False
+                    ).filter(
+                        Q(tr_remarks__icontains="Closed for replacement") |
+                        Q(tc_financestatus__status__icontains="Replaced")
+                    ).values_list('tr_consignmentnumber_id', flat=True)) |
+                    Q(co_vehicelnumber=selected_vehicle_number)
+                ).last()
+                if rep_cnote:
+                    trip_det_form.initial['tr_consignmentnumber'] = rep_cnote.id
 
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
@@ -421,13 +458,42 @@ def tripdetail_add(request, tripdetail_id=0):
 
             status_list = Tripstatusinfo.objects.filter(id__in=allowed_statuses)
 
+            # Auto-link consignment for replacement vehicle trip if not yet set
+            if not trip_instance.tr_consignmentnumber and trip_instance.tr_category_id == 1:
+                allotment_obj_check = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(va_vehiclenumber__vm_registrationnumber=trip_instance.tr_vehiclenumber) |
+                    Q(va_vehiclenumber_mkt=trip_instance.tr_vehiclenumber)
+                ).first()
+                if allotment_obj_check and getattr(allotment_obj_check, 'va_replaced_allotment_id', None):
+                    rep_cnote = ConsignmentdetailInfo.objects.filter(
+                        co_enquirynumber=enquiry_num_id
+                    ).filter(
+                        Q(id__in=TripdetailInfo.objects.filter(
+                            tr_enquirynumber=enquiry_num_id,
+                            tr_consignmentnumber__isnull=False
+                        ).filter(
+                            Q(tr_remarks__icontains="Closed for replacement") |
+                            Q(tc_financestatus__status__icontains="Replaced")
+                        ).values_list('tr_consignmentnumber_id', flat=True)) |
+                        Q(co_vehicelnumber=trip_instance.tr_vehiclenumber)
+                    ).last()
+                    if rep_cnote:
+                        trip_instance.tr_consignmentnumber = rep_cnote
+                        trip_instance.save(update_fields=['tr_consignmentnumber'])
+                        trip_det_form.initial['tr_consignmentnumber'] = rep_cnote.id
+
             consignment_selected = trip_instance.tr_consignmentnumber.id if trip_instance.tr_consignmentnumber else None
 
-            # ✅ Exclude already-used consignments, but keep current one visible
+            # ✅ Exclude already-used consignments, but keep current one and any closed-for-replacement consignments visible
             used_consignments = TripdetailInfo.objects.filter(
                 tr_enquirynumber=enquiry_num_id
             ).exclude(tr_consignmentnumber__isnull=True).exclude(
                 tr_consignmentnumber=trip_instance.tr_consignmentnumber
+            ).exclude(
+                Q(tr_remarks__icontains="Closed for replacement") |
+                Q(tc_financestatus__status__icontains="Replaced")
             ).values_list('tr_consignmentnumber_id', flat=True)
 
             consignment_list = ConsignmentdetailInfo.objects.filter(
@@ -498,6 +564,37 @@ def tripdetail_add(request, tripdetail_id=0):
             import json
             allotted_vehicle_map_json = json.dumps(allotted_vehicle_map)
 
+            # If existing trip has a vehicle not in allotted_vehicle_map (e.g. replaced vehicle), keep it in list
+            if trip_instance.tr_vehiclenumber and trip_instance.tr_vehiclenumber not in allotted_vehicle_map:
+                hist_item = {
+                    'reg_number': trip_instance.tr_vehiclenumber,
+                    'is_mkt': trip_instance.tr_vehiclesource_id == 3,
+                    'vehiclesource_id': trip_instance.tr_vehiclesource_id,
+                    'vehiclesource_name': str(trip_instance.tr_vehiclesource) if trip_instance.tr_vehiclesource else '',
+                    'vehicletype_id': trip_instance.tr_vehicletype_id if trip_instance.tr_vehicletype else None,
+                    'vehicletype_placed_id': trip_instance.tr_vehicletype_placed_id if trip_instance.tr_vehicletype_placed else None,
+                    'driver_name': trip_instance.tr_drivername or '',
+                    'driver_number': trip_instance.tr_drivernumber or '',
+                    'driver_lic': trip_instance.tr_driver_lic or '',
+                    'driver_master_id': None
+                }
+                allotted_vehicle_list.insert(0, hist_item)
+                allotted_vehicle_map[trip_instance.tr_vehiclenumber] = hist_item
+                allotted_vehicle_map_json = json.dumps(allotted_vehicle_map)
+
+            # Check if current trip belongs to a replacement vehicle
+            is_replacement_trip = False
+            allotment_obj = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_num_id,
+                va_vehiclenumber__vm_registrationnumber=trip_instance.tr_vehiclenumber
+            ).first() or Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_num_id,
+                va_vehiclenumber_mkt=trip_instance.tr_vehiclenumber
+            ).first()
+
+            if allotment_obj and getattr(allotment_obj, 'va_replaced_allotment_id', None):
+                is_replacement_trip = True
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -520,6 +617,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'has_consignment': has_consignment,
                 'has_consignment_goods': has_consignment_goods,
                 'has_vehicle_started': has_vehicle_started,
+                'is_replacement_trip': is_replacement_trip,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
                 'trip_attachments': TripAttachmentInfo.objects.filter(
@@ -558,22 +656,29 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
-            # ✅ Prevent using same consignment again (backend check)
-            if cosnignment_number and TripdetailInfo.objects.filter(
+            # ✅ Prevent using same consignment again, UNLESS previous trip was closed for vehicle replacement
+            if cosnignment_number:
+                existing_c_trip = TripdetailInfo.objects.filter(
                     tr_consignmentnumber=cosnignment_number
-            ).exists():
-                messages.error(request, 'This consignment number is already used in another trip.')
-                return render(request, "asset_mgt_app/tripdetail_add.html", {
-                    'first_name': first_name,
-                    'user_id': user_id,
-                    'trip_det_form': trip_det_form,
-                    'tripclosurefiles_form': tripclosurefiles_form,
-                    'enquiry_num_id': enquiry_num_id,
-                    'status_list': status_list,
-                    'consignment_list': consignment_list,
-                    'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                    'status_selected': request.POST.get('tc_financestatus') or 12,
-                })
+                ).first()
+                if existing_c_trip:
+                    is_rep_closed = (
+                        (existing_c_trip.tr_remarks and "Closed for replacement" in existing_c_trip.tr_remarks) or
+                        (existing_c_trip.tc_financestatus and "Replaced" in existing_c_trip.tc_financestatus.status)
+                    )
+                    if not is_rep_closed:
+                        messages.error(request, 'This consignment number is already used in another trip.')
+                        return render(request, "asset_mgt_app/tripdetail_add.html", {
+                            'first_name': first_name,
+                            'user_id': user_id,
+                            'trip_det_form': trip_det_form,
+                            'tripclosurefiles_form': tripclosurefiles_form,
+                            'enquiry_num_id': enquiry_num_id,
+                            'status_list': status_list,
+                            'consignment_list': consignment_list,
+                            'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                            'status_selected': request.POST.get('tc_financestatus') or 12,
+                        })
 
             # o. Prevent multiple active business trips for the same vehicle (backend check)
             trip_category_id = post_data.get('tr_category')
@@ -639,7 +744,18 @@ def tripdetail_add(request, tripdetail_id=0):
                             )
                             return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
-                        if str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
+                        is_replacement_continuation = False
+                        if vehicle_allotment_id:
+                            try:
+                                va_check = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+                                if va_check.va_replaced_allotment:
+                                    rep_p_id = va_check.va_replaced_allotment.va_replacement_place_id
+                                    if rep_p_id and str(departed_loc_id) == str(rep_p_id):
+                                        is_replacement_continuation = True
+                            except Exception:
+                                pass
+
+                        if not is_replacement_continuation and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
                             messages.error(
                                 request,
                                 f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
@@ -1761,9 +1877,27 @@ def get_last_reported_km(request):
 
     latest_km = (last_trip.tr_reportedkm or last_trip.tr_reportedkm_delivery) if last_trip else None
 
+    last_loc_id = None
+    last_loc_name = None
+    if last_trip and last_trip.tr_reportedlocation:
+        last_loc_id = last_trip.tr_reportedlocation_id
+        last_loc_name = str(last_trip.tr_reportedlocation)
+
+    # If vehicle has a replacement breakdown place recorded, prioritize it if no post-replacement trip exists
+    if not last_loc_id:
+        va_rec = Vehicle_allotmentInfo.objects.filter(
+            Q(va_vehiclenumber__vm_registrationnumber=vehicle) | Q(va_vehiclenumber_mkt=vehicle)
+        ).order_by('-id').first()
+        if va_rec and getattr(va_rec, 'va_replaced_allotment_id', None) and va_rec.va_replaced_allotment:
+            if va_rec.va_replaced_allotment.va_replacement_place:
+                last_loc_id = va_rec.va_replaced_allotment.va_replacement_place_id
+                last_loc_name = str(va_rec.va_replaced_allotment.va_replacement_place)
+
     return JsonResponse({
         "reported_km": latest_km,
-        "reported_date": reported_dt_str
+        "reported_date": reported_dt_str,
+        "last_location_id": last_loc_id,
+        "last_location_name": last_loc_name,
     })
 
 
