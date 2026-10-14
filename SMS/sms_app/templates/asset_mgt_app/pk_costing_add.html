@@ -57,7 +57,7 @@
                                     <div class="col-6 pr-1">
                                         <div class="form-group-modern">
                                             <label class="form-label-modern">Job Number</label>
-                                            <select id="ct_job_no_select" name="ct_job_no" class="form-control form-control-modern" onchange="load_pk_requirement_type_by_job()">
+                                            <select id="ct_job_no_select" name="ct_job_no" class="form-control form-control-modern" onchange="load_pk_requirement_type_by_job(true)">
                                                 <option value="">--Select--</option>
                                                 {% for job in job_no_list %}
                                                     <option value="{{ job }}" {% if job == current_job_no %}selected{% endif %}>{{ job }}</option>
@@ -447,8 +447,19 @@
             $(customer_po_field).removeClass('disable_a_href');
         }
 
+        var isEditMode = {% if form.instance.pk %}true{% else %}false{% endif %};
+
+        // If Purch/Cons UOM are empty in edit mode, sync with UOM
+        if (isEditMode) {
+            var mainUom = $('#ct_uom').val();
+            if (mainUom) {
+                if (!$('#ct_weight_received').val()) $('#ct_weight_received').val(mainUom);
+                if (!$('#ct_weight_Consumption').val()) $('#ct_weight_Consumption').val(mainUom);
+            }
+        }
+
         if($('#ct_job_no_select').val()) {
-			load_pk_requirement_type_by_job();
+			load_pk_requirement_type_by_job(!isEditMode);
 		}
         
         $(document).on("click", "#search_wood", function (e) {
@@ -457,13 +468,14 @@
         });
         
         // Initialize UI state based on selected cost type on page load
-        if (typeof change_cost_type === 'function') change_cost_type();
+        if (typeof change_cost_type === 'function') change_cost_type(true);
     });
 })(jQuery);
 </script>
 
 <script>
-    function change_cost_type() {
+    function change_cost_type(isInitialLoad = false) {
+        var isEditMode = {% if form.instance.pk %}true{% else %}false{% endif %};
         var CFT_Sqft_Req_unit = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
         var job_type_qty = parseFloat(document.getElementById("ct_na_quantity").value) || 0;
         
@@ -478,6 +490,9 @@
             $('#search_wood').show();
             $('#ct_item').removeClass('disable_a_href');
             var jn1 = document.getElementById("ct_stock_type").value;
+            if (jn1 == 1) {
+                $("#total_cft").show();
+            }
         } else {
             if ($('#ct_part_code').val()) {
                 $('#ct_part_code').val(null).trigger('change.select2');
@@ -499,6 +514,12 @@
             if (document.getElementById("ct_length_req")) document.getElementById("ct_length_req").value = "0.0";
             if (document.getElementById("ct_width_req")) document.getElementById("ct_width_req").value = "0.0";
             if (document.getElementById("ct_height_req")) document.getElementById("ct_height_req").value = "0.0";
+        }
+
+        // On initial page load in Edit Mode, preserve saved database values from Quotation!
+        // Do not recalculate or overwrite ct_sqrt_req, ct_total_cft_display, ct_total_cost, ct_totalbox_cost, or ct_quantity.
+        if (isInitialLoad && isEditMode) {
+            return;
         }
         
         if (jn == 8) {
@@ -633,6 +654,10 @@
 		var ct_requirement_id = selectedOption.attr('data-pod-id') || selectedOption.val();
 		var ct_customer_po = $('#ct_customer_po').val();
 		var job_no = $('#ct_job_no_select').val();
+        var isEditMode = {% if form.instance.pk %}true{% else %}false{% endif %};
+
+        if (!ct_requirement_id || !ct_customer_po) return;
+
 		$.ajax({
 			url: '{% url "pk_store_po_dimension_id" %}',
 			type: 'GET',
@@ -656,32 +681,36 @@
 				if (document.getElementById("ct_requirement_size")) document.getElementById("ct_requirement_size").value = po_dimension_box_val;
 				// Job Qty = Job Release Qty from PO (used to multiply total costs)
 				if (document.getElementById("ct_na_quantity")) document.getElementById("ct_na_quantity").value = po_quantity;
-				if (document.getElementById("ct_item")) {
-                    $("#ct_item").val(data.pod_item_id);
-                    // Manually trigger description load if item was changed
-                    if(data.pod_item_id) {
-                        $.ajax({
-                            url: "{% url 'pk_get_item_description' %}",
-                            data: { 'item_id': data.pod_item_id },
-                            dataType: 'json',
-                            success: function(desc_data) {
-                                $('#ct_itemdescription').empty().append('<option value="">--Select--</option>');
-                                if (desc_data.item_description_id) {
-                                    for (var i = 0; i < desc_data.item_description_id.length; i++) {
-                                        $('#ct_itemdescription').append('<option value="' + desc_data.item_description_id[i] + '">' + desc_data.item_description_val[i] + '</option>');
+
+                // When editing an existing costing item, DO NOT overwrite the component item, description, or piece dimensions!
+                if (!isEditMode) {
+                    if (document.getElementById("ct_item")) {
+                        if (data.pod_item_id) {
+                            $("#ct_item").val(data.pod_item_id);
+                            // Manually trigger description load if item was changed
+                            $.ajax({
+                                url: "{% url 'pk_get_item_description' %}",
+                                data: { 'item_id': data.pod_item_id },
+                                dataType: 'json',
+                                success: function(desc_data) {
+                                    $('#ct_itemdescription').empty().append('<option value="">--Select--</option>');
+                                    if (desc_data.item_description_id) {
+                                        for (var i = 0; i < desc_data.item_description_id.length; i++) {
+                                            $('#ct_itemdescription').append('<option value="' + desc_data.item_description_id[i] + '">' + desc_data.item_description_val[i] + '</option>');
+                                        }
+                                    }
+                                    if(data.pod_itemdescription_id) {
+                                        $('#ct_itemdescription').val(data.pod_itemdescription_id);
                                     }
                                 }
-                                if(data.pod_itemdescription_id) {
-                                    $('#ct_itemdescription').val(data.pod_itemdescription_id);
-                                }
-                            }
-                        });
+                            });
+                        }
                     }
+                    
+                    if (document.getElementById("ct_height_req")) document.getElementById("ct_height_req").value = h;
+                    if (document.getElementById("ct_width_req")) document.getElementById("ct_width_req").value = w;
+                    if (document.getElementById("ct_length_req")) document.getElementById("ct_length_req").value = l;
                 }
-				
-                if (document.getElementById("ct_height_req")) document.getElementById("ct_height_req").value = h;
-                if (document.getElementById("ct_width_req")) document.getElementById("ct_width_req").value = w;
-                if (document.getElementById("ct_length_req")) document.getElementById("ct_length_req").value = l;
 
 				if (document.getElementById("pkqt_dimension_type")) document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
 				if (document.getElementById("pkqt_dimension_type_id")) document.getElementById("pkqt_dimension_type_id").value = na_dimension_type_id_val;
@@ -700,11 +729,13 @@
 		});
 	}
 
-    function load_pk_requirement_type_by_job() {
+    function load_pk_requirement_type_by_job(triggerChange = true) {
 		var ct_assessment_num_id = $('#ct_assessment_num').val();
 		var ct_customer_po_id = $('#ct_customer_po').val();
 		var job_no = $('#ct_job_no_select').val();
 		
+        if (!job_no) return;
+
 		$.ajax({
 			url: "{% url 'pk_get_po_requirement_type' %}",
 			type: 'GET',
@@ -728,9 +759,15 @@
 				}
 				
 				if (current_req_val && $("#ct_requirement option[value='" + current_req_val + "']").length > 0) {
-					$("#ct_requirement").val(current_req_val).trigger('change');
+					$("#ct_requirement").val(current_req_val);
+                    if (triggerChange) {
+                        $("#ct_requirement").trigger('change');
+                    }
 				} else if(data.po_requirement_type_id.length == 1) {
-					$("#ct_requirement").val(data.po_requirement_type_id[0]).trigger('change');
+					$("#ct_requirement").val(data.po_requirement_type_id[0]);
+                    if (triggerChange) {
+                        $("#ct_requirement").trigger('change');
+                    }
 				}
 			}
 		});
@@ -782,6 +819,7 @@
 
     function changeItemDescription() {
         var item_id = $('#ct_item').val();
+        var current_desc = $('#ct_itemdescription').val();
         if(item_id) {
             $.ajax({
                 url: "{% url 'pk_get_item_description' %}",
@@ -793,6 +831,9 @@
                         for (var i = 0; i < data.item_description_id.length; i++) {
                             $('#ct_itemdescription').append('<option value="' + data.item_description_id[i] + '">' + data.item_description_val[i] + '</option>');
                         }
+                    }
+                    if (current_desc && $("#ct_itemdescription option[value='" + current_desc + "']").length > 0) {
+                        $('#ct_itemdescription').val(current_desc);
                     }
                 }
             });
@@ -814,6 +855,16 @@
                     }
                     if (data.pc_uom_id) {
                         $('#ct_uom').val(data.pc_uom_id);
+                    }
+                    if (data.stock_received_id) {
+                        $('#ct_weight_received').val(data.stock_received_id);
+                    } else if (data.pc_uom_id && !$('#ct_weight_received').val()) {
+                        $('#ct_weight_received').val(data.pc_uom_id);
+                    }
+                    if (data.stock_consumption_id) {
+                        $('#ct_weight_Consumption').val(data.stock_consumption_id);
+                    } else if (data.pc_uom_id && !$('#ct_weight_Consumption').val()) {
+                        $('#ct_weight_Consumption').val(data.pc_uom_id);
                     }
                     
                     // Dimensions from part code intentionally omitted per user request.
