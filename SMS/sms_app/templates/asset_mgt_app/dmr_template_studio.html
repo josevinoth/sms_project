@@ -1,0 +1,759 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block title %}{% if template_obj %}Edit {{ template_obj.template_name }}{% else %}New DMR Template Studio{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .studio-modern-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .studio-modern-container .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .studio-modern-container .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .studio-modern-container .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+</style>
+
+<div class="container-fluid py-4 studio-modern-container">
+
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-magic mr-2"></i> {% if template_obj %}EDIT TEMPLATE: {{ template_obj.template_name|upper }}{% else %}DMR TEMPLATE MAKING STUDIO{% endif %}
+        </h3>
+        <div class="d-flex flex-wrap" style="gap: 12px;">
+            <a href="{% url 'dmr_template_list' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="button" class="btn btn-cancel" onclick="openPreviewModal()" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem;">
+                <i class="fas fa-eye"></i> Live Preview
+            </button>
+            <button type="button" class="btn btn-cancel" onclick="clearAllColumns()" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; color:#ef4444;">
+                <i class="fas fa-trash"></i> Clear Columns
+            </button>
+            <button type="button" class="btn btn-submit" onclick="saveTemplateAjax()" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem;">
+                <i class="fas fa-save"></i> Save Template
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ Template Configuration Form Section ══ -->
+    <div class="form-section mb-4">
+        <div class="form-section-title mb-3">
+            <i class="fas fa-sliders-h text-primary"></i> Template Configuration
+        </div>
+        <div class="row align-items-center">
+            <div class="col-md-4 mb-2 mb-md-0">
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern">Template Name <span class="text-danger">*</span></label>
+                    <input type="text" id="template_name" class="form-control form-control-modern font-weight-bold" 
+                           placeholder="e.g. EIPL Sea Export Custom DMR" value="{{ template_obj.template_name|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern">Customer</label>
+                    <select id="customer_id" class="form-control form-control-modern select2-studio">
+                        <option value="">-- Generic (All Customers) --</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}" {% if template_obj.customer_id == c.id %}selected{% endif %}>
+                            {{ c.cu_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3 mb-2 mb-md-0">
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern">Department (Optional)</label>
+                    <select id="department_id" class="form-control form-control-modern select2-studio">
+                        <option value="">-- All Departments --</option>
+                        {% for d in departments %}
+                        <option value="{{ d.id }}" {% if template_obj.department_id == d.id %}selected{% endif %}>
+                            {{ d.ct_customerdepartment }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2 d-flex flex-column justify-content-center">
+                <div class="custom-control custom-switch mb-1">
+                    <input type="checkbox" class="custom-control-input" id="merge_identical_cells" 
+                           {% if template_obj.merge_identical_cells %}checked{% endif %}>
+                    <label class="custom-control-label small font-weight-bold" for="merge_identical_cells" title="Merge rows with identical Job/C-Note in Excel (like EIPL)">
+                        Merge Identical Rows
+                    </label>
+                </div>
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="is_active" 
+                           {% if template_obj %}{% if template_obj.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+                    <label class="custom-control-label small font-weight-bold" for="is_active">
+                        Template Active
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace (Left: Field Catalog Palette, Right: Excel Column Canvas) -->
+    <div class="row">
+        <!-- LEFT: Page-Wise Field Palette -->
+        <div class="col-lg-4 col-md-5 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 font-weight-bold text-dark">
+                        <i class="fas fa-layer-group text-primary mr-2"></i> Page-wise Field Palette
+                    </h6>
+                    <span class="badge badge-light border text-muted small">Pick / Add</span>
+                </div>
+                <div class="card-body p-2" style="max-height: 720px; overflow-y: auto;">
+                    <!-- Field Search -->
+                    <div class="mb-2">
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                            <input type="text" id="field_search" class="form-control" placeholder="Search fields (e.g. weight, date, toll)..." onkeyup="filterPaletteFields()">
+                        </div>
+                    </div>
+
+                    <!-- Accordion of Pages -->
+                    <div class="accordion" id="paletteAccordion">
+                        {% for page in page_catalog %}
+                        <div class="card border mb-2 shadow-none rounded">
+                            <div class="card-header bg-light py-2 px-3" id="heading{{ page.id }}" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse{{ page.id }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="font-weight-bold text-{{ page.color }} small">
+                                        <i class="{{ page.icon }} mr-1"></i> {{ page.title }}
+                                    </span>
+                                    <span class="badge badge-{{ page.color }} badge-pill">{{ page.fields|length }}</span>
+                                </div>
+                            </div>
+
+                            <div id="collapse{{ page.id }}" class="collapse {% if forloop.first %}show{% endif %}" data-parent="#paletteAccordion">
+                                <div class="card-body p-2 bg-white">
+                                    {% for f in page.fields %}
+                                    <div class="palette-field-item p-2 mb-1 border rounded d-flex justify-content-between align-items-center" 
+                                         data-page="{{ page.id }}" data-key="{{ f.key }}" data-label="{{ f.label }}" data-type="{{ f.type }}"
+                                         data-has-charges="{% if f.has_multi_charges %}1{% else %}0{% endif %}"
+                                         data-has-static="{% if f.has_static_value %}1{% else %}0{% endif %}"
+                                         style="background-color: #fafbfc; transition: all 0.15s ease;">
+                                        <div class="mr-2 text-truncate" style="max-width: 210px;">
+                                            <div class="font-weight-bold text-dark small">{{ f.label }}</div>
+                                            <div class="text-muted" style="font-size: 0.72rem;">{{ f.desc }}</div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-{{ page.color }} btn-xs py-1 px-2 font-weight-bold" 
+                                                onclick="addColumnFromPalette('{{ page.id }}', '{{ f.key }}', '{{ f.label|escapejs }}', '{% if f.has_multi_charges %}1{% else %}0{% endif %}', '{% if f.has_static_value %}1{% else %}0{% endif %}')">
+                                            <i class="fas fa-plus mr-1"></i> Add
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Visual Excel Column Canvas -->
+        <div class="col-lg-8 col-md-7 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 font-weight-bold text-dark">
+                            <i class="fas fa-columns text-success mr-2"></i> Excel Template Columns Canvas
+                        </h6>
+                        <span class="text-muted small">These columns will generate the Excel spreadsheet in exact sequence.</span>
+                    </div>
+                    <div>
+                        <span class="badge badge-info px-2 py-1" id="column_count_badge">0 Columns</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-3" style="max-height: 720px; overflow-y: auto;">
+                    <!-- Empty State -->
+                    <div id="empty_columns_notice" class="text-center py-5 text-muted border border-dashed rounded" style="display: none;">
+                        <i class="fas fa-hand-pointer fa-3x mb-3 text-secondary"></i>
+                        <h5>No Columns Added Yet</h5>
+                        <p class="small text-muted mb-0">
+                            Click <strong>"+ Add"</strong> on any field from the palette on the left to add columns to your DMR Excel template.
+                        </p>
+                    </div>
+
+                    <!-- Column List Container -->
+                    <div id="columns_container">
+                        <!-- Populated dynamically via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MULTI-CHARGES SELECTION MODAL -->
+<div class="modal fade" id="chargesModal" tabindex="-1" role="dialog" aria-labelledby="chargesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold" id="chargesModalLabel">
+                    <i class="fas fa-calculator mr-2"></i> Configure Total Cost Column Charges
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">
+                    Select which charges should be added together to calculate this column's total value:
+                </p>
+                <div class="mb-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllCharges(true)">Select All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllCharges(false)">Clear All</button>
+                </div>
+                <div class="border rounded p-3 bg-light">
+                    {% for ch in available_charges %}
+                    <div class="custom-control custom-checkbox mb-2">
+                        <input type="checkbox" class="custom-control-input charge-checkbox" id="chk_charge_{{ ch.key }}" value="{{ ch.key }}">
+                        <label class="custom-control-label font-weight-bold small" for="chk_charge_{{ ch.key }}">
+                            {{ ch.label }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="applyChargesToActiveColumn()">
+                    <i class="fas fa-check mr-1"></i> Apply Charges
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LIVE PREVIEW MODAL -->
+<div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h5 class="modal-title font-weight-bold mb-0 mr-3" id="previewModalLabel">
+                        <i class="fas fa-table mr-2 text-warning"></i> DMR Excel Output Preview
+                    </h5>
+                    <div class="custom-control custom-switch d-inline-block bg-secondary px-3 py-1 rounded">
+                        <input type="checkbox" class="custom-control-input" id="preview_merge_switch" onchange="renderPreviewRows()">
+                        <label class="custom-control-label text-warning font-weight-bold small mb-0" for="preview_merge_switch" style="cursor: pointer;">
+                            <i class="fas fa-object-group mr-1"></i> Preview Row Merge (Excel Style)
+                        </label>
+                    </div>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="table-responsive" style="max-height: 480px;">
+                    <table class="table table-bordered table-striped table-sm text-nowrap" id="preview_table">
+                        <thead class="bg-warning text-dark font-weight-bold" id="preview_thead">
+                            <!-- Populated dynamically -->
+                        </thead>
+                        <tbody id="preview_tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global State
+    var templateId = {% if template_obj %}{{ template_obj.id }}{% else %}null{% endif %};
+    var configuredColumns = {{ existing_columns_json|safe }};
+    var pageCatalog = {{ page_catalog_json|safe }};
+    var availableCharges = {{ available_charges_json|safe }};
+    var activeColumnIndexForCharges = null;
+
+    $(document).ready(function() {
+        if ($.fn.select2) {
+            $('.select2-studio').select2({ width: '100%' });
+        }
+        renderColumns();
+    });
+
+    // Render columns in canvas
+    function renderColumns() {
+        var container = $('#columns_container');
+        container.empty();
+
+        if (configuredColumns.length === 0) {
+            $('#empty_columns_notice').show();
+            $('#column_count_badge').text('0 Columns');
+            return;
+        }
+
+        $('#empty_columns_notice').hide();
+        $('#column_count_badge').text(configuredColumns.length + ' Columns');
+
+        configuredColumns.forEach(function(col, idx) {
+            var colOrder = idx + 1;
+            col.column_order = colOrder;
+
+            // Page label helper
+            var pageInfo = getPageInfo(col.source_page);
+            var pageBadge = '<span class="badge badge-' + pageInfo.color + ' mr-2"><i class="' + pageInfo.icon + ' mr-1"></i>' + pageInfo.title.split(' ')[0] + '</span>';
+
+            // Special charge config button if field is custom_total_charges or has_multi_charges
+            var chargesButton = '';
+            if (col.field_key === 'custom_total_charges' || col.field_key === 'total_charges') {
+                var selectedCount = col.included_charges ? col.included_charges.split(',').filter(Boolean).length : availableCharges.length;
+                chargesButton = '<button type="button" class="btn btn-outline-danger btn-xs py-1 px-2 mr-2 font-weight-bold" onclick="openChargesModal(' + idx + ')">' +
+                                '<i class="fas fa-sliders-h mr-1"></i> Included Charges (' + selectedCount + ')' +
+                                '</button>';
+            }
+
+            // Date format selector if date type
+            var dateFmtHtml = '';
+            if (col.date_format !== undefined && (col.field_key.includes('date') || col.field_key.includes('time'))) {
+                dateFmtHtml = '<div class="mr-2 d-inline-block" style="width: 130px;">' +
+                              '<select class="form-control form-control-xs py-0" style="height: 28px; font-size: 0.8rem;" onchange="updateColDateFormat(' + idx + ', this.value)">' +
+                              '<option value="%d-%m-%Y"' + (col.date_format === '%d-%m-%Y' ? ' selected' : '') + '>DD-MM-YYYY</option>' +
+                              '<option value="%H:%M"' + (col.date_format === '%H:%M' ? ' selected' : '') + '>HH:MM (Time)</option>' +
+                              '<option value="%d-%m-%Y %H:%M"' + (col.date_format === '%d-%m-%Y %H:%M' ? ' selected' : '') + '>DD-MM-YYYY HH:MM</option>' +
+                              '<option value="%B"' + (col.date_format === '%B' ? ' selected' : '') + '>Month Name</option>' +
+                              '</select>' +
+                              '</div>';
+            }
+
+            // Static text input if field_key is static_text
+            var staticValHtml = '';
+            if (col.field_key === 'static_text') {
+                staticValHtml = '<div class="mr-2 d-inline-block" style="width: 140px;">' +
+                                '<input type="text" class="form-control form-control-xs py-0" style="height: 28px; font-size: 0.8rem;" placeholder="Fixed text value..." ' +
+                                'value="' + (col.static_value || '') + '" onchange="updateColStaticVal(' + idx + ', this.value)">' +
+                                '</div>';
+            }
+
+            var card = $(
+                '<div class="card border mb-2 shadow-sm column-card" style="border-left: 4px solid var(--' + pageInfo.color + ') !important;">' +
+                    '<div class="card-body p-2 d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">' +
+                        '<div class="d-flex align-items-center flex-grow-1" style="min-width: 280px;">' +
+                            '<span class="badge badge-dark px-2 py-1 mr-2 font-weight-bold" style="font-size: 0.85rem;">#' + colOrder + '</span>' +
+                            pageBadge +
+                            '<div class="flex-grow-1 mr-2">' +
+                                '<input type="text" class="form-control form-control-sm font-weight-bold text-dark header-name-input" ' +
+                                       'value="' + escapeHtml(col.column_header || '') + '" ' +
+                                       'placeholder="Excel Column Header Title" ' +
+                                       'onchange="updateColHeader(' + idx + ', this.value)" style="border-color: #ced4da;">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="d-flex align-items-center flex-wrap" style="gap: 5px;">' +
+                            dateFmtHtml +
+                            staticValHtml +
+                            chargesButton +
+                            '<button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" title="Move Up / Left" onclick="moveColumn(' + idx + ', -1)" ' + (idx === 0 ? 'disabled' : '') + '>' +
+                                '<i class="fas fa-arrow-up"></i>' +
+                            '</button>' +
+                            '<button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" title="Move Down / Right" onclick="moveColumn(' + idx + ', 1)" ' + (idx === configuredColumns.length - 1 ? 'disabled' : '') + '>' +
+                                '<i class="fas fa-arrow-down"></i>' +
+                            '</button>' +
+                            '<button type="button" class="btn btn-outline-danger btn-xs py-1 px-2 ml-1" title="Remove Column" onclick="removeColumn(' + idx + ')">' +
+                                '<i class="fas fa-times"></i>' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            );
+            container.append(card);
+        });
+    }
+
+    // Helper: get page info from catalog
+    function getPageInfo(pageId) {
+        for (var i = 0; i < pageCatalog.length; i++) {
+            if (pageCatalog[i].id === pageId) return pageCatalog[i];
+        }
+        return { id: 'SYSTEM', title: 'System', color: 'secondary', icon: 'fas fa-cog' };
+    }
+
+    // Add column from palette
+    function addColumnFromPalette(pageId, fieldKey, fieldLabel, hasCharges, hasStatic) {
+        var defaultDateFormat = '';
+        if (fieldKey.includes('date') && fieldKey.includes('time')) {
+            defaultDateFormat = '%d-%m-%Y %H:%M';
+        } else if (fieldKey.includes('time')) {
+            defaultDateFormat = '%H:%M';
+        } else if (fieldKey.includes('date')) {
+            defaultDateFormat = '%d-%m-%Y';
+        }
+
+        var colObj = {
+            column_order: configuredColumns.length + 1,
+            column_header: fieldLabel,
+            source_page: pageId,
+            field_key: fieldKey,
+            date_format: defaultDateFormat,
+            included_charges: hasCharges === '1' ? availableCharges.map(function(c) { return c.key; }).join(',') : '',
+            static_value: '',
+            column_width: 15
+        };
+
+        configuredColumns.push(colObj);
+        renderColumns();
+
+        // Scroll to bottom of canvas
+        var container = $('#columns_container').parent();
+        container.animate({ scrollTop: container[0].scrollHeight }, 200);
+    }
+
+    function updateColHeader(index, val) {
+        if (configuredColumns[index]) {
+            configuredColumns[index].column_header = val;
+        }
+    }
+
+    function updateColDateFormat(index, val) {
+        if (configuredColumns[index]) {
+            configuredColumns[index].date_format = val;
+        }
+    }
+
+    function updateColStaticVal(index, val) {
+        if (configuredColumns[index]) {
+            configuredColumns[index].static_value = val;
+        }
+    }
+
+    function moveColumn(index, delta) {
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= configuredColumns.length) return;
+        var temp = configuredColumns[index];
+        configuredColumns[index] = configuredColumns[newIndex];
+        configuredColumns[newIndex] = temp;
+        renderColumns();
+    }
+
+    function removeColumn(index) {
+        configuredColumns.splice(index, 1);
+        renderColumns();
+    }
+
+    function clearAllColumns() {
+        if (configuredColumns.length === 0) return;
+        if (confirm('Are you sure you want to remove all configured columns?')) {
+            configuredColumns = [];
+            renderColumns();
+        }
+    }
+
+    // Charges Modal
+    function openChargesModal(index) {
+        activeColumnIndexForCharges = index;
+        var col = configuredColumns[index];
+        var includedKeys = col.included_charges ? col.included_charges.split(',').filter(Boolean) : availableCharges.map(function(c) { return c.key; });
+
+        $('.charge-checkbox').each(function() {
+            var val = $(this).val();
+            $(this).prop('checked', includedKeys.indexOf(val) !== -1);
+        });
+
+        $('#chargesModal').modal('show');
+    }
+
+    function selectAllCharges(selectAll) {
+        $('.charge-checkbox').prop('checked', selectAll);
+    }
+
+    function applyChargesToActiveColumn() {
+        if (activeColumnIndexForCharges === null || !configuredColumns[activeColumnIndexForCharges]) return;
+        var selected = [];
+        $('.charge-checkbox:checked').each(function() {
+            selected.push($(this).val());
+        });
+        configuredColumns[activeColumnIndexForCharges].included_charges = selected.join(',');
+        $('#chargesModal').modal('hide');
+        renderColumns();
+    }
+
+    // Filter Palette
+    function filterPaletteFields() {
+        var q = ($('#field_search').val() || '').toLowerCase();
+        $('.palette-field-item').each(function() {
+            var label = ($(this).data('label') || '').toLowerCase();
+            var desc = ($(this).find('.text-muted').text() || '').toLowerCase();
+            if (!q || label.indexOf(q) !== -1 || desc.indexOf(q) !== -1) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+
+    // Save Template AJAX
+    function saveTemplateAjax() {
+        var name = ($('#template_name').val() || '').trim();
+        if (!name) {
+            alert('Please enter a Template Name.');
+            $('#template_name').focus();
+            return;
+        }
+
+        if (configuredColumns.length === 0) {
+            alert('Please add at least one column to your template.');
+            return;
+        }
+
+        var payload = {
+            template_id: templateId,
+            template_name: name,
+            customer_id: $('#customer_id').val() || null,
+            department_id: $('#department_id').val() || null,
+            is_active: $('#is_active').is(':checked'),
+            merge_identical_cells: $('#merge_identical_cells').is(':checked'),
+            columns: configuredColumns
+        };
+
+        $.ajax({
+            url: "{% url 'dmr_template_save_ajax' %}",
+            type: "POST",
+            contentType: "application/json",
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: JSON.stringify(payload),
+            success: function(res) {
+                if (res.status) {
+                    alert(res.message);
+                    if (res.template_id && !templateId) {
+                        window.location.href = res.redirect_url;
+                    }
+                } else {
+                    alert('Error: ' + res.message);
+                }
+            },
+            error: function(err) {
+                console.error(err);
+                alert('An error occurred while saving the template.');
+            }
+        });
+    }
+
+    // Open Live Preview Modal
+    function openPreviewModal() {
+        if (configuredColumns.length === 0) {
+            alert('Add at least one column first.');
+            return;
+        }
+
+        var payload = {
+            customer_id: $('#customer_id').val() || null,
+            columns: configuredColumns
+        };
+
+        var shouldMerge = $('#merge_identical_cells').is(':checked');
+        $('#preview_merge_switch').prop('checked', shouldMerge);
+        $('#preview_thead').html('<tr><th>Loading preview...</th></tr>');
+        $('#preview_tbody').empty();
+        $('#previewModal').modal('show');
+
+        $.ajax({
+            url: "{% url 'dmr_template_preview_ajax' %}",
+            type: "POST",
+            contentType: "application/json",
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: JSON.stringify(payload),
+            success: function(res) {
+                if (res.status) {
+                    lastPreviewData = res;
+                    // Build thead
+                    var thHtml = '<tr>';
+                    res.headers.forEach(function(h) {
+                        thHtml += '<th>' + escapeHtml(h) + '</th>';
+                    });
+                    thHtml += '</tr>';
+                    $('#preview_thead').html(thHtml);
+
+                    renderPreviewRows();
+                } else {
+                    $('#preview_thead').html('<tr><td class="text-danger">' + escapeHtml(res.message) + '</td></tr>');
+                }
+            },
+            error: function(xhr) {
+                var err = "Failed to load preview";
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data && data.message) err = data.message;
+                } catch(e) {}
+                $('#preview_thead').html('<tr><td class="text-danger font-weight-bold p-3">' + escapeHtml(err) + '</td></tr>');
+            }
+        });
+    }
+
+    var lastPreviewData = null;
+
+    function renderPreviewRows() {
+        if (!lastPreviewData || !lastPreviewData.rows) return;
+        var headers = lastPreviewData.headers || [];
+        var rows = lastPreviewData.rows || [];
+        var isMerge = $('#preview_merge_switch').is(':checked');
+
+        if (rows.length === 0) {
+            $('#preview_tbody').html('<tr><td colspan="' + headers.length + '" class="text-center text-muted py-4">No recent trip data found to preview</td></tr>');
+            return;
+        }
+
+        if (!isMerge) {
+            // Standard flat table
+            var tbHtml = '';
+            rows.forEach(function(r) {
+                tbHtml += '<tr>';
+                r.forEach(function(cell) {
+                    tbHtml += '<td>' + escapeHtml(cell !== null && cell !== undefined ? cell : '') + '</td>';
+                });
+                tbHtml += '</tr>';
+            });
+            $('#preview_tbody').html(tbHtml);
+            return;
+        }
+
+        // ROW MERGING ALGORITHM (EIPL Excel Style)
+        // Only trip/consignment/charge columns merge. Cargo line items (HAWB, BOE, Weight, Pieces, Seal, etc.) stay distinct.
+        var columnsMeta = lastPreviewData.columns_meta || [];
+        var rowItems = lastPreviewData.row_items || [];
+        var numRows = rows.length;
+        var numCols = headers.length;
+        var spanMatrix = [];
+        for (var r = 0; r < numRows; r++) {
+            spanMatrix[r] = [];
+            for (var c = 0; c < numCols; c++) {
+                spanMatrix[r][c] = 1;
+            }
+        }
+
+        // Check each column
+        for (var c = 0; c < numCols; c++) {
+            var colMeta = columnsMeta[c] || {};
+            var isColMergeable = colMeta.is_mergeable !== undefined ? colMeta.is_mergeable : true;
+
+            // Fallback header keyword check if metadata is missing
+            if (colMeta.is_mergeable === undefined) {
+                var headerLower = (headers[c] || '').toLowerCase();
+                var cargoTerms = ['hawb', 'hbl', 'boe', 'eway', 'pkg', 'pcs', 'weight', 'cbm', 'volume', 'invoice', 'seal', 'ref no'];
+                if (cargoTerms.some(function(term) { return headerLower.includes(term); })) {
+                    isColMergeable = false;
+                }
+            }
+
+            // Columns that belong to cargo items NEVER merge
+            if (!isColMergeable) {
+                continue;
+            }
+
+            var rStart = 0;
+            while (rStart < numRows) {
+                var rEnd = rStart + 1;
+                var startVal = String(rows[rStart][c] !== null && rows[rStart][c] !== undefined ? rows[rStart][c] : '').trim();
+                var startTripKey = rowItems[rStart] ? rowItems[rStart].trip_key : ('trip_' + rStart);
+
+                while (rEnd < numRows) {
+                    var curVal = String(rows[rEnd][c] !== null && rows[rEnd][c] !== undefined ? rows[rEnd][c] : '').trim();
+                    var curTripKey = rowItems[rEnd] ? rowItems[rEnd].trip_key : ('trip_' + rEnd);
+
+                    if (curTripKey === startTripKey && curVal === startVal) {
+                        rEnd++;
+                    } else {
+                        break;
+                    }
+                }
+
+                var span = rEnd - rStart;
+                if (span > 1) {
+                    spanMatrix[rStart][c] = span;
+                    for (var rSkip = rStart + 1; rSkip < rEnd; rSkip++) {
+                        spanMatrix[rSkip][c] = -1; // Covered by vertical row merge
+                    }
+                }
+                rStart = rEnd;
+            }
+        }
+
+        // Render merged HTML
+        var tbHtml = '';
+        for (var r = 0; r < numRows; r++) {
+            tbHtml += '<tr>';
+            for (var c = 0; c < numCols; c++) {
+                if (spanMatrix[r][c] === -1) {
+                    continue; // Skip cell covered by vertical row merge
+                }
+                var cellVal = escapeHtml(rows[r][c] !== null && rows[r][c] !== undefined ? rows[r][c] : '');
+                var rowspanAttr = '';
+                if (spanMatrix[r][c] > 1) {
+                    rowspanAttr = ' rowspan="' + spanMatrix[r][c] + '" style="vertical-align: middle !important; background-color: #f7faff; border-bottom: 2px solid #b8daff !important; font-weight: 600;"';
+                }
+                tbHtml += '<td' + rowspanAttr + '>' + cellVal + '</td>';
+            }
+            tbHtml += '</tr>';
+        }
+        $('#preview_tbody').html(tbHtml);
+    }
+
+    // Helper: CSRF Cookie
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+
+<style>
+    .palette-field-item:hover {
+        background-color: #eef2f7 !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .column-card {
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .column-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .btn-xs {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.75rem;
+        border-radius: 0.2rem;
+    }
+</style>
+{% endblock %}
