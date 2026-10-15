@@ -132,9 +132,22 @@ def dispatch_add(request, dispatch_id=0):
                     if dispatch.dispatch_status_id == 5:  # Completed
                         customer = dispatch.dispatch_customer
                         if customer.cu_automatic_email == 'YES':
+                            from ..sub_models.emailmaster_mod import Emailmaster
                             recipient_list = [customer.cu_email]
+                            cc_list = []
+                            try:
+                                email_master = Emailmaster.objects.filter(
+                                    em_Customer_name=customer,
+                                    em_emailtype__email_type__icontains='Alert'
+                                ).first()
+                                if email_master and email_master.em_to_names:
+                                    recipient_list = [e.strip() for e in email_master.em_to_names.split(',') if e.strip()]
+                                    if email_master.em_cc_names:
+                                        cc_list = [e.strip() for e in email_master.em_cc_names.split(',') if e.strip()]
+                            except Exception as em_err:
+                                print(f"Error fetching Email Master for Dispatch: {em_err}")
                             message = "Dear Customer,\n\nPlease find the Gate-Out Gate Pass attached.\n\nRegards,\nBVM Warehouse Team"
-                            send_gate_out_email_logic(dispatch.id, recipient_list, message, request)
+                            send_gate_out_email_logic(dispatch.id, recipient_list, message, request, cc_list=cc_list)
                 except Exception as e:
                     print(f"Auto-Email Error (Dispatch): {e}")
 
@@ -653,7 +666,7 @@ def dispatch_goods_back(request):
     return redirect('/SMS/dispatch_update/' + str(dispatch_id))
 
 
-def send_gate_out_email_logic(dispatch_id, recipient_list, message, request=None):
+def send_gate_out_email_logic(dispatch_id, recipient_list, message, request=None, cc_list=None):
     dispatch = Dispatch_info.objects.get(pk=dispatch_id)
     dispatch_number = dispatch.dispatch_num
     subject = f"{dispatch_number}_Gate-Out Alert"
@@ -665,7 +678,7 @@ def send_gate_out_email_logic(dispatch_id, recipient_list, message, request=None
     formatted_message = message.replace('\n', '<br>')
 
     send_department_email('warehouse', subject, formatted_message, recipient_list, pdf_data, 'application/pdf',
-                          file_name)
+                          file_name, cc_list=cc_list)
 
     # Update email count
     Dispatch_info.objects.filter(pk=dispatch_id).update(dispatch_email_count=F('dispatch_email_count') + 1)

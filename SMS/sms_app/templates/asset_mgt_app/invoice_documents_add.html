@@ -6,7 +6,7 @@
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Invoice Documents Add/Edit</h2>
         <div style="position: relative; z-index: 10;">
-            <a href="{% url 'invoice_documents_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+            <a href="{% if is_invoiced %}{% url 'invoice_completed_documents_list' %}{% else %}{% url 'invoice_documents_list' %}{% endif %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
                 <i class="fas fa-arrow-left"></i> BACK TO LIST
             </a>
         </div>
@@ -38,7 +38,7 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Customer Ref No</label>
-                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No">
+                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No" {% if is_invoiced %}readonly disabled{% endif %}>
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
@@ -54,7 +54,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2 px-1">
                             <label for="check_consigner_invoice" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">Consigner Invoice</label>
                             <div class="d-flex align-items-center justify-content-end w-25">
-                                <input type="checkbox" id="check_consigner_invoice" name="use_consigner_invoice" style="cursor:pointer; width:15px; height:15px;">
+                                <input type="checkbox" id="check_consigner_invoice" name="use_consigner_invoice" style="cursor:pointer; width:15px; height:15px; {% if is_invoiced %}pointer-events:none;{% endif %}" {% if is_invoiced %}disabled{% endif %}>
                             </div>
                         </div>
 
@@ -62,7 +62,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2 px-1">
                             <label for="check_hawb" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">HAWB</label>
                             <div class="d-flex align-items-center justify-content-end w-25">
-                                <input type="checkbox" id="check_hawb" name="use_hawb" style="cursor:pointer; width:15px; height:15px;">
+                                <input type="checkbox" id="check_hawb" name="use_hawb" style="cursor:pointer; width:15px; height:15px; {% if is_invoiced %}pointer-events:none;{% endif %}" {% if is_invoiced %}disabled{% endif %}>
                             </div>
                         </div>
 
@@ -70,7 +70,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2 px-1">
                             <label for="check_mawb" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">MAWB</label>
                             <div class="d-flex align-items-center justify-content-end w-25">
-                                <input type="checkbox" id="check_mawb" name="use_mawb" style="cursor:pointer; width:15px; height:15px;">
+                                <input type="checkbox" id="check_mawb" name="use_mawb" style="cursor:pointer; width:15px; height:15px; {% if is_invoiced %}pointer-events:none;{% endif %}" {% if is_invoiced %}disabled{% endif %}>
                             </div>
                         </div>
                         <!-- Hidden flags for JS validation -->
@@ -231,7 +231,11 @@
                         <!-- Invoice Status -->
                         <div class="form-group-modern mt-3 mb-0">
                             <label class="form-label-modern small mb-1 font-weight-bold">Invoice Status</label>
-                            {% render_field invoice_form.id_status id="id_status" class="form-control form-control-modern form-control-sm border-primary" %}
+                            {% if is_invoiced %}
+                                <input type="text" class="form-control form-control-modern form-control-sm border-success text-success font-weight-bold" value="Invoice Completed" readonly disabled>
+                            {% else %}
+                                {% render_field invoice_form.id_status id="id_status" class="form-control form-control-modern form-control-sm border-primary" %}
+                            {% endif %}
                         </div>
                         {% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control form-control-modern" %}
                         {% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control form-control-modern" %}
@@ -241,7 +245,7 @@
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
                         <div class="form-section-title mb-3 d-flex justify-content-between align-items-center" style="font-size:0.95rem;">
-                            <span><i class="fas fa-file-upload"></i> Upload Docs</span>
+                            <span><i class="fas fa-{% if is_invoiced %}file-alt{% else %}file-upload{% endif %}"></i> {% if is_invoiced %}Attached Documents{% else %}Upload Docs{% endif %}</span>
                             {% if invoice_doc and invoice_doc.id_merged_pdf %}
                             <a href="{{ invoice_doc.id_merged_pdf.url }}" target="_blank" class="text-success ml-1" title="Download PDF"><i class="fas fa-download"></i></a>
                             {% endif %}
@@ -520,11 +524,13 @@
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
+                        {% if not is_invoiced %}
                         <button type="submit" class="btn-modern btn-submit px-5">
                             <i class="fas fa-check mr-2"></i> Submit
                         </button>
-                        <a href="{% url 'invoice_documents_list' %}" class="btn-modern btn-cancel px-5">
-                            <i class="fas fa-times mr-2"></i> Cancel
+                        {% endif %}
+                        <a href="{% if is_invoiced %}{% url 'invoice_completed_documents_list' %}{% else %}{% url 'invoice_documents_list' %}{% endif %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-{% if is_invoiced %}arrow-left{% else %}times{% endif %} mr-2"></i> {% if is_invoiced %}BACK TO LIST{% else %}Cancel{% endif %}
                         </a>
                     </div>
                 </div>
@@ -751,22 +757,23 @@ function deleteTcAtt(attId) {
     }).catch(function(e){ alert('Error: ' + e); });
 }
 </script>
-{% if is_invoiced and user_role == 'User' %}
+{% if is_invoiced %}
 <script>
     $(document).ready(function() {
-        // Disable all form fields
-        $('form :input').prop('disabled', true);
-        $('form select').prop('disabled', true).trigger('change.select2');
+        $('.modern-header').after('<div class="alert alert-success text-center fw-bold mt-3" style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;"><i class="fas fa-lock mr-2"></i> Status: Invoice Completed. This Trip is Read-Only.</div>');
         
-        // Hide submit buttons and actions
-        $('.btn-submit:contains("ADD"), .btn-submit:contains("SAVE"), button[type="submit"]').addClass('disable_a_href').prop('disabled', true).hide();
-        $('.custom-file-input, .custom-file-label').hide();
-        $('a.btn-danger, button.btn-danger, .trash-icon').addClass('disable_a_href').hide();
+        // Make all inputs, textareas, selects, and checkboxes readonly and disabled
+        $('form :input').not('.btn-cancel, a').prop('disabled', true).attr('readonly', true);
+        $('form select').prop('disabled', true).trigger('change.select2');
+        $('input[type="checkbox"]').prop('disabled', true).css('pointer-events', 'none');
+        
+        // Hide/remove submit buttons, file inputs, upload labels, and delete trash icons
+        $('.btn-submit, button[type="submit"]').addClass('disable_a_href').prop('disabled', true).hide().remove();
+        $('input[type="file"], .form-control-file, .custom-file-input, .custom-file-label').hide().remove();
+        $('a.text-danger, button.btn-danger, .trash-icon, [onclick*="deleteTcAtt"]').addClass('disable_a_href').hide().remove();
 
         // Keep cancel / back buttons enabled
-        $('a.btn-cancel, a:contains("BACK TO LIST")').removeClass('disable_a_href').prop('disabled', false).show();
-        
-        $('.modern-header').after('<div class="alert alert-warning text-center fw-bold mt-3" style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;"><i class="fas fa-file-invoice mr-2"></i> Invoice Completed / Ready For Invoice. This Invoice Documents Page is Read-Only.</div>');
+        $('a.btn-cancel, a:contains("BACK TO LIST"), a:contains("Cancel")').removeClass('disable_a_href').prop('disabled', false).show();
     });
 </script>
 {% endif %}

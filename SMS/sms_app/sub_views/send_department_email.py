@@ -3,7 +3,7 @@ from io import BytesIO
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
-def send_department_email(department, subject, message, recipient_list,attachment=None, attachment_type=None, file_name=None,email_type=1):
+def send_department_email(department, subject, message, recipient_list,attachment=None, attachment_type=None, file_name=None,email_type=1, cc_list=None):
     print('Email sending..')
     department_email_settings = settings.DEPARTMENT_EMAILS.get(department)
 
@@ -21,6 +21,7 @@ def send_department_email(department, subject, message, recipient_list,attachmen
             body=message,
             from_email=settings.EMAIL_HOST_USER,
             to=recipient_list,
+            cc=cc_list or [],
         )
         # # Set the content subtype to 'html' to send HTML email
         if email_type == 1:

@@ -236,7 +236,7 @@ def compute_cargo_condition_for_job(job_no):
 
 
 @login_required(login_url='login_page')
-def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None, recipient_list=None, message=None):
+def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None, recipient_list=None, message=None, cc_list=None):
     print('Entering dsr_send_email_view')
     header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
     cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
@@ -879,7 +879,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         message = message.replace('\n', '<br>')
         if pre_gatein_id is None:
             pre_gatein_id = request.session.get('ses_pre_gatein_id')
-        send_department_email('warehouse', subject, message, recipient_list, attachment, attachment_type, file_name)
+        send_department_email('warehouse', subject, message, recipient_list, attachment, attachment_type, file_name, cc_list=cc_list)
         messages.success(request, "E-mail sent successfully")
         return redirect(request.META['HTTP_REFERER'])
 
