@@ -27,7 +27,7 @@ def dmr_template_list(request):
     if customer_filter:
         templates = templates.filter(customer_id=customer_filter)
 
-    customers = CustomerInfo.objects.filter(cu_name__isnull=False).order_by('cu_name')
+    customers = CustomerInfo.objects.filter(cu_name__icontains='(T)').order_by('cu_name')
 
     context = {
         'templates': templates,
@@ -51,7 +51,7 @@ def dmr_template_create_or_edit(request, template_id=None):
             'date_format', 'included_charges', 'static_value', 'column_width'
         ))
 
-    customers = CustomerInfo.objects.filter(cu_name__isnull=False).order_by('cu_name')
+    customers = CustomerInfo.objects.filter(cu_name__icontains='(T)').order_by('cu_name')
     departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
 
     context = {

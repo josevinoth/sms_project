@@ -626,7 +626,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
     "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
     "Trip Charges", "Toll charges", "Loading charges",
     "Unloading Charges", "Weighment charges", "Halting Charges", "Handling Charges", "Parking Charges",
-    "Selling", "Invoice No", "Vendor Name", "Bill No", "Trip Cost",
+    "Cancellation Charges","Selling", "Invoice No", "Vendor Name", "Bill No", "Trip Cost",
     "Toll Expenses", "Loading Expenses", "Unloading Expenses",
     "Weighment Expenses", "Halting Expenses", "Handling Expenses", "Parking Expenses",
     "Buying", "Profit", "Profit % with Selling", "Profit % with Buying"
@@ -2975,6 +2975,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
             selling_halting,
             selling_handling,
             selling_parking,
+            selling_cancellation,
             total_selling,
             invoice_map.get(trip.id, ""),
             vendor_name,
