@@ -56,7 +56,10 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['na_customer_new_name'] = customer_new_name_id
-            form = PkquotationsummaryForm(instance=quotationsummary)
+            # Ensure dependent costs (e.g. HT Cost per job type) are recalculated before aggregation
+            from .pk_quotation_view import recalculate_dependent_costs
+            recalculate_dependent_costs(needassessment_id, request)
+
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
 
             # Optimized single-pass aggregation

@@ -237,7 +237,7 @@
                                 </div>
                                 <div class="col-6 pl-1">
                                     <div class="form-group-modern" id="total_cft">
-                                        <label class="form-label-modern">Proj. Total CFT</label>
+                                        <label class="form-label-modern">Job Total CFT (Wood)</label>
                                         {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
@@ -597,15 +597,26 @@
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
             
-            // Bring in the Project's Aggregate Total CFT
-            document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
-            var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+            // Calculate CFT for the currently selected Job Type only
+            var selected_req = $('#pkqt_requirement').val();
+            var total_cft = 0;
+            if (window.jobCftMap && selected_req && window.jobCftMap[selected_req] !== undefined) {
+                total_cft = parseFloat(window.jobCftMap[selected_req]) || 0;
+            } else if (window.currentJobCft !== undefined) {
+                total_cft = window.currentJobCft;
+            } else {
+                total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+            }
+            
+            document.getElementById("pkqt_total_cft_display").value = total_cft.toFixed(3);
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             
-            if (document.getElementById("pkqt_cft_sqft_req")) { document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); }
+            if (document.getElementById("pkqt_cft_sqft_req")) { 
+                document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); 
+            }
             
-            // If total_cft is the project total, we divide by na_quantity to get unit cost per box
-            var unit_cft = total_cft / na_quantity;
+            // Unit CFT per box for this selected Job Type
+            var unit_cft = na_quantity > 0 ? (total_cft / na_quantity) : 0;
             if (document.getElementById("pkqt_sqrt_req")) {
                 document.getElementById("pkqt_sqrt_req").value = unit_cft.toFixed(3);
             }
@@ -737,6 +748,8 @@
 </script>
 
 <script>
+    window.jobCftMap = {{ job_cft_map_json|safe|default:"{}" }};
+
     function pk_store_na_dimension_id() {
         var pkqt_requirement_id = $('#pkqt_requirement').val();
 
@@ -755,6 +768,12 @@
                 var h = parseFloat(data.na_height);
                 var na_uom_val = data.na_uom;
                 var na_uom_id_val = data.na_uom_id;
+
+                if (data.job_total_cft !== undefined) {
+                    window.jobCftMap = window.jobCftMap || {};
+                    window.jobCftMap[pkqt_requirement_id] = parseFloat(data.job_total_cft) || 0;
+                    window.currentJobCft = parseFloat(data.job_total_cft) || 0;
+                }
 
                 document.getElementById("pkqt_requirement_size").value = na_dimension_box_val;
                 document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;

@@ -16,29 +16,41 @@ def recalculate_dependent_costs(assessment_id, request=None):
     aggregate_cft = PkquotationInfo.objects.filter(
         pkqt_assessment_num=assessment_id,
         pkqt_cost_type=8,
-        pkqt_stock_type=1
+        pkqt_stock_type__in=[1, 5]
     ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
     
     total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
     if request:
         request.session['total_cft_display'] = total_cft
 
-    # Find HT Cost entries for this assessment and recalculate them automatically
+    # Find HT Cost entries for this assessment and recalculate them automatically per Job Type
     ht_costs = PkquotationInfo.objects.filter(
         pkqt_assessment_num=assessment_id,
         pkqt_cost_type=5
-    )
+    ).select_related('pkqt_requirement')
+
     for ht in ht_costs:
-        na_quantity = float(ht.pkqt_na_quantity or 1)
+        if ht.pkqt_requirement:
+            job_wood_cft = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=assessment_id,
+                pkqt_requirement=ht.pkqt_requirement,
+                pkqt_cost_type=8,
+                pkqt_stock_type__in=[1, 5]
+            ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
+            current_cft = round(job_wood_cft, 3) if job_wood_cft is not None else 0.0
+        else:
+            current_cft = total_cft
+
+        na_quantity = float(ht.pkqt_na_quantity or (ht.pkqt_requirement.nad_na_quantity if ht.pkqt_requirement and ht.pkqt_requirement.nad_na_quantity else 1) or 1)
         rate = float(ht.pkqt_rate or 0)
         
-        # Unit CFT per box
-        unit_cft = total_cft / na_quantity if na_quantity else 0
+        # Unit CFT per box for this job type
+        unit_cft = (current_cft / na_quantity) if na_quantity else 0.0
         
         # Cost per box
         totalCost = rate * unit_cft
         
-        # Total cost for all boxes
+        # Total cost for all boxes of this job type
         totalboxCost = totalCost * na_quantity
         
         ht.pkqt_sqrt_req = round(unit_cft, 3)
@@ -93,12 +105,27 @@ def pk_quotation_add(request, quotation_id=0):
             if pkqt_item_description_id:
                 initial_data['pkqt_itemdescription'] = pkqt_item_description_id
 
+            import json
+            # Calculate CFT map by job type (Wood ONLY)
+            job_cft_qs = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=na_assessment_num_id,
+                pkqt_cost_type=8,
+                pkqt_stock_type__in=[1, 5]
+            ).values('pkqt_requirement').annotate(
+                total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
+            )
+            job_cft_map = {}
+            for j in job_cft_qs:
+                if j['pkqt_requirement']:
+                    job_cft_map[str(j['pkqt_requirement'])] = round(j['total'] or 0.0, 3)
+            job_cft_map_json = json.dumps(job_cft_map)
+
             form = PkquotationForm(initial=initial_data)
             # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
-                pkqt_stock_type=1
+                pkqt_stock_type__in=[1, 5]
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
 
@@ -113,10 +140,24 @@ def pk_quotation_add(request, quotation_id=0):
                 'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
                 'total_cft_display': project_total_cft,
-
+                'job_cft_map_json': job_cft_map_json,
             }
         else:
             print("Inside PK quotation get edit")
+            import json
+            job_cft_qs = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=na_assessment_num_id,
+                pkqt_cost_type=8,
+                pkqt_stock_type__in=[1, 5]
+            ).values('pkqt_requirement').annotate(
+                total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
+            )
+            job_cft_map = {}
+            for j in job_cft_qs:
+                if j['pkqt_requirement']:
+                    job_cft_map[str(j['pkqt_requirement'])] = round(j['total'] or 0.0, 3)
+            job_cft_map_json = json.dumps(job_cft_map)
+
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(instance=quotation)
             
@@ -124,7 +165,7 @@ def pk_quotation_add(request, quotation_id=0):
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
-                pkqt_stock_type=1
+                pkqt_stock_type__in=[1, 5]
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
             
@@ -137,6 +178,7 @@ def pk_quotation_add(request, quotation_id=0):
                 'na_assessment_num_id': na_assessment_num_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
                 'total_cft_display': project_total_cft,
+                'job_cft_map_json': job_cft_map_json,
             }
         return render(request, "asset_mgt_app/pk_quotation_add.html", context)
 
@@ -208,12 +250,12 @@ def pk_quotation_add(request, quotation_id=0):
                         stock_type = quotation.pkqt_stock_type.id
                         assessment_id = quotation.pkqt_assessment_num.id
 
-                        # ✅ Only for cost_type = 8 and Wood stock_type = 1
-                        if cost_type == 8 and stock_type == 1:
+                        # ✅ Only for cost_type = 8 and Wood stock_type in [1, 5]
+                        if cost_type == 8 and stock_type in [1, 5]:
                             total_cft = PkquotationInfo.objects.filter(
                                 pkqt_assessment_num=assessment_id,
                                 pkqt_cost_type=8,
-                                pkqt_stock_type=1
+                                pkqt_stock_type__in=[1, 5]
                             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                             print("total_cft", total_cft)
                             request.session['total_cft_display'] = round(total_cft, 3)
@@ -233,12 +275,12 @@ def pk_quotation_add(request, quotation_id=0):
                     stock_type = quotation.pkqt_stock_type.id
                     assessment_id = quotation.pkqt_assessment_num.id
 
-                    # ✅ Only for cost_type = 8 and Wood stock_type = 1
-                    if cost_type == 8 and stock_type == 1:
+                    # ✅ Only for cost_type = 8 and Wood stock_type in [1, 5]
+                    if cost_type == 8 and stock_type in [1, 5]:
                         total_cft = PkquotationInfo.objects.filter(
                             pkqt_assessment_num=assessment_id,
                             pkqt_cost_type=8,
-                            pkqt_stock_type=1
+                            pkqt_stock_type__in=[1, 5]
                         ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                         print("total_cft", total_cft)
                         request.session['total_cft_display'] = round(total_cft, 3)
@@ -359,6 +401,7 @@ def pk_store_na_dimension_id(request):
         'na_wood_type_id': '',
         'na_wood_desc_id': '',
         'na_type_of_req_id': '',
+        'job_total_cft': 0.0,
     }
 
     # Guard: return empty response if no valid ID provided
@@ -369,6 +412,13 @@ def pk_store_na_dimension_id(request):
         a = Nadimension.objects.get(pk=ct_requirement_id)
     except Nadimension.DoesNotExist:
         return JsonResponse(empty_response)
+
+    job_wood_cft = PkquotationInfo.objects.filter(
+        pkqt_requirement_id=ct_requirement_id,
+        pkqt_cost_type=8,
+        pkqt_stock_type__in=[1, 5]
+    ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
+    job_wood_cft = round(job_wood_cft, 3) if job_wood_cft is not None else 0.0
 
     na_dimension_box_val.append(
         str(a.nad_type_of_req) + ' (' + str(a.nad_length) + 'x' + str(a.nad_width) + 'x' + str(a.nad_height) + ')'
@@ -386,5 +436,6 @@ def pk_store_na_dimension_id(request):
         'na_wood_type_id': a.nad_wood_type.first().id if a.nad_wood_type.exists() else "",
         'na_wood_desc_id': a.nad_wood_description.first().id if a.nad_wood_description.exists() else "",
         'na_type_of_req_id': a.nad_type_of_req.id if a.nad_type_of_req else "",
+        'job_total_cft': job_wood_cft,
     }
     return JsonResponse(data)
