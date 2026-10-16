@@ -431,8 +431,6 @@ def check_trip_is_invoiced(trip):
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
     if TransInvoiceInfo.objects.filter(ti_trip=trip).exists():
         return True
-    if trip.tc_financestatus_id == 10:
-        return True
     if trip.tr_consignmentnumber_id:
         if TransInvoiceInfo.objects.filter(ti_consignment_id=trip.tr_consignmentnumber_id).exists():
             return True
@@ -474,10 +472,10 @@ def invoice_documents_list_ajax_view(request):
         from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 
         status_ids = list(Tripstatusinfo.objects.filter(
-            status__in=['Trip Settled', 'Ready for Invoice']
+            status__in=['Trip Settled', 'Ready for Invoice', 'Cancellation with Billing']
         ).values_list('id', flat=True))
         if not status_ids:
-            status_ids = [7, 9]
+            status_ids = [7, 9, 10]
 
         all_invoiced_ids = get_all_invoiced_trip_ids()
 
@@ -1050,12 +1048,13 @@ def invoice_documents_add(request, trip_id):
             messages.error(request, "At least one reference field is required: Customer Ref No, Consigner Invoice, HAWB, or MAWB.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
-        # Validate either Trip Charges or Special Sell must be checked
+        # Validate either Trip Charges, Special Sell, or Cancellation must be checked
         is_tripcost_checked = bool(request.POST.get('tc_tripcost_check'))
         is_special_sell_checked = bool(request.POST.get('special_sell_check'))
+        is_cancellation_checked = bool(request.POST.get('tc_cancellation_check'))
 
-        if not is_tripcost_checked and not is_special_sell_checked:
-            messages.error(request, "Either Trip Charges or Special Sell must be checked to bill to the customer.")
+        if not is_tripcost_checked and not is_special_sell_checked and not is_cancellation_checked:
+            messages.error(request, "Either Trip Charges, Special Sell, or Cancellation must be checked to bill to the customer.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate Special Sell cannot be less than actual/standard rate
@@ -1264,22 +1263,28 @@ def invoice_documents_add(request, trip_id):
         
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        # Map Ready for Invoice status by its ID 9
+        # Determine appropriate target status: if trip is Cancellation with Billing (10), keep 10, else default to Ready for Invoice (9)
         ready_status = Tripstatusinfo.objects.filter(id=9).first()
-        if invoice_doc and not invoice_doc.id_status and ready_status:
-            invoice_doc.id_status = ready_status
+        if trip.tc_financestatus_id == 10:
+            target_status_id = 10
+            target_status = Tripstatusinfo.objects.filter(id=10).first()
+        else:
+            target_status_id = 9
+            target_status = ready_status
+
+        if invoice_doc and not invoice_doc.id_status and target_status:
+            invoice_doc.id_status = target_status
 
         if not invoice_doc:
-            invoice_form = InvoiceDocumentForm(initial={'id_status': ready_status})
+            invoice_form = InvoiceDocumentForm(initial={'id_status': target_status})
         else:
-            # Force the form to default to 'Ready for Invoice' for user convenience
-            if invoice_doc and invoice_doc.id_status_id != 9:
-                invoice_doc.id_status_id = 9
+            if invoice_doc and invoice_doc.id_status_id != target_status_id:
+                invoice_doc.id_status_id = target_status_id
                 
             invoice_form = InvoiceDocumentForm(instance=invoice_doc)
         
         # Only show 'Ready for Invoice' (ID 9) and the actual trip's current status (so it doesn't fail validation)
-        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else 9
+        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else target_status_id
         invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(
             Q(id=9) | Q(id=current_status_id)
         )
@@ -1295,13 +1300,12 @@ def invoice_documents_add(request, trip_id):
             )
 
         # Only show 'Ready for Invoice' (ID 9) and the current status
-        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else 9
         settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             Q(id=9) | Q(id=current_status_id)
         )
         
-        # Default to 'Ready for Invoice' (ID 9) so they don't have to manually select it
-        settlement_form.fields['tc_financestatus'].initial = 9
+        # Default to appropriate status
+        settlement_form.fields['tc_financestatus'].initial = target_status_id
         # Restrict huge querysets for disabled fields to speed up page loading
         if trip.tr_enquirynumber_id:
             settlement_form.fields['tr_enquirynumber'].queryset = settlement_form.fields['tr_enquirynumber'].queryset.filter(id=trip.tr_enquirynumber_id)
