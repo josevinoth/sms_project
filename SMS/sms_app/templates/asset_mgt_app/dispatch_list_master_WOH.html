@@ -7,6 +7,57 @@
 <!--        <i class="fas fa-arrow-left"></i>-->
 <!--      </a>-->
 <!--    </div>-->
+<style>
+/* E-way bill expired row highlighting: soft light red */
+#dispatch_master_list tbody tr.expired-row td,
+table#dispatch_master_list.dataTable tbody tr.expired-row td,
+table.dataTable.modern-table tbody tr.expired-row td {
+    background-color: #fee2e2 !important;
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #991b1b !important;
+    font-weight: 500;
+}
+#dispatch_master_list tbody tr.expired-row:hover td,
+table#dispatch_master_list.dataTable tbody tr.expired-row:hover td,
+table.dataTable.modern-table tbody tr.expired-row:hover td {
+    background-color: #fecaca !important;
+    background-color: rgba(239, 68, 68, 0.24) !important;
+    color: #7f1d1d !important;
+}
+#dispatch_master_list tbody tr.expired-row td a,
+#dispatch_master_list tbody tr.expired-row td span:not(.badge),
+#dispatch_master_list tbody tr.expired-row td b {
+    color: #991b1b !important;
+}
+#dispatch_master_list tbody tr.expired-row td.select-checkbox {
+    cursor: not-allowed !important;
+}
+#dispatch_master_list tbody tr.expired-row td.select-checkbox:before {
+    border-color: #ef4444 !important;
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+}
+
+/* Dark mode support */
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td,
+[data-theme="dark"] table#dispatch_master_list.dataTable tbody tr.expired-row td,
+[data-theme="dark"] table.dataTable.modern-table tbody tr.expired-row td {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row:hover td,
+[data-theme="dark"] table#dispatch_master_list.dataTable tbody tr.expired-row:hover td,
+[data-theme="dark"] table.dataTable.modern-table tbody tr.expired-row:hover td {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    color: #fee2e2 !important;
+}
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td a,
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td span:not(.badge),
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td b {
+    color: #fca5a5 !important;
+}
+</style>
+
 <div class="container-fluid shadow-box-table p-3">
     <div class="col-md-1.5">
         <a href="" id='add_btn' class="btn btn-warning" onclick="return confirm('Are you sure to Check-Out this stock?');">
@@ -43,9 +94,9 @@
         </thead>
         <tbody>
         {% for goodsinfo in dispatch_master_list %}
-        <tr data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}">
+        <tr data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}" class="{% if goodsinfo.is_expired %}expired-row{% endif %}">
             <td></td>
-            <td><input type="checkbox" class="row-checkbox"></td>
+            <td></td>
             <td>{{ goodsinfo.wh_job_no }}</td>
             <td>{{ goodsinfo.wh_consigner }}</td>
             <td>{{ goodsinfo.wh_consignee }}</td>
@@ -164,24 +215,13 @@
 
     // Function to highlight expired rows
     function highlightExpiredRows() {
+        let today = new Date().toISOString().split('T')[0];
         $('#dispatch_master_list tbody tr').each(function () {
             let expiry = $(this).data('expiry');
-            if (expiry) {
-                let today = new Date().toISOString().split('T')[0];
-                if (expiry < today) {
-                    $(this).css({ "background-color": "red", "color": "white" });
-                    let checkbox = $(this).find('.row-checkbox');
-                    checkbox.prop("disabled", true);
-
-                    // Remove old handlers to avoid duplicate alerts
-                    $(this).off('click').on('click', function () {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Expired!",
-                            text: "This stock is expired. You cannot select it!"
-                        });
-                    });
-                }
+            let isExpired = $(this).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+            if (isExpired) {
+                $(this).addClass('expired-row');
+                $(this).find('td').css({ "background-color": "rgba(239, 68, 68, 0.15)", "color": "#991b1b" });
             }
         });
     }
@@ -192,31 +232,28 @@
         highlightExpiredRows();
     });
 
-    // Checkbox confirmation with auto reload
-    $(document).on("change", ".expiry-checkbox", function () {
-        if (this.checked) {
+    // Prevent selection of expired rows
+    table.on('user-select', function (e, dt, type, cell, originalEvent) {
+        let rowNode = dt.row(cell.index().row).node();
+        let expiry = $(rowNode).data('expiry');
+        let today = new Date().toISOString().split('T')[0];
+        if ($(rowNode).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today)) {
+            e.preventDefault();
             Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to mark this as expired?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, mark it!",
-                cancelButtonText: "No, cancel"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: "Marked!",
-                        text: "The row has been marked as expired.",
-                        icon: "success",
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        // Auto refresh after success
-                        window.location.reload();
-                    });
-                } else {
-                    this.checked = false; // reset if cancelled
-                }
+                icon: "error",
+                title: "Expired!",
+                text: "This stock is expired. You cannot select it!"
+            });
+        }
+    });
+
+    // Alert if user clicks on an expired row
+    $(document).on('click', '#dispatch_master_list tbody tr.expired-row', function (e) {
+        if (!$(e.target).closest('button, form, a, input').length) {
+            Swal.fire({
+                icon: "error",
+                title: "Expired!",
+                text: "This stock is expired. You cannot select it!"
             });
         }
     });
@@ -280,7 +317,8 @@
             let expiry = $(row).data('expiry');
             let today = new Date().toISOString().split('T')[0];
 
-            if (!expiry || expiry >= today) {
+            let isExpired = $(row).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+            if (!isExpired) {
                 elements.push(selectedData[loopIndex][12]); // col 12 = WH Stock Number
             }
         });
