@@ -686,6 +686,7 @@ function setDateFieldValue(selector, value) {
 					} else {
 						$('#va_vehiclenumber').removeClass('disable_a_href');
 					}
+					dropdown.trigger('change.select2');
 				}
 			});
 		}

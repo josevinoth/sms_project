@@ -164,7 +164,24 @@ def warehouse_jobs_add(request, gatein_id=0):
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)
             if gatein_form.is_valid():
                 print("Form is Valid")
-                gatein_form.save()
+                instance = gatein_form.save()
+
+                # Sync customer & customer model to all existing warehouse goods and dispatches for this job
+                if instance.gatein_job_no and instance.gatein_customer:
+                    wh_goods = Warehouse_goods_info.objects.filter(
+                        Q(wh_gate_injob_no_id=instance) | Q(wh_job_no=instance.gatein_job_no)
+                    )
+                    wh_goods.update(
+                        wh_customer_name=instance.gatein_customer,
+                        wh_customer_type=instance.gatein_customer_type
+                    )
+                    # Also update any Dispatch records linked to these goods
+                    dispatch_ids = wh_goods.exclude(wh_dispatch_id__isnull=True).values_list('wh_dispatch_id', flat=True).distinct()
+                    if dispatch_ids:
+                        Dispatch_info.objects.filter(id__in=dispatch_ids).update(
+                            dispatch_customer=instance.gatein_customer
+                        )
+
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Form is In-Valid")
