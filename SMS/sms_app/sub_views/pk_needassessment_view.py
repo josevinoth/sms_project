@@ -209,32 +209,43 @@ def needassessment_list(request):
         }
     return render(request,"asset_mgt_app/pk_needassessment_list.html",context)
 
+def _resolve_assessment_id(assessment_ref):
+    if isinstance(assessment_ref, int):
+        return assessment_ref
+    if isinstance(assessment_ref, PkneedassessmentInfo):
+        return assessment_ref.id
+    if isinstance(assessment_ref, str):
+        if assessment_ref.isdigit():
+            return int(assessment_ref)
+        na = PkneedassessmentInfo.objects.filter(na_assessment_num=assessment_ref).first()
+        return na.id if na else None
+    return None
+
 #Delete needassessment
 @login_required(login_url='login_page')
 def needassessment_delete(request,needassessment_id):
     needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)
-    assessment_num = needassessment.na_assessment_num
 
     # Deleting PkcostingInfo objects
-    Pkcosting_delete(assessment_num)
+    Pkcosting_delete(needassessment.id)
 
     # Deleting Pkcosting summary objects
-    Pkcostingsummary_delete(assessment_num)
+    Pkcostingsummary_delete(needassessment.id)
 
     # Deleting Pkpurchaseorders objects
-    Pkpurchaseorder_delete(assessment_num)
+    Pkpurchaseorder_delete(needassessment.id)
 
     # Deleting Pkpurchaseorders dims objects
-    Pkpurchaseorder_dim_delete(assessment_num)
+    Pkpurchaseorder_dim_delete(needassessment.id)
 
     #Deleting Pkquotations objects
-    Pkquotation_delete(assessment_num)
+    Pkquotation_delete(needassessment.id)
 
     # Deleting quotation summary objects
-    Pkquotation_summary_delete(assessment_num)
+    Pkquotation_summary_delete(needassessment.id)
 
     # Deleting Pkneedassessment dims objects
-    Pkneedassessment_dim_delete(assessment_num)
+    Pkneedassessment_dim_delete(needassessment.id)
 
     # Deleting need assessment objects
     needassessment.delete()
@@ -245,11 +256,10 @@ def needassessment_delete(request,needassessment_id):
 def Pkcosting_delete(assessment_num, job_no=None):
     try:
         if job_no:
-            # Safer: Only delete lines for this SPECIFIC Job
             costing_objects = PkcostingInfo.objects.filter(ct_job_no=job_no)
         else:
-            # Legacy: Delete everything for this Assessment
-            costing_objects = PkcostingInfo.objects.filter(ct_assessment_num=assessment_num)
+            aid = _resolve_assessment_id(assessment_num)
+            costing_objects = PkcostingInfo.objects.filter(ct_assessment_num_id=aid) if aid else PkcostingInfo.objects.none()
 
         if costing_objects.exists():
             costing_objects.delete()
@@ -262,7 +272,8 @@ def Pkcostingsummary_delete(assessment_num, job_no=None):
         if job_no:
             summaries = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no)
         else:
-            summaries = PkcostingsummaryInfo.objects.filter(cs_assessment_num=assessment_num)
+            aid = _resolve_assessment_id(assessment_num)
+            summaries = PkcostingsummaryInfo.objects.filter(cs_assessment_num_id=aid) if aid else PkcostingsummaryInfo.objects.none()
             
         if summaries.exists():
             summaries.delete()
@@ -271,67 +282,52 @@ def Pkcostingsummary_delete(assessment_num, job_no=None):
 
 
 def Pkpurchaseorder_delete(assessment_num):
-    # Deleting PkpurchaseorderInfo objects
     try:
-        customer_po_objects = PkpurchaseorderInfo.objects.filter(po_assessment_num=assessment_num)
+        aid = _resolve_assessment_id(assessment_num)
+        customer_po_objects = PkpurchaseorderInfo.objects.filter(po_assessment_num_id=aid) if aid else PkpurchaseorderInfo.objects.none()
         if customer_po_objects.exists():
             customer_po_objects.delete()
-        else:
-            print("No matching PkpurchaseorderInfo found to delete.")
     except Exception as e:
         print(f"An error occurred while deleting PkpurchaseorderInfo: {e}")
 
 
 def Pkpurchaseorder_dim_delete(assessment_num):
-    # Deleting Pkpurchaseorder dimension objects
     try:
-        customer_po_dim_objects = POdimension.objects.filter(pod_assess_num=assessment_num)
+        aid = _resolve_assessment_id(assessment_num)
+        customer_po_dim_objects = POdimension.objects.filter(pod_assess_num_id=aid) if aid else POdimension.objects.none()
         if customer_po_dim_objects.exists():
             customer_po_dim_objects.delete()
-        else:
-            print("No matching Pkpurchaseorder dimensions found to delete.")
     except Exception as e:
         print(f"An error occurred while deleting Pkpurchaseorder dimensions: {e}")
 
 
 def Pkquotation_delete(assessment_num):
-    # Deleting PkquotationInfo objects
     try:
-        quotation_objects = PkquotationInfo.objects.filter(pkqt_assessment_num=assessment_num)
+        aid = _resolve_assessment_id(assessment_num)
+        quotation_objects = PkquotationInfo.objects.filter(pkqt_assessment_num_id=aid) if aid else PkquotationInfo.objects.none()
         if quotation_objects.exists():
             quotation_objects.delete()
-        else:
-            print("No matching PkquotationInfo found to delete.")
     except Exception as e:
         print(f"An error occurred while deleting PkquotationInfo: {e}")
 
 
 def Pkquotation_summary_delete(assessment_num):
-    # Deleting PkquotationsummaryInfo objects
     try:
-        quotationsummary_objects = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assessment_num)
+        aid = _resolve_assessment_id(assessment_num)
+        quotationsummary_objects = PkquotationsummaryInfo.objects.filter(qs_assessment_num_id=aid) if aid else PkquotationsummaryInfo.objects.none()
         if quotationsummary_objects.exists():
             quotationsummary_objects.delete()
-        else:
-            print("No matching PkquotationsummaryInfo found to delete.")
     except Exception as e:
         print(f"An error occurred while deleting PkquotationsummaryInfo: {e}")
 
 def Pkneedassessment_dim_delete(assessment_num):
     try:
-        # Fetch the queryset for the matching records
-        na_dim_objects = Nadimension.objects.filter(nad_assess_num=assessment_num)
-
-        # Check if any objects were found
+        aid = _resolve_assessment_id(assessment_num)
+        na_dim_objects = Nadimension.objects.filter(nad_assess_num_id=aid) if aid else Nadimension.objects.none()
         if na_dim_objects.exists():
-            # Delete the objects
             na_dim_objects.delete()
-        else:
-            # Handle the case where no objects were found, if needed
-            print("No matching costing info found to delete.")
     except Exception as e:
-        # Handle any unexpected exceptions
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in Pkneedassessment_dim_delete: {e}")
 
 @login_required(login_url='login_page')
 def na_dimension_cancel(request,needassessment_id=0):

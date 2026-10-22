@@ -329,6 +329,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             tr_vehicletype_placed=default_vehicletype,
                             tr_category=default_category,
                             tc_financestatus_id=trip_status_id,
+                            tr_operational_status_id=trip_status_id,
                             tc_cancellation=cancellation_charge,
                             tc_cancellation_check=(status_id == 9),
                             tr_updated_by=request.user
@@ -398,6 +399,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                                 tr_vehicletype_placed=default_vehicletype,
                                 tr_category=default_category,
                                 tc_financestatus_id=trip_status_id,
+                                tr_operational_status_id=trip_status_id,
                                 tc_cancellation=cancellation_charge,
                                 tc_cancellation_check=(status_id == 9),
                                 tr_updated_by=request.user
@@ -407,6 +409,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             existing_dummy.tc_cancellation = cancellation_charge
                             existing_dummy.tc_cancellation_check = (status_id == 9)
                             existing_dummy.tc_financestatus_id = trip_status_id
+                            existing_dummy.tr_operational_status_id = trip_status_id
                             existing_dummy.save()
 
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id

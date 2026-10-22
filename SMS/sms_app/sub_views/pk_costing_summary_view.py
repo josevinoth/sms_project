@@ -69,14 +69,30 @@ def costingsummary_add(request,costingsummary_id=0):
             plywood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[4, 6], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             plywood_cost = round(plywood_cost, 2)
 
-            # Combined Total CFT (Wood=1, Hardwood=5)
-            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).aggregate(
+            # Combined Total CFT (Wood=1, Hardwood=5; excluding reused wood weight in Kg)
+            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
                 total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
             )['total'] or 0.0
             total_cft = round(total_cft, 2)
 
-            # Combined Total SQFT (Plywood=4, Marine Ply=6)
-            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).aggregate(
+            # Combined Total SQFT (Plywood=4, Marine Ply=6; excluding reused plywood weight in Kg)
+            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
                 total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
             )['total'] or 0.0
             total_sqft = round(total_sqft, 2)

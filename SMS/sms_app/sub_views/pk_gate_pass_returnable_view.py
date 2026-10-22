@@ -50,16 +50,16 @@ def gate_return_add(request, gate_id=0):
             form = GatepassreturnForm(initial=initial_data)
             assessment_id = request.session.get('na_assessment_id') or (costing.cs_assessment_num.id if job_no and costing else None)
             
-            gatepassreturn_list = None
+            gatepassreturn_list = []
             if job_no and costing:
                 assess_ids = PkcostingInfo.objects.filter(
                     ct_job_no=job_no
                 ).values_list('ct_assessment_num', flat=True).distinct()
                 from sms_app.sub_models.po_dimension_mod import POdimension
-                gatepassreturn_list = POdimension.objects.filter(
+                gatepassreturn_list = list(POdimension.objects.filter(
                     pod_assess_num__in=assess_ids, 
                     pod_po_num=costing.cs_customer_po
-                )
+                ))
             # Attach job qty to each dimension (do NOT sum, just take the first matching BOM row's target qty)
             for po_dim in gatepassreturn_list:
                 costing_item = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_po_dimension=po_dim).first()
@@ -174,6 +174,10 @@ def gate_return_delete(request,gate_id):
 @login_required(login_url='login_page')
 def gate_return_pdf(request, gate_id):
     gate = PackingGateReturn.objects.filter(id=gate_id).first()
+    if not gate:
+        messages.error(request, "Record not found.")
+        return redirect('/SMS/packing_gate_list')
+
     # Pull items directly linked to this Job Number via the Costing info
     # Use a fallback strategy for older records where the direct link might be missing
     pod_ids = list(PkcostingInfo.objects.filter(
@@ -195,10 +199,6 @@ def gate_return_pdf(request, gate_id):
             pod_assess_num__in=assessments, 
             pod_po_num=gate.gp_customer_po
         )
-
-    if not gate:
-        messages.error(request, "Record not found.")
-        return redirect('/SMS/packing_gate_list')
 
     wh_location = None
     if gate.gp_assessment_num:
@@ -395,11 +395,9 @@ def gate_pass_get_job_details(request):
         data['customer_gstin'] = costing.cs_customer_name.cu_gst if costing.cs_customer_name else ''
         data['bvm_inv_no'] = costing.cs_invoice_num if costing.cs_invoice_num else ''
         
-        # HSN Code from linked Need Assessment dimensions if possible
-        if costing.cs_assessment_num:
-            from ..models import Nadimension
-            hsn = Nadimension.objects.filter(na_assessment_num=costing.cs_assessment_num).values_list('na_hsn_code', flat=True).first()
-            data['hsn_code'] = hsn if hsn else ''
+        # HSN Code from previous Gate Pass for this customer if available
+        prev_gp = PackingGateReturn.objects.filter(gp_customer_name=customer_id).exclude(gp_hsn_code__isnull=True).exclude(gp_hsn_code='').first()
+        data['hsn_code'] = prev_gp.gp_hsn_code if prev_gp else ''
 
         # Also return the full PO list for this customer
         po_qs = PkpurchaseorderInfo.objects.filter(po_customer_name=customer_id)

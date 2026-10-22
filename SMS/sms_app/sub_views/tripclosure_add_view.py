@@ -447,6 +447,14 @@ def tripclosure_add(request, tripclosure_id=0):
                 # 🔒 BOSS RULE PROTECTION: Trip Closure must NEVER overwrite the trip cost in the DB.
                 # If the user overrode it in Invoice Documents, we must preserve that override.
                 obj.tc_tripcost = tripclosure.tc_tripcost
+
+                # Automatically synchronize operational status
+                if obj.tc_financestatus_id:
+                    if obj.tc_financestatus_id in [2, 3, 10, 11]:
+                        obj.tr_operational_status_id = obj.tc_financestatus_id
+                    elif not obj.tr_operational_status_id or obj.tr_operational_status_id in [1, 12]:
+                        obj.tr_operational_status_id = 2  # Closed operationally
+
                 obj.save()
                 
                 print("Trip Closure Main Form Saved")

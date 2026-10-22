@@ -280,6 +280,7 @@
             </div>
 
             <input type="hidden" id="hidden_pc_stock_description">
+            <input type="hidden" id="hidden_pc_code">
             {% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" %}
         </div>
     </form>
@@ -465,9 +466,17 @@
             if (document.getElementById("pkqt_uom")) document.getElementById("pkqt_uom").value = "";
         }
         
+        var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+        var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+        var part_code_check = part_code_code || part_code_text;
+        var desc_check = desc.toUpperCase();
+        var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
+
         if (jn == 8) {
             var jn1 = document.getElementById("pkqt_stock_type").value;
-            if (jn1 == 1 || jn1 == 5) {
+            if (is_reused) {
+                req_label_elem.html('Req Wt (Kg) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required Weight in Kg for reused material"></i>');
+            } else if (jn1 == 1 || jn1 == 5) {
                 req_label_elem.html('Req Vol (CFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Cubic Feet (CFT) volume"></i>');
             } else if (jn1 == 2) {
                 req_label_elem.html('Req Area (SQFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Box Surface Area in SQFT"></i>');
@@ -484,7 +493,30 @@
                 $('#pkqt_item').removeClass('disable_a_href');
             }
             var jn1 = document.getElementById("pkqt_stock_type").value;
-            if (jn1 == 1 || jn1 == 5) {
+            if (is_reused) {
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                $('#pkqt_quantity').removeClass('disable_a_href');
+                $('#pkqt_sqrt_req').addClass('disable_a_href');
+                $('#pkqt_days').addClass('disable_a_href');
+                document.getElementById("pkqt_days").value = 0;
+
+                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
+                // Reused material formula: Unit Cost = Qty Req (Kg) * Rate
+                var totalCost = rate * quantity_req;
+                document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
+                document.getElementById("pkqt_sqrt_req").value = quantity_req.toFixed(3);
+                if (document.getElementById("pkqt_cft")) {
+                    document.getElementById("pkqt_cft").value = "0.000";
+                }
+            }
+            else if (jn1 == 1 || jn1 == 5) {
                 $('#pkqt_stock_description').addClass('disable_a_href');
                 $('#pkqt_uom').addClass('disable_a_href');
                 $('#pkqt_quantity').removeClass('disable_a_href');
@@ -1029,6 +1061,10 @@
                 }
 
 
+                if (data.pc_code && document.getElementById("hidden_pc_code")) {
+                    document.getElementById("hidden_pc_code").value = data.pc_code;
+                }
+
                 $('#pkqt_stock_type').removeClass('disable_a_href');
                 if (pc_stock_type_id == 1 || pc_stock_type_id == 4) {
                     $('#pkqt_item').removeClass('disable_a_href');
@@ -1044,14 +1080,20 @@
 <script>
     function toggleFields() {
         var stockType = $("#pkqt_stock_type").val();
+        var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+        var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+        var part_code_check = part_code_code || part_code_text;
+        var desc_check = ($('#hidden_pc_stock_description').val() || $('#pkqt_stock_description option:selected').text() || '').trim().toUpperCase();
+        var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
 
-        if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+        if (is_reused) {
+            $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group").hide();
+            $("#length_group, #width_group, #height_group").hide();
+        } else if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
             $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group ").hide();
             $("#length_group, #width_group, #height_group").show();
-
-        }
-        else {
-            $("#diameter_width_group, #con_length_group, #uom_group, weight_group, weight_sq_group ").show();
+        } else {
+            $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group ").show();
             $("#length_group, #width_group, #height_group").hide();
         }
     }

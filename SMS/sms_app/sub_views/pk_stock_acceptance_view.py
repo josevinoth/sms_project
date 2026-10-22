@@ -55,8 +55,8 @@ def pk_acceptance_add(request,retrival_id=0):
                     ref_no = purchase_ref
                     if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {retrival.id})").exists():
                         try:
-                            # Use ct_na_quantity which is the actual retrieved stock count
-                            actual_qty = float(retrival.ct_na_quantity or retrival.ct_quantity or 0)
+                            # Use total material required (ct_quantity or ct_quantity_req * ct_na_quantity)
+                            actual_qty = float(retrival.ct_quantity or (float(retrival.ct_quantity_req or 0) * float(retrival.ct_na_quantity or 1)))
                             StockMaintenance.objects.create(
                                 sm_stock_type_id=2, # Retrieval
                                 sm_invoice_date=datetime.now().date(),

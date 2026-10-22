@@ -212,6 +212,7 @@ def fetch_part_code_details(request):
         stock_consumption = stock_desc.stock_Consumption if stock_desc and stock_desc.stock_Consumption else None
 
         data = {
+            'pc_code': part_code.pc_code,
             'pc_stock_type': str(part_code.pc_stock_type) if part_code.pc_stock_type else '',
             'pc_stock_type_id': part_code.pc_stock_type.id if part_code.pc_stock_type else None,
             'pc_stock_description': str(stock_desc) if stock_desc else '',
