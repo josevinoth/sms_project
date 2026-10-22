@@ -284,8 +284,18 @@ def tripdetail_add(request, tripdetail_id=0):
                 va_status_id__in=[1, 3]
             ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
 
+            # Find vehicles that have a cancelled trip for this enquiry so they cannot create another trip
+            cancelled_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(tc_cancellation_check=True) | Q(tc_financestatus_id__in=[10, 11]) | Q(
+                        tr_operational_status_id__in=[10, 11])
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
             # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
-            # Category 1 = Business trip (exclude cancelled trips so cancelled vehicles can run a new trip)
+            # Category 1 = Business trip
             assigned_business_vehicles = set(
                 TripdetailInfo.objects.filter(
                     tr_enquirynumber=enquiry_num_id,
@@ -294,8 +304,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     tc_cancellation_check=True
                 ).exclude(
                     tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
                 ).values_list('tr_vehiclenumber', flat=True)
             )
 
@@ -304,8 +312,10 @@ def tripdetail_add(request, tripdetail_id=0):
             for va_item in allotted_vas:
                 reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (
                     va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
-                # Exclude vehicle only if it already has an active (non-cancelled) Business trip
+                # Exclude vehicle if it was cancelled or already has an active Business trip
                 if reg_num and reg_num not in allotted_vehicle_map:
+                    if reg_num in cancelled_vehicles and reg_num != selected_vehicle_number:
+                        continue
                     if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
                         continue
 
@@ -677,13 +687,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num_id,
                     tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
-                ).exists()
+                ).exclude(tc_cancellation_check=True).exists()
 
                 if existing_business_trip:
                     messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
@@ -977,15 +981,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num,
                     tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    pk=tripdetail.id
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
-                ).exists()
+                ).exclude(pk=tripdetail.id).exclude(tc_cancellation_check=True).exists()
 
                 if existing_business_trip:
                     messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
@@ -1089,13 +1085,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.tc_financestatus_id = 8
                     trip.tr_operational_status_id = 8
 
-                # Fallback: Sync operational status if missing or if desynced with final/closure finance statuses
+                # Fallback: Sync operational status if missing or if manual_status_id was disabled in UI
                 if not trip.tr_operational_status_id and trip.tc_financestatus_id:
                     trip.tr_operational_status_id = trip.tc_financestatus_id
-                elif trip.tc_financestatus_id in [2, 3, 8, 10, 11] and trip.tr_operational_status_id != trip.tc_financestatus_id:
-                    trip.tr_operational_status_id = trip.tc_financestatus_id
-                elif trip.tc_financestatus_id in [4, 5, 6, 7, 9] and trip.tr_operational_status_id in [1, 12, None]:
-                    trip.tr_operational_status_id = 2  # Closed operationally
+                # Special case: Awaiting Trip Approval (8) should always be synced
+                elif trip.tc_financestatus_id == 8 and trip.tr_operational_status_id != 8:
+                    trip.tr_operational_status_id = 8
 
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:
@@ -2487,6 +2482,3 @@ def view_combined_pod(request, trip_num):
     response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}.pdf"'
     return response
-
-
-

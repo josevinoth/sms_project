@@ -113,7 +113,7 @@ def dispatch_add(request, dispatch_id=0):
 
             if dispatch_form.is_valid():
                 dispatch = dispatch_form.save(commit=False)
-                                # Process driver signature
+                # Process driver signature
                 driver_data = request.POST.get('driver_signature_data')
                 if driver_data:
                     dispatch.driver_sign_b64 = driver_data
@@ -157,7 +157,8 @@ def dispatch_add(request, dispatch_id=0):
                                     em_emailtype__email_type__icontains='Alert'
                                 ).first()
                                 if email_master and email_master.em_to_names:
-                                    recipient_list = [e.strip() for e in email_master.em_to_names.split(',') if e.strip()]
+                                    recipient_list = [e.strip() for e in email_master.em_to_names.split(',') if
+                                                      e.strip()]
                                     if email_master.em_cc_names:
                                         cc_list = [e.strip() for e in email_master.em_cc_names.split(',') if e.strip()]
                             except Exception as em_err:
@@ -273,7 +274,7 @@ def dispatch_goods_list(request):
         goods.all_dispatch_nums = dispatch_num_val
         goods.loadingbay = loadingbay_dict.get(goods.wh_job_no) or goods.wh_lb_job_no_id
         goods_list.append(goods)
-        
+
     context = {
         'goods_list': goods_list,
         'dispatch_master_list': dispatch_master_list,
@@ -328,7 +329,7 @@ def dispatch_remove_goods(request):
 
     dispatch_invoice_job_update(dispatch_num_val)
     warehousevolme_area_calc(request)
-    
+
     return JsonResponse({'status': 'success'})
 
 
@@ -351,7 +352,7 @@ def dispatch_add_goods(request):
     selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     current_date = now()
     print('selected', selected_stocks)
-    
+
     try:
         dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
         vehicle_type = dispatch_info.dispatch_truck_type
@@ -368,7 +369,7 @@ def dispatch_add_goods(request):
     # Bulk fetch all goods in one go
     goods_queryset = list(Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks))
     goods_ids = [g.id for g in goods_queryset]
-    
+
     # Bulk fetch aggregates
     dispatch_aggregates = GoodsPartialDispatchInfo.objects.filter(
         pd_goods_id__in=goods_ids
@@ -379,14 +380,14 @@ def dispatch_add_goods(request):
     dispatch_dict = {item['pd_goods_id']: item for item in dispatch_aggregates}
 
     goods_to_update = []
-    
+
     for goods_info in goods_queryset:
         fumigation_action = goods_info.wh_fumigation_action
         fumigation_date = goods_info.wh_fumigation_date
 
         if str(fumigation_action) == 'BVM' and not fumigation_date:
             messages.error(request, f'Fumigation Date not entered for stock {goods_info.wh_qr_rand_num}.')
-            continue # Instead of redirecting entirely, just skip this one
+            continue  # Instead of redirecting entirely, just skip this one
 
         aggs = dispatch_dict.get(goods_info.id, {'total': 0, 'total_wt': 0})
         total_dispatched = aggs['total'] or 0
@@ -453,11 +454,11 @@ def dispatch_invoice_job_update(dispatch_num_val):
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
     total_weight = \
-    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_weight'))[
-        'wh_goods_weight__sum']
+        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_weight'))[
+            'wh_goods_weight__sum']
     total_goods = \
-    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_pieces'))[
-        'wh_goods_pieces__sum']
+        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_pieces'))[
+            'wh_goods_pieces__sum']
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_weight=total_weight)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_goods=total_goods)
     return ()
@@ -803,9 +804,11 @@ def dispatch_delete_attachment(request, pk, att_type):
 
     return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))
 
+
 from django.http import JsonResponse
 from django.urls import reverse
 from django.db.models import Q
+
 
 @login_required(login_url='login_page')
 def dispatch_list_ajax(request):
@@ -822,7 +825,7 @@ def dispatch_list_ajax(request):
 
     if dispatch_number:
         queryset = queryset.filter(dispatch_num__icontains=dispatch_number)
-    
+
     if job_number:
         queryset = queryset.filter(dispatch_job_num_list__icontains=job_number)
 
@@ -838,11 +841,11 @@ def dispatch_list_ajax(request):
 
     total_records = Dispatch_info.objects.count()
     filtered_records = queryset.count()
-    
+
     # Ordering
     order_column_index = request.GET.get('order[0][column]', 0)
     order_dir = request.GET.get('order[0][dir]', 'desc')
-    
+
     columns = [
         'id', 'dispatch_created_at', 'dispatch_num', 'id', 'dispatch_customer__cu_name',
         'dispatch_transporter', 'dispatch_truck_number', 'dispatch_truck_type',
@@ -857,18 +860,18 @@ def dispatch_list_ajax(request):
         queryset = queryset.order_by(order_by)
 
     data = []
-    for item in queryset[start:start+length]:
+    for item in queryset[start:start + length]:
         update_url = reverse('dispatch_update', args=[item.id])
         delete_url = reverse('dispatch_delete', args=[item.id])
         gatepass_url = reverse('dispatch_gatepass_pdf_download', args=[item.id])
         csrf_token = request.COOKIES.get('csrftoken', '')
-        
+
         edit_btn = f'''<div class="d-flex justify-content-center gap-1">
             <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{update_url}" >
                 <i class="far fa-edit"></i>
             </a>
         </div>'''
-        
+
         delete_btn = f'''<form action="{delete_url}" method="post" onclick="return confirm('Are you sure you want to delete this Dispatch record?');" style="margin:0; display:inline;">
             <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
             <button type="submit" class="btn btn-outline-danger" style="border-radius: 8px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">
@@ -884,20 +887,25 @@ def dispatch_list_ajax(request):
 
         data.append({
             'edit': edit_btn,
-            'dispatch_created_at': timezone.localtime(item.dispatch_created_at).strftime('%Y-%m-%d %H:%M:%S') if item.dispatch_created_at else '',
+            'dispatch_created_at': timezone.localtime(item.dispatch_created_at).strftime(
+                '%Y-%m-%d %H:%M:%S') if item.dispatch_created_at else '',
             'dispatch_num': item.dispatch_num or '',
             'gatepass': gatepass,
-            'dispatch_customer': str(item.dispatch_customer.cu_name) if hasattr(item, 'dispatch_customer') and item.dispatch_customer else 'None',
+            'dispatch_customer': str(item.dispatch_customer.cu_name) if hasattr(item,
+                                                                                'dispatch_customer') and item.dispatch_customer else 'None',
             'dispatch_transporter': str(item.dispatch_transporter) if item.dispatch_transporter else 'None',
             'dispatch_truck_number': item.dispatch_truck_number or '',
             'dispatch_truck_type': str(item.dispatch_truck_type) if item.dispatch_truck_type else '',
             'dispatch_cargo_picked': str(item.dispatch_cargo_picked) if item.dispatch_cargo_picked else '',
-            'dispatch_sticker_pasted_bvm': str(item.dispatch_sticker_pasted_bvm) if item.dispatch_sticker_pasted_bvm else '',
+            'dispatch_sticker_pasted_bvm': str(
+                item.dispatch_sticker_pasted_bvm) if item.dispatch_sticker_pasted_bvm else '',
             'dispatch_invoice_list': f'<div class="scrollable-cell">{item.dispatch_invoice_list or ""}</div>',
             'dispatch_job_num_list': f'<div class="scrollable-cell">{item.dispatch_job_num_list or ""}</div>',
-            'dispatch_status': str(item.dispatch_status.status_title) if hasattr(item, 'dispatch_status') and item.dispatch_status else 'None',
+            'dispatch_status': str(item.dispatch_status.status_title) if hasattr(item,
+                                                                                 'dispatch_status') and item.dispatch_status else 'None',
             'dispatch_updated_by': str(item.dispatch_updated_by) if item.dispatch_updated_by else 'None',
-            'dispatch_updated_at': timezone.localtime(item.dispatch_updated_at).strftime('%b %d, %Y') if item.dispatch_updated_at else '',
+            'dispatch_updated_at': timezone.localtime(item.dispatch_updated_at).strftime(
+                '%b %d, %Y') if item.dispatch_updated_at else '',
             'delete': delete_btn
         })
 
