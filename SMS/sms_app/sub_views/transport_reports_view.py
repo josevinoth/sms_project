@@ -443,12 +443,13 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
 
         # Halting Logic
         halting_days = safe_num(trip.tc_no_of_days_halting)
-        if inv:
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_day_cost = safe_num(trip.tc_haltingcost)
+        if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+            tc_haltingcost = tc_day_cost * halting_days
+        elif inv and safe_num(inv.ti_halting_charges) > 0:
             tc_haltingcost = safe_num(inv.ti_halting_charges)
-        elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-            tc_haltingcost = safe_num(trip.tc_total_halting_cost)
-        elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-            tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
         else:
             tc_haltingcost = 0.0
 
@@ -1897,17 +1898,11 @@ def ref_no_pending_report_ajax_view(request):
         halting_days = safe_num(trip.tc_no_of_days_halting)
         if halting_days <= 0:
             halting_days = 1.0
-        tc_tot_cost = safe_num(trip.tc_total_halting_cost)
         tc_day_cost = safe_num(trip.tc_haltingcost)
         tc_total_check = getattr(trip, 'tc_total_halting_cost_check', False)
         tc_day_check = getattr(trip, 'tc_haltingcost_check', False)
-        if tc_total_check or tc_day_check:
-            if tc_tot_cost > 0:
-                halting_val = tc_tot_cost
-            elif tc_day_cost > 0:
-                halting_val = tc_day_cost * halting_days
-            else:
-                halting_val = 0.0
+        if (tc_total_check or tc_day_check) and tc_day_cost > 0:
+            halting_val = tc_day_cost * halting_days
         else:
             halting_val = 0.0
 
@@ -2210,8 +2205,7 @@ def invoice_pending_report_ajax_view(request):
                      output_field=FloatField()) +
                 Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
                 Case(
-                    When(tc_total_halting_cost_check=True, tc_total_halting_cost__gt=0, then=F('tc_total_halting_cost')),
-                    When(Q(tc_haltingcost_check=True) | Q(tc_total_halting_cost_check=True), then=F('tc_haltingcost') * Case(When(tc_no_of_days_halting__gt=0, then=F('tc_no_of_days_halting')), default=1, output_field=FloatField())),
+                    When((Q(tc_haltingcost_check=True) | Q(tc_total_halting_cost_check=True)) & Q(tc_haltingcost__gt=0), then=F('tc_haltingcost') * Case(When(tc_no_of_days_halting__gt=0, then=F('tc_no_of_days_halting')), default=1, output_field=FloatField())),
                     default=0.0,
                     output_field=FloatField()
                 ) +
@@ -2420,17 +2414,11 @@ def invoice_pending_report_ajax_view(request):
         halting_days = safe_num(trip.tc_no_of_days_halting)
         if halting_days <= 0:
             halting_days = 1.0
-        tc_tot_cost = safe_num(trip.tc_total_halting_cost)
         tc_day_cost = safe_num(trip.tc_haltingcost)
         tc_total_check = getattr(trip, 'tc_total_halting_cost_check', False)
         tc_day_check = getattr(trip, 'tc_haltingcost_check', False)
-        if tc_total_check or tc_day_check:
-            if tc_tot_cost > 0:
-                halting_val = tc_tot_cost
-            elif tc_day_cost > 0:
-                halting_val = tc_day_cost * halting_days
-            else:
-                halting_val = 0.0
+        if (tc_total_check or tc_day_check) and tc_day_cost > 0:
+            halting_val = tc_day_cost * halting_days
         else:
             halting_val = 0.0
 
@@ -2834,12 +2822,13 @@ def vendor_p_l_mkt_report_ajax_view(request):
         selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
         
         halting_days = safe_num(trip.tc_no_of_days_halting)
-        if inv:
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_day_cost = safe_num(trip.tc_haltingcost)
+        if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+            selling_halting = tc_day_cost * halting_days
+        elif inv and safe_num(inv.ti_halting_charges) > 0:
             selling_halting = safe_num(inv.ti_halting_charges)
-        elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-            selling_halting = safe_num(trip.tc_total_halting_cost)
-        elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-            selling_halting = safe_num(trip.tc_haltingcost) * halting_days
         else:
             selling_halting = 0.0
             
@@ -3371,12 +3360,13 @@ def vendor_p_l_attached_report_ajax_view(request):
             selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
             
             halting_days = safe_num(trip.tc_no_of_days_halting)
-            if inv:
+            if halting_days <= 0:
+                halting_days = 1.0
+            tc_day_cost = safe_num(trip.tc_haltingcost)
+            if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+                selling_halting = tc_day_cost * halting_days
+            elif inv and safe_num(inv.ti_halting_charges) > 0:
                 selling_halting = safe_num(inv.ti_halting_charges)
-            elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-                selling_halting = safe_num(trip.tc_total_halting_cost)
-            elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-                selling_halting = safe_num(trip.tc_haltingcost) * halting_days
             else:
                 selling_halting = 0.0
                 
@@ -4409,11 +4399,12 @@ def own_vehicle_pl_report_view(request):
 
                 # Halting Logic
                 halting_days = safe_num(trip.tc_no_of_days_halting)
-                if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-                    selling_halting = safe_num(trip.tc_total_halting_cost)
-                elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-                    selling_halting = safe_num(trip.tc_haltingcost) * halting_days
-                elif inv:
+                if halting_days <= 0:
+                    halting_days = 1.0
+                tc_day_cost = safe_num(trip.tc_haltingcost)
+                if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+                    selling_halting = tc_day_cost * halting_days
+                elif inv and safe_num(inv.ti_halting_charges) > 0:
                     selling_halting = safe_num(inv.ti_halting_charges)
                 else:
                     selling_halting = 0.0
@@ -5621,7 +5612,7 @@ def diesel_vs_revenue_report_ajax_view(request):
         rev_loading = (safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0))
         rev_unloading = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0))
         rev_weighment = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
-        rev_halting = (safe_num(inv.ti_halting_charges) if inv else (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0))
+        rev_halting = ((safe_num(trip.tc_haltingcost) * max(1.0, safe_num(trip.tc_no_of_days_halting))) if (trip.tc_haltingcost_check or trip.tc_total_halting_cost_check) and safe_num(trip.tc_haltingcost) > 0 else (safe_num(inv.ti_halting_charges) if inv else 0.0))
         rev_handling = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
         rev_parking = (safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0))
         rev_rto = safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0.0
@@ -5827,7 +5818,7 @@ def own_vs_market_sales_report_view(request):
                   (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) + \
                   (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) + \
                   (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) + \
-                  (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0) + \
+                  (safe_num(trip.tc_haltingcost) * max(1.0, safe_num(trip.tc_no_of_days_halting)) if (trip.tc_haltingcost_check or trip.tc_total_halting_cost_check) and safe_num(trip.tc_haltingcost) > 0 else 0) + \
                   (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0) + \
                   (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
 

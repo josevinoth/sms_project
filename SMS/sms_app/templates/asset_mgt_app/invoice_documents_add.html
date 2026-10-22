@@ -224,7 +224,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Cancellation</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
@@ -674,12 +674,13 @@
                 return false;
             }
 
-            // Validate that either Trip Charges or Special Sell is checked
+            // Validate that either Trip Charges, Special Sell, or Cancellation is checked
             var isTripChargesChecked = $("#tc_tripcost_check").is(":checked");
             var isSpecialSellChecked = $("#special_sell_check").is(":checked");
-            if (!isTripChargesChecked && !isSpecialSellChecked) {
+            var isCancellationChecked = $("#tc_cancellation_check").is(":checked");
+            if (!isTripChargesChecked && !isSpecialSellChecked && !isCancellationChecked) {
                 e.preventDefault();
-                alert("Either Trip Charges or Special Sell must be checked before submitting the form.");
+                alert("Either Trip Charges, Special Sell, or Cancellation must be checked before submitting the form.");
                 $("#tc_tripcost_check").focus();
                 return false;
             }

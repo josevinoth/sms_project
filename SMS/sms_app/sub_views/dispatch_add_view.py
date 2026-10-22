@@ -349,21 +349,32 @@ def dispatch_stock_list(request):
 def dispatch_add_goods(request):
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
-    selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
+    raw_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
+    selected_stocks = [str(s).strip() for s in raw_stocks if s and str(s).strip()]
     current_date = now()
     print('selected', selected_stocks)
 
-    try:
-        dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
-        vehicle_type = dispatch_info.dispatch_truck_type
-    except Dispatch_info.DoesNotExist:
+    dispatch_info = None
+    if dispatch_id_val:
+        dispatch_info = Dispatch_info.objects.filter(id=dispatch_id_val).first()
+    if not dispatch_info and dispatch_num_val:
+        dispatch_info = Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).first()
+
+    if not dispatch_info:
         messages.error(request, 'Dispatch information not found.')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.is_ajax():
+            return JsonResponse({'status': 'error', 'message': 'Dispatch information not found.'}, status=400)
         return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    dispatch_num_val = dispatch_info.dispatch_num
+    vehicle_type = dispatch_info.dispatch_truck_type
 
     try:
         check_in_out_instance = Check_in_out.objects.get(id=2)
     except Check_in_out.DoesNotExist:
         messages.error(request, 'Check_in_out instance with id=2 not found.')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.is_ajax():
+            return JsonResponse({'status': 'error', 'message': 'Check_in_out instance with id=2 not found.'}, status=400)
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     # Bulk fetch all goods in one go
@@ -879,11 +890,21 @@ def dispatch_list_ajax(request):
             </button>
         </form>'''
 
-        gatepass = f'''<div class="d-flex justify-content-center gap-1">
-            <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}" target="_blank" title="Download Gate Pass">
-                <i class="fas fa-luggage-cart"></i>
-            </a>
-        </div>'''
+        has_driver_sign = bool(item.dispatch_driver_signature or (item.driver_sign_b64 and str(item.driver_sign_b64).strip()))
+        has_supervisor_sign = bool(item.dispatch_supervisor_signature or (item.supervisor_sign_b64 and str(item.supervisor_sign_b64).strip()))
+
+        if has_driver_sign and has_supervisor_sign:
+            gatepass = f'''<div class="d-flex justify-content-center gap-1">
+                <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}" target="_blank" title="Download Gate Pass">
+                    <i class="fas fa-luggage-cart"></i>
+                </a>
+            </div>'''
+        else:
+            gatepass = f'''<div class="d-flex justify-content-center gap-1">
+                <button class="btn" style="background: #d1d5db; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: none;" disabled title="Both Driver and Supervisor signatures required">
+                    <i class="fas fa-luggage-cart"></i>
+                </button>
+            </div>'''
 
         data.append({
             'edit': edit_btn,

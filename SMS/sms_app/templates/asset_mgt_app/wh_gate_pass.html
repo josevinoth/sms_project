@@ -87,22 +87,18 @@
     </table>
     <div class="left-group">
         {% for dispatch_detail in dispatch_details %}
-        <div>
-            <strong>Driver ----------------------------------------------</strong><br>
+        <div style="margin-top: 15px;">
             {% if dispatch_detail.driver_signature_base64 %}
-            <img src="{{ dispatch_detail.driver_signature_base64 }}" style="height: 50px;">
-            {% else %}
-            <span>No Signature</span>
+            <img src="{{ dispatch_detail.driver_signature_base64 }}" style="height: 45px; display: block; margin-bottom: 2px;">
             {% endif %}
+            <strong>Driver ----------------------------------------------</strong>
         </div>
 
-        <div style="margin-top: 30px;">
-            <strong>BVM Supervisor ----------------------------------------------</strong><br>
+        <div style="margin-top: 25px;">
             {% if dispatch_detail.supervisor_signature_base64 %}
-            <img src="{{ dispatch_detail.supervisor_signature_base64 }}" style="height: 50px;">
-            {% else %}
-            <span>No Signature</span>
+            <img src="{{ dispatch_detail.supervisor_signature_base64 }}" style="height: 45px; display: block; margin-bottom: 2px;">
             {% endif %}
+            <strong>BVM Supervisor ----------------------------------------------</strong>
         </div>
         {% endfor %}
     </div>

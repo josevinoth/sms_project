@@ -1,5 +1,3 @@
-{% block content %}
-
 <hr>
 
 <!--    <div class="col-md-1">-->
@@ -60,9 +58,9 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
 
 <div class="container-fluid shadow-box-table p-3">
     <div class="col-md-1.5">
-        <a href="" id='add_btn' class="btn btn-warning" onclick="return confirm('Are you sure to Check-Out this stock?');">
-            <i class="fas fa-plus"></i> Check-Out
-        </a>
+        <button type="button" id='add_btn' class="btn btn-warning">
+            <i class="fas fa-plus mr-1"></i> Check-Out
+        </button>
     </div>
     <br>
     <table  id="dispatch_master_list" class="table table-hover modern-table w-100">
@@ -94,7 +92,7 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
         </thead>
         <tbody>
         {% for goodsinfo in dispatch_master_list %}
-        <tr data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}" class="{% if goodsinfo.is_expired %}expired-row{% endif %}">
+        <tr data-stock="{{ goodsinfo.wh_qr_rand_num|default:''|cut:' ' }}" data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}" class="{% if goodsinfo.is_expired %}expired-row{% endif %}">
             <td></td>
             <td></td>
             <td>{{ goodsinfo.wh_job_no }}</td>
@@ -196,9 +194,18 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
 <!--} );-->
 <!--</script>-->
 <script>
-    $(document).ready(function () {
-    // Initialize DataTable
-    var table = new DataTable('#dispatch_master_list', {
+$(document).ready(function () {
+    // Helper function for user alerts (supports SweetAlert2 if loaded, fallback to native alert/confirm)
+    function notifyAlert(title, text, icon) {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({ title: title, text: text, icon: icon || 'info' });
+        } else {
+            alert((title ? title + ': ' : '') + text);
+        }
+    }
+
+    // Initialize DataTable with unique variable name
+    var masterTable = new DataTable('#dispatch_master_list', {
         responsive: {
             details: { type: 'inline', target: 0 }
         },
@@ -228,33 +235,25 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
 
     // Highlight expired rows on load + redraw
     highlightExpiredRows();
-    table.on('draw', function () {
+    masterTable.on('draw', function () {
         highlightExpiredRows();
     });
 
     // Prevent selection of expired rows
-    table.on('user-select', function (e, dt, type, cell, originalEvent) {
+    masterTable.on('user-select', function (e, dt, type, cell, originalEvent) {
         let rowNode = dt.row(cell.index().row).node();
         let expiry = $(rowNode).data('expiry');
         let today = new Date().toISOString().split('T')[0];
         if ($(rowNode).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today)) {
             e.preventDefault();
-            Swal.fire({
-                icon: "error",
-                title: "Expired!",
-                text: "This stock is expired. You cannot select it!"
-            });
+            notifyAlert("Expired!", "This stock is expired. You cannot select it!", "error");
         }
     });
 
     // Alert if user clicks on an expired row
     $(document).on('click', '#dispatch_master_list tbody tr.expired-row', function (e) {
         if (!$(e.target).closest('button, form, a, input').length) {
-            Swal.fire({
-                icon: "error",
-                title: "Expired!",
-                text: "This stock is expired. You cannot select it!"
-            });
+            notifyAlert("Expired!", "This stock is expired. You cannot select it!", "error");
         }
     });
 
@@ -306,24 +305,44 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
     // Add button logic
     $('#add_btn').on('click', function (e) {
         e.preventDefault();
-        let selectedIndexes = table.rows({ selected: true }).indexes();
-        let selectedData = table.rows({ selected: true }).data();
-        let len1 = selectedIndexes.length;
-        console.log("Total selected: ", len1);
+        let selectedRows = masterTable.rows({ selected: true });
+        let count = selectedRows.count();
+        console.log("Total selected: ", count);
+
+        if (count === 0) {
+            notifyAlert("No stock selected", "Please select at least one stock to check out.", "info");
+            return;
+        }
 
         var elements = [];
-        selectedIndexes.each(function (idx, loopIndex) {
-            let row = table.row(idx).node();
-            let expiry = $(row).data('expiry');
-            let today = new Date().toISOString().split('T')[0];
+        let today = new Date().toISOString().split('T')[0];
 
-            let isExpired = $(row).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+        selectedRows.every(function () {
+            let rowNode = this.node();
+            let $row = $(rowNode);
+            let expiry = $row.data('expiry');
+            let isExpired = $row.hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+
             if (!isExpired) {
-                elements.push(selectedData[loopIndex][12]); // col 12 = WH Stock Number
+                let stockNum = $row.attr('data-stock') || $row.data('stock');
+                if (!stockNum) {
+                    let rowData = this.data();
+                    if (rowData && rowData[12]) {
+                        stockNum = $('<div>').html(rowData[12]).text().trim();
+                    }
+                }
+                if (stockNum && String(stockNum).trim() !== '') {
+                    elements.push(String(stockNum).trim());
+                }
             }
         });
 
-        if (elements.length > 0) {
+        if (elements.length === 0) {
+            notifyAlert("No valid items selected!", "Please select non-expired stock only.", "error");
+            return;
+        }
+
+        function executeCheckout() {
             $.ajax({
                 url: '{% url "dispatch_add_goods" %}',
                 type: 'POST',
@@ -331,19 +350,34 @@ table.dataTable.modern-table tbody tr.expired-row:hover td {
                     'myList[]': elements,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
-                success: function () {
+                success: function (response) {
                     location.reload();
+                },
+                error: function (xhr) {
+                    alert('Error: ' + (xhr.responseText || 'Failed to dispatch stock.'));
+                }
+            });
+        }
+
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                title: 'Check-Out Stock',
+                text: 'Are you sure you want to check out ' + elements.length + ' selected stock(s)?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Check-Out'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeCheckout();
                 }
             });
         } else {
-            Swal.fire({
-                icon: "error",
-                title: "No valid items selected!",
-                text: "Please select non-expired stock only."
-            });
+            if (confirm('Are you sure you want to check out ' + elements.length + ' selected stock(s)?')) {
+                executeCheckout();
+            }
         }
     });
 });
-
 </script>
-{% endblock content %}
