@@ -117,11 +117,27 @@ def dispatch_add(request, dispatch_id=0):
                 driver_data = request.POST.get('driver_signature_data')
                 if driver_data:
                     dispatch.driver_sign_b64 = driver_data
+                    try:
+                        if ';base64,' in driver_data:
+                            format, imgstr = driver_data.split(';base64,')
+                            ext = format.split('/')[-1]
+                            data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
+                            dispatch.dispatch_driver_signature = data
+                    except Exception as e:
+                        print(f"Error saving driver signature file: {e}")
 
                 # Process supervisor signature
                 supervisor_data = request.POST.get('supervisor_signature_data')
                 if supervisor_data:
                     dispatch.supervisor_sign_b64 = supervisor_data
+                    try:
+                        if ';base64,' in supervisor_data:
+                            format, imgstr = supervisor_data.split(';base64,')
+                            ext = format.split('/')[-1]
+                            data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
+                            dispatch.dispatch_supervisor_signature = data
+                    except Exception as e:
+                        print(f"Error saving supervisor signature file: {e}")
 
                 dispatch.save()
                 print("Form Saved")
@@ -624,8 +640,8 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
                                                                                                 flat=True).order_by(
         'id').first()
     for d in dispatch_details:
-        d.driver_signature_base64 = d.driver_sign_b64
-        d.supervisor_signature_base64 = d.supervisor_sign_b64
+        d.driver_signature_base64 = d.driver_sign_b64 or get_base64_image(d.dispatch_driver_signature)
+        d.supervisor_signature_base64 = d.supervisor_sign_b64 or get_base64_image(d.dispatch_supervisor_signature)
     context = {
         'dispatch_details': dispatch_details,
         'grouped_dispatch_details': grouped_details,
@@ -860,19 +876,11 @@ def dispatch_list_ajax(request):
             </button>
         </form>'''
 
-        gatepass = ''
-        if item.dispatch_driver_signature and item.dispatch_supervisor_signature:
-            gatepass = f'''<div class="d-flex justify-content-center gap-1">
-                <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}">
-                    <i class="fas fa-luggage-cart"></i>
-                </a>
-            </div>'''
-        else:
-            gatepass = f'''<div class="d-flex justify-content-center gap-1">
-                <button class="btn" style="background: #d1d5db; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: none;" disabled>
-                    <i class="fas fa-luggage-cart"></i>
-                </button>
-            </div>'''
+        gatepass = f'''<div class="d-flex justify-content-center gap-1">
+            <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}" target="_blank" title="Download Gate Pass">
+                <i class="fas fa-luggage-cart"></i>
+            </a>
+        </div>'''
 
         data.append({
             'edit': edit_btn,

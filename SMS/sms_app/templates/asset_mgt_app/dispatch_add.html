@@ -354,13 +354,24 @@
 </script>
 <script>
     function SignatureButtons() {
-      const status = document.getElementById("dispatch_status").value;
-      document.getElementById("driver-sign-btn").disabled = status !== "5";
-      document.getElementById("supervisor-sign-btn").disabled = status !== "5";
+      const statusElem = document.getElementById("dispatch_status");
+      if (!statusElem) return;
+      const isCompleted = String(statusElem.value).trim() === "5";
+      const driverBtn = document.getElementById("driver-sign-btn");
+      const supervisorBtn = document.getElementById("supervisor-sign-btn");
+      if (driverBtn) driverBtn.disabled = !isCompleted;
+      if (supervisorBtn) supervisorBtn.disabled = !isCompleted;
     }
 
-    // Run on page load
-    document.addEventListener("DOMContentLoaded", SignatureButtons);
+    // Run on page load and on status change
+    document.addEventListener("DOMContentLoaded", function() {
+        SignatureButtons();
+        const statusElem = document.getElementById("dispatch_status");
+        if (statusElem) {
+            statusElem.addEventListener("change", SignatureButtons);
+            $(statusElem).on("change", SignatureButtons);
+        }
+    });
 </script>
 
 <script>

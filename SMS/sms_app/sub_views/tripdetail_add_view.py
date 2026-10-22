@@ -203,7 +203,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
-                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
@@ -728,7 +728,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 if vehicle_number and str(v_source_id) != "3":
                     last_trip_for_loc = TripdetailInfo.objects.filter(
                         tr_vehiclenumber=vehicle_number
-                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
@@ -1851,24 +1851,22 @@ def get_last_reported_km(request):
             })
 
     last_trip = None
+    last_trip_loc = None
     if vehicle:
-        if enquiry_id:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
-
-        if not last_trip:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_vehiclenumber=vehicle)
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
+        last_trip = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+            .order_by('-id')
+            .first()
+        )
+        last_trip_loc = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .exclude(tr_reportedlocation__isnull=True)
+            .order_by('-tr_created_at', '-id')
+            .first()
+        )
 
     reported_dt_str = None
     if last_trip and last_trip.tr_reporteddate:
@@ -1879,9 +1877,9 @@ def get_last_reported_km(request):
 
     last_loc_id = None
     last_loc_name = None
-    if last_trip and last_trip.tr_reportedlocation:
-        last_loc_id = last_trip.tr_reportedlocation_id
-        last_loc_name = str(last_trip.tr_reportedlocation)
+    if last_trip_loc and last_trip_loc.tr_reportedlocation:
+        last_loc_id = last_trip_loc.tr_reportedlocation_id
+        last_loc_name = str(last_trip_loc.tr_reportedlocation)
 
     # If vehicle has a replacement breakdown place recorded, prioritize it if no post-replacement trip exists
     if not last_loc_id:
