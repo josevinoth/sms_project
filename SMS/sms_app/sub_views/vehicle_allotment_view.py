@@ -1216,10 +1216,14 @@ def load_vehicle_source(request):
     vehicle_source_name_list = []
     vehicle_source_id_list = []
 
-    # Fetch vehicles allotted in a trip
+    # Fetch vehicles allotted in a trip (created on/after 2026-08-01)
     vehicle_allotted_list = list(
-        TripdetailInfo.objects.filter(tr_vehiclesource__in=[1, 2], tc_financestatus=1).values_list('tr_vehiclenumber',
-                                                                                                   flat=True)
+        TripdetailInfo.objects.filter(
+            tr_vehiclesource__in=[1, 2],
+            tc_financestatus=1
+        ).filter(
+            Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+        ).values_list('tr_vehiclenumber', flat=True)
     )
 
     # Fetch all vehicle master records, avoiding repetitive queries
@@ -1274,11 +1278,13 @@ def load_vehicle_number(request):
 
     closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
-    # 1) Open / In-Progress Trips (Trip Started, Work in Progress, or unclosed trips)
+    # 1) Open / In-Progress Trips (Trip Started, Work in Progress, or unclosed trips created on/after 2026-08-01)
     open_trips_qs = TripdetailInfo.objects.filter(
         Q(tc_financestatus_id=1) |
         Q(tr_operational_status_id__in=[1, 12]) |
         (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
+    ).filter(
+        Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
     ).exclude(
         tr_enquirynumber__en_status_id=8
     )
