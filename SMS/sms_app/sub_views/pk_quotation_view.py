@@ -12,11 +12,19 @@ def recalculate_dependent_costs(assessment_id, request=None):
     from django.db.models import Sum, F
     from ..models import PkquotationInfo
     
-    # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
+    # Calculate total_cft_display dynamically for the assessment (Wood ONLY, excluding reused wood)
     aggregate_cft = PkquotationInfo.objects.filter(
         pkqt_assessment_num=assessment_id,
         pkqt_cost_type=8,
         pkqt_stock_type__in=[1, 5]
+    ).exclude(
+        pkqt_part_code__pc_code__icontains='RE'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='RE - Used'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='RE-Used'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='Reused'
     ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
     
     total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
@@ -36,6 +44,14 @@ def recalculate_dependent_costs(assessment_id, request=None):
                 pkqt_requirement=ht.pkqt_requirement,
                 pkqt_cost_type=8,
                 pkqt_stock_type__in=[1, 5]
+            ).exclude(
+                pkqt_part_code__pc_code__icontains='RE'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='Reused'
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             current_cft = round(job_wood_cft, 3) if job_wood_cft is not None else 0.0
         else:
@@ -106,11 +122,19 @@ def pk_quotation_add(request, quotation_id=0):
                 initial_data['pkqt_itemdescription'] = pkqt_item_description_id
 
             import json
-            # Calculate CFT map by job type (Wood ONLY)
+            # Calculate CFT map by job type (Wood ONLY, excluding reused wood)
             job_cft_qs = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
                 pkqt_stock_type__in=[1, 5]
+            ).exclude(
+                pkqt_part_code__pc_code__icontains='RE'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='Reused'
             ).values('pkqt_requirement').annotate(
                 total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
             )
@@ -121,11 +145,19 @@ def pk_quotation_add(request, quotation_id=0):
             job_cft_map_json = json.dumps(job_cft_map)
 
             form = PkquotationForm(initial=initial_data)
-            # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
+            # Calculate total_cft_display dynamically for the assessment (Wood ONLY, excluding reused wood)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
                 pkqt_stock_type__in=[1, 5]
+            ).exclude(
+                pkqt_part_code__pc_code__icontains='RE'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='Reused'
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
 
@@ -149,6 +181,14 @@ def pk_quotation_add(request, quotation_id=0):
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
                 pkqt_stock_type__in=[1, 5]
+            ).exclude(
+                pkqt_part_code__pc_code__icontains='RE'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='Reused'
             ).values('pkqt_requirement').annotate(
                 total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
             )
@@ -161,11 +201,19 @@ def pk_quotation_add(request, quotation_id=0):
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(instance=quotation)
             
-            # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
+            # Calculate total_cft_display dynamically for the assessment (Wood ONLY, excluding reused wood)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
                 pkqt_stock_type__in=[1, 5]
+            ).exclude(
+                pkqt_part_code__pc_code__icontains='RE'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                pkqt_stock_description__stock_description__icontains='Reused'
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
             
@@ -256,6 +304,14 @@ def pk_quotation_add(request, quotation_id=0):
                                 pkqt_assessment_num=assessment_id,
                                 pkqt_cost_type=8,
                                 pkqt_stock_type__in=[1, 5]
+                            ).exclude(
+                                pkqt_part_code__pc_code__icontains='RE'
+                            ).exclude(
+                                pkqt_stock_description__stock_description__icontains='RE - Used'
+                            ).exclude(
+                                pkqt_stock_description__stock_description__icontains='RE-Used'
+                            ).exclude(
+                                pkqt_stock_description__stock_description__icontains='Reused'
                             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                             print("total_cft", total_cft)
                             request.session['total_cft_display'] = round(total_cft, 3)
@@ -281,6 +337,14 @@ def pk_quotation_add(request, quotation_id=0):
                             pkqt_assessment_num=assessment_id,
                             pkqt_cost_type=8,
                             pkqt_stock_type__in=[1, 5]
+                        ).exclude(
+                            pkqt_part_code__pc_code__icontains='RE'
+                        ).exclude(
+                            pkqt_stock_description__stock_description__icontains='RE - Used'
+                        ).exclude(
+                            pkqt_stock_description__stock_description__icontains='RE-Used'
+                        ).exclude(
+                            pkqt_stock_description__stock_description__icontains='Reused'
                         ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                         print("total_cft", total_cft)
                         request.session['total_cft_display'] = round(total_cft, 3)
@@ -417,6 +481,14 @@ def pk_store_na_dimension_id(request):
         pkqt_requirement_id=ct_requirement_id,
         pkqt_cost_type=8,
         pkqt_stock_type__in=[1, 5]
+    ).exclude(
+        pkqt_part_code__pc_code__icontains='RE'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='RE - Used'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='RE-Used'
+    ).exclude(
+        pkqt_stock_description__stock_description__icontains='Reused'
     ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
     job_wood_cft = round(job_wood_cft, 3) if job_wood_cft is not None else 0.0
 
