@@ -225,6 +225,7 @@ def dispatch_goods_list(request):
     loadingbay_dict = {lb.lb_job_no: lb for lb in Loadingbay_Info.objects.filter(lb_job_no__in=all_job_nos)}
 
     filtered_master_list = []
+    today_date = timezone.now().date()
     for goods in dispatch_master_list:
         aggs = dispatch_dict.get(goods.id, {'total': 0, 'total_wt': 0})
         total_dispatched = aggs['total'] or 0
@@ -234,7 +235,15 @@ def dispatch_goods_list(request):
         goods.remaining_qty = goods.wh_goods_pieces - total_dispatched
         goods.dispatched_total_weight = total_dispatched_weight
         goods.remaining_weight = goods.wh_goods_weight - total_dispatched_weight
-        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no)
+        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no) or goods.wh_lb_job_no_id
+        if not goods.loadingbay and goods.wh_gate_injob_no_id:
+            goods.loadingbay = Loadingbay_Info.objects.filter(lb_job_no_id=goods.wh_gate_injob_no_id).first()
+
+        validity_dt = goods.loadingbay.lb_validity_date if goods.loadingbay else None
+        if validity_dt and timezone.localtime(validity_dt).date() < today_date:
+            goods.is_expired = True
+        else:
+            goods.is_expired = False
 
         if goods.remaining_qty > 0:
             filtered_master_list.append(goods)
@@ -246,7 +255,7 @@ def dispatch_goods_list(request):
         goods = entry.pd_goods
         goods.dispatched_total = entry.pd_dispatch_qty
         goods.all_dispatch_nums = dispatch_num_val
-        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no)
+        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no) or goods.wh_lb_job_no_id
         goods_list.append(goods)
         
     context = {
