@@ -1790,20 +1790,20 @@
                                     <span style="font-size:0.63rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
                                         <i class="fas fa-bolt text-warning"></i> CS Allocation Speed &amp; Conversion SLA
                                     </span>
-                                    <span style="color:#10b981; font-size:0.6rem; font-weight:700;">89.2% Overall Conv.</span>
+                                    <span style="color:#10b981; font-size:0.6rem; font-weight:700;" id="cs-sla-conv">89.2% Overall Conv.</span>
                                 </div>
                                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px;">
                                     <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
                                         <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Allotment TAT</div>
-                                        <div style="font-size:0.75rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;">14 Mins</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="cs-sla-tat">14 Mins</div>
                                     </div>
                                     <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
                                         <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Lost Enquiries</div>
-                                        <div style="font-size:0.75rem; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace;">0.0%</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace;" id="cs-sla-lost">0.0%</div>
                                     </div>
                                     <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
                                         <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Target Milestone</div>
-                                        <div style="font-size:0.75rem; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace;">3 In Club</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="cs-sla-milestone">3 In Club</div>
                                     </div>
                                 </div>
                             </div>
@@ -1831,7 +1831,7 @@
                                 <div class="billing-item">
                                     <div class="billing-item-lbl">Billed (MTD)</div>
                                     <div class="billing-item-val" style="color:#10b981;" id="tms-pipe-billed">₹10.37L</div>
-                                    <div style="font-size:0.56rem; color:#94a3b8;">157 invoices cleared</div>
+                                    <div style="font-size:0.56rem; color:#94a3b8;" id="tms-pipe-billed-cnt">157 invoices cleared</div>
                                 </div>
                                 <div class="billing-item">
                                     <div class="billing-item-lbl">Avg Freight / Trip</div>
@@ -1840,7 +1840,7 @@
                                 </div>
                                 <div class="billing-item">
                                     <div class="billing-item-lbl">POD Turnaround</div>
-                                    <div class="billing-item-val" style="color:#ffffff;">2.4 Days</div>
+                                    <div class="billing-item-val" style="color:#ffffff;" id="tms-pipe-pod-tat">2.4 Days</div>
                                     <div style="font-size:0.56rem; color:#10b981;">Target &lt; 3 Days</div>
                                 </div>
                             </div>
@@ -1950,11 +1950,11 @@
                                 </div>
                                 <div class="hub-bar-wrap">
                                     <div class="hub-bar-lbl">
-                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-maa-cft">32,595</b> / 491,250 CFT</span>
-                                        <span>6.6% CFT Used</span>
+                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-maa-cft">32,595</b> / <span id="s3-hub-maa-tot-cft">491,250</span> CFT</span>
+                                        <span id="s3-hub-maa-vol-pct">6.6% CFT Used</span>
                                     </div>
                                     <div class="hub-bar-track">
-                                        <div class="hub-bar-fill maa" style="width: 6.6%;"></div>
+                                        <div class="hub-bar-fill maa" id="s3-hub-maa-vol-bar" style="width: 6.6%;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1976,11 +1976,11 @@
                                 </div>
                                 <div class="hub-bar-wrap">
                                     <div class="hub-bar-lbl">
-                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-blr-cft">11,832</b> / 249,916 CFT</span>
-                                        <span>4.7% CFT Used</span>
+                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-blr-cft">11,832</b> / <span id="s3-hub-blr-tot-cft">249,916</span> CFT</span>
+                                        <span id="s3-hub-blr-vol-pct">4.7% CFT Used</span>
                                     </div>
                                     <div class="hub-bar-track">
-                                        <div class="hub-bar-fill blr" style="width: 4.7%;"></div>
+                                        <div class="hub-bar-fill blr" id="s3-hub-blr-vol-bar" style="width: 4.7%;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -2045,23 +2045,23 @@
                         <div>
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between;">
                                 <span><i class="fas fa-clock text-warning"></i> Shift-Wise Handling Velocity</span>
-                                <span style="color:#36d1ff; font-size:0.6rem;">8.2 MT / hr Avg</span>
+                                <span style="color:#36d1ff; font-size:0.6rem;" id="wms-shift-avg-rate">8.2 MT / hr Avg</span>
                             </div>
                             <div class="shift-strip-grid">
                                 <div class="shift-pill-box">
                                     <span class="shift-pill-lbl">Morning (06-14h)</span>
-                                    <span class="shift-pill-val" style="color:#36d1ff;">18 Veh <small style="font-size:0.56rem; color:#94a3b8;">(34.2 MT)</small></span>
-                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 34 Mins</span>
+                                    <span class="shift-pill-val" style="color:#36d1ff;" id="wms-shift-m-val">18 Veh <small style="font-size:0.56rem; color:#94a3b8;">(34.2 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;" id="wms-shift-m-tat">TAT: 34 Mins</span>
                                 </div>
                                 <div class="shift-pill-box">
                                     <span class="shift-pill-lbl">Evening (14-22h)</span>
-                                    <span class="shift-pill-val" style="color:#f59e0b;">22 Veh <small style="font-size:0.56rem; color:#94a3b8;">(46.8 MT)</small></span>
-                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 42 Mins</span>
+                                    <span class="shift-pill-val" style="color:#f59e0b;" id="wms-shift-e-val">22 Veh <small style="font-size:0.56rem; color:#94a3b8;">(46.8 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;" id="wms-shift-e-tat">TAT: 42 Mins</span>
                                 </div>
                                 <div class="shift-pill-box">
                                     <span class="shift-pill-lbl">Night (22-06h)</span>
-                                    <span class="shift-pill-val" style="color:#a855f7;">8 Veh <small style="font-size:0.56rem; color:#94a3b8;">(16.4 MT)</small></span>
-                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 38 Mins</span>
+                                    <span class="shift-pill-val" style="color:#a855f7;" id="wms-shift-n-val">8 Veh <small style="font-size:0.56rem; color:#94a3b8;">(16.4 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;" id="wms-shift-n-tat">TAT: 38 Mins</span>
                                 </div>
                             </div>
                         </div>
@@ -2070,23 +2070,23 @@
                         <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-stopwatch text-info"></i> Dock Operations &amp; Turn-Around (TAT)</span>
-                                <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">8 DOCKS ACTIVE</span>
+                                <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;" id="wms-dock-badge">8 DOCKS ACTIVE</span>
                             </div>
                             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
                                 <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
                                     <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Avg Dock TAT</div>
-                                    <div style="font-size:0.88rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">42 Mins</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-dock-tat">42 Mins</div>
                                     <div style="font-size:0.52rem; color:#10b981;">Target &lt; 45 Mins</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
                                     <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Handling Rate</div>
-                                    <div style="font-size:0.88rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;">8.2 MT/h</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-dock-handling-rate">8.2 MT/h</div>
                                     <div style="font-size:0.52rem; color:#94a3b8;">Forklift speed</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
                                     <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Gate Queue</div>
-                                    <div style="font-size:0.88rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">3 Trucks</div>
-                                    <div style="font-size:0.52rem; color:#94a3b8;">Avg wait 8 mins</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="wms-dock-queue">3 Trucks</div>
+                                    <div style="font-size:0.52rem; color:#94a3b8;">Active at Gate</div>
                                 </div>
                             </div>
                         </div>
@@ -2162,7 +2162,7 @@
                                 </div>
                                 <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
                                     <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Safe Handling SLA</div>
-                                    <div style="font-size:0.8rem; font-weight:700; color:#10b981;">99.8%</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#10b981;" id="s3-sla-safe-pct">99.8%</div>
                                     <div style="font-size:0.52rem; color:#94a3b8;">Target &gt; 99.5%</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
@@ -2172,7 +2172,7 @@
                                 </div>
                                 <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
                                     <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Security &amp; MHE</div>
-                                    <div style="font-size:0.8rem; font-weight:700; color:#36d1ff;">6/6 Active</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#36d1ff;" id="s3-sla-mhe">3/3 Active</div>
                                     <div style="font-size:0.52rem; color:#94a3b8;">100% Forklift uptime</div>
                                 </div>
                             </div>
@@ -2526,14 +2526,24 @@
 
                 // Slide 2 Live Fleet Matrix
                 if (tms.fleet_matrix) {
-                    $('#f-mat-transit').text(tms.fleet_matrix && tms.fleet_matrix.in_transit !== undefined ? tms.fleet_matrix.in_transit : 0);
-                    $('#f-mat-loading').text(tms.fleet_matrix.loading || 18);
-                    $('#f-mat-unloading').text(tms.fleet_matrix.unloading || 14);
-                    $('#f-mat-yard').text(tms.fleet_matrix.yard_standby || 22);
-                    const totalFleet = (tms.fleet_matrix.in_transit || 0) + (tms.fleet_matrix.loading || 0) + 
-                                       (tms.fleet_matrix.unloading || 0) + (tms.fleet_matrix.yard_standby || 0) + 
-                                       (tms.fleet_matrix.maintenance || 0);
+                    $('#f-mat-transit').text(tms.fleet_matrix.in_transit !== undefined ? tms.fleet_matrix.in_transit : 0);
+                    $('#f-mat-loading').text(tms.fleet_matrix.loading !== undefined ? tms.fleet_matrix.loading : 0);
+                    $('#f-mat-unloading').text(tms.fleet_matrix.unloading !== undefined ? tms.fleet_matrix.unloading : 0);
+                    $('#f-mat-yard').text(tms.fleet_matrix.yard_standby !== undefined ? tms.fleet_matrix.yard_standby : 0);
+                    const totalFleet = tms.fleet_matrix.total || (
+                        (tms.fleet_matrix.in_transit || 0) + (tms.fleet_matrix.loading || 0) + 
+                        (tms.fleet_matrix.unloading || 0) + (tms.fleet_matrix.yard_standby || 0) + 
+                        (tms.fleet_matrix.maintenance || 0)
+                    );
                     $('#f-mat-total').text(totalFleet + ' Trucks');
+                }
+
+                // Slide 2 CS SLA Strip
+                if (tms.cs_sla) {
+                    $('#cs-sla-conv').text(`${tms.cs_sla.overall_conv_pct}% Overall Conv.`);
+                    $('#cs-sla-tat').text(tms.cs_sla.allotment_tat_str || `${tms.cs_sla.allotment_tat_mins} Mins`);
+                    $('#cs-sla-lost').text(`${tms.cs_sla.lost_pct}%`);
+                    $('#cs-sla-milestone').text(`${tms.cs_sla.milestone_count} In Club`);
                 }
 
                 // Slide 2 Branch Target Meters
@@ -2554,6 +2564,12 @@
                 $('#tms-pipe-unbilled').text(`₹${tms.ready_invoice_val_lakhs || '0.0'}L`);
                 $('#tms-pipe-unbilled-cnt').text(`${(tms.ready_invoice_count || 0).toLocaleString()} trips ready`);
                 $('#tms-pipe-billed').text(`₹${tms.invoiced_val_lakhs || '0.0'}L`);
+                if (tms.invoiced_mtd_count !== undefined) {
+                    $('#tms-pipe-billed-cnt').text(`${(tms.invoiced_mtd_count).toLocaleString()} invoices cleared`);
+                }
+                if (tms.pod_turnaround_days !== undefined) {
+                    $('#tms-pipe-pod-tat').text(`${tms.pod_turnaround_days} Days`);
+                }
                 if (tms.avg_freight_per_trip) {
                     $('#tms-pipe-avg-frt').text(`₹${tms.avg_freight_per_trip.toLocaleString()}`);
                 }
@@ -2629,6 +2645,13 @@
                         $('#s3-hub-maa-avail').text(maaAvailSqft.toLocaleString() + ' Sq.Ft Available');
                         $('#s3-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
                         $('#s3-hub-maa-cft').text(maaOccCft.toLocaleString());
+                        if (maaHub.vol_pct !== undefined) {
+                            $('#s3-hub-maa-vol-pct').text(maaHub.vol_pct + '% CFT Used');
+                            $('#s3-hub-maa-vol-bar').css('width', Math.min(maaHub.vol_pct, 100) + '%');
+                        }
+                        if (maaHub.total_cft) {
+                            $('#s3-hub-maa-tot-cft').text(maaHub.total_cft.toLocaleString());
+                        }
                     }
                     const blrTotSqft = blrHub.total_sqft || blrHub.total_area_sqft;
                     if (blrTotSqft) {
@@ -2641,7 +2664,48 @@
                         $('#s3-hub-blr-avail').text(blrAvailSqft.toLocaleString() + ' Sq.Ft Available');
                         $('#s3-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
                         $('#s3-hub-blr-cft').text(blrOccCft.toLocaleString());
+                        if (blrHub.vol_pct !== undefined) {
+                            $('#s3-hub-blr-vol-pct').text(blrHub.vol_pct + '% CFT Used');
+                            $('#s3-hub-blr-vol-bar').css('width', Math.min(blrHub.vol_pct, 100) + '%');
+                        }
+                        if (blrHub.total_cft) {
+                            $('#s3-hub-blr-tot-cft').text(blrHub.total_cft.toLocaleString());
+                        }
                     }
+                }
+
+                // Slide 3 Shift Handling Velocity
+                if (wms.shift_throughput) {
+                    const st = wms.shift_throughput;
+                    if (st.avg_rate) {
+                        $('#wms-shift-avg-rate').text(`${st.avg_rate} MT / hr Avg`);
+                    }
+                    if (st.morning) {
+                        $('#wms-shift-m-val').html(`${st.morning.trucks} Veh <small style="font-size:0.56rem; color:#94a3b8;">(${st.morning.mt} MT)</small>`);
+                        $('#wms-shift-m-tat').text(`TAT: ${st.morning.tat}`);
+                    }
+                    if (st.evening) {
+                        $('#wms-shift-e-val').html(`${st.evening.trucks} Veh <small style="font-size:0.56rem; color:#94a3b8;">(${st.evening.mt} MT)</small>`);
+                        $('#wms-shift-e-tat').text(`TAT: ${st.evening.tat}`);
+                    }
+                    if (st.night) {
+                        $('#wms-shift-n-val').html(`${st.night.trucks} Veh <small style="font-size:0.56rem; color:#94a3b8;">(${st.night.mt} MT)</small>`);
+                        $('#wms-shift-n-tat').text(`TAT: ${st.night.tat}`);
+                    }
+                }
+
+                // Slide 3 Dock Operations & Queue
+                if (wms.active_docks !== undefined) {
+                    $('#wms-dock-badge').text(`${wms.active_docks} DOCKS ACTIVE`);
+                }
+                if (wms.yard_tat_mins !== undefined) {
+                    $('#wms-dock-tat').text(`${wms.yard_tat_mins} Mins`);
+                }
+                if (wms.handling_rate_hr !== undefined) {
+                    $('#wms-dock-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
+                }
+                if (wms.gate_queue_trucks !== undefined) {
+                    $('#wms-dock-queue').text(`${wms.gate_queue_trucks} Trucks`);
                 }
 
                 // Slide 3 Top Storage Accounts
@@ -2661,7 +2725,11 @@
                 }
 
                 // Slide 3 Cargo Integrity & SLA
-                $('#s3-sla-hv').text((wms.high_value_today || 0) + ' Today (' + (wms.high_value_total || 1688) + ' MTD)');
+                if (wms.audit_compliance) {
+                    $('#s3-sla-hv').text((wms.high_value_today || 0) + ' Today (' + (wms.audit_compliance.high_value_verified || 48) + ' Verified)');
+                    $('#s3-sla-safe-pct').text((wms.audit_compliance.safe_handling_pct || 99.9) + '%');
+                    $('#s3-sla-mhe').text(wms.audit_compliance.mhe_operational || '3/3 Active');
+                }
                 $('#s3-sla-damages').text((wms.damages_today || 0) + ' Open');
 
                 // Slide 3 Inventory Audit & Environmental Control
