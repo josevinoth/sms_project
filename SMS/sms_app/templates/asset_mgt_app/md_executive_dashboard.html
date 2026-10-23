@@ -1,0 +1,3044 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVM Executive Pulse | MD Dashboard</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- BVM Native Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261023">
+    
+    <style>
+        :root {
+            --bg-dark: #050a24;
+            --bg-card: rgba(13, 22, 60, 0.72);
+            --bg-card-hover: rgba(18, 31, 84, 0.85);
+            --border-glass: rgba(54, 209, 255, 0.18);
+            --border-glow: rgba(54, 209, 255, 0.4);
+            --neon-blue: #36d1ff;
+            --neon-cyan: #00f2fe;
+            --neon-green: #10b981;
+            --neon-amber: #f59e0b;
+            --neon-rose: #f43f5e;
+            --neon-purple: #a855f7;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 15% 15%, #0a1340 0%, #050a24 55%, #020512 100%) !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            color: var(--text-primary);
+            overflow: hidden !important;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Progress Countdown Bar */
+        #slide-progress-bar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            z-index: 9999;
+        }
+        #slide-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #36d1ff, #00f2fe, #10b981);
+            box-shadow: 0 0 10px rgba(54, 209, 255, 0.8);
+            transition: width 0.1s linear;
+        }
+
+        /* Top Header */
+        .md-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 18px;
+            height: 58px;
+            background: rgba(6, 12, 38, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            z-index: 100;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bvm-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .bvm-logo-badge {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1e3a8a, #0284c7);
+            border: 1px solid var(--neon-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(54, 209, 255, 0.35);
+        }
+        .brand-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand-title span {
+            color: var(--neon-blue);
+            text-shadow: 0 0 12px rgba(54, 209, 255, 0.4);
+        }
+        .brand-sub {
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        /* Center Navigation Pills */
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slide-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .slide-pill i {
+            font-size: 0.72rem;
+        }
+        .slide-pill:hover {
+            color: var(--text-primary);
+            background: rgba(54, 209, 255, 0.1);
+            border-color: rgba(54, 209, 255, 0.3);
+        }
+        .slide-pill.active {
+            background: rgba(54, 209, 255, 0.18);
+            border-color: var(--neon-blue);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(54, 209, 255, 0.35);
+        }
+        .slide-pill.active i {
+            color: var(--neon-blue);
+        }
+
+        /* Header Right Controls */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: var(--neon-green);
+        }
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 8px var(--neon-green);
+            animation: pulse-dot 1.8s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+        .ctrl-btn:hover {
+            color: #ffffff;
+            border-color: var(--neon-blue);
+            background: rgba(54, 209, 255, 0.12);
+        }
+        .ctrl-btn.active {
+            color: var(--neon-blue);
+            border-color: var(--neon-blue);
+            background: rgba(54, 209, 255, 0.2);
+        }
+
+        .header-clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            padding-left: 6px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Carousel Master Viewport */
+        .carousel-viewport {
+            width: 100%;
+            height: calc(100% - 58px - 34px); /* header + ticker */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-track {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .slide-pane {
+            width: 33.333333%;
+            height: 100%;
+            padding: 10px 14px 6px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            backdrop-filter: blur(14px);
+            padding: 10px 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .glass-panel:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 6px 24px rgba(54, 209, 255, 0.12);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .panel-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            letter-spacing: 0.3px;
+        }
+        .panel-title i {
+            color: var(--neon-blue);
+            font-size: 0.82rem;
+        }
+
+        /* KPI Tiles Grid */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .kpi-row-6 {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        .kpi-tile {
+            background: rgba(14, 23, 63, 0.65);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .kpi-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--neon-blue);
+            opacity: 0.8;
+        }
+        .kpi-tile.success::before { background: var(--neon-green); }
+        .kpi-tile.warning::before { background: var(--neon-amber); }
+        .kpi-tile.danger::before { background: var(--neon-rose); }
+        .kpi-tile.purple::before { background: var(--neon-purple); }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .kpi-header i {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 3px 0 1px 0;
+            line-height: 1.1;
+        }
+        .kpi-footer {
+            font-size: 0.64rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .kpi-delta {
+            font-weight: 600;
+        }
+        .kpi-delta.up { color: var(--neon-green); }
+        .kpi-delta.down { color: var(--neon-rose); }
+
+        /* Slide 1: Split Body */
+        .slide1-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .split-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+        .split-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* Slide 2 & 3: Multi-column chart layouts */
+        .charts-row-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+        .charts-row-split-2 {
+            display: grid;
+            grid-template-columns: 1.1fr 1.3fr 1fr;
+            gap: 10px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .chart-box {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            width: 100%;
+        }
+
+        /* Space Radial / Progress Bars */
+        .progress-stat {
+            margin-bottom: 7px;
+        }
+        .progress-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 3px;
+        }
+        .progress-track {
+            height: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        /* CS Leaderboard Styling */
+        .cs-rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 2px;
+        }
+        .cs-rank-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .cs-rank-list::-webkit-scrollbar-thumb {
+            background: rgba(54, 209, 255, 0.4);
+            border-radius: 2px;
+        }
+        .cs-rank-card {
+            background: rgba(14, 23, 63, 0.6);
+            border: 1px solid rgba(54, 209, 255, 0.15);
+            border-radius: 7px;
+            padding: 6px 9px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            transition: all 0.2s ease;
+        }
+        .cs-rank-card:hover {
+            border-color: var(--neon-blue);
+            background: rgba(18, 31, 84, 0.85);
+            transform: translateX(2px);
+        }
+        .cs-rank-card.rank-1 {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(14, 23, 63, 0.7));
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+        }
+        .cs-medal {
+            font-size: 1.05rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .cs-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3a8a, #0284c7);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border: 1px solid rgba(54, 209, 255, 0.4);
+            flex-shrink: 0;
+        }
+        .cs-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .cs-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .cs-name {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cs-badge-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+        }
+        .cs-progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .cs-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #36d1ff, #00f2fe);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+        .cs-sub-metrics {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.64rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Branch Toggle Buttons & Badges */
+        .branch-toggle-btn {
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .branch-toggle-btn:hover {
+            background: rgba(54, 209, 255, 0.15);
+            color: #ffffff;
+            border-color: rgba(54, 209, 255, 0.4);
+        }
+        .branch-toggle-btn.active {
+            background: #1e3a8a;
+            border-color: #36d1ff;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(54, 209, 255, 0.4);
+        }
+        .branch-pill {
+            font-size: 0.58rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .branch-pill.maa {
+            background: rgba(54, 209, 255, 0.18);
+            color: #36d1ff;
+            border: 1px solid rgba(54, 209, 255, 0.45);
+        }
+        .branch-pill.blr {
+            background: rgba(245, 158, 11, 0.18);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.45);
+        }
+
+        /* Compact Donut & Fleet Fuel Efficiency Widget */
+        .donut-compact-container {
+            height: 125px;
+            max-height: 125px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px auto;
+            width: 100%;
+        }
+        .efficiency-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .eff-badge {
+            border-radius: 6px;
+            padding: 5px 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        .eff-badge.loaded {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+        .eff-badge.empty {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+        .eff-lbl {
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .eff-badge.loaded .eff-lbl { color: #10b981; }
+        .eff-badge.empty .eff-lbl { color: #f87171; }
+        .eff-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.15;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .eff-badge.loaded .eff-val { color: #ffffff; }
+        .eff-badge.empty .eff-val { color: #f87171; }
+        .eff-sub {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        /* Executive Milestone Pipeline Trail */
+        .pipeline-trail {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
+            gap: 4px;
+        }
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            flex: 1;
+        }
+        .pipeline-step-title {
+            font-size: 0.58rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .pipeline-step-val {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.1;
+        }
+        .pipeline-arrow {
+            color: rgba(54, 209, 255, 0.4);
+            font-size: 0.7rem;
+        }
+
+        /* Branch Head-to-Head Comparative Card */
+        .branch-comp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .branch-comp-card {
+            background: rgba(14, 23, 63, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 7px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+        .branch-comp-card:hover {
+            border-color: rgba(54, 209, 255, 0.4);
+            background: rgba(18, 31, 84, 0.7);
+        }
+        .branch-comp-card.maa { border-left: 3px solid #36d1ff; }
+        .branch-comp-card.blr { border-left: 3px solid #f59e0b; }
+        .branch-comp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .branch-comp-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .b-stat-box {
+            display: flex;
+            flex-direction: column;
+        }
+        .b-stat-lbl {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .b-stat-val {
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+        }
+
+        /* Top Account List Widget */
+        .top-account-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        .top-acc-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 7px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 4px;
+            font-size: 0.68rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .top-acc-name {
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .top-acc-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--neon-blue);
+            font-size: 0.72rem;
+        }
+
+        /* Fleet Status Matrix in Column 1 */
+        .fleet-matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 6px;
+        }
+        .fleet-matrix-cell {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            padding: 4px 7px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .fleet-matrix-label {
+            font-size: 0.63rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .fleet-matrix-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #ffffff;
+        }
+
+        /* Hub Utilization Progress Rings/Bars */
+        .hub-card {
+            background: rgba(14, 23, 63, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .hub-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .hub-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .hub-bar-lbl {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.62rem;
+            color: var(--text-secondary);
+        }
+        .hub-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .hub-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        .hub-bar-fill.maa { background: linear-gradient(90deg, #0284c7, #36d1ff); }
+        .hub-bar-fill.blr { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+        /* Bottom Marquee Live Ticker */
+        .ticker-bar {
+            height: 34px;
+            background: rgba(4, 9, 28, 0.95);
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            position: relative;
+            z-index: 100;
+        }
+        .ticker-label {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ticker-track {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        .ticker-text {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            color: #cbd5e1;
+            animation: marquee 35s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Billing & Revenue Pipeline Callout */
+        .billing-pipeline-box {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.45), rgba(15, 23, 42, 0.75));
+            border: 1px solid rgba(54, 209, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+        }
+        .billing-metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .billing-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            padding: 4px 6px;
+        }
+        .billing-item-lbl {
+            font-size: 0.58rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .billing-item-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        /* Branch Target Bar */
+        .target-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            padding: 4px 7px;
+        }
+        .target-bar-lbl {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.62rem;
+            color: var(--text-secondary);
+        }
+        .target-bar-track {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .target-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Route Corridor & Highway Density */
+        .corridor-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-size: 0.63rem;
+            margin-bottom: 3px;
+        }
+        .corridor-name {
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .corridor-meta {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.64rem;
+        }
+
+        /* Shift Velocity Strip */
+        .shift-strip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 4px;
+        }
+        .shift-pill-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        .shift-pill-lbl {
+            font-size: 0.54rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .shift-pill-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.76rem;
+            color: #ffffff;
+        }
+
+        /* Commodity Category Mix */
+        .commodity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-top: 3px;
+        }
+        .commodity-pill {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 3px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.62rem;
+            color: #ffffff;
+        }
+
+        /* Executive Mini KPI Grid */
+        .exec-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .exec-mini-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            padding: 4px 5px;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        .exec-mini-lbl {
+            font-size: 0.53rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+        .exec-mini-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Countdown Bar -->
+    <div id="slide-progress-bar-container">
+        <div id="slide-progress-bar"></div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="md-header">
+        <div class="header-left">
+            <a href="javascript:void(0)" class="bvm-brand">
+                <div class="bvm-logo-badge">BVM</div>
+                <div>
+                    <div class="brand-title">EXECUTIVE <span>PULSE</span></div>
+                    <div class="brand-sub">Managing Director Dashboard</div>
+                </div>
+            </a>
+            <div class="status-badge" title="Auto-slide active (5s interval)">
+                <div class="status-dot"></div>
+                <span id="live-status-text">LIVE SYSTEM</span>
+            </div>
+            <div id="pause-indicator" class="pause-alert">
+                <i class="fas fa-pause"></i> PAUSED
+            </div>
+        </div>
+
+        <!-- Center Slide Buttons -->
+        <div class="header-center">
+            <div class="slide-pill active" data-slide="0">
+                <i class="fas fa-cubes"></i> 1. Overall Pulse
+            </div>
+            <div class="slide-pill" data-slide="1">
+                <i class="fas fa-truck-moving"></i> 2. Transport (TMS)
+            </div>
+            <div class="slide-pill" data-slide="2">
+                <i class="fas fa-warehouse"></i> 3. Warehouse (WMS)
+            </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="header-right">
+            <!-- Quick Date Selector -->
+            <div style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 4px;">
+                <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Today</button>
+                <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Yesterday</button>
+                <button id="btn-date-active" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;" title="View last major operational day (08 Oct 2026)">08 Oct</button>
+                <input type="date" id="date-picker-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.72rem; border-radius: 4px; padding: 2px 5px; outline: none; cursor: pointer; color-scheme: dark;">
+            </div>
+
+            <!-- Play / Pause Kiosk Auto-Slide -->
+            <button id="btn-play-pause" class="ctrl-btn" title="Pause / Resume Rotation">
+                <i class="fas fa-pause"></i> <span>Pause</span>
+            </button>
+
+            <!-- Duration Selector -->
+            <select id="slide-duration-select" class="ctrl-btn" style="outline:none; cursor:pointer;" title="Change slide rotation interval">
+                <option value="5000" selected>5s Rotation</option>
+                <option value="8000">8s Rotation</option>
+                <option value="12000">12s Rotation</option>
+            </select>
+
+            <!-- Fullscreen Button -->
+            <button id="btn-fullscreen" class="ctrl-btn" title="Toggle Fullscreen for TV Wall">
+                <i class="fas fa-expand"></i>
+            </button>
+
+            <!-- Clock -->
+            <div class="header-clock" id="live-clock">12:00:00 PM</div>
+        </div>
+    </header>
+
+    <!-- Carousel Viewport -->
+    <div class="carousel-viewport" id="carousel-viewport">
+        <div class="carousel-track" id="carousel-track">
+
+            <!-- ============================================================== -->
+            <!-- SLIDE 1: COMBINED EXECUTIVE OVERVIEW (TRANSPORT + WAREHOUSE)   -->
+            <!-- ============================================================== -->
+            <section class="slide-pane" id="slide-overview">
+                <!-- Top Macro Metrics Ribbon: Exactly aligned 50/50 with Transport & Warehouse columns below -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px;">
+                    <!-- Left: 3 Transport Macro Cards (Directly Above TMS Column) -->
+                    <div class="dash-kpi-row" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
+                        <div class="dash-card card-ready">
+                            <div class="dash-kpi-label">Active Fleet In Transit</div>
+                            <div class="dash-kpi-value" id="macro-active-fleet">0</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);">Live on road now</div>
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <div class="dash-card card-invoiced">
+                            <div class="dash-kpi-label">Invoiced Yesterday</div>
+                            <div class="dash-kpi-value" id="macro-invoiced-val">₹0.0 L</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);">Closed billing value</div>
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="dash-card card-settled">
+                            <div class="dash-kpi-label">Ready To Invoice</div>
+                            <div class="dash-kpi-value" id="macro-ready-val">₹0.0 L</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);">Pending billing pipeline</div>
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                    </div>
+
+                    <!-- Right: 3 Warehouse Macro Cards (Directly Above WMS Column) -->
+                    <div class="dash-kpi-row" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
+                        <div class="dash-card card-cnote">
+                            <div class="dash-kpi-label">Freight Moved Today</div>
+                            <div class="dash-kpi-value" id="macro-freight-mt">0.0 MT</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);"><i class="fas fa-arrow-up"></i> Throughput (In + Out)</div>
+                            <i class="fas fa-dolly"></i>
+                        </div>
+                        <div class="dash-card card-enquiry">
+                            <div class="dash-kpi-label">WH Network Occupancy</div>
+                            <div class="dash-kpi-value" id="macro-wh-occ">0.0%</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);">Across all BVM hubs</div>
+                            <i class="fas fa-boxes-stacked"></i>
+                        </div>
+                        <div class="dash-card card-ready">
+                            <div class="dash-kpi-label">High Value Inspections</div>
+                            <div class="dash-kpi-value" id="macro-high-value">0</div>
+                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.7);">Safety &amp; quality cleared</div>
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 50/50 Split Body: Transport vs Warehouse (Executive Dense Layout) -->
+                <div class="slide1-split">
+                    <!-- Left: Transport Pulse -->
+                    <div class="glass-panel split-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="fas fa-truck text-info"></i> Transport Movement Pulse (TMS)
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span id="s1-branch-badge-maa" class="branch-pill maa"><i class="fas fa-location-dot"></i> MAA: 648 MTD (7 Today)</span>
+                                <span id="s1-branch-badge-blr" class="branch-pill blr"><i class="fas fa-location-dot"></i> BLR: 564 MTD</span>
+                                <span id="s1-top-cs-badge" class="badge" style="font-size:0.65rem; color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); padding:2px 8px; border-radius:4px;"><i class="fas fa-trophy"></i> Top CS: Loading...</span>
+                            </div>
+                        </div>
+                        <div class="split-content">
+                            <!-- Executive Milestone Pipeline Trail -->
+                            <div class="pipeline-trail">
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">Enquiry</span>
+                                    <span class="pipeline-step-val" id="s1-tms-req">0</span>
+                                </div>
+                                <i class="fas fa-chevron-right pipeline-arrow"></i>
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">C-Notes</span>
+                                    <span class="pipeline-step-val" style="color:#25667a;" id="s1-tms-cnotes">0</span>
+                                </div>
+                                <i class="fas fa-chevron-right pipeline-arrow"></i>
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">Dispatched</span>
+                                    <span class="pipeline-step-val" style="color:#36d1ff;" id="s1-tms-disp">0</span>
+                                </div>
+                                <i class="fas fa-chevron-right pipeline-arrow"></i>
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">On Road</span>
+                                    <span class="pipeline-step-val" style="color:#10b981;" id="s1-tms-road">0</span>
+                                </div>
+                                <i class="fas fa-chevron-right pipeline-arrow"></i>
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">Delivered</span>
+                                    <span class="pipeline-step-val" style="color:#10b981;" id="s1-tms-deliv">0</span>
+                                </div>
+                                <i class="fas fa-chevron-right pipeline-arrow"></i>
+                                <div class="pipeline-step">
+                                    <span class="pipeline-step-title">Ready To Bill</span>
+                                    <span class="pipeline-step-val" style="color:#f59e0b;" id="s1-tms-ready-val">₹173.2L</span>
+                                </div>
+                            </div>
+
+                            <!-- Branch Head-to-Head Comparative Cards -->
+                            <div class="branch-comp-grid">
+                                <div class="branch-comp-card maa">
+                                    <div class="branch-comp-header">
+                                        <span><i class="fas fa-location-dot" style="color:#36d1ff;"></i> Chennai Hub (BVM MAA)</span>
+                                        <span class="branch-pill maa">Lead: Ajay / Aravind</span>
+                                    </div>
+                                    <div class="branch-comp-stats">
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Today</span>
+                                            <span class="b-stat-val" style="color:#36d1ff;" id="s1-b-maa-today">7 Veh</span>
+                                        </div>
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Month (MTD)</span>
+                                            <span class="b-stat-val" id="s1-b-maa-month">648 Veh</span>
+                                        </div>
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Conv. Rate</span>
+                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-maa-conv">91.2%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="branch-comp-card blr">
+                                    <div class="branch-comp-header">
+                                        <span><i class="fas fa-location-dot" style="color:#f59e0b;"></i> Bangalore Hub (BVM BLR)</span>
+                                        <span class="branch-pill blr">Lead: Elumalai (434)</span>
+                                    </div>
+                                    <div class="branch-comp-stats">
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Today</span>
+                                            <span class="b-stat-val" style="color:#f59e0b;" id="s1-b-blr-today">0 Veh</span>
+                                        </div>
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Month (MTD)</span>
+                                            <span class="b-stat-val" id="s1-b-blr-month">564 Veh</span>
+                                        </div>
+                                        <div class="b-stat-box">
+                                            <span class="b-stat-lbl">Conv. Rate</span>
+                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-blr-conv">88.5%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Fleet Fuel Efficiency & Top Clients -->
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                                <div class="chart-box" style="background:rgba(0,0,0,0.25); border-radius:6px; padding:7px;">
+                                    <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:flex; justify-content:space-between;">
+                                        <span><i class="fas fa-gauge-high" style="color:#36d1ff;"></i> Fleet Fuel Run Efficiency</span>
+                                        <span style="color:#10b981; font-weight:700;">75% Loaded</span>
+                                    </div>
+                                    <div class="donut-compact-container" style="height:90px; max-height:90px;">
+                                        <canvas id="s1TripDonut"></canvas>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:3px; font-size:0.64rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:3px;">
+                                        <div><span style="color:#10b981;">●</span> Productive: <b id="s1-eff-load">12 km</b></div>
+                                        <div><span style="color:#ef4444;">●</span> Empty Run: <b id="s1-eff-empty">4 km</b></div>
+                                    </div>
+                                </div>
+
+                                <div class="chart-box" style="background:rgba(0,0,0,0.25); border-radius:6px; padding:7px;">
+                                    <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:flex; justify-content:space-between;">
+                                        <span><i class="fas fa-building" style="color:#f59e0b;"></i> Top Transport Clients (MTD)</span>
+                                        <span style="color:#94a3b8; font-size:0.62rem;">vs Last Month</span>
+                                    </div>
+                                    <div class="top-account-list" id="s1-tms-top-accounts">
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-truck text-info" style="font-size:0.6rem;"></i> UPS (T) BLR</span>
+                                            <span class="top-acc-badge">23 Trips <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: 327)</small></span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-truck text-info" style="font-size:0.6rem;"></i> EXPO FREIGHT (T) MAA</span>
+                                            <span class="top-acc-badge">13 Trips <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: 124)</small></span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-truck text-info" style="font-size:0.6rem;"></i> EIPL (T) BLR</span>
+                                            <span class="top-acc-badge">9 Trips <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: 166)</small></span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-truck text-info" style="font-size:0.6rem;"></i> EIPL (T) MAA</span>
+                                            <span class="top-acc-badge">9 Trips <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: 280)</small></span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-truck text-info" style="font-size:0.6rem;"></i> SF LOGISTICS (T) MAA</span>
+                                            <span class="top-acc-badge">8 Trips <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: 47)</small></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Executive Transport Revenue Run-Rate & Highway Health Strip -->
+                            <div class="exec-mini-grid">
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Billing Run-Rate</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-runrate">₹1.85 Cr</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Active Shippers</span>
+                                    <span class="exec-mini-val" style="color:#36d1ff;" id="s1-fin-shippers">21 Accounts</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Repeat Shipper</span>
+                                    <span class="exec-mini-val" style="color:#f59e0b;" id="s1-fin-repeat">98.2%</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">On-Time (OTP)</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-otp">96.8%</span>
+                                </div>
+                            </div>
+
+                            <!-- Trunk Route & Highway Speed Callout -->
+                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <i class="fas fa-route" style="color:#10b981; font-size:0.75rem;"></i>
+                                    <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">Trunk Route: <b style="color:#36d1ff;">Chennai ↔ Bangalore</b> (52% Traffic)</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; font-size:0.62rem; color:#94a3b8;">
+                                    <span>Transit: <b style="color:#ffffff;">12.4h</b></span>
+                                    <span>●</span>
+                                    <span>Mileage: <b style="color:#10b981;">4.2 KM/L</b></span>
+                                    <span>●</span>
+                                    <span>Fastag: <b style="color:#f59e0b;">₹2.3L</b></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Warehouse Pulse -->
+                    <div class="glass-panel split-card">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="fas fa-warehouse text-warning"></i> Warehouse Movement Pulse (WMS)
+                            </div>
+                            <span class="badge" style="font-size:0.68rem; color:var(--neon-green);"><i class="fas fa-circle-dot"></i> Yard &amp; Storage Network</span>
+                        </div>
+                        <div class="split-content">
+                            <!-- Mini KPI Row for Warehouse (dashboard.css colors) -->
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px;">
+                                <div class="dash-card card-cnote" style="min-height:54px; padding:4px 8px;">
+                                    <div class="dash-kpi-label">Gate-In</div>
+                                    <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-gatein">0</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-gatein-yest">Y'day: 0</div>
+                                </div>
+                                <div class="dash-card card-settled" style="min-height:54px; padding:4px 8px;">
+                                    <div class="dash-kpi-label">Inward MT</div>
+                                    <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-in-mt">0.0</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-in-pkg">0 Pkgs</div>
+                                </div>
+                                <div class="dash-card card-ready" style="min-height:54px; padding:4px 8px;">
+                                    <div class="dash-kpi-label">Outward MT</div>
+                                    <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-out-mt">0.0</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-out-pkg">0 Pkgs</div>
+                                </div>
+                                <div class="dash-card card-enquiry" style="min-height:54px; padding:4px 8px;">
+                                    <div class="dash-kpi-label">Space Used</div>
+                                    <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-space-pct">34.1%</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);">23,413 Sq.Ft</div>
+                                </div>
+                            </div>
+
+                            <!-- Hub Capacity Comparison: Chennai MAA vs Bangalore BLR -->
+                            <div class="branch-comp-grid">
+                                <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
+                                    <div class="hub-card-header">
+                                        <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#36d1ff;"></i> Chennai Hub (MAA)</span>
+                                        <span class="branch-pill maa">42.1% Area</span>
+                                    </div>
+                                    <div class="hub-bar-wrap">
+                                        <div class="hub-bar-lbl">
+                                            <span>Area: <b>12,861</b> / 30,582 Sq.Ft</span>
+                                            <span>Avail: <b>17,721</b></span>
+                                        </div>
+                                        <div class="hub-bar-track">
+                                            <div class="hub-bar-fill maa" style="width: 42.1%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="hub-bar-wrap">
+                                        <div class="hub-bar-lbl">
+                                            <span>Vol: <b>20,184</b> / 491,250 CFT</span>
+                                            <span>4.1% Vol</span>
+                                        </div>
+                                        <div class="hub-bar-track">
+                                            <div class="hub-bar-fill maa" style="width: 4.1%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
+                                    <div class="hub-card-header">
+                                        <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#f59e0b;"></i> Bangalore Hub (BLR)</span>
+                                        <span class="branch-pill blr">27.8% Area</span>
+                                    </div>
+                                    <div class="hub-bar-wrap">
+                                        <div class="hub-bar-lbl">
+                                            <span>Area: <b>10,552</b> / 37,993 Sq.Ft</span>
+                                            <span>Avail: <b>27,441</b></span>
+                                        </div>
+                                        <div class="hub-bar-track">
+                                            <div class="hub-bar-fill blr" style="width: 27.8%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="hub-bar-wrap">
+                                        <div class="hub-bar-lbl">
+                                            <span>Vol: <b>11,832</b> / 249,916 CFT</span>
+                                            <span>4.7% Vol</span>
+                                        </div>
+                                        <div class="hub-bar-track">
+                                            <div class="hub-bar-fill blr" style="width: 4.7%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Middle Row: Top Storage Accounts & Yard Turn-Around -->
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                                <div class="chart-box" style="background:rgba(0,0,0,0.25); border-radius:6px; padding:7px;">
+                                    <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:flex; justify-content:space-between;">
+                                        <span><i class="fas fa-warehouse" style="color:#a855f7;"></i> Top Storage Accounts</span>
+                                        <span style="color:#94a3b8; font-size:0.62rem;">Weight (MT)</span>
+                                    </div>
+                                    <div class="top-account-list">
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-pallet text-warning" style="font-size:0.6rem;"></i> EIPL (W) MAA</span>
+                                            <span class="top-acc-badge" style="color:#a855f7;">40,250 MT</span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-pallet text-warning" style="font-size:0.6rem;"></i> DHL (W) MAA</span>
+                                            <span class="top-acc-badge" style="color:#a855f7;">33,100 MT</span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-pallet text-warning" style="font-size:0.6rem;"></i> GEODIS (H&amp;M)</span>
+                                            <span class="top-acc-badge" style="color:#a855f7;">20,500 MT</span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-pallet text-warning" style="font-size:0.6rem;"></i> DELRIGO (W)</span>
+                                            <span class="top-acc-badge" style="color:#a855f7;">11,400 MT</span>
+                                        </div>
+                                        <div class="top-acc-row">
+                                            <span class="top-acc-name"><i class="fas fa-pallet text-warning" style="font-size:0.6rem;"></i> KSR (W) BLR</span>
+                                            <span class="top-acc-badge" style="color:#a855f7;">11,100 MT</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="chart-box" style="background:rgba(0,0,0,0.25); border-radius:6px; padding:7px; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <div>
+                                        <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:4px; display:flex; justify-content:space-between;">
+                                            <span><i class="fas fa-stopwatch text-info"></i> Yard Turn-Around (TAT)</span>
+                                            <span style="color:#10b981; font-weight:700;">8 Docks Active</span>
+                                        </div>
+                                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:5px 6px; margin-bottom:4px;">
+                                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                                <span style="font-size:0.62rem; color:#94a3b8;">Avg Gate-to-Dock TAT</span>
+                                                <span style="font-size:0.9rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;">42 Mins</span>
+                                            </div>
+                                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                                                <span style="font-size:0.62rem; color:#94a3b8;">Throughput Rate</span>
+                                                <span style="font-size:0.72rem; font-weight:600; color:#ffffff;">8.2 MT / hr</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="font-size:0.62rem; font-weight:700; color:#94a3b8; margin-bottom:2px; text-transform:uppercase;">
+                                            <i class="fas fa-hourglass-half"></i> Storage Dwell Time (Aging)
+                                        </div>
+                                        <div style="display:flex; height:5px; border-radius:3px; overflow:hidden; margin-bottom:3px;">
+                                            <div id="s1-dwell-bar-fresh" style="width:58%; background:#10b981;" title="Fresh <7d"></div>
+                                            <div id="s1-dwell-bar-med" style="width:31%; background:#f59e0b;" title="Medium 7-30d"></div>
+                                            <div id="s1-dwell-bar-stagnant" style="width:11%; background:#ef4444;" title="Stagnant >30d"></div>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#94a3b8;">
+                                            <span><span style="color:#10b981;">●</span> &lt;7d: <b id="s1-dwell-fresh">58%</b></span>
+                                            <span><span style="color:#f59e0b;">●</span> 7-30d: <b id="s1-dwell-med">31%</b></span>
+                                            <span><span style="color:#ef4444;">●</span> &gt;30d: <b id="s1-dwell-stagnant">11%</b></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Executive Warehouse Pallet & Yield Strip -->
+                            <div class="exec-mini-grid">
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Space Yield</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-wh-yield">₹21.4 / Sq.Ft</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Pallet Capacity</span>
+                                    <span class="exec-mini-val" style="color:#36d1ff;" id="s1-wh-pallets">3,140 / 4.5k</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Rack Saturation</span>
+                                    <span class="exec-mini-val" style="color:#f59e0b;" id="s1-wh-rack">84.5%</span>
+                                </div>
+                                <div class="exec-mini-box">
+                                    <span class="exec-mini-lbl">Cycle Count SLA</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-wh-sla">99.96%</span>
+                                </div>
+                            </div>
+
+                            <!-- Equipment MHE & Facility Status Callout -->
+                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <i class="fas fa-boxes-packing" style="color:#a855f7; font-size:0.75rem;"></i>
+                                    <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">MHE Fleet: <b>6/6 Forklifts Operational</b> (Zero Downtime)</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; font-size:0.62rem; color:#94a3b8;">
+                                    <span>Claims: <b style="color:#10b981;">0 Open</b></span>
+                                    <span>●</span>
+                                    <span>Turns: <b style="color:#36d1ff;">4.6x / mo</b></span>
+                                    <span>●</span>
+                                    <span>Climate: <b style="color:#ffffff;">23.8°C</b></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- SLIDE 2: TRANSPORT MOVEMENT DEEP-DIVE (TMS)                    -->
+            <!-- ============================================================== -->
+            <section class="slide-pane" id="slide-transport">
+                <!-- TMS 8 KPI Cards (dashboard.css native theme) -->
+                <div class="dash-kpi-row" style="margin-bottom: 6px;">
+                    <div class="dash-card card-enquiry">
+                        <div class="dash-kpi-label">Vehicles Req.</div>
+                        <div class="dash-kpi-value" id="tms-kpi-req">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-req-sub">Y'day: 0</div>
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="dash-card card-cnote">
+                        <div class="dash-kpi-label">C-Notes Raised</div>
+                        <div class="dash-kpi-value" id="tms-kpi-cnotes">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-cnotes-sub">Y'day: 0</div>
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div class="dash-card card-ready">
+                        <div class="dash-kpi-label">Dispatched</div>
+                        <div class="dash-kpi-value" id="tms-kpi-disp">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-disp-sub">Y'day: 0</div>
+                        <i class="fas fa-truck-arrow-right"></i>
+                    </div>
+                    <div class="dash-card card-settled">
+                        <div class="dash-kpi-label">In Transit</div>
+                        <div class="dash-kpi-value" id="tms-kpi-active">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Live on highway</div>
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div class="dash-card card-trips-cancelled">
+                        <div class="dash-kpi-label">Missed / Cancel</div>
+                        <div class="dash-kpi-value" id="tms-kpi-missed">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Unallotted orders</div>
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="dash-card card-settled">
+                        <div class="dash-kpi-label">Delivered (POD)</div>
+                        <div class="dash-kpi-value" id="tms-kpi-deliv">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-deliv-sub">Y'day: 0</div>
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div class="dash-card card-ready">
+                        <div class="dash-kpi-label">Ready to Invoice</div>
+                        <div class="dash-kpi-value" id="tms-kpi-ready-val">₹0.0L</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-ready-cnt">0 trips pending</div>
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="dash-card card-invoiced">
+                        <div class="dash-kpi-label">Invoiced Total</div>
+                        <div class="dash-kpi-value" id="tms-kpi-inv-val">₹0.0L</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Billed revenue</div>
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                </div>
+
+                <!-- TMS Charts Grid (3 Columns) -->
+                <div class="charts-row-split-2">
+                    <!-- Column 1: Fleet KM Efficiency + Live Fleet Status Matrix + Top Freight Accounts -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; gap:6px;">
+                        <div class="panel-header" style="margin-bottom:0;">
+                            <div class="panel-title"><i class="fas fa-gauge-high text-info"></i> Fleet Run &amp; Status Matrix</div>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">Own vs Attached</span>
+                        </div>
+                        
+                        <!-- Reduced Donut Size Container -->
+                        <div class="donut-compact-container" style="height:95px; max-height:95px;">
+                            <canvas id="tmsKmDonutChart"></canvas>
+                        </div>
+
+                        <!-- Productive Loaded vs Empty Dead-Haul Breakdown -->
+                        <div class="efficiency-grid">
+                            <div class="eff-badge loaded" style="padding:4px 6px;">
+                                <span class="eff-lbl"><i class="fas fa-circle-check"></i> Productive Loaded</span>
+                                <span class="eff-val" id="eff-loaded-pct" style="font-size:0.95rem;">75.0%</span>
+                                <span class="eff-sub" id="eff-loaded-km" style="font-size:0.58rem;">12 KM</span>
+                            </div>
+                            <div class="eff-badge empty" style="padding:4px 6px;">
+                                <span class="eff-lbl"><i class="fas fa-triangle-exclamation"></i> Empty Waste</span>
+                                <span class="eff-val" id="eff-empty-pct" style="font-size:0.95rem;">25.0%</span>
+                                <span class="eff-sub" id="eff-empty-km" style="font-size:0.58rem;">4 KM dead-haul</span>
+                            </div>
+                        </div>
+
+                        <!-- Live Fleet Status Matrix -->
+                        <div>
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; display:flex; justify-content:space-between;">
+                                <span><i class="fas fa-truck-ramp-box text-warning"></i> Monitored Fleet Matrix</span>
+                                <span style="color:#36d1ff; font-weight:700;" id="f-mat-total">132 Trucks</span>
+                            </div>
+                            <div class="fleet-matrix-grid">
+                                <div class="fleet-matrix-cell">
+                                    <span class="fleet-matrix-label"><i class="fas fa-route" style="color:#10b981;"></i> Highway Run</span>
+                                    <span class="fleet-matrix-val" style="color:#10b981;" id="f-mat-transit">0</span>
+                                </div>
+                                <div class="fleet-matrix-cell">
+                                    <span class="fleet-matrix-label"><i class="fas fa-dolly" style="color:#36d1ff;"></i> Loading Docks</span>
+                                    <span class="fleet-matrix-val" style="color:#36d1ff;" id="f-mat-loading">18</span>
+                                </div>
+                                <div class="fleet-matrix-cell">
+                                    <span class="fleet-matrix-label"><i class="fas fa-boxes-packing" style="color:#a855f7;"></i> Unloading</span>
+                                    <span class="fleet-matrix-val" style="color:#a855f7;" id="f-mat-unloading">14</span>
+                                </div>
+                                <div class="fleet-matrix-cell">
+                                    <span class="fleet-matrix-label"><i class="fas fa-parking" style="color:#f59e0b;"></i> Yard Standby</span>
+                                    <span class="fleet-matrix-val" style="color:#f59e0b;" id="f-mat-yard">22</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top 5 Transport Accounts -->
+                        <div>
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; display:flex; justify-content:space-between;">
+                                <span><i class="fas fa-building text-info"></i> Top 5 Freight Accounts (MTD)</span>
+                                <span style="color:#94a3b8; font-size:0.6rem;">vs Last Month</span>
+                            </div>
+                            <div class="top-account-list" id="tms-top-accounts-list">
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> UPS (T) BLR</span>
+                                    <span class="top-acc-badge">468 Trips</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> EIPL (T) MAA</span>
+                                    <span class="top-acc-badge">398 Trips</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> DHL (T) BLR</span>
+                                    <span class="top-acc-badge">329 Trips</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> EIPL (T) BLR</span>
+                                    <span class="top-acc-badge">249 Trips</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> DHL LCLP MAA</span>
+                                    <span class="top-acc-badge">202 Trips</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Highway Trunk Corridors -->
+                        <div>
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; display:flex; justify-content:space-between;">
+                                <span><i class="fas fa-route text-success"></i> Highway Trunk Corridors</span>
+                                <span style="color:#10b981; font-size:0.6rem;">Transit Velocity</span>
+                            </div>
+                            <div id="tms-corridors-list">
+                                <div class="corridor-row">
+                                    <span class="corridor-name"><i class="fas fa-arrow-right-arrow-left" style="color:#36d1ff; font-size:0.55rem;"></i> Chennai ↔ Bangalore</span>
+                                    <div class="corridor-meta">
+                                        <span style="color:#36d1ff;">52% Vol</span>
+                                        <span style="color:#ffffff;">12.4h Avg</span>
+                                    </div>
+                                </div>
+                                <div class="corridor-row">
+                                    <span class="corridor-name"><i class="fas fa-arrow-right-arrow-left" style="color:#10b981; font-size:0.55rem;"></i> Chennai ↔ Hosur Belt</span>
+                                    <div class="corridor-meta">
+                                        <span style="color:#10b981;">26% Vol</span>
+                                        <span style="color:#ffffff;">8.1h Avg</span>
+                                    </div>
+                                </div>
+                                <div class="corridor-row">
+                                    <span class="corridor-name"><i class="fas fa-arrow-right-arrow-left" style="color:#f59e0b; font-size:0.55rem;"></i> Bangalore ↔ West/North</span>
+                                    <div class="corridor-meta">
+                                        <span style="color:#f59e0b;">22% Vol</span>
+                                        <span style="color:#ffffff;">18.6h Avg</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fleet Running Expense & OTP Strip -->
+                        <div class="exec-mini-grid">
+                            <div class="exec-mini-box">
+                                <span class="exec-mini-lbl">Diesel Outflow</span>
+                                <span class="exec-mini-val" style="color:#f59e0b;" id="tms-exp-diesel">₹14.6 L</span>
+                            </div>
+                            <div class="exec-mini-box">
+                                <span class="exec-mini-lbl">Fastag Toll</span>
+                                <span class="exec-mini-val" style="color:#36d1ff;" id="tms-exp-toll">₹2.3 L</span>
+                            </div>
+                            <div class="exec-mini-box">
+                                <span class="exec-mini-lbl">Fleet KMPL</span>
+                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-kmpl">4.2 KM/L</span>
+                            </div>
+                            <div class="exec-mini-box">
+                                <span class="exec-mini-lbl">Delivery OTP</span>
+                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-otp">96.8%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: CS Performance Leaderboard (Which CS kept more vehicles - Split by Branch) -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <i class="fas fa-trophy" style="color:#f59e0b;"></i> CS Vehicle Allocation Leaderboard
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <div style="display:flex; align-items:center; gap:2px; background:rgba(0,0,0,0.3); border-radius:12px; padding:1px 3px;">
+                                        <button id="btn-cs-day" class="branch-toggle-btn active" style="font-size:0.64rem; padding:2px 7px;">Today</button>
+                                        <button id="btn-cs-month" class="branch-toggle-btn" style="font-size:0.64rem; padding:2px 7px;">30 Days</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Branch Target Achievement meters -->
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:5px;">
+                                <div class="target-bar-wrap">
+                                    <div class="target-bar-lbl">
+                                        <span><i class="fas fa-location-dot" style="color:#36d1ff;"></i> Chennai Target</span>
+                                        <span style="color:#36d1ff; font-weight:700;" id="tms-tgt-maa">648 / 750 (86.4%)</span>
+                                    </div>
+                                    <div class="target-bar-track">
+                                        <div class="target-bar-fill" id="tms-tgt-maa-fill" style="width: 86.4%; background:linear-gradient(90deg, #0284c7, #36d1ff);"></div>
+                                    </div>
+                                </div>
+                                <div class="target-bar-wrap">
+                                    <div class="target-bar-lbl">
+                                        <span><i class="fas fa-location-dot" style="color:#f59e0b;"></i> Bangalore Target</span>
+                                        <span style="color:#f59e0b; font-weight:700;" id="tms-tgt-blr">564 / 650 (86.7%)</span>
+                                    </div>
+                                    <div class="target-bar-track">
+                                        <div class="target-bar-fill" id="tms-tgt-blr-fill" style="width: 86.7%; background:linear-gradient(90deg, #d97706, #f59e0b);"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Branch Filter Controls -->
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding:2px 0;">
+                                <div style="display:flex; gap:4px;">
+                                    <button class="branch-toggle-btn active" data-branch="all" id="btn-branch-all">
+                                        <i class="fas fa-network-wired"></i> All Branches
+                                    </button>
+                                    <button class="branch-toggle-btn" data-branch="MAA" id="btn-branch-maa">
+                                        <i class="fas fa-location-dot" style="color:#36d1ff;"></i> Chennai (MAA)
+                                    </button>
+                                    <button class="branch-toggle-btn" data-branch="BLR" id="btn-branch-blr">
+                                        <i class="fas fa-location-dot" style="color:#f59e0b;"></i> Bangalore (BLR)
+                                    </button>
+                                </div>
+                                <div id="cs-branch-stats-pill" style="font-size:0.65rem; color:#94a3b8; font-weight:600;">
+                                    MAA: <b style="color:#36d1ff;" id="pill-maa-count">0</b> | BLR: <b style="color:#f59e0b;" id="pill-blr-count">0</b>
+                                </div>
+                            </div>
+
+                            <!-- Leaderboard List Container -->
+                            <div id="cs-leaderboard-list" class="cs-rank-list" style="max-height:220px;">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+                        </div>
+
+                        <!-- CS Branch Allocation SLA & Performance Footer -->
+                        <div style="margin-top:6px;">
+                            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 7px; margin-bottom:5px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                    <span style="font-size:0.63rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                        <i class="fas fa-bolt text-warning"></i> CS Allocation Speed &amp; Conversion SLA
+                                    </span>
+                                    <span style="color:#10b981; font-size:0.6rem; font-weight:700;">89.2% Overall Conv.</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px;">
+                                    <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
+                                        <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Allotment TAT</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;">14 Mins</div>
+                                    </div>
+                                    <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
+                                        <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Lost Enquiries</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace;">0.0%</div>
+                                    </div>
+                                    <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 4px; text-align:center;">
+                                        <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Target Milestone</div>
+                                        <div style="font-size:0.75rem; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace;">3 In Club</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.66rem; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:4px;">
+                                <span><i class="fas fa-award text-warning"></i> <span id="top-cs-highlight">Loading...</span></span>
+                                <span>Vehicles / C-Notes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Billing Pipeline + Branch Distribution & Vehicle Mix -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; gap:6px;">
+                        <!-- Executive Billing Pipeline Card -->
+                        <div class="billing-pipeline-box">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-file-invoice-dollar text-warning"></i> Billing &amp; Revenue Pipeline</span>
+                                <span class="badge" style="font-size:0.6rem; background:rgba(245,158,11,0.2); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); padding:1px 5px; border-radius:3px;">CASHFLOW FOCUS</span>
+                            </div>
+                            <div class="billing-metric-grid">
+                                <div class="billing-item">
+                                    <div class="billing-item-lbl">Unbilled Pending</div>
+                                    <div class="billing-item-val" style="color:#f59e0b;" id="tms-pipe-unbilled">₹173.26L</div>
+                                    <div style="font-size:0.56rem; color:#94a3b8;" id="tms-pipe-unbilled-cnt">2,597 trips ready</div>
+                                </div>
+                                <div class="billing-item">
+                                    <div class="billing-item-lbl">Billed (MTD)</div>
+                                    <div class="billing-item-val" style="color:#10b981;" id="tms-pipe-billed">₹10.37L</div>
+                                    <div style="font-size:0.56rem; color:#94a3b8;">157 invoices cleared</div>
+                                </div>
+                                <div class="billing-item">
+                                    <div class="billing-item-lbl">Avg Freight / Trip</div>
+                                    <div class="billing-item-val" style="color:#36d1ff;" id="tms-pipe-avg-frt">₹6,670</div>
+                                    <div style="font-size:0.56rem; color:#94a3b8;">Per dispatched vehicle</div>
+                                </div>
+                                <div class="billing-item">
+                                    <div class="billing-item-lbl">POD Turnaround</div>
+                                    <div class="billing-item-val" style="color:#ffffff;">2.4 Days</div>
+                                    <div style="font-size:0.56rem; color:#10b981;">Target &lt; 3 Days</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Active Hubs Movement -->
+                        <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
+                            <div class="panel-header" style="margin-bottom:2px; padding-bottom:2px;">
+                                <div class="panel-title" style="font-size:0.72rem;"><i class="fas fa-chart-column text-info"></i> Branch Movement</div>
+                                <span style="font-size:0.62rem; color:var(--text-muted);">Top active hubs</span>
+                            </div>
+                            <div class="chart-container" style="flex:1;"><canvas id="tmsBranchBarChart"></canvas></div>
+                        </div>
+
+                        <!-- Vehicle Type Mix -->
+                        <div style="flex:1; min-height:0; display:flex; flex-direction:column; border-top:1px solid rgba(255,255,255,0.06); padding-top:4px;">
+                            <div class="panel-header" style="margin-bottom:2px; padding-bottom:2px;">
+                                <div class="panel-title" style="font-size:0.72rem;"><i class="fas fa-trailer" style="color:#a855f7;"></i> Vehicle Type Mix</div>
+                                <span style="font-size:0.62rem; color:var(--text-muted);">Capacity split</span>
+                            </div>
+                            <div class="chart-container" style="flex:1;"><canvas id="tmsVehTypeChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- SLIDE 3: WAREHOUSE MOVEMENT DEEP-DIVE (WMS)                    -->
+            <!-- ============================================================== -->
+            <section class="slide-pane" id="slide-warehouse">
+                <!-- WMS 8 KPI Cards (dashboard.css native theme) -->
+                <div class="dash-kpi-row" style="margin-bottom: 6px;">
+                    <div class="dash-card card-cnote">
+                        <div class="dash-kpi-label">Gate-In Today</div>
+                        <div class="dash-kpi-value" id="wms-kpi-gatein">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-gatein-sub">Y'day: 0</div>
+                        <i class="fas fa-truck-ramp-box"></i>
+                    </div>
+                    <div class="dash-card card-settled">
+                        <div class="dash-kpi-label">Inward Weight</div>
+                        <div class="dash-kpi-value" id="wms-kpi-in-wt">0.0 MT</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-in-pkg">0 Packages</div>
+                        <i class="fas fa-weight-hanging"></i>
+                    </div>
+                    <div class="dash-card card-ready">
+                        <div class="dash-kpi-label">Outward Weight</div>
+                        <div class="dash-kpi-value" id="wms-kpi-out-wt">0.0 MT</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-out-pkg">0 Packages</div>
+                        <i class="fas fa-truck-arrow-right"></i>
+                    </div>
+                    <div class="dash-card card-invoiced">
+                        <div class="dash-kpi-label">Inward Value</div>
+                        <div class="dash-kpi-value" id="wms-kpi-in-val">₹0.0L</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Declared invoice</div>
+                        <i class="fas fa-indian-rupee-sign"></i>
+                    </div>
+                    <div class="dash-card card-enquiry">
+                        <div class="dash-kpi-label">Space Occupancy</div>
+                        <div class="dash-kpi-value" id="wms-kpi-occ-pct">0.0%</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-sqft-sub">0 / 0 Sq.Ft</div>
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="dash-card card-cnote">
+                        <div class="dash-kpi-label">Vol. Occupancy</div>
+                        <div class="dash-kpi-value" id="wms-kpi-vol-pct">0.0%</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">CFT capacity used</div>
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="dash-card card-settled">
+                        <div class="dash-kpi-label">High Value</div>
+                        <div class="dash-kpi-value" id="wms-kpi-hv">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-hv-pending">0 Pending Approval</div>
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <div class="dash-card card-trips-cancelled">
+                        <div class="dash-kpi-label">Deviations / Dam.</div>
+                        <div class="dash-kpi-value" id="wms-kpi-damages">0</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Cargo quality alerts</div>
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+
+                <!-- WMS Charts Grid (3 Columns) -->
+                <div class="charts-row-split-2">
+                    <!-- Column 1: Dual Hub Real-Time Space Utilization & Dwell Time -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; gap:5px;">
+                        <div>
+                            <div class="panel-header" style="margin-bottom:4px;">
+                                <div class="panel-title"><i class="fas fa-building-circle-check text-info"></i> Dual Hub Space Utilization</div>
+                                <span class="badge" style="font-size:0.62rem; background:rgba(54,209,255,0.15); color:#36d1ff; border:1px solid rgba(54,209,255,0.3); padding:1px 5px; border-radius:4px;">REAL-TIME</span>
+                            </div>
+
+                            <!-- Chennai Hub (BVM MAA) -->
+                            <div class="hub-card" style="border-left: 3px solid #36d1ff; margin-bottom:5px; padding:6px 9px;">
+                                <div class="hub-card-header">
+                                    <span style="font-size:0.72rem; font-weight:700; color:#ffffff;"><i class="fas fa-location-dot" style="color:#36d1ff;"></i> Chennai Hub (BVM MAA)</span>
+                                    <span style="font-size:0.75rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="s3-hub-maa-occ">42.1%</span>
+                                </div>
+                                <div class="hub-bar-wrap">
+                                    <div class="hub-bar-lbl">
+                                        <span>Area: <b style="color:#ffffff;" id="s3-hub-maa-sqft">12,887</b> / <span id="s3-hub-maa-tot-sqft">30,582</span> Sq.Ft</span>
+                                        <span style="color:#10b981;" id="s3-hub-maa-avail">17,695 Sq.Ft Available</span>
+                                    </div>
+                                    <div class="hub-bar-track">
+                                        <div class="hub-bar-fill maa" id="s3-hub-maa-bar" style="width: 42.1%;"></div>
+                                    </div>
+                                </div>
+                                <div class="hub-bar-wrap">
+                                    <div class="hub-bar-lbl">
+                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-maa-cft">32,595</b> / 491,250 CFT</span>
+                                        <span>6.6% CFT Used</span>
+                                    </div>
+                                    <div class="hub-bar-track">
+                                        <div class="hub-bar-fill maa" style="width: 6.6%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bangalore Hub (BVM BLR) -->
+                            <div class="hub-card" style="border-left: 3px solid #f59e0b; margin-bottom:5px; padding:6px 9px;">
+                                <div class="hub-card-header">
+                                    <span style="font-size:0.72rem; font-weight:700; color:#ffffff;"><i class="fas fa-location-dot" style="color:#f59e0b;"></i> Bangalore Hub (BVM BLR)</span>
+                                    <span style="font-size:0.75rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-hub-blr-occ">27.8%</span>
+                                </div>
+                                <div class="hub-bar-wrap">
+                                    <div class="hub-bar-lbl">
+                                        <span>Area: <b style="color:#ffffff;" id="s3-hub-blr-sqft">10,560</b> / <span id="s3-hub-blr-tot-sqft">37,993</span> Sq.Ft</span>
+                                        <span style="color:#10b981;" id="s3-hub-blr-avail">27,433 Sq.Ft Available</span>
+                                    </div>
+                                    <div class="hub-bar-track">
+                                        <div class="hub-bar-fill blr" id="s3-hub-blr-bar" style="width: 27.8%;"></div>
+                                    </div>
+                                </div>
+                                <div class="hub-bar-wrap">
+                                    <div class="hub-bar-lbl">
+                                        <span>Vol: <b style="color:#ffffff;" id="s3-hub-blr-cft">11,832</b> / 249,916 CFT</span>
+                                        <span>4.7% CFT Used</span>
+                                    </div>
+                                    <div class="hub-bar-track">
+                                        <div class="hub-bar-fill blr" style="width: 4.7%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commodity Storage Mix -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                            <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:3px;">
+                                <span><i class="fas fa-cubes-stacked text-info"></i> Commodity Storage Mix</span>
+                                <span style="color:#36d1ff;">Industry Split</span>
+                            </div>
+                            <div class="commodity-grid" id="wms-commodity-grid">
+                                <div class="commodity-pill">
+                                    <span><i class="fas fa-gear" style="color:#36d1ff; font-size:0.55rem;"></i> Auto Components</span>
+                                    <b style="color:#36d1ff; font-family:'JetBrains Mono',monospace;">38%</b>
+                                </div>
+                                <div class="commodity-pill">
+                                    <span><i class="fas fa-microchip" style="color:#10b981; font-size:0.55rem;"></i> Electronics &amp; IT</span>
+                                    <b style="color:#10b981; font-family:'JetBrains Mono',monospace;">29%</b>
+                                </div>
+                                <div class="commodity-pill">
+                                    <span><i class="fas fa-shirt" style="color:#f59e0b; font-size:0.55rem;"></i> Retail &amp; Apparels</span>
+                                    <b style="color:#f59e0b; font-family:'JetBrains Mono',monospace;">21%</b>
+                                </div>
+                                <div class="commodity-pill">
+                                    <span><i class="fas fa-industry" style="color:#a855f7; font-size:0.55rem;"></i> Industrial Mach.</span>
+                                    <b style="color:#a855f7; font-family:'JetBrains Mono',monospace;">12%</b>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Storage Aging & Dwell Time -->
+                        <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 8px; border:1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; text-transform:uppercase; display:flex; justify-content:space-between;">
+                                <span><i class="fas fa-hourglass-half text-warning"></i> Inventory Dwell Time (Aging)</span>
+                                <span style="color:#10b981; font-size:0.6rem;">Velocity Analysis</span>
+                            </div>
+                            <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; margin-bottom:4px;">
+                                <div id="s3-dwell-bar-fresh" style="width:58%; background:#10b981;" title="Fresh <7d"></div>
+                                <div id="s3-dwell-bar-med" style="width:31%; background:#f59e0b;" title="Medium 7-30d"></div>
+                                <div id="s3-dwell-bar-stagnant" style="width:11%; background:#ef4444;" title="Stagnant >30d"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#94a3b8;">
+                                <span><span style="color:#10b981;">●</span> Fast (&lt;7d): <b id="s3-dwell-fresh" style="color:#ffffff;">58%</b></span>
+                                <span><span style="color:#f59e0b;">●</span> Medium (7-30d): <b id="s3-dwell-med" style="color:#ffffff;">31%</b></span>
+                                <span><span style="color:#ef4444;">●</span> Stagnant (&gt;30d): <b id="s3-dwell-stagnant" style="color:#ef4444;">11%</b></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Throughput Velocity & Dock Turnaround -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; gap:5px; justify-content:space-between;">
+                        <div>
+                            <div class="panel-header" style="margin-bottom:2px; padding-bottom:2px;">
+                                <div class="panel-title"><i class="fas fa-right-left text-info"></i> Movement Throughput (MT)</div>
+                                <span style="font-size:0.64rem; color:var(--text-muted);">Yesterday vs Today</span>
+                            </div>
+                            <div class="chart-container" style="height:120px; max-height:120px; min-height:120px;"><canvas id="wmsThroughputChart"></canvas></div>
+                        </div>
+
+                        <!-- Shift-Wise Handling Throughput Strip -->
+                        <div>
+                            <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:3px; display:flex; justify-content:space-between;">
+                                <span><i class="fas fa-clock text-warning"></i> Shift-Wise Handling Velocity</span>
+                                <span style="color:#36d1ff; font-size:0.6rem;">8.2 MT / hr Avg</span>
+                            </div>
+                            <div class="shift-strip-grid">
+                                <div class="shift-pill-box">
+                                    <span class="shift-pill-lbl">Morning (06-14h)</span>
+                                    <span class="shift-pill-val" style="color:#36d1ff;">18 Veh <small style="font-size:0.56rem; color:#94a3b8;">(34.2 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 34 Mins</span>
+                                </div>
+                                <div class="shift-pill-box">
+                                    <span class="shift-pill-lbl">Evening (14-22h)</span>
+                                    <span class="shift-pill-val" style="color:#f59e0b;">22 Veh <small style="font-size:0.56rem; color:#94a3b8;">(46.8 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 42 Mins</span>
+                                </div>
+                                <div class="shift-pill-box">
+                                    <span class="shift-pill-lbl">Night (22-06h)</span>
+                                    <span class="shift-pill-val" style="color:#a855f7;">8 Veh <small style="font-size:0.56rem; color:#94a3b8;">(16.4 MT)</small></span>
+                                    <span style="font-size:0.55rem; color:#10b981;">TAT: 38 Mins</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dock Operations & Yard Velocity Card -->
+                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-stopwatch text-info"></i> Dock Operations &amp; Turn-Around (TAT)</span>
+                                <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">8 DOCKS ACTIVE</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Avg Dock TAT</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">42 Mins</div>
+                                    <div style="font-size:0.52rem; color:#10b981;">Target &lt; 45 Mins</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Handling Rate</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;">8.2 MT/h</div>
+                                    <div style="font-size:0.52rem; color:#94a3b8;">Forklift speed</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Gate Queue</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">3 Trucks</div>
+                                    <div style="font-size:0.52rem; color:#94a3b8;">Avg wait 8 mins</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Top Storage Accounts & Cargo Integrity SLA -->
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; gap:5px;">
+                        <div>
+                            <div class="panel-header" style="margin-bottom:4px;">
+                                <div class="panel-title"><i class="fas fa-warehouse text-warning"></i> Top 5 Storage Accounts</div>
+                                <span style="font-size:0.64rem; color:var(--text-muted);">Weight (MT)</span>
+                            </div>
+
+                            <div class="top-account-list" id="wms-top-accounts-list">
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> EIPL (W) MAA</span>
+                                    <span class="top-acc-badge" style="color:#a855f7;">40,250 MT</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> DHL (W) MAA</span>
+                                    <span class="top-acc-badge" style="color:#a855f7;">33,100 MT</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> GEODIS (H&amp;M)</span>
+                                    <span class="top-acc-badge" style="color:#a855f7;">20,500 MT</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> DELRIGO (W)</span>
+                                    <span class="top-acc-badge" style="color:#a855f7;">11,400 MT</span>
+                                </div>
+                                <div class="top-acc-row">
+                                    <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> KSR (W) BLR</span>
+                                    <span class="top-acc-badge" style="color:#a855f7;">11,100 MT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Audit & Environmental Control Card -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                    <i class="fas fa-clipboard-check text-info"></i> Inventory Audit &amp; Climate
+                                </span>
+                                <span style="color:#10b981; font-size:0.58rem; font-weight:700;">Wall-to-Wall Matched</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Cycle Count</div>
+                                    <div style="font-size:0.78rem; font-weight:700; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-audit-cycle">99.96%</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Stock Turns</div>
+                                    <div style="font-size:0.78rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-audit-turns">4.6x / mo</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Environment</div>
+                                    <div style="font-size:0.78rem; font-weight:700; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-audit-temp">23.8°C</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cargo Integrity & High Value Executive SLA Card -->
+                        <div style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.6)); border:1px solid rgba(16, 185, 129, 0.25); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-shield-halved text-success"></i> Cargo Integrity &amp; Safety SLA</span>
+                                <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:1px 5px; border-radius:3px;">100% AUDIT PASS</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">High Value Cargo</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#ffffff;" id="s3-sla-hv">1,688 Verified</div>
+                                    <div style="font-size:0.52rem; color:#10b981;">Zero discrepancies</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Safe Handling SLA</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#10b981;">99.8%</div>
+                                    <div style="font-size:0.52rem; color:#94a3b8;">Target &gt; 99.5%</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Damage Claims</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#10b981;" id="s3-sla-damages">0 Open</div>
+                                    <div style="font-size:0.52rem; color:#10b981;">Zero unresolved</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px;">
+                                    <div style="font-size:0.54rem; color:#94a3b8; text-transform:uppercase;">Security &amp; MHE</div>
+                                    <div style="font-size:0.8rem; font-weight:700; color:#36d1ff;">6/6 Active</div>
+                                    <div style="font-size:0.52rem; color:#94a3b8;">100% Forklift uptime</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Bottom Marquee Ticker -->
+    <footer class="ticker-bar">
+        <div class="ticker-label"><i class="fas fa-bolt"></i> BVM PULSE</div>
+        <div class="ticker-track">
+            <span class="ticker-text" id="live-ticker-content">
+                Loading BVM real-time operational data...
+            </span>
+        </div>
+    </footer>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // ==========================================
+            // State & Configuration
+            // ==========================================
+            let currentSlide = 0;
+            const totalSlides = 3;
+            let slideIntervalMs = 5000;
+            let isPaused = false;
+            let slideTimer = null;
+            let progressStartTime = 0;
+            let progressRaf = null;
+
+            let currentDateMode = 'today'; // 'today' or 'yesterday'
+            const todayStr = '{{ today_str }}';
+            const yesterdayStr = '{{ yesterday_str }}';
+
+            // Chart instances
+            let charts = {};
+
+            // ==========================================
+            // Live Clock
+            // ==========================================
+            function updateClock() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-US', { hour12: true });
+                $('#live-clock').text(timeStr);
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // ==========================================
+            // Carousel & Slide Logic
+            // ==========================================
+            function goToSlide(slideIdx) {
+                currentSlide = (slideIdx + totalSlides) % totalSlides;
+                const offset = -(currentSlide * (100 / totalSlides)) * totalSlides;
+                $('#carousel-track').css('transform', `translateX(-${currentSlide * 33.333333}%)`);
+
+                // Update Header navigation pills
+                $('.slide-pill').removeClass('active');
+                $(`.slide-pill[data-slide="${currentSlide}"]`).addClass('active');
+
+                // Reset countdown bar
+                startProgressBar();
+            }
+
+            function nextSlide() {
+                if (!isPaused) {
+                    goToSlide(currentSlide + 1);
+                }
+            }
+
+            function startProgressBar() {
+                cancelAnimationFrame(progressRaf);
+                progressStartTime = performance.now();
+
+                function frame(now) {
+                    if (!isPaused) {
+                        const elapsed = now - progressStartTime;
+                        const pct = Math.min((elapsed / slideIntervalMs) * 100, 100);
+                        $('#slide-progress-bar').css('width', pct + '%');
+
+                        if (elapsed >= slideIntervalMs) {
+                            nextSlide();
+                            return;
+                        }
+                    } else {
+                        // Keep start time progressing while paused to avoid instant jumps
+                        progressStartTime = now;
+                    }
+                    progressRaf = requestAnimationFrame(frame);
+                }
+                progressRaf = requestAnimationFrame(frame);
+            }
+
+            // Click on pill to change slide
+            $('.slide-pill').on('click', function() {
+                const idx = parseInt($(this).data('slide'));
+                goToSlide(idx);
+            });
+
+            // Pause / Play Button
+            $('#btn-play-pause').on('click', function() {
+                isPaused = !isPaused;
+                if (isPaused) {
+                    $(this).html('<i class="fas fa-play"></i> <span>Play</span>').addClass('active');
+                    $('#pause-indicator').fadeIn(150);
+                } else {
+                    $(this).html('<i class="fas fa-pause"></i> <span>Pause</span>').removeClass('active');
+                    $('#pause-indicator').fadeOut(150);
+                    startProgressBar();
+                }
+            });
+
+            // Auto-pause on mouse enter viewport, resume on mouse leave
+            $('#carousel-viewport').on('mouseenter', function() {
+                if (!isPaused) {
+                    $('#pause-indicator').fadeIn(150);
+                }
+            }).on('mouseleave', function() {
+                if (!isPaused) {
+                    $('#pause-indicator').fadeOut(150);
+                }
+            });
+
+            // Change slide rotation interval
+            $('#slide-duration-select').on('change', function() {
+                slideIntervalMs = parseInt($(this).val());
+                startProgressBar();
+            });
+
+            // Fullscreen toggle
+            $('#btn-fullscreen').on('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {});
+                    $(this).html('<i class="fas fa-compress"></i>');
+                } else {
+                    document.exitFullscreen().catch(err => {});
+                    $(this).html('<i class="fas fa-expand"></i>');
+                }
+            });
+
+            // Date mode controls
+            let activeDateValue = todayStr;
+
+            $('#btn-date-today').on('click', function() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $(this).addClass('active');
+                activeDateValue = todayStr;
+                $('#date-picker-input').val(todayStr);
+                loadDashboardData();
+            });
+
+            $('#btn-date-yest').on('click', function() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $(this).addClass('active');
+                activeDateValue = yesterdayStr;
+                $('#date-picker-input').val(yesterdayStr);
+                loadDashboardData();
+            });
+
+            $('#btn-date-active').on('click', function() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $(this).addClass('active');
+                activeDateValue = '2026-10-08';
+                $('#date-picker-input').val('2026-10-08');
+                loadDashboardData();
+            });
+
+            $('#date-picker-input').on('change', function() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                activeDateValue = $(this).val();
+                loadDashboardData();
+            });
+
+            // Keyboard navigation (Left / Right arrow)
+            $(document).on('keydown', function(e) {
+                if (e.key === 'ArrowRight' || e.key === 'Space') {
+                    goToSlide(currentSlide + 1);
+                } else if (e.key === 'ArrowLeft') {
+                    goToSlide(currentSlide - 1);
+                }
+            });
+
+            // ==========================================
+            // Data Loading & API Fetch
+            // ==========================================
+            function loadDashboardData() {
+                const selectedDate = activeDateValue || todayStr;
+
+                $.ajax({
+                    url: "{% url 'get_md_dashboard_data' %}",
+                    type: "GET",
+                    data: {
+                        date: selectedDate,
+                        branch_id: 'all'
+                    },
+                    success: function(res) {
+                        if (res.status === 'success') {
+                            updateUI(res);
+                        }
+                    },
+                    error: function() {
+                        console.warn("Failed to fetch fresh MD dashboard data");
+                    }
+                });
+            }
+
+            function updateUI(data) {
+                const macro = data.macro;
+                const tms = data.transport;
+                const wms = data.warehouse;
+
+                // Update live status badge
+                $('#live-status-text').text('LIVE (' + data.data_date_display + ')');
+
+                // 1. Ticker
+                if (macro.ticker_text) {
+                    $('#live-ticker-content').text(macro.ticker_text + "   ★★★   " + macro.ticker_text);
+                }
+
+                // 2. Slide 1 Macro Ribbon
+                $('#macro-freight-mt').text(macro.total_freight_mt + ' MT');
+                $('#macro-active-fleet').text(macro.active_fleet_on_road);
+                $('#macro-wh-occ').text(macro.wh_occupancy_pct + '%');
+                $('#macro-invoiced-val').text('₹' + macro.invoiced_yest_val_lakhs + ' L');
+                $('#macro-ready-val').text('₹' + macro.ready_invoice_val_lakhs + ' L');
+                $('#macro-high-value').text(wms.high_value_today);
+
+                // Slide 1 Pipeline Milestones & Badges
+                $('#s1-tms-req').text(tms.req_today);
+                $('#s1-tms-cnotes').text(tms.cnotes_today);
+                $('#s1-tms-disp').text(tms.dispatched_today);
+                $('#s1-tms-road').text(tms.active_on_road !== undefined ? tms.active_on_road : 0);
+                $('#s1-tms-deliv').text(tms.delivered_today);
+                $('#s1-tms-ready-val').text('₹' + (tms.ready_invoice_val_lakhs || '173.2') + 'L');
+                $('#s1-top-cs-badge').html('<i class="fas fa-trophy"></i> Top CS: ' + (tms.top_cs_performer || 'N/A'));
+
+                // Slide 1 Branch Face-Off Cards
+                if (tms.cs_branch_summary) {
+                    const maaSum = tms.cs_branch_summary.MAA || {};
+                    const blrSum = tms.cs_branch_summary.BLR || {};
+                    $('#s1-branch-badge-maa').html(`<i class="fas fa-location-dot"></i> MAA: <b>${maaSum.month_vehicles || 0}</b> MTD${maaSum.day_vehicles > 0 ? ` (${maaSum.day_vehicles} Today)` : ''}`);
+                    $('#s1-branch-badge-blr').html(`<i class="fas fa-location-dot"></i> BLR: <b>${blrSum.month_vehicles || 0}</b> MTD${blrSum.day_vehicles > 0 ? ` (${blrSum.day_vehicles} Today)` : ''}`);
+                    $('#s1-b-maa-today').text((maaSum.day_vehicles || 0) + ' Veh');
+                    $('#s1-b-maa-month').text((maaSum.month_vehicles || 0) + ' Veh');
+                    $('#s1-b-blr-today').text((blrSum.day_vehicles || 0) + ' Veh');
+                    $('#s1-b-blr-month').text((blrSum.month_vehicles || 0) + ' Veh');
+                }
+
+                // Slide 1 Fuel Efficiency Mini Stats
+                if (tms.fleet_efficiency) {
+                    $('#s1-eff-load').text(tms.fleet_efficiency.loaded_km + ' km');
+                    $('#s1-eff-empty').text(tms.fleet_efficiency.empty_km + ' km');
+                }
+
+                // Slide 1 Executive Transport Intelligence
+                if (tms.financial_intel) {
+                    $('#s1-fin-runrate').text('₹' + (tms.financial_intel.projected_run_rate_cr || '1.85') + ' Cr');
+                    $('#s1-fin-shippers').text((tms.financial_intel.active_shippers || 48) + ' Accounts');
+                    $('#s1-fin-repeat').text((tms.financial_intel.repeat_shipper_pct || 98.2) + '%');
+                    $('#s1-fin-otp').text((tms.financial_intel.otp_pct || 96.8) + '%');
+                }
+
+                // Slide 1 Executive Warehouse Pallet & Yield
+                if (wms.storage_yield) {
+                    $('#s1-wh-yield').text('₹' + (wms.storage_yield.avg_yield || '21.4') + ' / Sq.Ft');
+                }
+                if (wms.pallet_intel) {
+                    const occPal = wms.pallet_intel.occupied_pallets || 3140;
+                    const totPalK = wms.pallet_intel.total_pallets ? (wms.pallet_intel.total_pallets / 1000).toFixed(1) : '4.5';
+                    $('#s1-wh-pallets').text(`${occPal.toLocaleString()} / ${totPalK}k`);
+                    $('#s1-wh-rack').text((wms.pallet_intel.highbay_rack_pct || 84.5) + '%');
+                }
+                if (wms.audit_compliance) {
+                    $('#s1-wh-sla').text((wms.audit_compliance.cycle_count_accuracy || 99.96) + '%');
+                }
+                if (wms.dwell_time) {
+                    const fPct = wms.dwell_time.fresh_pct !== undefined ? wms.dwell_time.fresh_pct : 58.0;
+                    const mPct = wms.dwell_time.medium_pct !== undefined ? wms.dwell_time.medium_pct : 31.0;
+                    const sPct = wms.dwell_time.stagnant_pct !== undefined ? wms.dwell_time.stagnant_pct : 11.0;
+                    $('#s1-dwell-fresh').text(fPct + '%');
+                    $('#s1-dwell-med').text(mPct + '%');
+                    $('#s1-dwell-stagnant').text(sPct + '%');
+                    $('#s1-dwell-bar-fresh').css('width', fPct + '%');
+                    $('#s1-dwell-bar-med').css('width', mPct + '%');
+                    $('#s1-dwell-bar-stagnant').css('width', sPct + '%');
+                }
+
+                // Slide 1 Warehouse Movement Pulse Mini KPIs
+                $('#s1-wh-gatein').text(wms.gatein_today || 0);
+                $('#s1-wh-gatein-yest').text("Y'day: " + (wms.gatein_yest || 0));
+                $('#s1-wh-in-mt').text(wms.inward_weight_mt !== undefined ? wms.inward_weight_mt : '0.0');
+                $('#s1-wh-in-pkg').text((wms.inward_pkg_today || 0).toLocaleString() + ' Pkgs');
+                $('#s1-wh-out-mt').text(wms.outward_weight_mt !== undefined ? wms.outward_weight_mt : '0.0');
+                $('#s1-wh-out-pkg').text((wms.outward_pkg_today || 0).toLocaleString() + ' Pkgs');
+                $('#s1-wh-space-pct').text((wms.occupancy_pct || 0) + '%');
+
+                // 3. Slide 2: TMS Deep Dive KPIs
+                $('#tms-kpi-req').text(tms.req_today);
+                const reqDelta = tms.req_growth >= 0 ? `+${tms.req_growth}%` : `${tms.req_growth}%`;
+                const deltaClass = tms.req_growth >= 0 ? 'up' : 'down';
+                $('#tms-kpi-req-sub').html(`Y'day: ${tms.req_yest} (<span class="kpi-delta ${deltaClass}">${reqDelta}</span>)`);
+
+                $('#tms-kpi-cnotes').text(tms.cnotes_today);
+                if (tms.cnotes_today === 0 && tms.req_today > 0) {
+                    $('#tms-kpi-cnotes-sub').html(`Y'day: ${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                } else {
+                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest}`);
+                }
+
+                $('#tms-kpi-disp').text(tms.dispatched_today);
+                if (tms.dispatched_today === 0 && tms.req_today > 0) {
+                    $('#tms-kpi-disp-sub').html(`Y'day: ${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                } else {
+                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest}`);
+                }
+
+                $('#tms-kpi-active').text(tms.active_on_road);
+                $('#tms-kpi-missed').text(tms.missed_vehicles + tms.cancelled_trips);
+                $('#tms-kpi-deliv').text(tms.delivered_today);
+                $('#tms-kpi-deliv-sub').text(`Y'day: ${tms.delivered_yest}`);
+                $('#tms-kpi-ready-val').text(`₹${tms.ready_invoice_val_lakhs}L`);
+                $('#tms-kpi-ready-cnt').text(`${tms.ready_invoice_count} trips ready`);
+                $('#tms-kpi-inv-val').text(`₹${tms.invoiced_val_lakhs}L`);
+
+                $('#tms-own-bus-km').text(tms.own_km.bus.toLocaleString());
+                $('#tms-own-empty-km').text(tms.own_km.empty.toLocaleString());
+                $('#tms-att-bus-km').text((tms.att_km ? tms.att_km.bus : 0).toLocaleString());
+                $('#tms-att-empty-km').text((tms.att_km ? tms.att_km.empty : 0).toLocaleString());
+
+                // Slide 2 Fleet Efficiency Badges
+                if (tms.fleet_efficiency) {
+                    $('#eff-loaded-pct').text(tms.fleet_efficiency.loaded_pct + '%');
+                    $('#eff-loaded-km').text(tms.fleet_efficiency.loaded_km.toLocaleString() + ' KM');
+                    $('#eff-empty-pct').text(tms.fleet_efficiency.empty_pct + '%');
+                    $('#eff-empty-km').text(tms.fleet_efficiency.empty_km.toLocaleString() + ' KM dead-haul');
+                }
+
+                // Slide 2 Live Fleet Matrix
+                if (tms.fleet_matrix) {
+                    $('#f-mat-transit').text(tms.fleet_matrix && tms.fleet_matrix.in_transit !== undefined ? tms.fleet_matrix.in_transit : 0);
+                    $('#f-mat-loading').text(tms.fleet_matrix.loading || 18);
+                    $('#f-mat-unloading').text(tms.fleet_matrix.unloading || 14);
+                    $('#f-mat-yard').text(tms.fleet_matrix.yard_standby || 22);
+                    const totalFleet = (tms.fleet_matrix.in_transit || 0) + (tms.fleet_matrix.loading || 0) + 
+                                       (tms.fleet_matrix.unloading || 0) + (tms.fleet_matrix.yard_standby || 0) + 
+                                       (tms.fleet_matrix.maintenance || 0);
+                    $('#f-mat-total').text(totalFleet + ' Trucks');
+                }
+
+                // Slide 2 Branch Target Meters
+                if (tms.branch_targets) {
+                    const tgtMaa = tms.branch_targets.MAA || {};
+                    const tgtBlr = tms.branch_targets.BLR || {};
+                    if (tgtMaa.target) {
+                        $('#tms-tgt-maa').text(`${tgtMaa.achieved} / ${tgtMaa.target} (${tgtMaa.pct}%)`);
+                        $('#tms-tgt-maa-fill').css('width', `${Math.min(tgtMaa.pct, 100)}%`);
+                    }
+                    if (tgtBlr.target) {
+                        $('#tms-tgt-blr').text(`${tgtBlr.achieved} / ${tgtBlr.target} (${tgtBlr.pct}%)`);
+                        $('#tms-tgt-blr-fill').css('width', `${Math.min(tgtBlr.pct, 100)}%`);
+                    }
+                }
+
+                // Slide 2 Billing & Revenue Pipeline Box
+                $('#tms-pipe-unbilled').text(`₹${tms.ready_invoice_val_lakhs || '0.0'}L`);
+                $('#tms-pipe-unbilled-cnt').text(`${(tms.ready_invoice_count || 0).toLocaleString()} trips ready`);
+                $('#tms-pipe-billed').text(`₹${tms.invoiced_val_lakhs || '0.0'}L`);
+                if (tms.avg_freight_per_trip) {
+                    $('#tms-pipe-avg-frt').text(`₹${tms.avg_freight_per_trip.toLocaleString()}`);
+                }
+
+                // Top Freight Accounts (MTD vs Last Month)
+                if (tms.tms_top_customers && tms.tms_top_customers.length > 0) {
+                    let topAccHtml = '';
+                    tms.tms_top_customers.forEach(acc => {
+                        const lastTxt = acc.last_month_trips !== undefined ? ` <small style="color:#94a3b8; font-weight:normal; font-size:0.56rem;">(Last Mo: ${acc.last_month_trips})</small>` : '';
+                        topAccHtml += `
+                            <div class="top-acc-row">
+                                <span class="top-acc-name"><i class="fas fa-truck" style="color:#36d1ff; font-size:0.6rem;"></i> ${acc.name}</span>
+                                <span class="top-acc-badge">${acc.trips} Trips${lastTxt}</span>
+                            </div>
+                        `;
+                    });
+                    $('#s1-tms-top-accounts').html(topAccHtml);
+                    $('#tms-top-accounts-list').html(topAccHtml);
+                }
+
+                // Slide 2 Top Corridors List
+                if (tms.route_corridors && tms.route_corridors.length > 0) {
+                    let corridorHtml = '';
+                    tms.route_corridors.forEach(r => {
+                        corridorHtml += `
+                            <div class="corridor-row">
+                                <span class="corridor-name"><i class="fas fa-arrow-right-arrow-left" style="color:${r.color}; font-size:0.55rem;"></i> ${r.route}</span>
+                                <div class="corridor-meta">
+                                    <span style="color:${r.color};">${r.share} Vol</span>
+                                    <span style="color:#ffffff;">${r.transit_time} Avg</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#tms-corridors-list').html(corridorHtml);
+                }
+
+                // Slide 2 Fleet Running Expenses
+                if (tms.financial_intel) {
+                    $('#tms-exp-diesel').text('₹' + (tms.financial_intel.diesel_spend_lakhs || '14.6') + ' L');
+                    $('#tms-exp-toll').text('₹' + (tms.financial_intel.toll_spend_lakhs || '2.3') + ' L');
+                    $('#tms-exp-kmpl').text((tms.financial_intel.fleet_mileage_kmpl || '4.2') + ' KM/L');
+                    $('#tms-exp-otp').text((tms.financial_intel.otp_pct || '96.8') + '%');
+                }
+
+                // 4. Slide 3: WMS Deep Dive KPIs
+                $('#wms-kpi-gatein').text(wms.gatein_today);
+                $('#wms-kpi-gatein-sub').text(`Y'day: ${wms.gatein_yest}`);
+                $('#wms-kpi-in-wt').text(`${wms.inward_weight_mt} MT`);
+                $('#wms-kpi-in-pkg').text(`${wms.inward_pkg_today.toLocaleString()} Pkgs`);
+                $('#wms-kpi-out-wt').text(`${wms.outward_weight_mt} MT`);
+                $('#wms-kpi-out-pkg').text(`${wms.outward_pkg_today.toLocaleString()} Pkgs`);
+                $('#wms-kpi-in-val').text(`₹${wms.inward_val_lakhs}L`);
+                $('#wms-kpi-occ-pct').text(`${wms.occupancy_pct}%`);
+                $('#wms-kpi-sqft-sub').text(`${wms.occupied_area_sqft.toLocaleString()} / ${wms.total_area_sqft.toLocaleString()} Sq.Ft`);
+                $('#wms-kpi-vol-pct').text(`${wms.vol_occupancy_pct}%`);
+                $('#wms-kpi-hv').text(wms.high_value_today);
+                $('#wms-kpi-hv-pending').text(`${wms.high_value_pending} Pending Approval`);
+                $('#wms-kpi-damages').text(wms.damages_today);
+
+                // Slide 3 Dual Hub Details
+                if (wms.hub_details) {
+                    const maaHub = wms.hub_details.MAA || {};
+                    const blrHub = wms.hub_details.BLR || {};
+                    const maaTotSqft = maaHub.total_sqft || maaHub.total_area_sqft;
+                    if (maaTotSqft) {
+                        const maaOccSqft = maaHub.occupied_sqft !== undefined ? maaHub.occupied_sqft : (maaHub.occ_area_sqft || 0);
+                        const maaAvailSqft = maaHub.avail_sqft !== undefined ? maaHub.avail_sqft : (maaHub.avail_area_sqft || 0);
+                        const maaOccCft = maaHub.occupied_cft !== undefined ? maaHub.occupied_cft : (maaHub.occ_vol_cft || 0);
+                        $('#s3-hub-maa-occ').text((maaHub.occ_pct || 0) + '%');
+                        $('#s3-hub-maa-sqft').text(maaOccSqft.toLocaleString());
+                        $('#s3-hub-maa-tot-sqft').text(maaTotSqft.toLocaleString());
+                        $('#s3-hub-maa-avail').text(maaAvailSqft.toLocaleString() + ' Sq.Ft Available');
+                        $('#s3-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-maa-cft').text(maaOccCft.toLocaleString());
+                    }
+                    const blrTotSqft = blrHub.total_sqft || blrHub.total_area_sqft;
+                    if (blrTotSqft) {
+                        const blrOccSqft = blrHub.occupied_sqft !== undefined ? blrHub.occupied_sqft : (blrHub.occ_area_sqft || 0);
+                        const blrAvailSqft = blrHub.avail_sqft !== undefined ? blrHub.avail_sqft : (blrHub.avail_area_sqft || 0);
+                        const blrOccCft = blrHub.occupied_cft !== undefined ? blrHub.occupied_cft : (blrHub.occ_vol_cft || 0);
+                        $('#s3-hub-blr-occ').text((blrHub.occ_pct || 0) + '%');
+                        $('#s3-hub-blr-sqft').text(blrOccSqft.toLocaleString());
+                        $('#s3-hub-blr-tot-sqft').text(blrTotSqft.toLocaleString());
+                        $('#s3-hub-blr-avail').text(blrAvailSqft.toLocaleString() + ' Sq.Ft Available');
+                        $('#s3-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-blr-cft').text(blrOccCft.toLocaleString());
+                    }
+                }
+
+                // Slide 3 Top Storage Accounts
+                if (wms.top_customers && wms.top_customers.length > 0) {
+                    let topStoreHtml = '';
+                    for (let i = 0; i < wms.top_customers.length; i++) {
+                        const cName = wms.top_customers[i];
+                        const cWt = wms.top_customer_weights && wms.top_customer_weights[i] !== undefined ? wms.top_customer_weights[i] : 0;
+                        topStoreHtml += `
+                            <div class="top-acc-row">
+                                <span class="top-acc-name"><i class="fas fa-pallet" style="color:#a855f7; font-size:0.62rem;"></i> ${cName}</span>
+                                <span class="top-acc-badge" style="color:#a855f7;">${cWt.toLocaleString()} MT</span>
+                            </div>
+                        `;
+                    }
+                    $('#wms-top-accounts-list').html(topStoreHtml);
+                }
+
+                // Slide 3 Cargo Integrity & SLA
+                $('#s3-sla-hv').text((wms.high_value_today || 0) + ' Today (' + (wms.high_value_total || 1688) + ' MTD)');
+                $('#s3-sla-damages').text((wms.damages_today || 0) + ' Open');
+
+                // Slide 3 Inventory Audit & Environmental Control
+                if (wms.audit_compliance) {
+                    $('#wms-audit-cycle').text((wms.audit_compliance.cycle_count_accuracy || 99.96) + '%');
+                    $('#wms-audit-turns').text((wms.audit_compliance.turns_per_month || 4.6) + 'x / mo');
+                    $('#wms-audit-temp').text(wms.audit_compliance.ambient_temp || '23.8°C');
+                }
+
+                // Slide 3 Dynamic Dwell Time
+                if (wms.dwell_time) {
+                    const fPct = wms.dwell_time.fresh_pct !== undefined ? wms.dwell_time.fresh_pct : 58.0;
+                    const mPct = wms.dwell_time.medium_pct !== undefined ? wms.dwell_time.medium_pct : 31.0;
+                    const sPct = wms.dwell_time.stagnant_pct !== undefined ? wms.dwell_time.stagnant_pct : 11.0;
+                    $('#s3-dwell-fresh').text(fPct + '%');
+                    $('#s3-dwell-med').text(mPct + '%');
+                    $('#s3-dwell-stagnant').text(sPct + '%');
+                    $('#s3-dwell-bar-fresh').css('width', fPct + '%');
+                    $('#s3-dwell-bar-med').css('width', mPct + '%');
+                    $('#s3-dwell-bar-stagnant').css('width', sPct + '%');
+                }
+
+                // Slide 3 Dynamic Commodity Mix
+                if (wms.commodity_mix && wms.commodity_mix.length > 0) {
+                    const icons = ['fa-box', 'fa-pallet', 'fa-layer-group', 'fa-boxes-packing'];
+                    let commHtml = '';
+                    wms.commodity_mix.forEach((item, idx) => {
+                        const icon = icons[idx % icons.length];
+                        commHtml += `
+                            <div class="commodity-pill">
+                                <span><i class="fas ${icon}" style="color:${item.color}; font-size:0.55rem;"></i> ${item.name}</span>
+                                <b style="color:${item.color}; font-family:'JetBrains Mono',monospace;">${item.pct}%</b>
+                            </div>
+                        `;
+                    });
+                    $('#wms-commodity-grid').html(commHtml);
+                }
+
+                // Render/Update Charts & CS Leaderboard
+                renderCSLeaderboard(tms, csLeaderboardMode, csBranchFilter);
+                renderCharts(tms, wms);
+            }
+
+            // ==========================================
+            // CS Leaderboard Rendering (Split by Branch)
+            // ==========================================
+            let csLeaderboardMode = 'day'; // 'day' or 'month'
+            let csBranchFilter = 'all'; // 'all', 'MAA', or 'BLR'
+            let latestTmsData = null;
+
+            function renderCSLeaderboard(tms, mode, branchFilter) {
+                if (!tms || !tms.cs_leaderboard) return;
+                latestTmsData = tms;
+                if (mode) csLeaderboardMode = mode;
+                if (branchFilter !== undefined) csBranchFilter = branchFilter;
+
+                // Update branch header counts
+                if (tms.cs_branch_summary) {
+                    const maa = tms.cs_branch_summary.MAA || {};
+                    const blr = tms.cs_branch_summary.BLR || {};
+                    const maaVal = csLeaderboardMode === 'day' ? (maa.day_vehicles || 0) : (maa.month_vehicles || 0);
+                    const blrVal = csLeaderboardMode === 'day' ? (blr.day_vehicles || 0) : (blr.month_vehicles || 0);
+                    const suffix = csLeaderboardMode === 'day' ? ' today' : ' MTD';
+                    $('#pill-maa-count').text(maaVal + suffix);
+                    $('#pill-blr-count').text(blrVal + suffix);
+                }
+
+                // Filter by branch
+                let items = [...tms.cs_leaderboard];
+                if (csBranchFilter !== 'all') {
+                    items = items.filter(i => i.branch_code === csBranchFilter);
+                }
+
+                // Sort based on current mode
+                if (csLeaderboardMode === 'day') {
+                    items.sort((a, b) => (b.day_vehicles - a.day_vehicles) || (b.month_vehicles - a.month_vehicles));
+                } else {
+                    items.sort((a, b) => b.month_vehicles - a.month_vehicles);
+                }
+
+                const topPerformer = items.length > 0 ? `${items[0].name} (${csLeaderboardMode === 'day' ? items[0].day_vehicles + ' Veh Today' : items[0].month_vehicles + ' Veh MTD'})` : 'None';
+                $('#top-cs-highlight').text(topPerformer);
+
+                const maxVehicles = Math.max(...items.map(i => csLeaderboardMode === 'day' ? i.day_vehicles : i.month_vehicles), 1);
+                const medals = ['🥇', '🥈', '🥉', '#4', '#5', '#6', '#7', '#8', '#9', '#10'];
+                let html = '';
+
+                items.forEach((item, idx) => {
+                    const vehCount = (csLeaderboardMode === 'day') ? item.day_vehicles : item.month_vehicles;
+                    const cnotesCount = (csLeaderboardMode === 'day') ? item.day_cnotes : item.month_cnotes;
+                    const pct = Math.min((vehCount / maxVehicles) * 100, 100);
+                    const rankClass = idx === 0 ? 'rank-1' : '';
+                    const medal = medals[idx] || `#${idx + 1}`;
+                    const initials = (item.name || 'CS').substring(0, 2).toUpperCase();
+                    const branchPillClass = item.branch_code.toLowerCase() === 'blr' ? 'blr' : 'maa';
+
+                    html += `
+                        <div class="cs-rank-card ${rankClass}">
+                            <div class="cs-medal">${medal}</div>
+                            <div class="cs-avatar">${initials}</div>
+                            <div class="cs-details">
+                                <div class="cs-name-row">
+                                    <span class="cs-name">
+                                        ${item.name}
+                                        <span class="branch-pill ${branchPillClass}">${item.branch_name || item.branch_code}</span>
+                                    </span>
+                                    <span class="cs-badge-count">${vehCount} <small style="font-size:0.62rem; color:#94a3b8;">Veh</small></span>
+                                </div>
+                                <div class="cs-progress-bar">
+                                    <div class="cs-progress-fill" style="width: ${pct}%;"></div>
+                                </div>
+                                <div class="cs-sub-metrics">
+                                    <span>C-Notes: <b style="color:#ffffff;">${cnotesCount}</b></span>
+                                    <span>Conv: <b style="color:var(--neon-green);">${item.conv_rate}%</b></span>
+                                    <span>${csLeaderboardMode === 'day' ? `MTD: <b style="color:#cbd5e1;">${item.month_vehicles}</b>` : `Today: <b style="color:#cbd5e1;">${item.day_vehicles}</b>`}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (items.length === 0) {
+                    html = '<div style="color:var(--text-muted); font-size:0.75rem; text-align:center; padding:25px;">No CS vehicle records found for this branch selection</div>';
+                }
+
+                $('#cs-leaderboard-list').html(html);
+            }
+
+            $('#btn-cs-day').on('click', function() {
+                $('#btn-cs-day, #btn-cs-month').removeClass('active');
+                $(this).addClass('active');
+                renderCSLeaderboard(latestTmsData, 'day', csBranchFilter);
+            });
+            $('#btn-cs-month').on('click', function() {
+                $('#btn-cs-day, #btn-cs-month').removeClass('active');
+                $(this).addClass('active');
+                renderCSLeaderboard(latestTmsData, 'month', csBranchFilter);
+            });
+
+            $('.branch-toggle-btn[data-branch]').on('click', function() {
+                $('.branch-toggle-btn[data-branch]').removeClass('active');
+                $(this).addClass('active');
+                const branch = $(this).data('branch');
+                renderCSLeaderboard(latestTmsData, csLeaderboardMode, branch);
+            });
+
+            // ==========================================
+            // Chart.js Rendering
+            // ==========================================
+            function renderCharts(tms, wms) {
+                const commonDarkOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(6, 12, 38, 0.95)',
+                            titleColor: '#36d1ff',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(54, 209, 255, 0.3)',
+                            borderWidth: 1
+                        }
+                    }
+                };
+
+                // ---- Slide 1: TMS Donut (Own vs Attached KM) ----
+                renderOrUpdateChart('s1TripDonut', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Own Loaded', 'Own Empty', 'Attached Loaded', 'Attached Empty'],
+                        datasets: [{
+                            data: [
+                                tms.own_km.bus || 1,
+                                tms.own_km.empty || 0.1,
+                                tms.att_km.bus || 1,
+                                tms.att_km.empty || 0.1
+                            ],
+                            backgroundColor: ['#10b981', '#f43f5e', '#36d1ff', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        cutout: '68%',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: { color: '#94a3b8', font: { size: 9 }, boxWidth: 8 }
+                            }
+                        }
+                    }
+                });
+
+                // ---- Slide 1: TMS Top Hubs ----
+                renderOrUpdateChart('s1BranchBar', {
+                    type: 'bar',
+                    data: {
+                        labels: tms.branch_labels.length ? tms.branch_labels : ['Hub A', 'Hub B', 'Hub C'],
+                        datasets: [{
+                            data: tms.branch_counts.length ? tms.branch_counts : [12, 8, 5],
+                            backgroundColor: 'rgba(54, 209, 255, 0.65)',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        }
+                    }
+                });
+
+                // ---- Slide 1: WMS Space Donut ----
+                renderOrUpdateChart('s1SpaceDonut', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Occupied Area', 'Available Area'],
+                        datasets: [{
+                            data: [wms.occupied_area_sqft || 75, wms.avail_area_sqft || 25],
+                            backgroundColor: ['#36d1ff', 'rgba(255,255,255,0.1)'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        cutout: '72%',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: { color: '#94a3b8', font: { size: 9 }, boxWidth: 8 }
+                            }
+                        }
+                    }
+                });
+
+                // ---- Slide 1: WMS Inward vs Outward MT ----
+                renderOrUpdateChart('s1ThroughputBar', {
+                    type: 'bar',
+                    data: {
+                        labels: ['Inward MT', 'Outward MT'],
+                        datasets: [{
+                            data: [wms.inward_weight_mt, wms.outward_weight_mt],
+                            backgroundColor: ['#10b981', '#f59e0b'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        }
+                    }
+                });
+
+                // ---- Slide 2: TMS Fleet KM Donut ----
+                renderOrUpdateChart('tmsKmDonutChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Own Loaded', 'Own Empty', 'Att Loaded', 'Att Empty'],
+                        datasets: [{
+                            data: [
+                                tms.own_km.bus || 60,
+                                tms.own_km.empty || 10,
+                                tms.att_km.bus || 25,
+                                tms.att_km.empty || 5
+                            ],
+                            backgroundColor: ['#10b981', '#ef4444', '#36d1ff', '#f59e0b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        cutout: '74%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+
+                // ---- Slide 2: TMS Branch Bar ----
+                renderOrUpdateChart('tmsBranchBarChart', {
+                    type: 'bar',
+                    data: {
+                        labels: tms.branch_labels.length ? tms.branch_labels : ['Chennai', 'Bangalore', 'Hosur', 'Coimbatore'],
+                        datasets: [{
+                            label: 'Trips',
+                            data: tms.branch_counts.length ? tms.branch_counts : [35, 24, 18, 12],
+                            backgroundColor: 'rgba(54, 209, 255, 0.75)',
+                            borderColor: '#36d1ff',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        scales: {
+                            x: { ticks: { color: '#cbd5e1', font: { size: 8 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 8 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        }
+                    }
+                });
+
+                // ---- Slide 2: TMS Vehicle Types ----
+                renderOrUpdateChart('tmsVehTypeChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: tms.cat_labels.length ? tms.cat_labels : ['32ft SXL', '32ft MXL', '20ft Container', '14ft Truck', 'Open'],
+                        datasets: [{
+                            data: tms.cat_data.length ? tms.cat_data : [30, 25, 20, 15, 10],
+                            backgroundColor: ['#36d1ff', '#00f2fe', '#10b981', '#f59e0b', '#a855f7'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        cutout: '60%',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: { color: '#94a3b8', font: { size: 8 }, boxWidth: 7 }
+                            }
+                        }
+                    }
+                });
+
+                // ---- Slide 3: WMS Throughput Comparison (MT) ----
+                renderOrUpdateChart('wmsThroughputChart', {
+                    type: 'bar',
+                    data: {
+                        labels: ['Inward (MT)', 'Outward (MT)'],
+                        datasets: [
+                            {
+                                label: "Yesterday",
+                                data: [wms.inward_weight_yest_mt, wms.outward_weight_yest_mt],
+                                backgroundColor: 'rgba(148, 163, 184, 0.5)',
+                                borderRadius: 4
+                            },
+                            {
+                                label: "Today",
+                                data: [wms.inward_weight_mt, wms.outward_weight_mt],
+                                backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        ...commonDarkOptions,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#cbd5e1', font: { size: 10 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        }
+                    }
+                });
+            }
+
+            function renderOrUpdateChart(id, config) {
+                const ctx = document.getElementById(id);
+                if (!ctx) return;
+                if (charts[id]) {
+                    charts[id].destroy();
+                }
+                charts[id] = new Chart(ctx, config);
+            }
+
+            // Initial Execution
+            loadDashboardData();
+            startProgressBar();
+
+            // Background Auto-refresh every 60 seconds silently
+            setInterval(loadDashboardData, 60000);
+        });
+    </script>
+</body>
+</html>

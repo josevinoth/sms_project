@@ -508,17 +508,38 @@
         const form = document.querySelector("form");
         const tripSelect = document.getElementById("co_tripnumber");
         const vehicleSelect = document.getElementById("co_vehicelnumber");
-        form.addEventListener("submit", function (e) {
-            if (tripSelect && (!tripSelect.value || tripSelect.value.trim() === "")) {
-                e.preventDefault();
-                alert("Please select Trip Number before submitting.");
-                tripSelect.focus();
-                return false;
-            }
-            if (vehicleSelect) {
-                $(vehicleSelect).prop('disabled', false);
-            }
-        });
+        const statusSelect = document.getElementById("consignment_status");
+        const submitBtn = document.getElementById("consignment_details_submit");
+
+        if (form) {
+            form.addEventListener("submit", function (e) {
+                const statusVal = statusSelect ? statusSelect.value : "";
+                // If status is not Cancellation with Billing (9) or Cancellation without Billing (10)
+                if (statusVal !== "9" && statusVal !== "10") {
+                    if (tripSelect && (!tripSelect.value || tripSelect.value.trim() === "")) {
+                        e.preventDefault();
+                        alert("Please select a Trip Number before submitting. A trip must be created and selected for this Consignment Note.");
+                        tripSelect.focus();
+                        return false;
+                    }
+                }
+                if (vehicleSelect) {
+                    $(vehicleSelect).prop('disabled', false);
+                }
+
+                // Prevent duplicate form submission
+                if (submitBtn) {
+                    if (submitBtn.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    setTimeout(function () {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+                    }, 20);
+                }
+            });
+        }
     });
 </script>
 <script>

@@ -33,7 +33,7 @@
             </div>
             {% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
             <div class="col-md-auto col-sm-12 text-md-right text-center mt-3 mt-md-0">
-                <button type="submit" class="btn-modern btn-submit py-2 px-4 w-100" style="font-size: 0.9rem; height: 45px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                <button type="submit" id="btn_save_vehicle" class="btn-modern btn-submit py-2 px-4 w-100" style="font-size: 0.9rem; height: 45px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                     <i class="fas fa-save"></i> Save
                 </button>
             </div>
@@ -180,7 +180,13 @@
         }
 
         // Enable env_enquirynumber, env_sale, env_special_sale on form submit and validate rate & quantity
+        var isVehicleSubmitting = false;
         $('#enquirynotevehicle_add').on('submit', function(e) {
+            if (isVehicleSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+
             var qtyVal = parseInt($('#env_quantity').val(), 10);
             if (isNaN(qtyVal) || qtyVal < 1) {
                 e.preventDefault();
@@ -189,17 +195,21 @@
                 return false;
             }
 
-            /*
-            var saleVal = $('#env_sale').val();
-            if (!saleVal || parseFloat(saleVal) <= 0 || isNaN(parseFloat(saleVal))) {
-                e.preventDefault();
-                alert('No Route Rate Master found for this Customer, Department, Route, and Vehicle Type. Please configure the route rate in Route Rate Master first.');
-                return false;
-            }
-            */
+            isVehicleSubmitting = true;
+            var $btn = $('#btn_save_vehicle');
+            $btn.prop('disabled', true).addClass('disabled').css('pointer-events', 'none');
+            $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
             $('#env_enquirynumber').prop('disabled', false);
             $('#env_sale').prop('disabled', false);
             $('#env_special_sale').prop('disabled', false);
+
+            // Re-enable after 3 seconds in case navigation is delayed
+            setTimeout(function() {
+                isVehicleSubmitting = false;
+                $btn.prop('disabled', false).removeClass('disabled').css('pointer-events', 'auto');
+                $btn.html('<i class="fas fa-save"></i> Save');
+            }, 3000);
         });
 
         // Prevent negative or 0 values while typing

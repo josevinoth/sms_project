@@ -22,9 +22,14 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 @login_required(login_url='login_page')
 def home_page(request):
     first_name=request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    user_ext = User_extInfo.objects.get(user=user_id)
-    role=User_extInfo.objects.get(user=user_id).emp_role
+    user_id = request.session.get('ses_userID') or request.user.id
+    try:
+        user_ext = User_extInfo.objects.get(user=user_id)
+        if user_ext.linked_customer or (user_ext.emp_role and user_ext.emp_role.role_name.lower() == 'customer') or getattr(user_ext, 'is_lp_customer', False):
+            return redirect('customer_dashboard')
+    except User_extInfo.DoesNotExist:
+        user_ext = None
+    role=user_ext.emp_role if user_ext else None
     department=User_extInfo.objects.get(user=user_id).department
     bussiness_solution=User_extInfo.objects.get(user=user_id).emp_organisation
     ses_username = request.session.get('ses_username', request.POST.get('username'))
