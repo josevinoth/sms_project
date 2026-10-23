@@ -1561,9 +1561,9 @@
                         <i class="fas fa-route"></i>
                     </div>
                     <div class="dash-card card-trips-cancelled">
-                        <div class="dash-kpi-label">Missed / Cancel</div>
+                        <div class="dash-kpi-label">Missed / Pending</div>
                         <div class="dash-kpi-value" id="tms-kpi-missed">0</div>
-                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Unallotted orders</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Unconverted indents</div>
                         <i class="fas fa-triangle-exclamation"></i>
                     </div>
                     <div class="dash-card card-settled">
@@ -2486,6 +2486,9 @@
                 $('#tms-kpi-cnotes').text(tms.cnotes_today);
                 if (tms.cnotes_today === 0 && tms.req_today > 0) {
                     $('#tms-kpi-cnotes-sub').html(`Y'day: ${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                } else if (tms.req_today > 0) {
+                    const convPct = Math.round((tms.cnotes_today / tms.req_today) * 100);
+                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest} (${convPct}% Conv)`);
                 } else {
                     $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest}`);
                 }
@@ -2493,6 +2496,9 @@
                 $('#tms-kpi-disp').text(tms.dispatched_today);
                 if (tms.dispatched_today === 0 && tms.req_today > 0) {
                     $('#tms-kpi-disp-sub').html(`Y'day: ${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                } else if (tms.cnotes_today > 0) {
+                    const dispPct = Math.round((tms.dispatched_today / tms.cnotes_today) * 100);
+                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest} (${dispPct}% on road)`);
                 } else {
                     $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest}`);
                 }

@@ -81,7 +81,7 @@ def get_md_dashboard_data(request):
     y_start, y_end = get_day_bounds(yesterday_date)
 
     # -------------------------------------------------------------
-    # 1. TRANSPORT (TMS) METRICS
+    # 1. TRANSPORT (TMS) METRICS - STRICT COHORT CONVERSION PIPELINE
     # -------------------------------------------------------------
     enq_today = EnquirynoteInfo.objects.filter(en_created_at__range=(t_start, t_end))
     enq_yest = EnquirynoteInfo.objects.filter(en_created_at__range=(y_start, y_end))
@@ -90,50 +90,65 @@ def get_md_dashboard_data(request):
         enq_today = enq_today.filter(en_assignedto_id__in=branch_users)
         enq_yest = enq_yest.filter(en_assignedto_id__in=branch_users)
 
-    # Vehicle Requested (env_quantity sum)
+    # 1. Vehicles Requested (Total Demand logged on target date)
     req_today = Enquirynotevehicle.objects.filter(env_enquirynumber__in=enq_today).aggregate(tot=Sum('env_quantity'))['tot'] or 0
     req_yest = Enquirynotevehicle.objects.filter(env_enquirynumber__in=enq_yest).aggregate(tot=Sum('env_quantity'))['tot'] or 0
 
     is_live_today = (req_today > 0)
     data_date_display = target_date.strftime('%d %b %Y')
 
-    # C-Notes created
-    cn_today_qs = ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end))
-    cn_yest_qs = ConsignmentdetailInfo.objects.filter(co_created_at__range=(y_start, y_end))
-    cnotes_today = cn_today_qs.count()
-    cnotes_yest = cn_yest_qs.count()
+    # 2. C-Notes Raised (Strict Cohort: 1 Vehicle = 1 C-Note)
+    cn_cohort_today = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_today).count()
+    cn_cohort_yest = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_yest).count()
+    cnotes_today = min(cn_cohort_today, req_today) if req_today > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end)).count()
+    cnotes_yest = min(cn_cohort_yest, req_yest) if req_yest > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(y_start, y_end)).count()
 
-    # Trips created & in transit
-    trips_today_qs = TripdetailInfo.objects.filter(tr_created_at__range=(t_start, t_end))
-    trips_yest_qs = TripdetailInfo.objects.filter(tr_created_at__range=(y_start, y_end))
+    # 3. Dispatched (Strict Cohort: Loaded on highway for today's requests)
+    trips_today_cohort = TripdetailInfo.objects.filter(
+        tr_enquirynumber__in=enq_today,
+        tr_consignmentnumber__isnull=False
+    ).values('tr_consignmentnumber').distinct().count()
+    if trips_today_cohort == 0 and req_today > 0:
+        trips_today_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today).values('tr_vehiclenumber').distinct().count()
+    trips_dispatched_today = min(trips_today_cohort, cnotes_today) if req_today > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(t_start, t_end)).count()
 
-    trips_dispatched_today = trips_today_qs.count()
-    trips_dispatched_yest = trips_yest_qs.count()
+    trips_yest_cohort = TripdetailInfo.objects.filter(
+        tr_enquirynumber__in=enq_yest,
+        tr_consignmentnumber__isnull=False
+    ).values('tr_consignmentnumber').distinct().count()
+    if trips_yest_cohort == 0 and req_yest > 0:
+        trips_yest_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_yest).values('tr_vehiclenumber').distinct().count()
+    trips_dispatched_yest = min(trips_yest_cohort, cnotes_yest) if req_yest > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(y_start, y_end)).count()
 
-    # Trips Delivered (unloading time in range OR closed/settled today)
-    delivered_today = TripdetailInfo.objects.filter(
-        Q(tr_unloading_time__range=(t_start, t_end)) |
-        Q(tr_updated_at__range=(t_start, t_end), tc_financestatus_id__in=[2, 7])
+    # 4. Delivered (POD completed from today's cohort)
+    delivered_today_cohort = TripdetailInfo.objects.filter(
+        tr_enquirynumber__in=enq_today,
+        tr_consignmentnumber__isnull=False
+    ).filter(
+        Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
+    ).values('tr_consignmentnumber').distinct().count()
+    delivered_today = min(delivered_today_cohort, trips_dispatched_today) if req_today > 0 else TripdetailInfo.objects.filter(
+        Q(tr_unloading_time__range=(t_start, t_end)) | Q(tr_updated_at__range=(t_start, t_end), tc_financestatus_id__in=[2, 7])
     ).distinct().count()
 
-    delivered_yest = TripdetailInfo.objects.filter(
-        Q(tr_unloading_time__range=(y_start, y_end)) |
-        Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
+    delivered_yest_cohort = TripdetailInfo.objects.filter(
+        tr_enquirynumber__in=enq_yest,
+        tr_consignmentnumber__isnull=False
+    ).filter(
+        Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
+    ).values('tr_consignmentnumber').distinct().count()
+    delivered_yest = min(delivered_yest_cohort, trips_dispatched_yest) if req_yest > 0 else TripdetailInfo.objects.filter(
+        Q(tr_unloading_time__range=(y_start, y_end)) | Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
     ).distinct().count()
 
-    # Active trips currently on road (filtered by today's operational window)
-    active_trips_on_road = trips_today_qs.filter(
-        tc_financestatus_id__in=[1, 12]
-    ).count()
-    if active_trips_on_road == 0 and trips_dispatched_today > delivered_today:
-        active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
+    # 5. Active on Road (In Transit: Dispatched minus Delivered)
+    active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
 
-    # Missed & Cancelled
-    cancelled_trips_today = trips_today_qs.filter(tc_financestatus_id=3).count()
-    missed_vehicles_today = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__in=enq_today,
-        va_status_id=4
-    ).count()
+    # 6. Missed / Unconverted Vehicles from Today's Requests
+    unallotted_today = max(0, req_today - cnotes_today)
+    cancelled_trips_today = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today, tc_financestatus_id=3).count()
+    missed_allots_today = Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enq_today, va_status_id=4).count()
+    missed_vehicles_today = max(missed_allots_today + cancelled_trips_today, unallotted_today)
 
     # Invoices & Revenue
     inv_today_qs = TransInvoiceInfo.objects.filter(ti_created_at__range=(t_start, t_end))
@@ -466,6 +481,7 @@ def get_md_dashboard_data(request):
         delivered_today = 21
         delivered_yest = 23
         active_trips_on_road = max(1, trips_dispatched_today - delivered_today)  # Exactly 5 on road (26 dispatched - 21 delivered)
+        missed_vehicles_today = max(0, req_today - cnotes_today)  # Exactly 6 pending (34 requested - 28 cnotes)
         invoiced_today_val = 1450000.0
         invoiced_yest_val = 1820000.0
         ready_invoice_count = 16
