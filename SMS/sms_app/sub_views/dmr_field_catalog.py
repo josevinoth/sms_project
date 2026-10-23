@@ -49,7 +49,8 @@ DMR_PAGE_CATALOG = [
             {"key": "co_cusrefnum", "label": "Invoice No / Customer Ref No", "type": "string", "desc": "Master Invoice # / Ref #"},
             {"key": "cg_hawbno", "label": "HAWB # / HBL #", "type": "string", "desc": "House Airway Bill / House Bill of Lading"},
             {"key": "cg_mawbno", "label": "MAWB #", "type": "string", "desc": "Master Airway Bill"},
-            {"key": "cg_ebillno", "label": "BOE # / E-Way Bill #", "type": "string", "desc": "Bill of Entry or E-Way Bill"},
+            {"key": "cg_boeno", "label": "BOE #", "type": "string", "desc": "Bill of Entry"},
+            {"key": "cg_ebillno", "label": "E-Way Bill #", "type": "string", "desc": "E-Way Bill number"},
             {"key": "cg_qty", "label": "No of Pieces / Pkgs", "type": "number", "desc": "Cargo pieces or package quantity"},
             {"key": "cg_weight", "label": "Actual Weight (Kgs)", "type": "number", "desc": "Gross / Cargo weight"},
             {"key": "chargeable_weight", "label": "Chargeable Weight", "type": "string", "desc": "Billing chargeable weight"},
@@ -181,7 +182,10 @@ def _safe_num(v):
 # EIPL Cargo / Goods line-item fields that must NEVER merge (remain individual per package/invoice):
 CARGO_GOODS_FIELD_KEYS = {
     'cg_hawbno',             # HAWB # / HBL #
-    'cg_ebillno',            # BOE # / E-Way Bill #
+    'cg_mawbno',             # MAWB #
+    'cg_boeno',              # BOE #
+    'cg_ebillno',            # E-Way Bill #
+    'cg_ewaybill',           # E-Way Bill alias
     'co_cusrefnum',          # Invoice No / Customer Ref No
     'cg_qty',                # No of Pieces / Pkgs
     'cg_weight',             # Actual Weight (Kgs)
@@ -325,8 +329,10 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         return _safe_str(cons_goods.cg_hawbno if cons_goods else "")
     if fk == "cg_mawbno":
         return _safe_str(cons_goods.cg_mawbno if cons_goods else "")
-    if fk == "cg_ebillno":
-        return _safe_str(cons_goods.cg_ebillno if cons_goods else "")
+    if fk in ("cg_boeno", "cg_boe", "boeno", "boe"):
+        return _safe_str(cons_goods.cg_boeno if cons_goods and getattr(cons_goods, 'cg_boeno', None) else "")
+    if fk in ("cg_ebillno", "cg_ewaybill", "cg_eway_bill", "ebillno", "ewaybill", "eway_bill"):
+        return _safe_str(cons_goods.cg_ebillno if cons_goods and getattr(cons_goods, 'cg_ebillno', None) else "")
     if fk == "cg_qty":
         qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (cons_goods.cg_qty if cons_goods else "")
         return _safe_str(qty)
@@ -334,10 +340,15 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         return _safe_str(cons_goods.cg_weight if cons_goods else "")
     if fk == "chargeable_weight":
         return ""
-    if fk == "cg_cbm":
+    if fk in ("cg_cbm", "cbm"):
+        if cons_goods and getattr(cons_goods, 'cg_cbm', None) not in (None, '', 0, 0.0, '0', '0.0'):
+            return cons_goods.cg_cbm
         if cons_goods and getattr(cons_goods, 'cg_length', 0) and getattr(cons_goods, 'cg_width', 0) and getattr(cons_goods, 'cg_height', 0):
             cbm = (cons_goods.cg_length * cons_goods.cg_width * cons_goods.cg_height) / 1000000.0
             return round(cbm, 3)
+        if cons_goods and getattr(cons_goods, 'cg_cbm', None) not in (None, ''):
+            val = cons_goods.cg_cbm
+            return val if str(val) not in ('0', '0.0') else ""
         return ""
     if fk == "co_seal_number":
         return _safe_str((cons_detail.co_seal_number or cons_detail.co_smart_lock_number) if cons_detail else "")

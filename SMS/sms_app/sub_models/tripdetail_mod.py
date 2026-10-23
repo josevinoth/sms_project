@@ -103,6 +103,7 @@ class TripdetailInfo(models.Model):
 
     tc_no_of_days_halting = models.IntegerField(null=True, blank=True,default=0)
     tc_pod = models.CharField(default=" ")
+    tc_no_of_pods = models.IntegerField(null=True, blank=True, default=0, verbose_name="No of POD's")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
     tr_operational_status = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE, related_name='operational_status_trips', blank=True, null=True)
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
@@ -115,6 +116,14 @@ class TripdetailInfo(models.Model):
     tr_trip_started_mail_sent = models.BooleanField(default=False)
     tr_unloading_report_mail_sent = models.BooleanField(default=False)
     tr_trip_closed_mail_sent = models.BooleanField(default=False)
+    @property
+    def tc_no_of_pod(self):
+        return self.tc_no_of_pods
+
+    @tc_no_of_pod.setter
+    def tc_no_of_pod(self, value):
+        self.tc_no_of_pods = value
+
     class Meta:
         ordering = ["tr_tripnumber"]
     def __str__(self):

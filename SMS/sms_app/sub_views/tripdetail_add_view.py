@@ -835,6 +835,13 @@ def tripdetail_add(request, tripdetail_id=0):
                     data = ContentFile(base64.b64decode(imgstr), name=f'pod_signature.{ext}')
                     trip.td_pod = data
 
+                # Populate trip charges on creation from matched allotment / enquiry note rate
+                if not trip.tc_tripcost or float(trip.tc_tripcost) == 0.0:
+                    from .tripclosure_add_view import get_allotment_sale_rate
+                    initial_rate = get_allotment_sale_rate(trip)
+                    if initial_rate and initial_rate > 0:
+                        trip.tc_tripcost = initial_rate
+
                 trip.save()
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
@@ -1005,7 +1012,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost',
                     'tc_handlingcost_reason', 'tc_haltingcost', 'tc_total_halting_cost',
                     'tc_supervisorcost', 'tc_rtocost', 'tc_betacost', 'tc_cancellation',
-                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment',
+                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment', 'tc_no_of_pods',
                     'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
                     'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
                     'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',

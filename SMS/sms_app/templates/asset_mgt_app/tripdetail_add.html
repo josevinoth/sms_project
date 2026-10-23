@@ -311,8 +311,13 @@
                 <div class="col-12 mb-2 trip-pod-row">
                     <div class="form-section p-3">
                         <div class="row align-items-end">
+                             <!-- No of POD's -->
+                             <div class="col-12 col-md-3 mb-2 mb-md-0 d-flex flex-column">
+                                 <label class="form-label-modern small mb-1">No of POD's</label>
+                                 {% render_field trip_det_form.tc_no_of_pods id="tc_no_of_pods" class="form-control form-control-modern form-control-sm" type="number" min="0" placeholder="Enter No of PODs" %}
+                             </div>
                              <!-- POD Attachment -->
-                             <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex flex-column position-relative">
+                             <div class="col-12 col-md-3 mb-2 mb-md-0 d-flex flex-column position-relative">
                                  <div class="d-flex justify-content-between align-items-center mb-1">
                                      <label class="form-label-modern small mb-0">POD Attachment(s)</label>
                                      {% if trip_attachments %}
@@ -363,12 +368,12 @@
                                  {% endif %}
                              </div>
                              <!-- Invoice Number -->
-                             <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex flex-column">
+                             <div class="col-12 col-md-3 mb-2 mb-md-0 d-flex flex-column">
                                  <label class="form-label-modern small mb-1">Invoice Number</label>
                                  {% render_field trip_det_form.tc_pod id="tc_pod" class="form-control form-control-modern form-control-sm" %}
                              </div>
                              <!-- POD Signature -->
-                             <div class="col-12 col-md-4 d-flex flex-column">
+                             <div class="col-12 col-md-3 d-flex flex-column">
                                  <label class="form-label-modern small mb-1">POD Signature</label>
                                  <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#podSignatureModal" id="pod-sign-btn" disabled>
                                      <i class="fas fa-pen mr-1"></i> Sign POD
@@ -382,8 +387,7 @@
                              </div>
                          </div>
                      </div>
-                 </div></div>
-                </div>
+                 </div>
 
                 <!-- Hidden inputs -->
                 <div class="d-none">
@@ -607,10 +611,12 @@ document.addEventListener("DOMContentLoaded", function () {
 		// Enable POD only during/after Unloading (Trip Closed = 2, Trip Settled = 3, Ready for Invoice = 4, Finance Approved = 7, etc)
 		var allowedStatuses = ["2", "3", "4", "7", "9"];
 		if (categoryValue == "1" && categoryText.indexOf('empty') === -1 && allowedStatuses.includes(tripStatus)) {
+			$('#tc_no_of_pods').prop('disabled', false).css('background-color', '#fff');
 			$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
 			$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
 			$('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
 		} else {
+			$('#tc_no_of_pods').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
@@ -1420,7 +1426,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	// Validate on Form Submit
-		// Validate on Form Submit
 	$("#tripdetail_add").on("submit", function(e) {
 		if (!validateDateTimeSequence()) {
 			e.preventDefault();
@@ -1449,6 +1454,10 @@ document.addEventListener("DOMContentLoaded", function () {
 					'<i class="fas fa-paperclip mr-1 text-primary"></i>' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)</span>';
 				previewContainer.append(badge);
 			});
+			var currentPods = $("#tc_no_of_pods").val();
+			if (!currentPods || currentPods == "0") {
+				$("#tc_no_of_pods").val(e.target.files.length);
+			}
 		}
 	});
 

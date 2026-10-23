@@ -217,6 +217,11 @@
 									<label class="form-label-modern">MAWB</label>
 									{% render_field form.cg_mawbno class="form-control form-control-modern" %}
 								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">BOE</label>
+									{% render_field form.cg_boeno id="cg_boeno" class="form-control form-control-modern" %}
+								</div>
 							</div>
 						</div>
 
@@ -323,6 +328,11 @@
 								<div class="form-group-modern">
 									<label class="form-label-modern">Invoice Weight</label>
 									{% render_field form.cg_weight class="form-control form-control-modern" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">CBM</label>
+									{% render_field form.cg_cbm id="cg_cbm" class="form-control form-control-modern" step="any" %}
 								</div>
 
 								{% render_field form.cg_lastmodifiedby id="cg_lastmodifiedby" hidden="True" class="form-control" %}
@@ -484,9 +494,13 @@
 					<th>Consigner</th>
 					<th>Consignee</th>
 					<th>Consigner Invoice</th>
+					<th>HAWB</th>
+					<th>MAWB</th>
+					<th>BOE</th>
 					<th>Value in INR</th>
 					<th style="width: 100px; text-align: center;">No. of Pieces</th>
 					<th>Invoice Weight</th>
+					<th>CBM</th>
 					<th>E-Bill No.</th>
 					<th>Link / Attachment</th>
 					<th>Date of Issue</th>
@@ -506,9 +520,13 @@
 					<td> {{consignmentgoodsinfo.cg_consigner}}</td>
 					<td> {{consignmentgoodsinfo.cg_consignee}}</td>
 					<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
+					<td> {{consignmentgoodsinfo.cg_hawbno|default:''}}</td>
+					<td> {{consignmentgoodsinfo.cg_mawbno|default:''}}</td>
+					<td> {{consignmentgoodsinfo.cg_boeno|default:''}}</td>
 					<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
 					<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
 					<td> {{consignmentgoodsinfo.cg_weight}}</td>
+					<td> {{consignmentgoodsinfo.cg_cbm|default:'0.0'}}</td>
 					<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
 					<td style="min-width: 320px; text-align: center; vertical-align: middle;">
 						<div class="attachment-actions d-flex flex-column align-items-center justify-content-center">

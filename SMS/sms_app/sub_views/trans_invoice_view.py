@@ -1991,7 +1991,7 @@ def trans_invoice_excel(request, invoice_no):
         elif "CEVA" in customer_name:
             extra_values = [
                 safe(trip.tr_enquirynumber.en_requestor if trip and trip.tr_enquirynumber else ""),
-                "",  # BOE NO - kept empty as Cnote No already displays consignment number
+                safe(goods.cg_boeno if goods and getattr(goods, 'cg_boeno', None) else ""),  # BOE NO
             ]
         elif "EIPL" in customer_name:
             extra_values = [

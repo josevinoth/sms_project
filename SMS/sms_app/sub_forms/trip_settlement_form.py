@@ -14,7 +14,7 @@ class TripSettlementForm(forms.ModelForm):
                   'tr_vehiclesource', 'tr_vehiclenumber', 'tr_vehicletype_placed', 'tr_category', 'tr_departedlocation',
                   'tr_reportedlocation', 'tc_tripcost', 'tc_parkingcost', 'tc_tollcost', 'tc_loadingcost',
                   'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost', 'tr_iou', 'tc_financestatus',
-                  'tr_customerref', 'tc_no_of_days_halting', 'tc_supervisorcost', 'tc_haltingcost', 'tc_total_halting_cost', 'tc_rtocost',
+                  'tr_customerref', 'tc_no_of_days_halting', 'tc_no_of_pods', 'tc_supervisorcost', 'tc_haltingcost', 'tc_total_halting_cost', 'tc_rtocost',
                   'tc_betacost', 'tc_cancellation',
                   'tc_tripcost_check', 'tc_special_sell_check', 'tc_special_sell',
                   'tc_parkingcost_check', 'tc_tollcost_check', 'tc_loadingcost_check',

@@ -999,7 +999,7 @@ def invoice_documents_add(request, trip_id):
         'tc_handlingcost', 'tc_handlingcost_check',
         'tc_supervisorcost', 'tc_supervisorcost_check',
         'tc_haltingcost', 'tc_haltingcost_check',
-        'tc_no_of_days_halting', 'tc_total_halting_cost', 'tc_total_halting_cost_check',
+        'tc_no_of_days_halting', 'tc_no_of_pods', 'tc_total_halting_cost', 'tc_total_halting_cost_check',
         'tc_rtocost', 'tc_rtocost_check',
         'tc_betacost', 'tc_betacost_check',
         'tc_cancellation', 'tc_cancellation_check',
@@ -1079,6 +1079,36 @@ def invoice_documents_add(request, trip_id):
                 messages.error(request, "Sell Rate Doc is mandatory because Special Sell is higher than Standard Sell / Trip Charges.")
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
+        # Validate No of POD's matching POD attachments (less or more not allowed)
+        no_of_pods_raw = request.POST.get('tc_no_of_pods')
+        expected_pods = 0
+        if no_of_pods_raw not in (None, ''):
+            try:
+                expected_pods = int(no_of_pods_raw)
+            except (ValueError, TypeError):
+                expected_pods = 0
+        if expected_pods == 0 and trip.tc_no_of_pods:
+            expected_pods = int(trip.tc_no_of_pods)
+
+        existing_pod_count = TripAttachmentInfo.objects.filter(
+            ta_tripnumber=trip.tr_tripnumber,
+            ta_category='POD'
+        ).count()
+        if (invoice_doc and invoice_doc.id_pod_doc) and existing_pod_count == 0:
+            existing_pod_count = 1
+
+        new_pod_count = len(request.FILES.getlist('id_pod_files'))
+        if 'id_pod_doc' in request.FILES:
+            new_pod_count += 1
+
+        total_pod_attachments = existing_pod_count + new_pod_count
+
+        if expected_pods > 0:
+            if total_pod_attachments != expected_pods:
+                diff_msg = "less than" if total_pod_attachments < expected_pods else "more than"
+                messages.error(request, f"Number of POD attachments ({total_pod_attachments}) is {diff_msg} No of POD's ({expected_pods}). Please attach exactly {expected_pods} POD attachment(s) to submit.")
+                return redirect('invoice_documents_add', trip_id=trip_id)
+
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
             chk_fields = [
                 'tc_tripcost_check', 'tc_special_sell_check', 'tc_parkingcost_check', 'tc_tollcost_check',
@@ -1151,6 +1181,7 @@ def invoice_documents_add(request, trip_id):
             elif is_special_sell_checked and (not trip_obj.tc_special_sell or trip_obj.tc_special_sell <= 0):
                 trip_obj.tc_special_sell = get_enquiry_special_sell(trip_obj)
 
+            trip_obj.tc_no_of_pods = expected_pods
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
 

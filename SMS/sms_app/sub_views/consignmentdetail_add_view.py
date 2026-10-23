@@ -756,6 +756,8 @@ def consignment_note_pdf(request, consignment_note_id=0):
                 goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
             if goods.cg_hawbno:
                 goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+            if getattr(goods, 'cg_boeno', None):
+                goods.cg_boeno = goods.cg_boeno.replace('/', '/ ').replace(',', ', ')
             if goods.cg_ebillno:
                 goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
 

@@ -121,22 +121,33 @@
                     <div class="mb-2">
                         <div class="input-group input-group-sm">
                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <button type="button" class="btn btn-outline-secondary bg-white border-right-0" id="btn_search_palette" onclick="filterPaletteFields()" title="Click to search fields" style="cursor: pointer;">
+                                    <i class="fas fa-search text-muted"></i>
+                                </button>
                             </div>
-                            <input type="text" id="field_search" class="form-control" placeholder="Search fields (e.g. weight, date, toll)..." onkeyup="filterPaletteFields()">
+                            <input type="text" id="field_search" class="form-control border-left-0" 
+                                   placeholder="Search fields (e.g. eway, boe, cbm, date)..." 
+                                   oninput="filterPaletteFields()" 
+                                   onkeyup="filterPaletteFields()"
+                                   onsearch="filterPaletteFields()">
+                            <div class="input-group-append" id="field_search_clear_wrapper" style="display: none;">
+                                <button type="button" class="btn btn-outline-secondary bg-white border-left-0" onclick="clearPaletteSearch()" title="Clear Search" style="cursor: pointer;">
+                                    <i class="fas fa-times text-muted"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Accordion of Pages -->
                     <div class="accordion" id="paletteAccordion">
                         {% for page in page_catalog %}
-                        <div class="card border mb-2 shadow-none rounded">
+                        <div class="card border mb-2 shadow-none rounded palette-accordion-card" id="card{{ page.id }}" data-total-fields="{{ page.fields|length }}">
                             <div class="card-header bg-light py-2 px-3" id="heading{{ page.id }}" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse{{ page.id }}">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="font-weight-bold text-{{ page.color }} small">
                                         <i class="{{ page.icon }} mr-1"></i> {{ page.title }}
                                     </span>
-                                    <span class="badge badge-{{ page.color }} badge-pill">{{ page.fields|length }}</span>
+                                    <span class="badge badge-{{ page.color }} badge-pill badge-fields-count">{{ page.fields|length }}</span>
                                 </div>
                             </div>
 
@@ -149,8 +160,8 @@
                                          data-has-static="{% if f.has_static_value %}1{% else %}0{% endif %}"
                                          style="background-color: #fafbfc; transition: all 0.15s ease;">
                                         <div class="mr-2 text-truncate" style="max-width: 210px;">
-                                            <div class="font-weight-bold text-dark small">{{ f.label }}</div>
-                                            <div class="text-muted" style="font-size: 0.72rem;">{{ f.desc }}</div>
+                                            <div class="font-weight-bold text-dark small palette-field-label">{{ f.label }}</div>
+                                            <div class="text-muted palette-field-desc" style="font-size: 0.72rem;">{{ f.desc }}</div>
                                         </div>
                                         <button type="button" class="btn btn-outline-{{ page.color }} btn-xs py-1 px-2 font-weight-bold" 
                                                 onclick="addColumnFromPalette('{{ page.id }}', '{{ f.key }}', '{{ f.label|escapejs }}', '{% if f.has_multi_charges %}1{% else %}0{% endif %}', '{% if f.has_static_value %}1{% else %}0{% endif %}')">
@@ -162,6 +173,10 @@
                             </div>
                         </div>
                         {% endfor %}
+                    </div>
+                    <div id="palette_no_results" class="text-center py-4 text-muted" style="display: none;">
+                        <i class="fas fa-search fa-2x mb-2 text-muted" style="opacity: 0.35;"></i>
+                        <div class="small font-weight-bold" id="palette_no_results_text">No fields found</div>
                     </div>
                 </div>
             </div>
@@ -493,16 +508,78 @@
 
     // Filter Palette
     function filterPaletteFields() {
-        var q = ($('#field_search').val() || '').toLowerCase();
-        $('.palette-field-item').each(function() {
-            var label = ($(this).data('label') || '').toLowerCase();
-            var desc = ($(this).find('.text-muted').text() || '').toLowerCase();
-            if (!q || label.indexOf(q) !== -1 || desc.indexOf(q) !== -1) {
-                $(this).show();
+        var raw = $('#field_search').val() || '';
+        var q = raw.trim().toLowerCase();
+
+        if (q.length > 0) {
+            $('#field_search_clear_wrapper').show();
+        } else {
+            $('#field_search_clear_wrapper').hide();
+        }
+
+        if (!q) {
+            // Restore default palette view
+            $('.palette-accordion-card').show();
+            $('.palette-field-item').show();
+            $('.palette-accordion-card').each(function(idx) {
+                var total = $(this).data('total-fields') || $(this).find('.palette-field-item').length;
+                $(this).find('.badge-fields-count').text(total);
+                var coll = $(this).find('.collapse');
+                if (idx === 0) {
+                    coll.addClass('show');
+                } else {
+                    coll.removeClass('show');
+                }
+            });
+            $('#palette_no_results').hide();
+            return;
+        }
+
+        var totalMatches = 0;
+
+        $('.palette-accordion-card').each(function() {
+            var card = $(this);
+            var coll = card.find('.collapse');
+            var items = card.find('.palette-field-item');
+            var cardMatches = 0;
+
+            items.each(function() {
+                var item = $(this);
+                var label = (item.attr('data-label') || item.data('label') || '').toString().toLowerCase();
+                var key = (item.attr('data-key') || item.data('key') || '').toString().toLowerCase();
+                var desc = (item.find('.palette-field-desc').text() || '').toLowerCase();
+
+                if (label.indexOf(q) !== -1 || key.indexOf(q) !== -1 || desc.indexOf(q) !== -1) {
+                    item.show();
+                    cardMatches++;
+                    totalMatches++;
+                } else {
+                    item.hide();
+                }
+            });
+
+            if (cardMatches > 0) {
+                card.show();
+                card.find('.badge-fields-count').text(cardMatches + ' found');
+                coll.addClass('show');
             } else {
-                $(this).hide();
+                card.hide();
+                coll.removeClass('show');
             }
         });
+
+        if (totalMatches === 0) {
+            $('#palette_no_results_text').text('No fields found matching "' + raw + '"');
+            $('#palette_no_results').show();
+        } else {
+            $('#palette_no_results').hide();
+        }
+    }
+
+    function clearPaletteSearch() {
+        $('#field_search').val('');
+        filterPaletteFields();
+        $('#field_search').focus();
     }
 
     // Save Template AJAX

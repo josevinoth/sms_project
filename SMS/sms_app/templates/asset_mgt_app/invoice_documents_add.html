@@ -200,6 +200,7 @@
                                 {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
                             </div>
                         </div>
+                        <input type="hidden" name="tc_no_of_pods" id="tc_no_of_pods" value="{{ trip.tc_no_of_pods|default:0 }}">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
                             <div class="d-flex align-items-center w-50">
@@ -482,6 +483,7 @@
                             <div class="d-flex align-items-center justify-content-between mb-1">
                                 <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
                                     POD
+                                    <span class="badge badge-light border text-primary ml-1" id="pod_expected_badge" title="No of POD's: {{ trip.tc_no_of_pods|default:0 }}" style="font-size:0.7rem; font-weight:600;">(<span id="pod_expected_count">{{ trip.tc_no_of_pods|default:0 }}</span>)</span>
                                     <input type="checkbox" id="pod_check" name="pod_check" class="ml-1" style="width:14px; height:14px; cursor: pointer;" title="Check if POD is available" {% if invoice_doc.id_pod_doc or attachments_by_cat.POD %}checked{% endif %}>
                                     {% if invoice_doc and invoice_doc.id_pod_doc %}<a href="{{ invoice_doc.id_pod_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
                                     {% if cat_atts %}<a href="#inv_att_POD" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
@@ -566,6 +568,7 @@
         $("#tc_haltingcost").on("input", calcTotalHalting);
         // Also calculate once on load
         calcTotalHalting();
+
 
         // Toggle Special Sell editability based on checkbox state
         function toggleSpecialSellEdit() {
@@ -721,13 +724,34 @@
             }
 
             // POD attachment validation
-            var podCheck = $("#pod_check").is(":checked");
+            var expectedPods = parseInt($("#tc_no_of_pods").val()) || 0;
             var podFileInput = document.querySelector('input[name="id_pod_files"]');
-            var hasNewPodFile = podFileInput && podFileInput.files && podFileInput.files.length > 0;
+            var newPodCount = (podFileInput && podFileInput.files) ? podFileInput.files.length : 0;
+            var existingPodCount = $('#inv_att_POD .border-bottom').length;
             var hasExistingPodDoc = {% if invoice_doc and invoice_doc.id_pod_doc %}true{% else %}false{% endif %};
-            var hasPodAtts = $('#inv_att_POD .border-bottom').length > 0;
-            var hasAnyPodAttachment = hasNewPodFile || hasExistingPodDoc || hasPodAtts;
+            if (hasExistingPodDoc && existingPodCount === 0) {
+                existingPodCount = 1;
+            }
+            var totalPodAttachments = existingPodCount + newPodCount;
+            var hasAnyPodAttachment = totalPodAttachments > 0;
 
+            // Enforce exact match if No of POD's is specified (less or more not allowed)
+            if (expectedPods > 0) {
+                if (totalPodAttachments !== expectedPods) {
+                    e.preventDefault();
+                    if (totalPodAttachments < expectedPods) {
+                        alert("Number of POD attachments (" + totalPodAttachments + ") is less than No of POD's (" + expectedPods + "). Please attach exactly " + expectedPods + " POD attachment" + (expectedPods > 1 ? "s" : "") + " to submit.");
+                    } else {
+                        alert("Number of POD attachments (" + totalPodAttachments + ") is more than No of POD's (" + expectedPods + "). Please attach exactly " + expectedPods + " POD attachment" + (expectedPods > 1 ? "s" : "") + " to submit.");
+                    }
+                    if (podFileInput) podFileInput.focus();
+                    return false;
+                }
+                // Ensure POD checkbox is checked
+                $("#pod_check").prop("checked", true);
+            }
+
+            var podCheck = $("#pod_check").is(":checked");
             if (podCheck && !hasAnyPodAttachment) {
                 e.preventDefault();
                 alert("You have ticked the POD checkbox but no attachment is provided. Please upload the POD document.");
