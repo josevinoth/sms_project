@@ -39,8 +39,8 @@
             {% csrf_token %}
             <input type="hidden" name="select_all" value="{{ select_all }}">
 
-            <div class="d-flex flex-wrap align-items-end" style="gap:15px;">
-                <div class="form-group-modern mb-0" style="flex: 1 1 180px;">
+            <div class="filter-grid-modern">
+                <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">Vehicle Number</label>
                     <select name="vehicle_number" id="vehicle_number" class="form-control form-control-modern select2">
                         <option value="">Search Vehicle...</option>
@@ -52,7 +52,7 @@
                     </select>
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">Vehicle Source</label>
                     <select name="vehicle_source" id="vehicle_source" class="form-control form-control-modern select2">
                         <option value="">All Sources</option>
@@ -64,38 +64,65 @@
                     </select>
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">From Location</label>
                     {% render_field form.from_location class="form-control form-control-modern select2" value=from_location %}
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">To Location</label>
                     {% render_field form.to_location class="form-control form-control-modern select2" value=to_location %}
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 140px;">
-                    <label class="form-label-modern fw-bold">From Date</label>
-                    <input type="date" class="form-control form-control-modern" name="from_date" id="from_date" value="{{ from_date }}">
-                </div>
-
-                <div class="form-group-modern mb-0" style="flex: 1 1 140px;">
-                    <label class="form-label-modern fw-bold">To Date</label>
-                    <input type="date" class="form-control form-control-modern" name="to_date" id="to_date" value="{{ to_date }}">
-                </div>
-
-                <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">Branch</label>
                     {% render_field form.branch class="form-control form-control-modern select2" value=branch_id %}
                 </div>
 
-                <div class="d-flex gap-2 mb-0" style="flex: 0 0 auto;">
-                    <button type="button" id="btn-filter" class="btn btn-submit d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 10px; padding: 0 18px; font-weight: 600;">
-                        <i class="fas fa-filter mr-1"></i> Filter
-                    </button>
-                    <a href="{% url 'vehicle_log_report' %}" class="btn btn-cancel d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 10px; padding: 0 16px; text-decoration:none;">
-                        <i class="fas fa-sync mr-1"></i> Clear
-                    </a>
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern fw-bold">From Date</label>
+                    <input type="date" class="form-control form-control-modern" name="from_date" id="from_date" value="{{ from_date }}">
+                </div>
+
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern fw-bold">To Date</label>
+                    <input type="date" class="form-control form-control-modern" name="to_date" id="to_date" value="{{ to_date }}">
+                </div>
+
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern fw-bold">Trip Type</label>
+                    <select name="trip_type" id="trip_type" class="form-control form-control-modern select2">
+                        <option value="">All Trip Types</option>
+                        {% for tt in all_trip_types %}
+                        <option value="{{ tt.id }}" {% if trip_type_id == tt.id|stringformat:"s" %}selected{% endif %}>
+                            {{ tt.tr_trip_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern fw-bold">Trip Category</label>
+                    <select name="trip_category" id="trip_category" class="form-control form-control-modern select2">
+                        <option value="">All Categories</option>
+                        {% for cat in all_trip_categories %}
+                        <option value="{{ cat.id }}" {% if trip_category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cat.category }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group-modern mb-0">
+                    <label class="form-label-modern d-none d-lg-block" style="visibility: hidden;">Actions</label>
+                    <div class="d-flex" style="gap: 10px;">
+                        <button type="button" id="btn-filter" class="btn btn-submit flex-fill d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 8px; font-weight: 600;">
+                            <i class="fas fa-filter mr-1"></i> Filter
+                        </button>
+                        <a href="{% url 'vehicle_log_report' %}" class="btn btn-cancel flex-fill d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 8px; text-decoration:none;">
+                            <i class="fas fa-sync mr-1"></i> Clear
+                        </a>
+                    </div>
                 </div>
             </div>
         </form>
@@ -152,6 +179,18 @@
             width: '100%'
         });
 
+        $('#trip_type').select2({
+            placeholder: "All Trip Types",
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#trip_category').select2({
+            placeholder: "All Categories",
+            allowClear: true,
+            width: '100%'
+        });
+
         var table = $('#vehicle_log_report_table').DataTable({
             "processing": true,
             "serverSide": true,
@@ -170,6 +209,8 @@
                     d.from_date = $('#from_date').val();
                     d.to_date = $('#to_date').val();
                     d.vehicle_source = $('#vehicle_source').val();
+                    d.trip_type = $('#trip_type').val();
+                    d.trip_category = $('#trip_category').val();
                 }
             },
             "dom": '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
@@ -271,6 +312,46 @@
 </script>
 
 <style>
+    /* Filter Grid Alignment */
+    .filter-grid-modern {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+
+    .filter-grid-modern .form-group-modern {
+        min-width: 0;
+        margin-bottom: 0;
+    }
+
+    .filter-grid-modern .form-control-modern {
+        height: 42px !important;
+        border-radius: 8px !important;
+    }
+
+    .filter-grid-modern .select2-container {
+        width: 100% !important;
+    }
+
+    @media (max-width: 1200px) {
+        .filter-grid-modern {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-grid-modern {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 576px) {
+        .filter-grid-modern {
+            grid-template-columns: 1fr;
+        }
+    }
+
     /* Select2 Alignment & Styling */
     .select2-container--default .select2-selection--single {
         background-color: var(--input-bg) !important;

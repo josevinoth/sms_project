@@ -71,6 +71,10 @@ def sync_allotment_rate_to_trips(allotment_obj):
     if effective_rate <= 0:
         return
 
+    # Do not sync rates from cancelled allotments
+    if getattr(allotment_obj, 'va_status_id', None) == 4:
+        return
+
     veh_no = ''
     if allotment_obj.va_vehiclenumber and getattr(allotment_obj.va_vehiclenumber, 'vm_registrationnumber', None):
         veh_no = allotment_obj.va_vehiclenumber.vm_registrationnumber.strip()
@@ -78,15 +82,27 @@ def sync_allotment_rate_to_trips(allotment_obj):
         veh_no = allotment_obj.va_vehiclenumber_mkt.strip()
 
     trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_id)
+    al_vt = allotment_obj.va_vehicletype_placed_id or allotment_obj.va_vehicletype_id
+
     if veh_no:
         clean_veh = veh_no.replace(' ', '').replace('-', '').upper()
         for t in trips:
             t_veh = (t.tr_vehiclenumber or '').replace(' ', '').replace('-', '').upper()
-            if not t_veh or t_veh == clean_veh or trips.count() == 1:
+            t_vt = t.tr_vehicletype_placed_id or t.tr_vehicletype_id
+            # Strictly match vehicle number; or if trip vehicle is unassigned, match by vehicle type
+            if clean_veh and t_veh == clean_veh:
+                t.tc_tripcost = effective_rate
+                t.save(update_fields=['tc_tripcost'])
+            elif not t_veh and al_vt and t_vt == al_vt:
                 t.tc_tripcost = effective_rate
                 t.save(update_fields=['tc_tripcost'])
     else:
-        trips.update(tc_tripcost=effective_rate)
+        if al_vt:
+            for t in trips:
+                t_vt = t.tr_vehicletype_placed_id or t.tr_vehicletype_id
+                if t_vt == al_vt:
+                    t.tc_tripcost = effective_rate
+                    t.save(update_fields=['tc_tripcost'])
 
 
 def validate_vehicle_number_format(veh_num):
@@ -1216,10 +1232,14 @@ def load_vehicle_source(request):
     vehicle_source_name_list = []
     vehicle_source_id_list = []
 
-    # Fetch vehicles allotted in a trip
+    # Fetch vehicles allotted in a trip (created on/after 2026-08-01)
     vehicle_allotted_list = list(
-        TripdetailInfo.objects.filter(tr_vehiclesource__in=[1, 2], tc_financestatus=1).values_list('tr_vehiclenumber',
-                                                                                                   flat=True)
+        TripdetailInfo.objects.filter(
+            tr_vehiclesource__in=[1, 2],
+            tc_financestatus=1
+        ).filter(
+            Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+        ).values_list('tr_vehiclenumber', flat=True)
     )
 
     # Fetch all vehicle master records, avoiding repetitive queries
@@ -1274,11 +1294,13 @@ def load_vehicle_number(request):
 
     closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
-    # 1) Open / In-Progress Trips (Trip Started, Work in Progress, or unclosed trips)
+    # 1) Open / In-Progress Trips (Trip Started, Work in Progress, or unclosed trips created on/after 2026-08-01)
     open_trips_qs = TripdetailInfo.objects.filter(
         Q(tc_financestatus_id=1) |
         Q(tr_operational_status_id__in=[1, 12]) |
         (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
+    ).filter(
+        Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
     ).exclude(
         tr_enquirynumber__en_status_id=8
     )

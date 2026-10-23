@@ -1285,63 +1285,6 @@ def trip_report(request):
     return render(request, "asset_mgt_app/dmr_report.html", context)
 
 
-@login_required(login_url='login_page')
-def trip_send_email(request):
-    if request.method != 'POST':
-        messages.error(request, "Invalid request.")
-        return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    customer_id = request.POST.get('customer_id')
-    dept_id = request.POST.get('customer_department') or request.POST.get('dept_id')
-    month = request.POST.get('month')
-    year = request.POST.get('year')
-    from_loc = request.POST.get('from_location')
-    to_loc = request.POST.get('to_location')
-    recipient = request.POST.get('recipient', "")
-    subject = request.POST.get('subject', "")
-    message_body = request.POST.get('message', "")
-
-    if not customer_id:
-        messages.error(request, "Please select a customer.")
-        return redirect('trip_report')
-
-    try:
-        customer_obj = CustomerInfo.objects.get(id=customer_id)
-    except CustomerInfo.DoesNotExist:
-        messages.error(request, "Customer not found.")
-        return redirect('trip_report')
-
-    # Query Trips
-    qs = TripdetailInfo.objects.filter(
-        tr_enquirynumber__en_customername_id=customer_id,
-        tr_category_id=1
-    ).order_by('tr_departeddate')  # Date sort
-
-    if dept_id:
-        try:
-            qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
-        except:
-            qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
-
-    if month and year:
-        try:
-            m, y = int(month), int(year)
-            # Validate month is in valid range
-            if 1 <= m <= 12:
-                first_day = date(y, m, 1)
-                last_day = date(y, m, calendar.monthrange(y, m)[1])
-                qs = qs.filter(
-                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
-                    Q(tr_departeddate__date__range=[first_day, last_day])
-                )
-        except (ValueError, TypeError):
-            pass
-
-    if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
-    if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
-
-    trips = list(qs)
-
 def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, start_idx=1, template_id=None):
     headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc, customer_id=customer_obj.id, dept_id=dept_id, template_id=template_id)
 
@@ -1639,7 +1582,9 @@ def trip_send_email(request):
     excel_file.seek(0)
 
     recipient_list = [x.strip() for x in recipient.split(",") if x.strip()]
-    subject = subject or f"{customer_obj.cu_name} - {template_key or 'DMR'} Report"
+    subject = subject.strip() if subject else ""
+    if not subject or "STUDIO" in subject.upper():
+        subject = f"{customer_obj.cu_name} - DMR Report"
     message = message_body.replace("\n", "<br>")
 
     try:

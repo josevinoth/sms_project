@@ -203,7 +203,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
-                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
@@ -284,8 +284,18 @@ def tripdetail_add(request, tripdetail_id=0):
                 va_status_id__in=[1, 3]
             ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
 
+            # Find vehicles that have a cancelled trip for this enquiry so they cannot create another trip
+            cancelled_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(tc_cancellation_check=True) | Q(tc_financestatus_id__in=[10, 11]) | Q(
+                        tr_operational_status_id__in=[10, 11])
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
             # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
-            # Category 1 = Business trip (exclude cancelled trips so cancelled vehicles can run a new trip)
+            # Category 1 = Business trip
             assigned_business_vehicles = set(
                 TripdetailInfo.objects.filter(
                     tr_enquirynumber=enquiry_num_id,
@@ -294,8 +304,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     tc_cancellation_check=True
                 ).exclude(
                     tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
                 ).values_list('tr_vehiclenumber', flat=True)
             )
 
@@ -304,8 +312,10 @@ def tripdetail_add(request, tripdetail_id=0):
             for va_item in allotted_vas:
                 reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (
                     va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
-                # Exclude vehicle only if it already has an active (non-cancelled) Business trip
+                # Exclude vehicle if it was cancelled or already has an active Business trip
                 if reg_num and reg_num not in allotted_vehicle_map:
+                    if reg_num in cancelled_vehicles and reg_num != selected_vehicle_number:
+                        continue
                     if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
                         continue
 
@@ -677,13 +687,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num_id,
                     tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
-                ).exists()
+                ).exclude(tc_cancellation_check=True).exists()
 
                 if existing_business_trip:
                     messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
@@ -724,7 +728,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 if vehicle_number and str(v_source_id) != "3":
                     last_trip_for_loc = TripdetailInfo.objects.filter(
                         tr_vehiclenumber=vehicle_number
-                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
@@ -830,6 +834,13 @@ def tripdetail_add(request, tripdetail_id=0):
                     ext = format.split('/')[-1]
                     data = ContentFile(base64.b64decode(imgstr), name=f'pod_signature.{ext}')
                     trip.td_pod = data
+
+                # Populate trip charges on creation from matched allotment / enquiry note rate
+                if not trip.tc_tripcost or float(trip.tc_tripcost) == 0.0:
+                    from .tripclosure_add_view import get_allotment_sale_rate
+                    initial_rate = get_allotment_sale_rate(trip)
+                    if initial_rate and initial_rate > 0:
+                        trip.tc_tripcost = initial_rate
 
                 trip.save()
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
@@ -977,15 +988,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num,
                     tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    pk=tripdetail.id
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    tc_financestatus_id__in=[10, 11]
-                ).exclude(
-                    tr_operational_status_id__in=[10, 11]
-                ).exists()
+                ).exclude(pk=tripdetail.id).exclude(tc_cancellation_check=True).exists()
 
                 if existing_business_trip:
                     messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
@@ -1009,7 +1012,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost',
                     'tc_handlingcost_reason', 'tc_haltingcost', 'tc_total_halting_cost',
                     'tc_supervisorcost', 'tc_rtocost', 'tc_betacost', 'tc_cancellation',
-                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment',
+                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment', 'tc_no_of_pods',
                     'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
                     'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
                     'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
@@ -1089,13 +1092,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.tc_financestatus_id = 8
                     trip.tr_operational_status_id = 8
 
-                # Fallback: Sync operational status if missing or if desynced with final/closure finance statuses
+                # Fallback: Sync operational status if missing or if manual_status_id was disabled in UI
                 if not trip.tr_operational_status_id and trip.tc_financestatus_id:
                     trip.tr_operational_status_id = trip.tc_financestatus_id
-                elif trip.tc_financestatus_id in [2, 3, 8, 10, 11] and trip.tr_operational_status_id != trip.tc_financestatus_id:
-                    trip.tr_operational_status_id = trip.tc_financestatus_id
-                elif trip.tc_financestatus_id in [4, 5, 6, 7, 9] and trip.tr_operational_status_id in [1, 12, None]:
-                    trip.tr_operational_status_id = 2  # Closed operationally
+                # Special case: Awaiting Trip Approval (8) should always be synced
+                elif trip.tc_financestatus_id == 8 and trip.tr_operational_status_id != 8:
+                    trip.tr_operational_status_id = 8
 
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:
@@ -1856,24 +1858,22 @@ def get_last_reported_km(request):
             })
 
     last_trip = None
+    last_trip_loc = None
     if vehicle:
-        if enquiry_id:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
-
-        if not last_trip:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_vehiclenumber=vehicle)
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
+        last_trip = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+            .order_by('-id')
+            .first()
+        )
+        last_trip_loc = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .exclude(tr_reportedlocation__isnull=True)
+            .order_by('-tr_created_at', '-id')
+            .first()
+        )
 
     reported_dt_str = None
     if last_trip and last_trip.tr_reporteddate:
@@ -1884,9 +1884,9 @@ def get_last_reported_km(request):
 
     last_loc_id = None
     last_loc_name = None
-    if last_trip and last_trip.tr_reportedlocation:
-        last_loc_id = last_trip.tr_reportedlocation_id
-        last_loc_name = str(last_trip.tr_reportedlocation)
+    if last_trip_loc and last_trip_loc.tr_reportedlocation:
+        last_loc_id = last_trip_loc.tr_reportedlocation_id
+        last_loc_name = str(last_trip_loc.tr_reportedlocation)
 
     # If vehicle has a replacement breakdown place recorded, prioritize it if no post-replacement trip exists
     if not last_loc_id:
@@ -2489,6 +2489,3 @@ def view_combined_pod(request, trip_num):
     response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}.pdf"'
     return response
-
-
-

@@ -402,6 +402,9 @@
 <script>
     // Auto-tick on page load only — runs once, never re-ticks after user manually unchecks
     function autoTickCheckboxes() {
+        if ($('#tc_cancellation_check').is(':checked')) {
+            return;
+        }
         const mappings = [
             { cost: 'tc_tripcost', check: 'tc_tripcost_check' }
         ];

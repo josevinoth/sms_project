@@ -26,6 +26,8 @@ class VehicleallotmentForm(forms.ModelForm):
                     Q(tc_financestatus_id=1) |
                     Q(tr_operational_status_id__in=[1, 12]) |
                     (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
+                ).filter(
+                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
                 ).exclude(
                     tr_enquirynumber__en_status_id=8
                 ).values_list('tr_vehiclenumber', flat=True) if t

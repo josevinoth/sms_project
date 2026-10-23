@@ -169,6 +169,11 @@
                         </div>
 
                         <div class="form-group-modern mb-3">
+                            <label class="form-label-modern">Subject</label>
+                            <input type="text" name="subject" id="subject" class="form-control form-control-modern" placeholder="Email Subject">
+                        </div>
+
+                        <div class="form-group-modern mb-3">
                             <label class="form-label-modern">Message</label>
                             <textarea id="message" name="message" class="form-control form-control-modern" rows="5" placeholder="Enter email message">{{ form.message.value }}</textarea>
                         </div>
@@ -446,6 +451,14 @@ $(document).ready(function () {
 
         // Update the visual disabled dropdown in the modal
         $("#dmr_customer").val(customerId);
+
+        // Pre-fill Subject with Clean Customer DMR Report title
+        const custText = $("#id_dmr_customer option:selected").text().trim();
+        if (custText && !custText.toLowerCase().includes("select")) {
+            $("#subject").val(`${custText} - DMR Report`);
+        } else {
+            $("#subject").val("DMR Report");
+        }
 
         $.ajax({
             url: "{% url 'get_dmr_email_details' %}",

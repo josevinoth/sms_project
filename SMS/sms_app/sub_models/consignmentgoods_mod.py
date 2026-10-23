@@ -36,6 +36,8 @@ class ConsignmentgoodsInfo(models.Model):
     cg_hawbno = models.CharField(max_length=1000,default = '', null=True, blank=True)
     cg_consignmenttype = models.ForeignKey(Consignment_type, on_delete=models.CASCADE,default=1, null=True,blank=True)
     cg_mawbno = models.CharField(max_length=22, default='', null=True, blank=True)
+    cg_boeno = models.CharField(max_length=100, default='', null=True, blank=True)
+    cg_cbm = models.FloatField(default=0.0, null=True, blank=True)
 
 
     def __str__(self):
