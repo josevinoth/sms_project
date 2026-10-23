@@ -1090,9 +1090,11 @@
 
             <!-- Duration Selector -->
             <select id="slide-duration-select" class="ctrl-btn" style="outline:none; cursor:pointer;" title="Change slide rotation interval">
-                <option value="5000" selected>5s Rotation</option>
+                <option value="5000">5s Rotation</option>
                 <option value="8000">8s Rotation</option>
-                <option value="12000">12s Rotation</option>
+                <option value="12000" selected>12s Rotation</option>
+                <option value="20000">20s Rotation</option>
+                <option value="30000">30s Rotation</option>
             </select>
 
             <!-- Fullscreen Button -->
@@ -2203,7 +2205,7 @@
             // ==========================================
             let currentSlide = 0;
             const totalSlides = 3;
-            let slideIntervalMs = 5000;
+            let slideIntervalMs = 12000;
             let isPaused = false;
             let slideTimer = null;
             let progressStartTime = 0;
