@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.core import signing
 from xhtml2pdf import pisa
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..models import (
@@ -243,16 +244,39 @@ def driver_dashboard(request):
         return redirect('driver_dashboard')
 
 
-    return render(request, 'driver_app/driver_dashboard.html', {'trip': trip, 'is_closed': is_closed})
+    cnote_token = ''
+    if trip.tr_consignmentnumber_id:
+        cnote_token = signing.dumps({
+            'trip_id': trip.id,
+            'consignment_id': trip.tr_consignmentnumber_id
+        })
+
+    return render(request, 'driver_app/driver_dashboard.html', {
+        'trip': trip,
+        'is_closed': is_closed,
+        'cnote_token': cnote_token
+    })
 
 
 @xframe_options_exempt
 def driver_cnote_pdf(request, consignment_id):
     """
     Renders the Consignment Note (C-Note) PDF for the driver.
-    Authenticated by driver session (not the main user login system).
+    Authenticated by driver session or cryptographically signed download token.
     """
-    trip_id = request.session.get('driver_trip_id')
+    token = request.GET.get('token')
+    trip_id = None
+    if token:
+        try:
+            data = signing.loads(token, max_age=86400)
+            if data.get('consignment_id') == consignment_id:
+                trip_id = data.get('trip_id')
+        except Exception as e:
+            print(f"Invalid or expired cnote token: {e}")
+
+    if not trip_id:
+        trip_id = request.session.get('driver_trip_id')
+
     if not trip_id:
         return redirect('driver_login')
 
