@@ -117,21 +117,14 @@ def driver_dashboard(request):
         elif action == 'loading_dock_out':
             if not trip.tr_dock_out_time:
                 trip.tr_dock_out_time = timezone.now()
-                
-                # Check if consignment goods exist
-                has_goods = False
-                if trip.tr_consignmentnumber_id:
-                    has_goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber_id).exists()
-                
-                if trip.tr_category_id == 1:
-                    trip.tr_approval = None  # Reset approval status
-                    if has_goods:
-                        trip.tc_financestatus_id = 8  # Awaiting Trip Approval
-                    else:
-                        trip.tc_financestatus_id = 2  # Work In Progress
-                        
-                trip.save()
-                messages.success(request, "Loading Dock Out Reported!")
+            
+            if trip.tr_category_id == 1:
+                trip.tr_approval = None  # Reset approval status so it enters approval fresh
+                trip.tc_financestatus_id = 8  # Awaiting Trip Approval (never 2 which is Trip Closed!)
+                trip.tr_operational_status_id = 8
+                    
+            trip.save()
+            messages.success(request, "Loading Dock Out Reported!")
 
         # 3. Vehicle Started (Departing Origin) -> tr_departeddate & tr_departedkm
         elif action == 'vehicle_started':

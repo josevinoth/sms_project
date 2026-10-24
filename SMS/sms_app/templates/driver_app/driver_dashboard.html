@@ -356,6 +356,11 @@
                         {% if trip.tr_departedkm %} - KM: {{ trip.tr_departedkm }}{% endif %}
                     </button>
                     {% else %}
+                    {% if trip.tr_dock_out_time and trip.tc_financestatus_id != 1 %}
+                    <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; padding: 7px 10px; border-radius: 8px; font-size: 0.78rem; margin-bottom: 8px; text-align: center;">
+                        <i class="fas fa-hourglass-half"></i> Awaiting Office Trip Approval to depart
+                    </div>
+                    {% endif %}
                     <button type="button"
                         onclick="submitWithKM('vehicle_started', 'Enter Vehicle Started KM (Departing Origin):')"
                         class="action-btn btn-primary" 

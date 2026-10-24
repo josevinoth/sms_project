@@ -54,9 +54,10 @@ def home_page(request):
     approval_count = TripdetailInfo.objects.filter(
         Q(tr_category=1),
         Q(tr_dock_out_time__isnull=False),
+        Q(tr_departeddate__isnull=True),
         Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
     ).exclude(
-        tr_approval__ta_approval_status__id=1
+        tc_financestatus_id__in=[1, 2, 3, 4, 5, 7, 9, 10, 11]
     ).count()
     approval_count_wms1 = HighvalueInfo.objects.filter( ( Q(hc_commodity__id__gte=11, hc_commodity__id__lte=14) |
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=2)
