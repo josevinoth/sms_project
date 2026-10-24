@@ -437,9 +437,9 @@
         <div id="cnote_overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; flex-direction:column;">
             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.1);">
                 <span style="font-weight:600; color:#00f2fe; font-size:0.95rem;"><i class="fas fa-file-pdf"></i> &nbsp;C-Note PDF</span>
-                <div>
-                    <a id="cnote_download_btn" href="#" download class="action-btn" style="background:rgba(0,242,254,0.15); border:1px solid rgba(0,242,254,0.4); color:#00f2fe; padding:6px 12px; border-radius:8px; font-size:0.9rem; text-decoration:none; margin-right:8px;">
-                        <i class="fas fa-download"></i> Save
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <a id="cnote_download_btn" href="#" download class="action-btn" onclick="saveCNote(event)" style="background:rgba(0,242,254,0.15); border:1px solid rgba(0,242,254,0.4); color:#00f2fe; padding:6px 12px; border-radius:8px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fas fa-download"></i> <span id="save_btn_text">Save</span>
                     </a>
                     <button onclick="closeCNote()" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#ef4444; padding:6px 12px; border-radius:8px; font-size:0.9rem; cursor:pointer;">
                         <i class="fas fa-times"></i> Close
@@ -513,14 +513,22 @@
         }
 
         let pdfDoc = null;
+        let currentCNoteUrl = '';
+        let currentCNoteFileName = 'Consignment_Note.pdf';
 
         function openCNote(url) {
+            currentCNoteUrl = url;
             const overlay = document.getElementById('cnote_overlay');
             const container = document.getElementById('pdf-viewer-container');
             const loading = document.getElementById('pdf-loading');
             const downloadBtn = document.getElementById('cnote_download_btn');
             
             downloadBtn.href = url;
+            const tripConsignmentNo = "{{ trip.tr_consignmentnumber.cn_consignmentno|default:'' }}";
+            if (tripConsignmentNo) {
+                currentCNoteFileName = 'Consignment_Note_' + tripConsignmentNo + '.pdf';
+            }
+            downloadBtn.setAttribute('download', currentCNoteFileName);
             
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -585,6 +593,76 @@
                 pdfDoc = null;
             }
             container.querySelectorAll('canvas').forEach(c => c.remove());
+        }
+
+        async function saveCNote(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const btn = document.getElementById('cnote_download_btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.style.pointerEvents = 'none';
+
+            const downloadUrl = currentCNoteUrl + (currentCNoteUrl.includes('?') ? '&' : '?') + 'download=1';
+
+            try {
+                const response = await fetch(downloadUrl);
+                if (!response.ok) throw new Error('Network error: ' + response.statusText);
+                const blob = await response.blob();
+
+                // 1. Web Share API (Optimized for Android / Mobile devices: Save to Drive/Files or WhatsApp)
+                if (navigator.canShare) {
+                    try {
+                        const file = new File([blob], currentCNoteFileName, { type: 'application/pdf' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: currentCNoteFileName,
+                                text: 'Consignment Note: ' + currentCNoteFileName
+                            });
+                            btn.innerHTML = originalHtml;
+                            btn.style.pointerEvents = 'auto';
+                            return;
+                        }
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') {
+                            btn.innerHTML = originalHtml;
+                            btn.style.pointerEvents = 'auto';
+                            return;
+                        }
+                        console.warn('Web Share failed, continuing to blob download:', shareErr);
+                    }
+                }
+
+                // 2. Client-side Blob URL download (Desktop and modern mobile browsers)
+                const blobUrl = window.URL.createObjectURL(blob);
+                const tempLink = document.createElement('a');
+                tempLink.href = blobUrl;
+                tempLink.download = currentCNoteFileName;
+                tempLink.style.display = 'none';
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                setTimeout(() => {
+                    document.body.removeChild(tempLink);
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 3000);
+
+            } catch (err) {
+                console.warn('Blob download failed, falling back to direct navigation:', err);
+                // 3. Fallback: Native system browser / navigation
+                if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+                    window.open(downloadUrl, '_system');
+                } else {
+                    window.location.href = downloadUrl;
+                }
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.pointerEvents = 'auto';
+                }, 1000);
+            }
         }
 
         // Close overlay on Android hardware back button via Capacitor

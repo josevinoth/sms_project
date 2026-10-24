@@ -336,7 +336,10 @@ def driver_cnote_pdf(request, consignment_id):
     # but let's keep the original xhtml2pdf logic.
     response = HttpResponse(content_type='application/pdf')
     file_name = f"Consignment_Note_{consignment_num}.pdf"
-    response['Content-Disposition'] = f'inline; filename={file_name}'
+    if request.GET.get('download') == '1':
+        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+    else:
+        response['Content-Disposition'] = f'inline; filename="{file_name}"'
 
     template = get_template(template_path)
     html = template.render(context)

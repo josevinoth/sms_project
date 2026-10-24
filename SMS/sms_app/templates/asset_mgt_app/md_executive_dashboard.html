@@ -1591,10 +1591,14 @@
                         <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Live on highway</div>
                         <i class="fas fa-route"></i>
                     </div>
-                    <div class="dash-card card-trips-cancelled">
-                        <div class="dash-kpi-label">Missed / Pending</div>
+                    <div class="dash-card card-trips-cancelled" id="tms-kpi-missed-card" style="cursor:pointer; position:relative; transition:all 0.2s ease;" title="Click to view branch drilldown">
+                        <div class="dash-kpi-label" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Missed / Pending</span>
+                            <span style="font-size:0.56rem; background:rgba(255,255,255,0.18); padding:1px 5px; border-radius:3px; text-transform:none;"><i class="fas fa-list-ul"></i> Drilldown</span>
+                        </div>
                         <div class="dash-kpi-value" id="tms-kpi-missed">0</div>
-                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Unconverted indents</div>
+                        <div style="font-size:0.62rem; font-weight:700; color:#fca5a5; margin-top:1px;" id="tms-kpi-missed-branches">MAA: 0 &bull; BLR: 0</div>
+                        <div style="font-size:0.55rem; color:rgba(255,255,255,0.75);">Unconverted indents (Click)</div>
                         <i class="fas fa-triangle-exclamation"></i>
                     </div>
                     <div class="dash-card card-settled">
@@ -1610,9 +1614,9 @@
                         <i class="fas fa-hourglass-half"></i>
                     </div>
                     <div class="dash-card card-invoiced">
-                        <div class="dash-kpi-label">Invoiced Total</div>
+                        <div class="dash-kpi-label">Invoiced (Today)</div>
                         <div class="dash-kpi-value" id="tms-kpi-inv-val">₹0.0L</div>
-                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Billed revenue</div>
+                        <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="tms-kpi-inv-sub">Y'day: ₹0.0L</div>
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                 </div>
@@ -1631,7 +1635,7 @@
                             <canvas id="tmsKmDonutChart"></canvas>
                         </div>
 
-                        <!-- Productive Loaded vs Empty Dead-Haul Breakdown -->
+                        <!-- Productive Loaded vs Empty Run Breakdown -->
                         <div class="efficiency-grid">
                             <div class="eff-badge loaded" style="padding:5px 8px;">
                                 <span class="eff-lbl"><i class="fas fa-circle-check"></i> Productive Loaded</span>
@@ -1639,9 +1643,9 @@
                                 <span class="eff-sub" id="eff-loaded-km" style="font-size:0.62rem;">12 KM</span>
                             </div>
                             <div class="eff-badge empty" style="padding:5px 8px;">
-                                <span class="eff-lbl"><i class="fas fa-triangle-exclamation"></i> Empty Waste</span>
+                                <span class="eff-lbl"><i class="fas fa-route"></i> Empty Run</span>
                                 <span class="eff-val" id="eff-empty-pct" style="font-size:1.05rem;">25.0%</span>
-                                <span class="eff-sub" id="eff-empty-km" style="font-size:0.62rem;">4 KM dead-haul</span>
+                                <span class="eff-sub" id="eff-empty-km" style="font-size:0.62rem;">4 KM non-revenue</span>
                             </div>
                         </div>
 
@@ -2247,6 +2251,93 @@
         </div>
     </footer>
 
+    <!-- ============================================================== -->
+    <!-- MISSED / PENDING VEHICLES BRANCH DRILLDOWN MODAL               -->
+    <!-- ============================================================== -->
+    <div id="missedPendingModal" style="display:none; position:fixed; inset:0; background:rgba(6, 11, 25, 0.85); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; padding:16px;">
+        <div style="width:100%; max-width:880px; max-height:86vh; display:flex; flex-direction:column; background:linear-gradient(145deg, #10192e, #0a1120); border:1px solid rgba(239, 68, 68, 0.35); box-shadow:0 25px 60px rgba(0,0,0,0.7); border-radius:12px; overflow:hidden;">
+            <!-- Header -->
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(239, 68, 68, 0.08);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; color:#ef4444; font-size:1.05rem;">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.96rem; font-weight:800; color:#ffffff; letter-spacing:0.4px;">
+                            Missed &amp; Pending Vehicle Indents <span style="font-size:0.7rem; color:#fca5a5; font-weight:600; margin-left:6px; background:rgba(239,68,68,0.2); padding:1px 6px; border-radius:3px;" id="modal-date-badge">TODAY'S COHORT</span>
+                        </div>
+                        <div style="font-size:0.68rem; color:#94a3b8;">
+                            Branch-wise breakdown of unallotted and unconverted customer vehicle demand
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="closeMissedModalBtn" style="background:rgba(255,255,255,0.08); border:none; color:#cbd5e1; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:background 0.2s;" title="Close (Esc)">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Top Summary Strip -->
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; padding:12px 20px; background:rgba(0,0,0,0.25); border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.25); border-radius:8px; padding:8px 12px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:#fca5a5; text-transform:uppercase;">Total Missed / Pending</div>
+                    <div style="font-size:1.4rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="modal-tot-pending">0</div>
+                    <div style="font-size:0.6rem; color:#94a3b8;">Unconverted customer indents</div>
+                </div>
+                <div style="background:rgba(54, 209, 255, 0.1); border:1px solid rgba(54, 209, 255, 0.25); border-radius:8px; padding:8px 12px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:#36d1ff; text-transform:uppercase;"><i class="fas fa-location-dot"></i> Chennai Hub (BVM MAA)</div>
+                    <div style="font-size:1.4rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="modal-maa-pending">0</div>
+                    <div style="font-size:0.6rem; color:#94a3b8;" id="modal-maa-pct">0% of total pending</div>
+                </div>
+                <div style="background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:8px 12px;">
+                    <div style="font-size:0.65rem; font-weight:700; color:#f59e0b; text-transform:uppercase;"><i class="fas fa-location-dot"></i> Bangalore Hub (BVM BLR)</div>
+                    <div style="font-size:1.4rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="modal-blr-pending">0</div>
+                    <div style="font-size:0.6rem; color:#94a3b8;" id="modal-blr-pct">0% of total pending</div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div style="padding:8px 20px; display:flex; gap:8px; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.06);">
+                <button type="button" class="missed-filter-btn active" data-filter="all" style="padding:4px 12px; border-radius:5px; font-size:0.7rem; font-weight:700; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.15); color:#ffffff; cursor:pointer;">
+                    All Branches (<span id="tab-cnt-all">0</span>)
+                </button>
+                <button type="button" class="missed-filter-btn" data-filter="MAA" style="padding:4px 12px; border-radius:5px; font-size:0.7rem; font-weight:700; border:1px solid rgba(54,209,255,0.3); background:transparent; color:#36d1ff; cursor:pointer;">
+                    Chennai MAA (<span id="tab-cnt-maa">0</span>)
+                </button>
+                <button type="button" class="missed-filter-btn" data-filter="BLR" style="padding:4px 12px; border-radius:5px; font-size:0.7rem; font-weight:700; border:1px solid rgba(245,158,11,0.3); background:transparent; color:#f59e0b; cursor:pointer;">
+                    Bangalore BLR (<span id="tab-cnt-blr">0</span>)
+                </button>
+            </div>
+
+            <!-- Table Body Container -->
+            <div style="flex:1; overflow-y:auto; padding:10px 20px; max-height:45vh;" id="modal-table-scroll">
+                <table style="width:100%; border-collapse:collapse; font-size:0.72rem;">
+                    <thead>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:#94a3b8; text-align:left; font-size:0.66rem; text-transform:uppercase;">
+                            <th style="padding:6px 6px;">Enquiry #</th>
+                            <th style="padding:6px 6px;">Customer</th>
+                            <th style="padding:6px 6px;">Branch</th>
+                            <th style="padding:6px 6px;">CS Owner</th>
+                            <th style="padding:6px 6px;">Vehicle Required</th>
+                            <th style="padding:6px 6px; text-align:center;">Demand vs Converted</th>
+                            <th style="padding:6px 6px; text-align:right;">Pending Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="missed-modal-tbody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:8px 20px; border-top:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.3); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.65rem; color:#94a3b8;"><i class="fas fa-circle-info text-info"></i> Direct operational visibility into unfulfilled demand</span>
+                <button type="button" id="closeMissedModalFooterBtn" style="padding:4px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#ffffff; border-radius:5px; font-size:0.7rem; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -2557,12 +2648,22 @@
                 }
 
                 $('#tms-kpi-active').text(tms.active_on_road);
-                $('#tms-kpi-missed').text(tms.missed_vehicles + tms.cancelled_trips);
+                const totMissed = tms.missed_vehicles + (tms.cancelled_trips || 0);
+                $('#tms-kpi-missed').text(totMissed);
+                if (tms.missed_breakdown) {
+                    $('#tms-kpi-missed-branches').html(`MAA: <b>${tms.missed_breakdown.maa_count}</b> &bull; BLR: <b>${tms.missed_breakdown.blr_count}</b>`);
+                    window.currentMissedBreakdown = tms.missed_breakdown;
+                } else {
+                    $('#tms-kpi-missed-branches').text('MAA: 0 • BLR: 0');
+                }
                 $('#tms-kpi-deliv').text(tms.delivered_today);
                 $('#tms-kpi-deliv-sub').text(`Y'day: ${tms.delivered_yest}`);
                 $('#tms-kpi-ready-val').text(`₹${tms.ready_invoice_val_lakhs}L`);
                 $('#tms-kpi-ready-cnt').text(`${tms.ready_invoice_count} trips ready`);
                 $('#tms-kpi-inv-val').text(`₹${tms.invoiced_val_lakhs}L`);
+                if (tms.invoiced_yest_val_lakhs !== undefined) {
+                    $('#tms-kpi-inv-sub').html(`Y'day: ₹<b>${tms.invoiced_yest_val_lakhs}L</b>`);
+                }
 
                 $('#tms-own-bus-km').text(tms.own_km.bus.toLocaleString());
                 $('#tms-own-empty-km').text(tms.own_km.empty.toLocaleString());
@@ -2574,7 +2675,7 @@
                     $('#eff-loaded-pct').text(tms.fleet_efficiency.loaded_pct + '%');
                     $('#eff-loaded-km').text(tms.fleet_efficiency.loaded_km.toLocaleString() + ' KM');
                     $('#eff-empty-pct').text(tms.fleet_efficiency.empty_pct + '%');
-                    $('#eff-empty-km').text(tms.fleet_efficiency.empty_km.toLocaleString() + ' KM dead-haul');
+                    $('#eff-empty-km').text(tms.fleet_efficiency.empty_km.toLocaleString() + ' KM non-revenue');
                 }
 
                 // Slide 2 Live Fleet Matrix
@@ -2616,7 +2717,7 @@
                 // Slide 2 Billing & Revenue Pipeline Box
                 $('#tms-pipe-unbilled').text(`₹${tms.ready_invoice_val_lakhs || '0.0'}L`);
                 $('#tms-pipe-unbilled-cnt').text(`${(tms.ready_invoice_count || 0).toLocaleString()} trips ready`);
-                $('#tms-pipe-billed').text(`₹${tms.invoiced_val_lakhs || '0.0'}L`);
+                $('#tms-pipe-billed').text(`₹${tms.invoiced_mtd_val_lakhs || tms.invoiced_val_lakhs || '0.0'}L`);
                 if (tms.invoiced_mtd_count !== undefined) {
                     $('#tms-pipe-billed-cnt').text(`${(tms.invoiced_mtd_count).toLocaleString()} invoices cleared`);
                 }
@@ -3160,6 +3261,109 @@
                 }
                 charts[id] = new Chart(ctx, config);
             }
+
+            // ==========================================
+            // Missed & Pending Indents Drilldown Modal
+            // ==========================================
+            function openMissedIndentsModal(branchFilter) {
+                branchFilter = branchFilter || 'all';
+                const data = window.currentMissedBreakdown || { total: 0, maa_count: 0, blr_count: 0, items: [] };
+                const total = data.total || 0;
+                const maa = data.maa_count || 0;
+                const blr = data.blr_count || 0;
+                const items = data.items || [];
+
+                $('#modal-tot-pending').text(total);
+                $('#modal-maa-pending').text(maa);
+                $('#modal-blr-pending').text(blr);
+
+                const maaPct = total > 0 ? Math.round((maa / total) * 100) : 0;
+                const blrPct = total > 0 ? Math.round((blr / total) * 100) : 0;
+                $('#modal-maa-pct').text(`${maaPct}% of total pending`);
+                $('#modal-blr-pct').text(`${blrPct}% of total pending`);
+
+                $('#tab-cnt-all').text(total);
+                $('#tab-cnt-maa').text(maa);
+                $('#tab-cnt-blr').text(blr);
+
+                const filtered = branchFilter === 'all' ? items : items.filter(it => it.branch_code === branchFilter);
+
+                let rowsHtml = '';
+                if (filtered.length === 0) {
+                    rowsHtml = `<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;"><i class="fas fa-check-circle text-success" style="font-size:1.2rem; display:block; margin-bottom:6px;"></i>No pending unconverted indents found for this branch filter.</td></tr>`;
+                } else {
+                    filtered.forEach(it => {
+                        const isMaa = it.branch_code === 'MAA';
+                        const badgeStyle = isMaa 
+                            ? 'background:rgba(54,209,255,0.15); color:#36d1ff; border:1px solid rgba(54,209,255,0.3);' 
+                            : 'background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);';
+
+                        rowsHtml += `
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+                                <td style="padding:8px 6px; font-weight:700; color:#ffffff; font-family:'JetBrains Mono',monospace;">
+                                    <i class="fas fa-file-invoice text-muted" style="font-size:0.65rem; margin-right:4px;"></i>${it.enquiry_no}
+                                    <div style="font-size:0.58rem; color:#94a3b8; font-weight:normal;">Logged: ${it.created_time || 'N/A'}</div>
+                                </td>
+                                <td style="padding:8px 6px; font-weight:600; color:#36d1ff;">${it.customer}</td>
+                                <td style="padding:8px 6px;">
+                                    <span style="font-size:0.62rem; font-weight:700; padding:2px 7px; border-radius:4px; ${badgeStyle}">
+                                        ${it.branch_name}
+                                    </span>
+                                </td>
+                                <td style="padding:8px 6px; color:#cbd5e1;">
+                                    <i class="fas fa-user-tie" style="font-size:0.62rem; color:#f59e0b; margin-right:3px;"></i>${it.cs_person}
+                                </td>
+                                <td style="padding:8px 6px; color:#ffffff;">${it.vehicle_type}</td>
+                                <td style="padding:8px 6px; text-align:center; color:#94a3b8;">
+                                    Req: <b style="color:#ffffff;">${it.requested_qty}</b> &bull; CN: <b style="color:#10b981;">${it.converted_cnotes}</b>
+                                </td>
+                                <td style="padding:8px 6px; text-align:right;">
+                                    <span style="font-size:0.75rem; font-weight:800; color:#ef4444; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px;">
+                                        ${it.pending_qty} Pending
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                $('#missed-modal-tbody').html(rowsHtml);
+                $('#missedPendingModal').css('display', 'flex');
+            }
+
+            // Click handler on the card
+            $(document).on('click', '#tms-kpi-missed-card', function() {
+                openMissedIndentsModal('all');
+            });
+
+            // Close handlers
+            $('#closeMissedModalBtn, #closeMissedModalFooterBtn').on('click', function() {
+                $('#missedPendingModal').hide();
+            });
+            $('#missedPendingModal').on('click', function(e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $('#missedPendingModal').is(':visible')) {
+                    $('#missedPendingModal').hide();
+                }
+            });
+
+            // Tab filter handler inside modal
+            $(document).on('click', '.missed-filter-btn', function() {
+                $('.missed-filter-btn').removeClass('active').css({
+                    'background': 'transparent',
+                    'color': $(this).data('filter') === 'MAA' ? '#36d1ff' : ($(this).data('filter') === 'BLR' ? '#f59e0b' : '#ffffff')
+                });
+                $(this).addClass('active').css({
+                    'background': 'rgba(255,255,255,0.15)',
+                    'color': '#ffffff'
+                });
+                const filter = $(this).data('filter');
+                openMissedIndentsModal(filter);
+            });
 
             // Initial Execution
             loadDashboardData();
