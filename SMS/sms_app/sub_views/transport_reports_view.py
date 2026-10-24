@@ -3170,10 +3170,10 @@ def vendor_p_l_attached_report_ajax_view(request):
     vehicle_type_id = request.GET.get('vehicle_type', '').strip()
     veh_no = request.GET.get('veh_no', '').strip()
 
-    trips = TripdetailInfo.objects.filter(
+    base_trips = TripdetailInfo.objects.filter(
         tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
         tr_vehiclesource_id=2,  # 2 = ATTACHED
-    ).exclude(tr_category_id__in=[2, 3]).select_related(
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -3207,44 +3207,46 @@ def vendor_p_l_attached_report_ajax_view(request):
         if date_from and date_to:
             dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
             dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
-            trips = trips.filter(tr_created_at__range=[dt_start, dt_end])
+            base_trips = base_trips.filter(tr_created_at__range=[dt_start, dt_end])
         elif date_from:
             dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
-            trips = trips.filter(tr_created_at__gte=dt_start)
+            base_trips = base_trips.filter(tr_created_at__gte=dt_start)
         elif date_to:
             dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
-            trips = trips.filter(tr_created_at__lte=dt_end)
+            base_trips = base_trips.filter(tr_created_at__lte=dt_end)
     except Exception:
         pass
 
     if date_from and date_to:
-        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
+        base_trips = base_trips.filter(resolved_date__date__range=[date_from, date_to])
     elif date_from:
-        trips = trips.filter(resolved_date__date__gte=date_from)
+        base_trips = base_trips.filter(resolved_date__date__gte=date_from)
     elif date_to:
-        trips = trips.filter(resolved_date__date__lte=date_to)
+        base_trips = base_trips.filter(resolved_date__date__lte=date_to)
 
     if from_loc_id:
-        trips = trips.filter(tr_departedlocation_id=from_loc_id)
+        base_trips = base_trips.filter(tr_departedlocation_id=from_loc_id)
 
     if to_loc_id:
-        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+        base_trips = base_trips.filter(tr_reportedlocation_id=to_loc_id)
 
     if vehicle_type_id:
-        trips = trips.filter(tr_vehicletype_id=vehicle_type_id)
+        base_trips = base_trips.filter(tr_vehicletype_id=vehicle_type_id)
 
     if vendor_id:
         enquiries_for_this_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list('va_enquirynumber_id', flat=True)
         vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
 
-        trips = trips.filter(
+        base_trips = base_trips.filter(
             Q(tr_enquirynumber_id__in=enquiries_for_this_vendor) |
             Q(tr_vehiclenumber__in=vendor_vehicles)
         )
 
     if veh_no:
-        trips = trips.filter(tr_vehiclenumber__icontains=veh_no)
+        base_trips = base_trips.filter(tr_vehiclenumber__icontains=veh_no)
 
+    # For table display, show loaded/revenue trips only (exclude empty categories 2 and 3)
+    trips = base_trips.exclude(tr_category_id__in=[2, 3])
     records_total = trips.count()
 
     if search_value:
@@ -3355,7 +3357,8 @@ def vendor_p_l_attached_report_ajax_view(request):
     attached_bill_map = {}
     ab_bills = attached_bills.only(
         'ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run',
-        'ab_from_date', 'ab_to_date', 'ab_vehicle_number_id', 'ab_toll_cost'
+        'ab_from_date', 'ab_to_date', 'ab_vehicle_number_id', 'ab_toll_cost',
+        'ab_trip_costs', 'ab_bill_amount'
     ).select_related('ab_vehicle_number')
 
     for b in ab_bills:
@@ -3596,9 +3599,16 @@ def vendor_p_l_attached_report_ajax_view(request):
     # -------------------------------
     # SUMMARY AGGREGATION (OPTIMIZED)
     # -------------------------------
-    # Fetch lightweight trip records matching the current filters for summary
-    summary_trips_data = list(trips.values(
-        'id', 'tr_category_id', 'tr_vehiclenumber', 'resolved_date', 'tr_departeddate', 'tr_reporteddate',
+    # Fetch lightweight trip records matching the current filters for summary (includes loaded, empty, and business empty trips)
+    summary_base = base_trips
+    if search_value:
+        summary_base = summary_base.filter(
+            Q(tr_vehiclenumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value)
+        )
+
+    summary_trips_data = list(summary_base.values(
+        'id', 'tr_category_id', 'tr_vehiclenumber', 'tr_tripnumber', 'resolved_date', 'tr_departeddate', 'tr_reporteddate',
         'tr_reportedkm_pickup', 'tr_departedkm', 'tr_reportedkm_delivery', 'tr_reportedkm',
         'tc_tripcost', 'tc_tollcost', 'tc_parkingcost', 'tc_loadingcost', 'tc_unloadingcost',
         'tc_weighmentcost', 'tc_handlingcost', 'tc_haltingcost', 'tc_supervisorcost',
@@ -3660,6 +3670,11 @@ def vendor_p_l_attached_report_ajax_view(request):
         elif cat == 3:
             business_empty_km_val += trip_km
 
+        clean_v = t.get('tr_vehiclenumber', '').replace(" ", "").upper() if t.get('tr_vehiclenumber') else ''
+        t_id = t.get('id')
+        t_num = str(t.get('tr_tripnumber') or '').strip()
+        att_b = attached_bill_map.get(t_id) or (attached_bill_map.get(t_num) if t_num else None)
+
         if cat not in [2, 3]:
             total_trips_sum += 1
             rev = (
@@ -3670,24 +3685,48 @@ def vendor_p_l_attached_report_ajax_view(request):
             )
             total_revenue += rev
 
-        clean_v = t.get('tr_vehiclenumber', '').replace(" ", "").upper() if t.get('tr_vehiclenumber') else ''
-        att_b = attached_bill_map.get(t.get('id'))
-        b_trip_cost = 0.0
-        if att_b:
-            tot_km_ab = safe_num(att_b.ab_total_km_run)
-            bill_amt = safe_num(att_b.ab_bill_amount)
-            if tot_km_ab > 0 and bill_amt > 0 and trip_km > 0:
-                b_trip_cost = trip_km * (bill_amt / tot_km_ab)
-            else:
-                tot_trips_ab = len([x for x in str(att_b.ab_selected_trips).split(',') if x.strip()])
-                if tot_trips_ab > 0:
-                    b_trip_cost = safe_num(att_b.ab_buy_cost) / tot_trips_ab
-        elif clean_v in veh_buycost_map:
-            cnt = vehicle_trip_counts.get(clean_v, 1)
-            b_trip_cost = veh_buycost_map[clean_v] / max(1, cnt)
+            b_trip_cost = 0.0
+            if att_b:
+                tot_km_ab = safe_num(att_b.ab_total_km_run)
+                bill_amt = safe_num(att_b.ab_bill_amount)
+                if tot_km_ab > 0 and bill_amt > 0 and trip_km > 0:
+                    b_trip_cost = trip_km * (bill_amt / tot_km_ab)
+                else:
+                    tot_trips_ab = len([x for x in str(att_b.ab_selected_trips).split(',') if x.strip()])
+                    if tot_trips_ab > 0:
+                        b_trip_cost = safe_num(att_b.ab_buy_cost) / tot_trips_ab
+            elif clean_v in veh_buycost_map:
+                cnt = vehicle_trip_counts.get(clean_v, 1)
+                b_trip_cost = veh_buycost_map[clean_v] / max(1, cnt)
 
-        total_buy_cost += b_trip_cost
-        total_buying_expenses += b_trip_cost
+            total_buy_cost += b_trip_cost
+            total_buying_expenses += b_trip_cost
+
+        # Calculate toll cost for summary
+        buying_toll = 0.0
+        if att_b:
+            has_trip_costs = False
+            if att_b.ab_trip_costs:
+                try:
+                    import json
+                    saved_costs = json.loads(att_b.ab_trip_costs)
+                    if isinstance(saved_costs, dict) and len(saved_costs) > 0:
+                        has_trip_costs = True
+                        if str(t_id) in saved_costs:
+                            buying_toll = safe_num(saved_costs[str(t_id)].get('toll', 0.0))
+                except Exception:
+                    pass
+
+            if not has_trip_costs:
+                if buying_toll == 0.0 and t.get('tc_tollcost'):
+                    buying_toll = safe_num(t.get('tc_tollcost'))
+                if buying_toll == 0.0 and safe_num(att_b.ab_toll_cost) > 0.0:
+                    tot_trips_ab = len([x for x in str(att_b.ab_selected_trips).split(',') if x.strip()])
+                    buying_toll = round(safe_num(att_b.ab_toll_cost) / (tot_trips_ab or 1), 2)
+        elif t.get('tc_tollcost'):
+            buying_toll = safe_num(t.get('tc_tollcost'))
+
+        total_toll_cost += buying_toll
 
     num_days_working = len(working_days_set)
     num_idle_days = max(0, total_days_in_period - num_days_working)
@@ -3695,17 +3734,20 @@ def vendor_p_l_attached_report_ajax_view(request):
         unique_veh_count = len(set(t['tr_vehiclenumber'] for t in summary_trips_data if t.get('tr_vehiclenumber')))
         num_idle_days = max(0, (total_days_in_period * unique_veh_count) - num_days_working)
 
-    empty_km_cost = 0.0
-    business_empty_km_cost = 0.0
-    if total_km > 0:
-        cost_per_km = total_buying_expenses / total_km
-        empty_km_cost = empty_km_val * cost_per_km
-        business_empty_km_cost = business_empty_km_val * cost_per_km
+    loaded_km = total_km - empty_km_val - business_empty_km_val
+    cost_per_km = 0.0
+    if loaded_km > 0 and total_buy_cost > 0:
+        cost_per_km = total_buy_cost / loaded_km
+    elif total_km > 0 and total_buy_cost > 0:
+        cost_per_km = total_buy_cost / total_km
 
-    total_expenses_all = total_buying_expenses + empty_km_cost + business_empty_km_cost
+    empty_km_cost = round(empty_km_val * cost_per_km, 2)
+    business_empty_km_cost = round(business_empty_km_val * cost_per_km, 2)
 
-    profit = total_revenue - total_expenses_all
-    profit_pct = (profit / total_revenue * 100) if total_revenue > 0 else 0
+    total_expenses_all = round(total_buy_cost + total_toll_cost + empty_km_cost + business_empty_km_cost, 2)
+
+    profit = round(total_revenue - total_expenses_all, 2)
+    profit_pct = round((profit / total_revenue * 100), 2) if total_revenue > 0 else 0
 
     def format_dmy(d_str):
         if not d_str: return ""

@@ -225,11 +225,20 @@ def get_attached_vehicle_details(request):
 
         filters = Q()
         if vehicle_id:
-            vehicle = VehiclemasterInfo.objects.get(id=vehicle_id)
-            filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+            try:
+                vehicle = VehiclemasterInfo.objects.get(id=vehicle_id)
+                # Strict check: vehicle must belong to selected vendor if vendor_id is given
+                if vendor_id and str(vehicle.vm_vendor_id) != str(vendor_id):
+                    return JsonResponse(data)
+                filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+            except VehiclemasterInfo.DoesNotExist:
+                return JsonResponse(data)
         elif vendor_id:
-            vehicle_reg_nos = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
+            vehicle_reg_nos = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id, vm_ownership_id=2).values_list('vm_registrationnumber', flat=True)
             filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
+
+        # Strict match: ONLY include trips executed as ATTACHED (tr_vehiclesource_id=2), excluding MARKET or OWN
+        filters &= Q(tr_vehiclesource_id=2)
         
         if f_dt_obj and t_dt_obj:
             from_date_str = f_dt_obj.isoformat()  # YYYY-MM-DD
@@ -629,6 +638,7 @@ def attached_bill_summary(request, id):
         expanded_end = to_date + timedelta(days=1)
         all_trips_in_period = TripdetailInfo.objects.filter(
             tr_vehiclenumber=vehicle.vm_registrationnumber,
+            tr_vehiclesource_id=2,
             tr_departeddate__date__range=[expanded_start, expanded_end]
         )
         for t in all_trips_in_period:
@@ -692,7 +702,7 @@ def attached_bill_summary(request, id):
 
     trips = []
     if selected_trip_numbers:
-        trip_filters = Q(tr_tripnumber__in=selected_trip_numbers)
+        trip_filters = Q(tr_tripnumber__in=selected_trip_numbers) & Q(tr_vehiclesource_id=2)
         # Optional: verify vehicle and date range for data integrity
         if vehicle:
             trip_filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
@@ -706,7 +716,7 @@ def attached_bill_summary(request, id):
     total_trips = len(selected_trip_numbers)
     trips = []
     if selected_trip_numbers:
-        trip_filters = Q(tr_tripnumber__in=selected_trip_numbers)
+        trip_filters = Q(tr_tripnumber__in=selected_trip_numbers) & Q(tr_vehiclesource_id=2)
         if vehicle:
             trip_filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
         trips = list(TripdetailInfo.objects.filter(trip_filters).select_related(
