@@ -230,7 +230,7 @@ def get_md_dashboard_data(request):
         .exclude(co_customer__cu_name__isnull=True)
         .values('co_customer__cu_name')
         .annotate(trips=Count('id'))
-        .order_by('-trips')[:5]
+        .order_by('-trips')[:8]
     )
 
     tms_top_customers = []
@@ -261,7 +261,7 @@ def get_md_dashboard_data(request):
             .exclude(co_customer__cu_name__isnull=True)
             .values('co_customer__cu_name')
             .annotate(trips=Count('id'))
-            .order_by('-trips')[:5]
+            .order_by('-trips')[:8]
         )
         for c in top_prev_month:
             c_name = c['co_customer__cu_name']
@@ -460,13 +460,13 @@ def get_md_dashboard_data(request):
         .exclude(wh_customer_name__cu_name__isnull=True)
         .values('wh_customer_name__cu_name')
         .annotate(tot_weight=Sum('wh_goods_weight'), count=Count('id'))
-        .order_by('-tot_weight')[:5]
+        .order_by('-tot_weight')[:8]
     )
     top_customer_labels = [c['wh_customer_name__cu_name'] for c in top_wh_customers]
     top_customer_weights = [round(c['tot_weight'] or 0.0, 1) for c in top_wh_customers]
     if not top_customer_labels:
-        top_customer_labels = ['TVS Logistics', 'Bosch Automotive', 'Schneider Electric', 'Hyundai Mobis', 'Saint Gobain']
-        top_customer_weights = [142.5, 98.4, 76.2, 54.0, 39.8]
+        top_customer_labels = ['TVS Logistics', 'Bosch Automotive', 'Schneider Electric', 'Hyundai Mobis', 'Saint Gobain', 'Samsung Electronics', 'DHL Supply Chain', 'Delrigo Tech']
+        top_customer_weights = [142.5, 98.4, 76.2, 54.0, 39.8, 28.4, 21.0, 14.5]
 
     # -------------------------------------------------------------
     # 3. EXECUTIVE PULSE & TICKER (SLIDE 1 COMBINED)

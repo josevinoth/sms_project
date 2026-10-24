@@ -620,9 +620,28 @@ def tripdetail_add(request, tripdetail_id=0):
                 'is_replacement_trip': is_replacement_trip,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
-                'trip_attachments': TripAttachmentInfo.objects.filter(
-                    ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at'),
             }
+
+            # Auto-sync legacy single-file tc_pod_attachment into TripAttachmentInfo if not yet linked
+            if trip_instance and trip_instance.tc_pod_attachment and trip_instance.tr_tripnumber:
+                if not TripAttachmentInfo.objects.filter(ta_tripnumber=trip_instance.tr_tripnumber, ta_category='POD').exists():
+                    try:
+                        import os
+                        filename = os.path.basename(trip_instance.tc_pod_attachment.name)
+                        TripAttachmentInfo.objects.create(
+                            ta_tripnumber=trip_instance.tr_tripnumber,
+                            ta_file=trip_instance.tc_pod_attachment,
+                            ta_filename=filename,
+                            ta_category='POD'
+                        )
+                        if not trip_instance.tc_no_of_pods or trip_instance.tc_no_of_pods == 0:
+                            trip_instance.tc_no_of_pods = 1
+                            trip_instance.save(update_fields=['tc_no_of_pods'])
+                    except Exception as e:
+                        print(f"Error auto-syncing POD attachment: {e}")
+
+            context['trip_attachments'] = TripAttachmentInfo.objects.filter(
+                ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at')
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
