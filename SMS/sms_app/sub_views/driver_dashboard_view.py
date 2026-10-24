@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.template.loader import get_template
 from django.views.decorators.clickjacking import xframe_options_exempt
-from django.core import signing
 from xhtml2pdf import pisa
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..models import (
@@ -244,39 +243,16 @@ def driver_dashboard(request):
         return redirect('driver_dashboard')
 
 
-    cnote_token = ''
-    if trip.tr_consignmentnumber_id:
-        cnote_token = signing.dumps({
-            'trip_id': trip.id,
-            'consignment_id': trip.tr_consignmentnumber_id
-        })
-
-    return render(request, 'driver_app/driver_dashboard.html', {
-        'trip': trip,
-        'is_closed': is_closed,
-        'cnote_token': cnote_token
-    })
+    return render(request, 'driver_app/driver_dashboard.html', {'trip': trip, 'is_closed': is_closed})
 
 
 @xframe_options_exempt
 def driver_cnote_pdf(request, consignment_id):
     """
     Renders the Consignment Note (C-Note) PDF for the driver.
-    Authenticated by driver session or cryptographically signed download token.
+    Authenticated by driver session (not the main user login system).
     """
-    token = request.GET.get('token')
-    trip_id = None
-    if token:
-        try:
-            data = signing.loads(token, max_age=86400)
-            if data.get('consignment_id') == consignment_id:
-                trip_id = data.get('trip_id')
-        except Exception as e:
-            print(f"Invalid or expired cnote token: {e}")
-
-    if not trip_id:
-        trip_id = request.session.get('driver_trip_id')
-
+    trip_id = request.session.get('driver_trip_id')
     if not trip_id:
         return redirect('driver_login')
 
@@ -360,10 +336,7 @@ def driver_cnote_pdf(request, consignment_id):
     # but let's keep the original xhtml2pdf logic.
     response = HttpResponse(content_type='application/pdf')
     file_name = f"Consignment_Note_{consignment_num}.pdf"
-    if request.GET.get('download') == '1':
-        response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-    else:
-        response['Content-Disposition'] = f'inline; filename="{file_name}"'
+    response['Content-Disposition'] = f'inline; filename={file_name}'
 
     template = get_template(template_path)
     html = template.render(context)

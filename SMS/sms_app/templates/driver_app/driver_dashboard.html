@@ -437,9 +437,9 @@
         <div id="cnote_overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; flex-direction:column;">
             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.1);">
                 <span style="font-weight:600; color:#00f2fe; font-size:0.95rem;"><i class="fas fa-file-pdf"></i> &nbsp;C-Note PDF</span>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <a id="cnote_download_btn" href="#" download target="_blank" class="action-btn" onclick="saveCNote(event)" style="background:rgba(0,242,254,0.15); border:1px solid rgba(0,242,254,0.4); color:#00f2fe; padding:6px 12px; border-radius:8px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                        <i class="fas fa-download"></i> <span id="save_btn_text">Download</span>
+                <div>
+                    <a id="cnote_download_btn" href="#" download class="action-btn" style="background:rgba(0,242,254,0.15); border:1px solid rgba(0,242,254,0.4); color:#00f2fe; padding:6px 12px; border-radius:8px; font-size:0.9rem; text-decoration:none; margin-right:8px;">
+                        <i class="fas fa-download"></i> Save
                     </a>
                     <button onclick="closeCNote()" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#ef4444; padding:6px 12px; border-radius:8px; font-size:0.9rem; cursor:pointer;">
                         <i class="fas fa-times"></i> Close
@@ -513,28 +513,14 @@
         }
 
         let pdfDoc = null;
-        let currentCNoteUrl = '';
-        let currentCNoteFileName = 'Consignment_Note.pdf';
 
         function openCNote(url) {
-            currentCNoteUrl = url;
             const overlay = document.getElementById('cnote_overlay');
             const container = document.getElementById('pdf-viewer-container');
             const loading = document.getElementById('pdf-loading');
             const downloadBtn = document.getElementById('cnote_download_btn');
             
-            const tripConsignmentNo = "{{ trip.tr_consignmentnumber.cn_consignmentno|default:'' }}";
-            if (tripConsignmentNo) {
-                currentCNoteFileName = 'Consignment_Note_' + tripConsignmentNo + '.pdf';
-            }
-            
-            let downloadUrl = url + (url.includes('?') ? '&' : '?') + 'download=1';
-            const tripToken = "{{ cnote_token|default:'' }}";
-            if (tripToken) {
-                downloadUrl += '&token=' + encodeURIComponent(tripToken);
-            }
-            downloadBtn.href = downloadUrl;
-            downloadBtn.setAttribute('download', currentCNoteFileName);
+            downloadBtn.href = url;
             
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -599,31 +585,6 @@
                 pdfDoc = null;
             }
             container.querySelectorAll('canvas').forEach(c => c.remove());
-        }
-
-        function saveCNote(event) {
-            const btn = document.getElementById('cnote_download_btn');
-            const downloadUrl = btn.href;
-
-            // 1. Android WebView / Capacitor APK detection:
-            // Android WebView restricts blob: downloads and has no native PDF download listener.
-            // Opening via _system invokes Android's system browser (Chrome), which validates the
-            // cryptographically signed download token and saves the PDF straight to the device's Downloads folder.
-            const isCapacitor = Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-            const isAndroidWebView = /wv|Android.*Version\/[0-9.]+/i.test(navigator.userAgent);
-
-            if (isCapacitor || isAndroidWebView) {
-                if (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                window.open(downloadUrl, '_system');
-                return;
-            }
-
-            // 2. Regular mobile browsers (Chrome on Android, Safari on iPhone) and desktop:
-            // Allow the native link click with download and target="_blank" to proceed with user gesture activation.
-            // The server's Content-Disposition: attachment header guarantees an instant file download.
         }
 
         // Close overlay on Android hardware back button via Capacitor
