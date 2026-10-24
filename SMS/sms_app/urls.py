@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
+from .sub_views.md_dashboard_view import md_dashboard, get_md_dashboard_data
 from .sub_views.ar_receipt_view import ar_receipt_list
 from .sub_views.approval_views import petty_cash_approval_list, approve_petty_cash
 
@@ -1061,6 +1062,8 @@ urlpatterns = [
     path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
     path('tms_dashboard/', tms_dashboard, name='tms_dashboard'),
     path('get_tms_dashboard_data/', get_tms_dashboard_data, name='get_tms_dashboard_data'),
+    path('md_dashboard/', md_dashboard, name='md_dashboard'),
+    path('get_md_dashboard_data/', get_md_dashboard_data, name='get_md_dashboard_data'),
     path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
     path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
     path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),

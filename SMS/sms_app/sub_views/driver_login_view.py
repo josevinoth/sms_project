@@ -21,9 +21,10 @@ def driver_login(request):
             messages.error(request, "Please enter Mobile Number.")
             return render(request, 'driver_app/driver_login.html')
         
-        # Step 1: Find the LATEST trip for this mobile number
+        # Step 1: Find the LATEST Business trip (Category 1) for this mobile number
         trip = TripdetailInfo.objects.filter(
-            tr_drivernumber=mobile_no
+            tr_drivernumber=mobile_no,
+            tr_category_id=1
         ).order_by('-id').first()
         
         if trip:
@@ -37,7 +38,7 @@ def driver_login(request):
             request.session['driver_trip_id'] = trip.id
             return redirect('driver_dashboard')
         else:
-            messages.error(request, "No trip found for this mobile number.")
+            messages.error(request, "No active trip found for this mobile number.")
             return render(request, 'driver_app/driver_login.html')
             
     return render(request, 'driver_app/driver_login.html')
