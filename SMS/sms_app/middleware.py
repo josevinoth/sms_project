@@ -38,6 +38,7 @@ MODULE_ROUTES = {
         '/SMS/user_approval_list',
         '/SMS/user_approve',
         '/SMS/user_reject',
+        '/SMS/user_control',
         '/SMS/department_list',
         '/SMS/department_insert',
         '/SMS/department_update',
@@ -96,11 +97,21 @@ MODULE_ROUTES = {
     'tms': (
         '/SMS/enquirynote',
         '/SMS/vehicle_allotment',
+        '/SMS/consignmentdetail',
         '/SMS/tripdetail',
         '/SMS/tripclosure',
         '/SMS/tripapproval',
         '/SMS/tms_dashboard',
         '/SMS/trans_',
+        '/SMS/attached_bill',
+        '/SMS/market_bill',
+        '/SMS/invoice_documents',
+        '/SMS/track_vehicle',
+        '/SMS/vehicle_availability',
+        '/SMS/fleet_management',
+        '/SMS/transport_reports',
+        '/SMS/tms_petty_cash',
+        '/SMS/maintenance',
     ),
     'wms': (
         '/SMS/gatein',
@@ -173,6 +184,15 @@ MODULE_ROUTES = {
         '/SMS/trbusinesstype_',
         '/SMS/email_master_',
     ),
+    'supports': (
+        '/SMS/task_',
+        '/SMS/timesheet_',
+        '/SMS/requirements_',
+        '/SMS/open_requirements',
+    ),
+    'prime': (
+        '/SMS/prime_',
+    ),
 }
 
 class GlobalModuleAuthorizationMiddleware:
@@ -209,6 +229,22 @@ class GlobalModuleAuthorizationMiddleware:
         if user_role_str in ['admin', 'super user', 'superuser']:
             return self.get_response(request)
 
+        # Transparent movement branch scoping (uses existing views' built-in branch handling)
+        try:
+            from .utils.page_catalog import get_user_movement_branches, ALL_BRANCH_CODES
+            allowed_branches = get_user_movement_branches(request.user)
+            if allowed_branches and allowed_branches != ALL_BRANCH_CODES and len(allowed_branches) == 1:
+                single_branch = next(iter(allowed_branches))
+                branch_id_map = {"BLR": 1, "MAA": 2, "PNY": 3, "HYD": 4, "CJB": 5}
+                if single_branch in branch_id_map:
+                    request.session['ses_branch_id'] = branch_id_map[single_branch]
+                if not request.GET.get('branch'):
+                    mutable_get = request.GET.copy()
+                    mutable_get['branch'] = single_branch
+                    request.GET = mutable_get
+        except Exception:
+            pass
+
         # Retrieve user extended info for module capability resolution
         try:
             user_ext = User_extInfo.objects.select_related(
@@ -239,7 +275,18 @@ class GlobalModuleAuthorizationMiddleware:
             elif 'finance' in dept_name:
                 allowed_modules.add('fms')
             elif 'sales' in dept_name:
-                allowed_modules.update(['cms', 'vms'])
+                allowed_modules.update(['sales', 'cms', 'vms'])
+            elif 'customer service' in dept_name or getattr(user_ext, 'department_id', None) == 4:
+                allowed_modules.update(['tms', 'prime'])
+            elif 'operation' in dept_name or getattr(user_ext, 'department_id', None) == 2:
+                if org_id == 1 or 'storage' in org_name:
+                    allowed_modules.add('wms')
+                elif org_id == 2 or 'trans' in org_name or request.user.username.upper().startswith('TRA'):
+                    allowed_modules.update(['tms', 'vms', 'prime'])
+                elif org_id == 3 or 'pack' in org_name or request.user.username.upper().startswith('PK'):
+                    allowed_modules.add('pms')
+                else:
+                    allowed_modules.update(['tms', 'wms', 'prime'])
 
             # Business Solution / Organisation based access
             # Org 1: BVM Storage Solutions (WMS)
@@ -247,10 +294,70 @@ class GlobalModuleAuthorizationMiddleware:
             # Org 3: BVM Pack Solutions (PMS)
             if org_id == 1 or 'storage' in org_name:
                 allowed_modules.add('wms')
-            if org_id == 2 or 'trans' in org_name:
-                allowed_modules.update(['tms', 'vms'])
-            if org_id == 3 or 'pack' in org_name:
+            if org_id == 2 or 'trans' in org_name or request.user.username.upper().startswith('TRA'):
+                allowed_modules.update(['tms', 'vms', 'prime'])
+            if org_id == 3 or 'pack' in org_name or request.user.username.upper().startswith('PK'):
                 allowed_modules.add('pms')
+
+        # Check if user has custom granular page permissions defined in UserPageAccess
+        from .models import UserPageAccess
+        import json
+
+        # Central Granular CRUD Enforcement via UserPageAccess
+        if request.user.is_authenticated:
+            try:
+                from .utils.page_catalog import resolve_request_crud, get_user_page_crud_permissions
+                action, pkey = resolve_request_crud(path)
+                if pkey:
+                    perms = get_user_page_crud_permissions(request.user, pkey)
+                    request.page_permissions = perms
+                    request.page_permissions_json = json.dumps(perms)
+                    request.current_page_key = pkey
+
+                    # Enforce CRUD checks for non-administrators
+                    if not (request.user.is_superuser or request.user.is_staff):
+                        is_ajax = (request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
+                                   request.content_type == 'application/json')
+                        
+                        def _access_denied_response(msg):
+                            if is_ajax:
+                                from django.http import JsonResponse
+                                return JsonResponse({'status': 'error', 'message': msg}, status=403)
+                            messages.error(request, msg)
+                            referer = request.META.get('HTTP_REFERER')
+                            if referer and referer != request.build_absolute_uri():
+                                return redirect(referer)
+                            return redirect('home_page')
+
+                        if action == 'view' and not perms['can_view']:
+                            return _access_denied_response("View Access Denied: You do not have permission to view this page.")
+                        elif action == 'create' and not perms['can_create']:
+                            return _access_denied_response("Create Access Denied: You do not have permission to create records on this page.")
+                        elif action == 'edit' and not perms['can_edit']:
+                            return _access_denied_response("Edit Access Denied: You do not have permission to edit records on this page.")
+                        elif action == 'delete' and not perms['can_delete']:
+                            return _access_denied_response("Delete Access Denied: You do not have permission to delete records on this page.")
+            except Exception:
+                pass
+
+        has_custom = UserPageAccess.objects.filter(user=request.user).exists()
+        if has_custom:
+            try:
+                from .utils.page_catalog import get_user_allowed_route_prefixes
+                custom_prefixes = get_user_allowed_route_prefixes(request.user)
+                # Check if current path matches any protected route in MODULE_ROUTES
+                matched_prefixes = [pfx for prefixes in MODULE_ROUTES.values() for pfx in prefixes if path.startswith(pfx)]
+                if matched_prefixes:
+                    if any(path.startswith(prefix) for prefix in custom_prefixes):
+                        return self.get_response(request)
+                    else:
+                        messages.error(
+                            request,
+                            "View Access Denied: You do not have permission to view this page."
+                        )
+                        return redirect('home_page')
+            except Exception:
+                pass
 
         # Check if the requested path belongs to any disallowed module
         matched_modules = []
@@ -264,7 +371,7 @@ class GlobalModuleAuthorizationMiddleware:
             if not has_access:
                 messages.error(
                     request,
-                    f"Access Restricted: You do not have permission to access this module ({', '.join(m.upper() for m in matched_modules)})."
+                    f"Access Denied: The {', '.join(m.upper() for m in matched_modules)} module is not enabled for your account."
                 )
                 return redirect('home_page')
 

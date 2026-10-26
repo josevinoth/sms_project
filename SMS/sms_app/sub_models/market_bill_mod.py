@@ -15,6 +15,7 @@ class MarketBillInfo(models.Model):
     mb_loading_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Loading Cost")
     mb_unloading_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Unloading Cost")
     mb_parking_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Parking Cost")
+    mb_weighment_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Weighment Cost")
     mb_halting_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Halting Cost")
     mb_halting_days = models.IntegerField(default=0,null=True,blank=True,verbose_name="Halting Days")
     mb_total_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Total Cost")

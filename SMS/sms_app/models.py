@@ -277,3 +277,4 @@ from .sub_models.pms_petty_cash_mod import PMSPettyCashInfo
 from .sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
 from .sub_models.agreementtype_mod import AgreementType
 from .sub_models.vendorratemaster1_history_mod import VendorratemasterHistory
+from .sub_models.user_page_access_mod import UserPageAccess
