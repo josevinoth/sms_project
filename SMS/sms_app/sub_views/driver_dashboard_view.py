@@ -27,9 +27,10 @@ def driver_dashboard(request):
 
     trip = get_object_or_404(TripdetailInfo, id=trip_id)
 
-    # Only redirect for cancelled trips (status 3)
-    if trip.tc_financestatus_id == 3:
-        messages.info(request, "This trip has been cancelled.")
+    # Only allow active trip statuses (Work In Progress, Awaiting Trip Approval, Trip Started)
+    # Block settlement (4, 7), closed (2), cancelled (3, 10, 11), finance (5), etc.
+    if trip.tc_financestatus_id not in [1, 8, 12, None]:
+        messages.info(request, "This trip has been completed and closed.")
         if 'driver_trip_id' in request.session:
             del request.session['driver_trip_id']
         return redirect('driver_login')
@@ -41,8 +42,7 @@ def driver_dashboard(request):
             del request.session['driver_trip_id']
         return redirect('driver_login')
 
-    # Flag for closed trips (read-only mode)
-    is_closed = trip.tc_financestatus_id in [2, 7]
+    is_closed = False
 
     if request.method == 'POST':
         action = request.POST.get('action')

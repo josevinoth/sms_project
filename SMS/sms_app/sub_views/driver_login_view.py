@@ -21,22 +21,30 @@ def driver_login(request):
             messages.error(request, "Please enter Mobile Number.")
             return render(request, 'driver_app/driver_login.html')
         
-        # Step 1: Find the LATEST Business trip (Category 1) for this mobile number
-        trip = TripdetailInfo.objects.filter(
+        # Step 1: Find the LATEST ACTIVE Business trip (Category 1) for this mobile number
+        # Drivers should ONLY see trips that are actively ongoing:
+        # 12: Work In Progress (or None), 8: Awaiting Trip Approval, 1: Trip Started
+        active_trip = TripdetailInfo.objects.filter(
+            tr_drivernumber=mobile_no,
+            tr_category_id=1
+        ).filter(
+            Q(tc_financestatus_id__in=[1, 8, 12]) | Q(tc_financestatus__isnull=True)
+        ).order_by('-id').first()
+
+        if active_trip:
+            # Success: Log in to the active trip
+            request.session['driver_trip_id'] = active_trip.id
+            return redirect('driver_dashboard')
+
+        # Step 2: If no active trip, check if any completed/settlement/closed trip exists
+        past_trip = TripdetailInfo.objects.filter(
             tr_drivernumber=mobile_no,
             tr_category_id=1
         ).order_by('-id').first()
-        
-        if trip:
-            # Step 2: Check if the latest trip is active.
-            # If it's Closed (2), Cancelled (3), or Delivered (7), do not show it.
-            if trip.tc_financestatus_id in [2, 3, 7]:
-                messages.error(request, "No active trip found (The latest trip is already closed).")
-                return render(request, 'driver_app/driver_login.html')
-            
-            # Success: Log in to the latest active trip
-            request.session['driver_trip_id'] = trip.id
-            return redirect('driver_dashboard')
+
+        if past_trip:
+            messages.error(request, "No active trip found (The latest trip is already closed).")
+            return render(request, 'driver_app/driver_login.html')
         else:
             messages.error(request, "No active trip found for this mobile number.")
             return render(request, 'driver_app/driver_login.html')
