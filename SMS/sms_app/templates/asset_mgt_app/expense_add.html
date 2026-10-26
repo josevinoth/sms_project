@@ -1,353 +1,308 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Expense{% endblock %}
 {% block content %}
-<form method="POST" id="invoice_add" action="" data-units-url="{% url 'load_whrate_model' %}">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Expense</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row container-fluid">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business</span>
-									</div>
-									{% render_field expense_form.exp_business id="exp_business" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Expense Category</span>
-									</div>
-									{% render_field expense_form.exp_category id="exp_category" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Expense Number</span>
-									</div>
-									{% render_field expense_form.exp_number id="exp_number" class="form-control disable_a_href bg-secondary text-white" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor</span>
-									</div>
-									{% render_field expense_form.exp_vendor id="exp_vendor" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill</span>
-									</div>
-									{% render_field expense_form.exp_vendor_bill id="exp_vendor_bill" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Bill Date</span>
-									</div>
-									{% render_field expense_form.exp_vendor_bill_date type="date" id="exp_vendor_bill_date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Service Start Date</span>
-									</div>
-									{% render_field expense_form.exp_service_start_date id="exp_service_start_date" type="date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Service End Date</span>
-									</div>
-									{% render_field expense_form.exp_service_end_date id="exp_service_end_date" type="date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Expense Type</span>
-									</div>
-									{% render_field expense_form.exp_expense_type id="exp_expense_type" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM</span>
-									</div>
-									{% render_field expense_form.exp_uom id="exp_uom" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">IOU</span>
-									</div>
-									{% render_field expense_form.exp_iou id="exp_iou" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Expense Rate (INR)</span>
-									</div>
-									{% render_field expense_form.exp_rate id="exp_rate" onchange="update_rates_fn()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity</span>
-									</div>
-									{% render_field expense_form.exp_quantity id="exp_quantity" onchange="update_rates_fn()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Amount (INR)</span>
-									</div>
-									{% render_field expense_form.exp_amount id="exp_amount" onchange="update_rates_fn()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST Rate %</span>
-									</div>
-									{% render_field expense_form.exp_gst_rate id="exp_gst_rate" onchange="update_rates_fn()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST Amount (INR)</span>
-									</div>
-									{% render_field expense_form.exp_gst_amount id="exp_gst_amount" onchange="update_rates_fn()" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Amount (INR)</span>
-									</div>
-									{% render_field expense_form.exp_total_amount id="exp_total_amount" onchange="update_rates_fn()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">TDS Rate %</span>
-									</div>
-									{% render_field expense_form.exp_tds_rate id="exp_tds_rate" onchange="update_rates_fn()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">TDS Amount (INR)</span>
-									</div>
-									{% render_field expense_form.exp_tds_amount id="exp_tds_amount" onchange="update_rates_fn()" class="form-control disable_a_href" %}
-								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Amount Payable (INR)</span>
-									</div>
-									{% render_field expense_form.exp_amount_payable id="exp_amount_payable" class="form-control disable_a_href" id="bill_no_of_days" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Due Date</span>
-									</div>
-									{% render_field expense_form.exp_due_date id="exp_due_date" type="date" class="form-control " id="bill_per_day_wh_charges" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Credit Ledger</span>
-									</div>
-									{% render_field expense_form.exp_credit_ledger id="exp_credit_ledger" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">To</span>
-									</div>
-									{% render_field expense_form.exp_to id="exp_to" class="form-control " %}
-								</div>
-<!--								<div class="input-group input-group-sm mb-3">-->
-<!--									<div class="input-group-prepend">-->
-<!--										<span class="input-group-text">Paid Date</span>-->
-<!--									</div>-->
-<!--									{% render_field expense_form.exp_paid_date id="exp_paid_date" type="date" class="form-control " id="bill_per_day_wh_charges" %}-->
-<!--								</div>-->
+<div class="container-fluid px-3 py-2 compact-form">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-money-bill-wave mr-2"></i> Add / Update Expense
+        </h3>
+        <div>
+            <a href="{% url 'expense_search' %}?from_date={{ request.GET.from_date|urlencode }}&to_date={{ request.GET.to_date|urlencode }}&expense_number={{ request.GET.expense_number|urlencode }}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
 
-								{% render_field expense_form.exp_updated_by id="exp_updated_by"  hidden="True" class="form-control" %}
-								{% render_field expense_form.exp_updated_at id="exp_updated_at" hidden="True" class="form-control" %}
-								{% render_field expense_form.exp_created_on id="exp_created_on" hidden="True" class="form-control" %}
-							</div>
-							<div class="container-fluid input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
-								</div>
-								{% render_field expense_form.exp_remarks id="exp_remarks" class="form-control " %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'expense_search' %}?from_date={{ request.GET.from_date|urlencode }}&to_date={{ request.GET.to_date|urlencode }}&expense_number={{ request.GET.expense_number|urlencode }}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel </a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-<hr>
-<div class="row">
-	<div class="col" id="customer_order_attach">
-		<div id="accordion" class="container-fluid">
-			<div class="card">
-				<div class="card-header bg-info" id="headingTwo">
-					<h5 class="mb-0">
-						<button class="btn btn-warning text-white collapsed" id="add_edit" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-							Add/Edit Expense Distribution
-						</button>
-					</h5>
-				</div>
-				<div id="collapseTwo" class="" aria-labelledby="headingTwo" data-parent="#accordion">
-					<div class="card-body">
-						<div class="card-body">
-							<div id="customer_attach_list_WOH">
-								{% include "asset_mgt_app/expense_ext_list_WOH.html" %}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <!-- ══ Form Card ══ -->
+    <div class="modern-card p-3 mb-3 w-100">
+        <form method="POST" id="invoice_add" action="" data-units-url="{% url 'load_whrate_model' %}">
+            {% csrf_token %}
+            <div class="form-section p-3 mb-3">
+                <div class="form-section-title mb-3">
+                    <i class="fas fa-info-circle text-primary mr-1"></i> Expense Details
+                </div>
+                <div class="row">
+                    <!-- Column 1 -->
+                    <div class="col-12 col-md-3">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Business</label>
+                            {% render_field expense_form.exp_business id="exp_business" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Expense Category</label>
+                            {% render_field expense_form.exp_category id="exp_category" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Expense Number</label>
+                            {% render_field expense_form.exp_number id="exp_number" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vendor</label>
+                            {% render_field expense_form.exp_vendor id="exp_vendor" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vendor Bill</label>
+                            {% render_field expense_form.exp_vendor_bill id="exp_vendor_bill" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="col-12 col-md-3">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vendor Bill Date</label>
+                            {% render_field expense_form.exp_vendor_bill_date type="date" id="exp_vendor_bill_date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Service Start Date</label>
+                            {% render_field expense_form.exp_service_start_date id="exp_service_start_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Service End Date</label>
+                            {% render_field expense_form.exp_service_end_date id="exp_service_end_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Expense Type</label>
+                            {% render_field expense_form.exp_expense_type id="exp_expense_type" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">UOM</label>
+                            {% render_field expense_form.exp_uom id="exp_uom" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <!-- Column 3 -->
+                    <div class="col-12 col-md-3">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">IOU</label>
+                            {% render_field expense_form.exp_iou id="exp_iou" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Expense Rate (INR)</label>
+                            {% render_field expense_form.exp_rate id="exp_rate" onchange="update_rates_fn()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Quantity</label>
+                            {% render_field expense_form.exp_quantity id="exp_quantity" onchange="update_rates_fn()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Amount (INR)</label>
+                            {% render_field expense_form.exp_amount id="exp_amount" onchange="update_rates_fn()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">GST Rate %</label>
+                            {% render_field expense_form.exp_gst_rate id="exp_gst_rate" onchange="update_rates_fn()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">GST Amount (INR)</label>
+                            {% render_field expense_form.exp_gst_amount id="exp_gst_amount" onchange="update_rates_fn()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                    </div>
+
+                    <!-- Column 4 -->
+                    <div class="col-12 col-md-3">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Total Amount (INR)</label>
+                            {% render_field expense_form.exp_total_amount id="exp_total_amount" onchange="update_rates_fn()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">TDS Rate %</label>
+                            {% render_field expense_form.exp_tds_rate id="exp_tds_rate" onchange="update_rates_fn()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">TDS Amount (INR)</label>
+                            {% render_field expense_form.exp_tds_amount id="exp_tds_amount" onchange="update_rates_fn()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Amount Payable (INR)</label>
+                            {% render_field expense_form.exp_amount_payable id="exp_amount_payable" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Due Date</label>
+                            {% render_field expense_form.exp_due_date id="exp_due_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Credit Ledger</label>
+                            {% render_field expense_form.exp_credit_ledger id="exp_credit_ledger" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">To</label>
+                            {% render_field expense_form.exp_to id="exp_to" class="form-control form-control-modern" %}
+                        </div>
+
+                        {% render_field expense_form.exp_updated_by id="exp_updated_by" hidden="True" class="form-control" %}
+                        {% render_field expense_form.exp_updated_at id="exp_updated_at" hidden="True" class="form-control" %}
+                        {% render_field expense_form.exp_created_on id="exp_created_on" hidden="True" class="form-control" %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field expense_form.exp_remarks id="exp_remarks" class="form-control form-control-modern" rows="3" placeholder="Enter remarks..." %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row my-2">
+                <div class="col-12 message text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit py-1 px-4" onclick="myjobnum()">
+                    <i class="fas fa-check mr-1"></i> Save
+                </button>
+                <a href="{% url 'expense_search' %}?from_date={{ request.GET.from_date|urlencode }}&to_date={{ request.GET.to_date|urlencode }}&expense_number={{ request.GET.expense_number|urlencode }}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Expense Distribution Section -->
+    <div class="modern-card p-3 mb-3 w-100" id="customer_order_attach">
+        <div id="accordion" class="container-fluid px-0">
+            <div class="card" style="border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; background: var(--bg-card);">
+                <div class="card-header" id="headingTwo" style="background: var(--primary-glow); padding: 0.6rem 1rem;">
+                    <h5 class="mb-0">
+                        <button class="btn-modern btn-highlight text-white collapsed py-1 px-3" id="add_edit" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            <i class="fas fa-sitemap mr-1"></i> Add / Edit Expense Distribution
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                    <div class="card-body p-3">
+                        <div id="customer_attach_list_WOH">
+                            {% include "asset_mgt_app/expense_ext_list_WOH.html" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<script>
-	$(document).ready(function() {
-            {
-                var expense_name = document.getElementById("exp_number").value
-                if (expense_name == "")
-                {
-                    $('#add_edit').addClass('disable_a_href');
-                }
-                else
-                {
-                    $('#add_edit').removeClass('disable_a_href');
-                }
-            }
-        });
-</script>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 80px !important;
+        min-height: 80px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
 
 <script>
-	$(document).ready(function() {
-        document.getElementById("exp_updated_by").value ='{{user_id}}';
-        var expense_category_val=document.getElementById("exp_category").value
-        if (expense_category_val=="")
-        {
-            $('#exp_category').removeClass('disable_a_href');
+    $(document).ready(function() {
+        var expense_name = document.getElementById("exp_number").value;
+        if (expense_name == "") {
+            $('#add_edit').addClass('disable_a_href');
+        } else {
+            $('#add_edit').removeClass('disable_a_href');
         }
-        else
-        {
+
+        var updatedBy = document.getElementById("exp_updated_by");
+        if (updatedBy) {
+            updatedBy.value = '{{user_id}}';
+        }
+
+        var expense_category_val = document.getElementById("exp_category").value;
+        if (expense_category_val == "") {
+            $('#exp_category').removeClass('disable_a_href');
+        } else {
             $('#exp_category').addClass('disable_a_href');
         }
         update_rates_fn();
-      });
+
+        // Select2 for Dropdowns
+        $('#exp_business, #exp_category, #exp_vendor, #exp_expense_type, #exp_uom, #exp_credit_ledger').select2({
+            width: '100%',
+            allowClear: true,
+            placeholder: "--Select--"
+        });
+    });
 </script>
 
 <script>
-	function update_rates_fn() {
-		var exp_rate_val=parseFloat(document.getElementById("exp_rate").value)
-		var exp_quantity_val=parseFloat(document.getElementById("exp_quantity").value)
-		var exp_amount_val=parseFloat(exp_rate_val*exp_quantity_val)
-		var exp_gst_rate_val=parseFloat(document.getElementById("exp_gst_rate").value)
-		var exp_gst_amount_val=parseFloat((exp_amount_val*exp_gst_rate_val)/100)
-		var exp_total_amount_val=parseFloat(exp_gst_amount_val)+parseFloat(exp_amount_val)
-		var exp_tds_rate_val=parseFloat(document.getElementById("exp_tds_rate").value)
-		var exp_tds_amount_val=parseFloat((exp_amount_val)*exp_tds_rate_val/100)
-		var exp_amount_payable_val=parseFloat(exp_total_amount_val-exp_tds_amount_val)
-
-		document.getElementById("exp_amount").value=exp_amount_val.toFixed(2)
-		document.getElementById("exp_gst_amount").value=exp_gst_amount_val.toFixed(2)
-		document.getElementById("exp_total_amount").value=exp_total_amount_val.toFixed(2)
-		document.getElementById("exp_tds_amount").value=exp_tds_amount_val.toFixed(2)
-		document.getElementById("exp_amount_payable").value=exp_amount_payable_val.toFixed(2)
-	}
+    function update_rates_fn() {
+        var amount = (parseFloat(document.getElementById("exp_rate").value) || 0) * (parseFloat(document.getElementById("exp_quantity").value) || 0);
+        document.getElementById("exp_amount").value = amount.toFixed(2);
+        var gst_amount = amount * (parseFloat(document.getElementById("exp_gst_rate").value) || 0) / 100;
+        document.getElementById("exp_gst_amount").value = gst_amount.toFixed(2);
+        var total_amount = amount + gst_amount;
+        document.getElementById("exp_total_amount").value = total_amount.toFixed(2);
+        var tds_amount = amount * (parseFloat(document.getElementById("exp_tds_rate").value) || 0) / 100;
+        document.getElementById("exp_tds_amount").value = tds_amount.toFixed(2);
+        var amount_payable = total_amount - tds_amount;
+        document.getElementById("exp_amount_payable").value = amount_payable.toFixed(2);
+    }
 </script>
+
+
 
 <script>
-	$(document).ready(function() {
-		if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-			$('#exp_expense_type').select2({
-				placeholder: "--Select--",
-				allowClear: true,
-				width: 'resolve'
-			});
-		}
-	});
+    function myjobnum() {
+        var expense_number = document.getElementById("exp_number").value;
+        if (expense_number == "") {
+            var selected_category = document.getElementById("exp_category");
+            var selected_category_text = selected_category.options[selected_category.selectedIndex].text;
+            var sub_selected_category_text = selected_category_text.substring(0, 1);
+            var selected_business = document.getElementById("exp_business");
+            var selected_business_text = selected_business.options[selected_business.selectedIndex].text;
+            var sub_selected_business_text = selected_business_text.substring(0, 1);
+            var random_num = {{ exp_count }};
+            var random_padded = String(random_num).padStart(6, '0');
+            var fin_year = "{{ fin_year }}";
+            var branch_short_name = "{{ ses_branch_short_name }}";
+            var text = fin_year + "_" + branch_short_name + "_EXP_" + sub_selected_business_text + "_" + sub_selected_category_text + "_" + random_padded;
+            document.getElementById("exp_number").value = text;
+        }
+    }
 </script>
-
-<script>
-	// Ensure these expense date fields are date-only on the frontend.
-	(function(){
-		var ids = ['exp_vendor_bill_date','exp_service_start_date','exp_service_end_date','exp_due_date','exp_paid_date'];
-		ids.forEach(function(id){
-			try{
-				var el = document.getElementById(id);
-				if(!el) return;
-				el.setAttribute('type','date');
-
-				if(window.flatpickr){
-					if(el._flatpickr){
-						try{ el._flatpickr.destroy(); }catch(e){}
-					}
-					window.flatpickr(el, {
-						enableTime: false,
-						dateFormat: 'Y-m-d',
-						altInput: true,
-						altFormat: 'd-m-Y',
-						allowInput: true
-					});
-				}
-			}catch(e){console && console.log && console.log('date-force error',e)}
-		});
-	})();
-</script>
-
-<style>
-    .input-group-text {
-        width: 150px;
-        font-size: 13px;
-        white-space: normal;
-        text-align: left;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 0.2rem 0.5rem;
-        background-color: #9fe9f0 !important;
-        color: #333;
-        font-weight: 600;
-        border: 1px solid #7ed2d9;
-        line-height: 1.2;
-    }
-
-    .input-group > .select2-container--default {
-        flex: 1 1 auto;
-        width: 1% !important;
-    }
-
-    .input-group > .select2-container--default .select2-selection--single {
-        min-height: calc(1.5em + .5rem + 2px);
-        border: 1px solid #ced4da !important;
-        border-radius: 0 .2rem .2rem 0 !important;
-        display: flex;
-        align-items: center;
-    }
-
-    .input-group > .select2-container--default .select2-selection__rendered {
-        line-height: 1.5 !important;
-        padding-left: .5rem !important;
-    }
-
-    .input-group > .select2-container--default .select2-selection__arrow {
-        min-height: calc(1.5em + .5rem + 2px);
-    }
-</style>
 
 {% endblock content %}

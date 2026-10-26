@@ -1,83 +1,119 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+
+{% block title %}Expense Extension List{% endblock %}
+
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Expense Extension List</h3>
+<div class="container-fluid py-3">
+
+    <!-- Header Block -->
+    <div class="modern-list-header mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="header-icon-box">
+                <i class="fas fa-receipt text-primary"></i>
+            </div>
+            <div>
+                <h1 class="modern-list-title">Expense Extension List</h1>
+                <p class="modern-list-subtitle">Manage branch and unit expense distribution records</p>
+            </div>
         </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid row">
-        <div class="col-md-1">
-            <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-                <i class="fas fa-arrow-left"></i> Back
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'expense_ext_add' %}" class="btn-modern btn-submit" style="text-decoration:none;">
+                <i class="fas fa-plus"></i> Add Extension
+            </a>
+            <a href="{% url 'expense_search' %}" class="btn-modern btn-cancel" style="text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Expenses
             </a>
         </div>
-</div>
-<hr>
+    </div>
 
-<div class="container-fluid">
-    <table  id="expense_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-                <th>ID</th>
-                <th>Expense Number</th>
-                <th>Branch</th>
-                <th style="width: 100px;">Unit</th>
-                <th>Expense Amount</th>
-                <th>Updated By</th>
-                <th>Updated On</th>
-                <th>Edit</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for expenseextinfo in expense_ext_list %}
-                <tr>
-                    <td>{{ expenseextinfo.id }}</td>
-                    <td>{{ expenseextinfo.exp_ext_expense_number }}</td>
-                    <td>{{ expenseextinfo.exp_ext_branch }}</td>
-                    <td>{{ expenseextinfo.exp_ext_unit }}</td>
-                    <td>{{ expenseextinfo.exp_ext_amount}}</td>
-                    <td>{{ expenseextinfo.exp_ext_updated_by}}</td>
-                    <td>{{ expenseextinfo.exp_ext_updated_on}}</td>
-                    <td>
-                        <a class="btn btn-primary" href="{% url 'expense_ext_update' expenseextinfo.id %}">
-                            <i class="far fa-edit"></i>
-                        </a>
-                    </td>
-                    <td>
-                        <form action="{% url 'expense_ext_delete' expenseextinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="9" class="text-center">No Expense found.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Table Card -->
+    <div class="modern-card p-0 overflow-hidden">
+        <div class="table-responsive p-3">
+            <table id="expense_ext_list_table" class="modern-table w-100">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Expense Number</th>
+                        <th>Branch</th>
+                        <th>Unit</th>
+                        <th class="text-right">Expense Amount</th>
+                        <th>Updated By</th>
+                        <th style="min-width: 140px;">Updated On</th>
+                        <th class="text-center" style="width: 65px;">Edit</th>
+                        <th class="text-center" style="width: 65px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expenseextinfo in expense_ext_list %}
+                        <tr>
+                            <td class="font-weight-bold text-muted">{{ expenseextinfo.id }}</td>
+                            <td class="font-weight-bold text-primary">{{ expenseextinfo.exp_ext_expense_number }}</td>
+                            <td><span class="badge badge-light px-2 py-1 font-weight-bold text-dark border">{{ expenseextinfo.exp_ext_branch }}</span></td>
+                            <td>{{ expenseextinfo.exp_ext_unit|default:"-" }}</td>
+                            <td class="text-right font-weight-bold text-danger">{{ expenseextinfo.exp_ext_amount }}</td>
+                            <td>{{ expenseextinfo.exp_ext_updated_by|default:"-" }}</td>
+                            <td>{{ expenseextinfo.exp_ext_updated_on|date:"M. d, Y, g:i a"|default:expenseextinfo.exp_ext_updated_on }}</td>
+                            <td class="text-center">
+                                <a class="btn-modern btn-highlight py-1 px-2" style="text-decoration:none; display:inline-flex; border-radius: 8px;" href="{% url 'expense_ext_update' expenseextinfo.id %}" title="Edit">
+                                    <i class="far fa-edit text-white"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <form action="{% url 'expense_ext_delete' expenseextinfo.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');" style="display:inline-block; margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-modern btn-cancel py-1 px-2" style="border:none; background:transparent;" title="Delete">
+                                        <i class="fas fa-trash-alt text-danger"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                <i class="fas fa-folder-open fa-3x mb-2 d-block text-secondary opacity-50"></i>
+                                No Expense Extension found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        <!-- Pagination Controls -->
+        {% if not show_all and expense_ext_list.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3 pt-3 px-3 pb-3" style="border-top: 1px solid var(--border-light, #e2e8f0); gap: 10px;">
+            <div class="text-muted font-weight-bold">
+                Page {{ expense_ext_list.number }} of {{ expense_ext_list.paginator.num_pages }} (Total {{ expense_ext_list.paginator.count }} records)
+            </div>
+            <div class="d-flex" style="gap: 6px;">
+                {% if expense_ext_list.has_previous %}
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page=1">First</a>
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ expense_ext_list.previous_page_number }}">Previous</a>
+                {% endif %}
+                <span class="btn-modern py-1 px-3" style="font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); font-weight: 700;">
+                    {{ expense_ext_list.number }}
+                </span>
+                {% if expense_ext_list.has_next %}
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ expense_ext_list.next_page_number }}">Next</a>
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ expense_ext_list.paginator.num_pages }}">Last</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
 <script>
     $(document).ready(function() {
-    $('#expense_ext_list').DataTable(
-        {
-        scrollY: "600px",
-        scrollX: true,
-        scrollCollapse: true,
-        dom: 'lBfrtip',
-        order: [0, 'desc' ],
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    } );
-} );
+        $('#expense_ext_list_table').DataTable({
+            paging: false,
+            info: false,
+            scrollX: true,
+            dom: 'Bfrtip',
+            order: [[0, 'desc']],
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+    });
 </script>
 {% endblock content %}
