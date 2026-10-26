@@ -71,6 +71,10 @@ def sync_allotment_rate_to_trips(allotment_obj):
     if effective_rate <= 0:
         return
 
+    # Do not sync rates from cancelled allotments
+    if getattr(allotment_obj, 'va_status_id', None) == 4:
+        return
+
     veh_no = ''
     if allotment_obj.va_vehiclenumber and getattr(allotment_obj.va_vehiclenumber, 'vm_registrationnumber', None):
         veh_no = allotment_obj.va_vehiclenumber.vm_registrationnumber.strip()
@@ -78,15 +82,27 @@ def sync_allotment_rate_to_trips(allotment_obj):
         veh_no = allotment_obj.va_vehiclenumber_mkt.strip()
 
     trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_id)
+    al_vt = allotment_obj.va_vehicletype_placed_id or allotment_obj.va_vehicletype_id
+
     if veh_no:
         clean_veh = veh_no.replace(' ', '').replace('-', '').upper()
         for t in trips:
             t_veh = (t.tr_vehiclenumber or '').replace(' ', '').replace('-', '').upper()
-            if not t_veh or t_veh == clean_veh or trips.count() == 1:
+            t_vt = t.tr_vehicletype_placed_id or t.tr_vehicletype_id
+            # Strictly match vehicle number; or if trip vehicle is unassigned, match by vehicle type
+            if clean_veh and t_veh == clean_veh:
+                t.tc_tripcost = effective_rate
+                t.save(update_fields=['tc_tripcost'])
+            elif not t_veh and al_vt and t_vt == al_vt:
                 t.tc_tripcost = effective_rate
                 t.save(update_fields=['tc_tripcost'])
     else:
-        trips.update(tc_tripcost=effective_rate)
+        if al_vt:
+            for t in trips:
+                t_vt = t.tr_vehicletype_placed_id or t.tr_vehicletype_id
+                if t_vt == al_vt:
+                    t.tc_tripcost = effective_rate
+                    t.save(update_fields=['tc_tripcost'])
 
 
 def validate_vehicle_number_format(veh_num):
@@ -309,7 +325,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             env_enquirynumber_id=enquiry_id
         ).select_related('env_vehiclecategory').first()
         vehicle_category_name = env_first.env_vehiclecategory.vc_vehiclecategory if (
-                    env_first and env_first.env_vehiclecategory) else ""
+                env_first and env_first.env_vehiclecategory) else ""
         vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
 
         # Check if any trip under this enquiry is invoiced
@@ -555,17 +571,20 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             allotments_to_check = allotments_to_check.filter(
                 Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             )
-            
+
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
             active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
             is_really_busy = False
             busy_enq_str = "Another Enquiry"
-            
-            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
+
+            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (
+                    vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
+                obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
             _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
 
             for a in active_allotments:
-                trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
+                trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber,
+                                                      tr_vehiclenumber__iexact=_reg_no_clean)
                 if not trips.exists():
                     is_really_busy = True
                     busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
@@ -588,8 +607,6 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
-            
-
 
             if duplicate_qs.exists():
                 messages.error(
@@ -605,7 +622,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
             reg_no = obj.va_vehiclenumber.vm_registrationnumber if (
-                        vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
+                    vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
                 obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
 
             if reg_no:
@@ -618,19 +635,27 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
                 for trip_item in other_trips:
                     enq_status_str = str(trip_item.tr_enquirynumber.en_status) if (
-                                trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
+                            trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
                     if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
                         continue
 
                     op_closed = (
-                                trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
+                            trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
                     fin_closed = (
-                                trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
+                            trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
                     if not (op_closed or fin_closed):
                         is_busy = True
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(
                             trip_item.tr_enquirynumber_id)
                         break
+
+            if is_busy:
+                messages.error(
+                    request,
+                    f"This vehicle is currently on an active trip in enquiry ({busy_enquiry}) and the trip has not been closed."
+                )
+                referer = request.META.get('HTTP_REFERER')
+                return redirect(referer if referer else request.path)
 
             # 🚫 DOUBLE-SUBMISSION / RACE CONDITION GUARD (Last 15 seconds check)
             from datetime import timedelta
@@ -769,31 +794,45 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             allotments_to_check = allotments_to_check.filter(
                 Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             ).exclude(id=vehicle_allotment_id)
-            
+
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
             active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
             is_really_busy = False
             busy_enq_str = "Another Enquiry"
-            
-            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
+
+            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (
+                    vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
+                obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
             _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
 
-            for a in active_allotments:
-                trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
-                if not trips.exists():
-                    is_really_busy = True
-                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
-                    break
-                has_active = False
-                for t in trips:
-                    status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
-                    if status_id in [1, 12]:
-                        has_active = True
+            # Allow closing/cancelling an allotment even if the vehicle is busy elsewhere (to break circular locks).
+            # Also allow updating commercial fields of an existing allotment without blocking on duplicate assignments.
+            # We only block if the user is changing the vehicle to a new, busy vehicle, OR trying to reactivate a cancelled one.
+            is_changing_vehicle = (
+                    obj.va_vehiclenumber_id != va.va_vehiclenumber_id or
+                    obj.va_vehiclenumber_mkt != va.va_vehiclenumber_mkt or
+                    obj.va_vehiclesource_id != va.va_vehiclesource_id
+            )
+            is_reactivating = va.va_status_id in [2, 3, 4, 5] and obj.va_status_id not in [2, 3, 4, 5]
+
+            if (is_changing_vehicle or is_reactivating) and obj.va_status_id not in [2, 3, 4, 5]:
+                for a in active_allotments:
+                    trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber,
+                                                          tr_vehiclenumber__iexact=_reg_no_clean)
+                    if not trips.exists():
+                        is_really_busy = True
+                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
                         break
-                if has_active:
-                    is_really_busy = True
-                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
-                    break
+                    has_active = False
+                    for t in trips:
+                        status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
+                        if status_id in [1, 12]:
+                            has_active = True
+                            break
+                    if has_active:
+                        is_really_busy = True
+                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                        break
 
             if is_really_busy:
                 messages.error(
@@ -803,14 +842,13 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
-
             # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - August 1, 2026 onwards)
             is_busy = False
             busy_enquiry = ""
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
             reg_no = obj.va_vehiclenumber.vm_registrationnumber if (
-                        vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
+                    vehicle_source in [1, 2] and obj.va_vehiclenumber) else (
                 obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
 
             if reg_no:
@@ -823,14 +861,14 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
                 for trip_item in other_trips:
                     enq_status_str = str(trip_item.tr_enquirynumber.en_status) if (
-                                trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
+                            trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
                     if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
                         continue
 
                     op_closed = (
-                                trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
+                            trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
                     fin_closed = (
-                                trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
+                            trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
                     if not (op_closed or fin_closed):
                         is_busy = True
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(
@@ -1194,10 +1232,14 @@ def load_vehicle_source(request):
     vehicle_source_name_list = []
     vehicle_source_id_list = []
 
-    # Fetch vehicles allotted in a trip
+    # Fetch vehicles allotted in a trip (created on/after 2026-08-01)
     vehicle_allotted_list = list(
-        TripdetailInfo.objects.filter(tr_vehiclesource__in=[1, 2], tc_financestatus=1).values_list('tr_vehiclenumber',
-                                                                                                   flat=True)
+        TripdetailInfo.objects.filter(
+            tr_vehiclesource__in=[1, 2],
+            tc_financestatus=1
+        ).filter(
+            Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+        ).values_list('tr_vehiclenumber', flat=True)
     )
 
     # Fetch all vehicle master records, avoiding repetitive queries
@@ -1250,57 +1292,92 @@ def load_vehicle_number(request):
     if not vehicletype_placed or not vehicletype_source:
         return JsonResponse({'vehicle_number_list': [], 'vehicle_number_list_id': []})
 
-    # Cutoff date: only allotments created on/after 2026-08-01 are considered for busy status
-    from datetime import datetime
-    from django.utils.timezone import make_aware
-    cutoff_date = make_aware(datetime(2026, 8, 1))
+    closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
-    # 2) Busy allotments are active allotments created on/after cutoff date
-    # Exclude cancelled (4), replaced (2), completed (5) allotments and dead/cancelled enquiries (5, 8)
+    # 1) Open / In-Progress Trips (Trip Started, Work in Progress, or unclosed trips created on/after 2026-08-01)
+    open_trips_qs = TripdetailInfo.objects.filter(
+        Q(tc_financestatus_id=1) |
+        Q(tr_operational_status_id__in=[1, 12]) |
+        (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
+    ).filter(
+        Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+    ).exclude(
+        tr_enquirynumber__en_status_id=8
+    )
+
+    # If current_vehicle_id and enquiry_id are passed (editing an existing allotment),
+    # allow the trip belonging to this specific enquiry so the vehicle is not excluded from its own allotment
+    if current_vehicle_id and enquiry_id:
+        open_trips_qs = open_trips_qs.exclude(tr_enquirynumber_id=enquiry_id)
+
+    open_trip_regs = set(
+        t.strip().upper() for t in open_trips_qs.values_list('tr_vehiclenumber', flat=True) if t
+    )
+
+    # 2) Busy allotments: vehicles in 'Vehicle Assigned' status (no trip created yet, or trip still active)
     busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
-        va_created_at__gte=cutoff_date
+        Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
     ).exclude(
         va_status_id__in=[2, 3, 4, 5]
     ).exclude(
-        va_enquirynumber__en_status_id__in=[5, 8]
+        va_enquirynumber__en_status_id=8
     ).exclude(va_vehiclenumber__isnull=True)
 
     busy_vehicle_ids = set()
     allotments = list(busy_allotments_qs.select_related('va_vehiclenumber'))
-    
+
     # Pre-fetch trips to avoid N+1 queries
     enquiry_ids = [a.va_enquirynumber_id for a in allotments]
     vehicle_regs = [a.va_vehiclenumber.vm_registrationnumber for a in allotments if a.va_vehiclenumber]
-    
+
     trips_qs = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids,
         tr_vehiclenumber__in=vehicle_regs
-    ).values('tr_enquirynumber_id', 'tr_vehiclenumber', 'tr_operational_status_id')
-    
-    # Build a dict: (enquiry_id, veh_reg) -> list of trip statuses
+    ).values('tr_enquirynumber_id', 'tr_vehiclenumber', 'tr_operational_status_id', 'tc_financestatus_id')
+
+    # Build a dict: (enquiry_id, veh_reg) -> list of (operational_status, finance_status)
     trip_map = {}
     for t in trips_qs:
         key = (t['tr_enquirynumber_id'], (t['tr_vehiclenumber'] or '').strip().upper())
         if key not in trip_map:
             trip_map[key] = []
-        status_id = t['tr_operational_status_id'] if t['tr_operational_status_id'] else 1
-        trip_map[key].append(status_id)
-        
+        op_status = t['tr_operational_status_id'] if t['tr_operational_status_id'] else 1
+        fin_status = t['tc_financestatus_id'] if t['tc_financestatus_id'] else 1
+        trip_map[key].append((op_status, fin_status))
+
     for a in allotments:
         if not a.va_vehiclenumber:
             continue
         key = (a.va_enquirynumber_id, (a.va_vehiclenumber.vm_registrationnumber or '').strip().upper())
-        
+
         if key in trip_map:
-            # If any trip is actively running (1 = Trip Started, 12 = Work In Progress)
-            # Other statuses like Closed (2), Settled (7), Ready for Invoice (9) mean vehicle is free
-            has_active_trip = any(s in [1, 12] for s in trip_map[key])
+            # If any trip is active / not closed
+            has_active_trip = any(
+                (op in [1, 12] or fin == 1 or (op not in closed_status_ids and fin not in closed_status_ids))
+                for op, fin in trip_map[key]
+            )
             if has_active_trip:
                 busy_vehicle_ids.add(a.va_vehiclenumber_id)
         else:
-            # If no trip exists yet, the vehicle was just assigned and is busy
+            # No trip exists yet -> vehicle is in 'Vehicle Assigned' status and is busy
             busy_vehicle_ids.add(a.va_vehiclenumber_id)
 
+    # 3) Prevent vehicles already allotted in this enquiry from being double-allotted
+    if enquiry_id:
+        existing_enq_allots = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id=enquiry_id
+        ).exclude(
+            va_status_id__in=[2, 3, 4, 5]
+        ).exclude(va_vehiclenumber__isnull=True)
+        for ea in existing_enq_allots:
+            busy_vehicle_ids.add(ea.va_vehiclenumber_id)
+
+    # 4) Exclude vehicles whose registration matches open trips
+    if open_trip_regs:
+        open_trip_vids = VehiclemasterInfo.objects.filter(
+            vm_registrationnumber__in=list(open_trip_regs)
+        ).values_list('id', flat=True)
+        busy_vehicle_ids.update(open_trip_vids)
 
     if current_vehicle_id:
         try:
@@ -1308,7 +1385,7 @@ def load_vehicle_number(request):
         except (ValueError, TypeError):
             pass
 
-    # 3) Get vehicles matching type+ownership (Active only)
+    # 5) Get vehicles matching type+ownership (Active only)
     candidate_qs = VehiclemasterInfo.objects.filter(
         Q(vm_status_id=1) | Q(vm_status__isnull=True),
         vm_vehicletype=vehicletype_placed,
@@ -1331,12 +1408,14 @@ def load_vehicle_number(request):
     seen_regs = set()
 
     for vid, reg in candidate_qs:
-        # skip duplicates
-        if reg in seen_regs:
+        clean_reg = (reg or '').strip().upper()
+        if not clean_reg or clean_reg in seen_regs:
+            continue
+        if clean_reg in open_trip_regs and not (current_vehicle_id and str(vid) == str(current_vehicle_id)):
             continue
 
         vehicle_data.append({'id': vid, 'number': reg})
-        seen_regs.add(reg)
+        seen_regs.add(clean_reg)
 
     return JsonResponse({
         'vehicle_number_list': [v['number'] for v in vehicle_data],
@@ -1887,7 +1966,7 @@ def vehicle_allotment_replace(request, allotment_id):
                     return JsonResponse({'success': True, 'new_id': existing_replacement.id})
 
                 old_vehicle_num_check = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (
-                            old_va.va_vehiclenumber_mkt or '')
+                        old_va.va_vehiclenumber_mkt or '')
                 restricted_trips = TripdetailInfo.objects.filter(
                     tr_enquirynumber=old_va.va_enquirynumber,
                     tc_financestatus_id__in=[4, 5, 7, 9]
@@ -1962,54 +2041,13 @@ def vehicle_allotment_replace(request, allotment_id):
                         'message': f"🚫 Cannot complete replacement: Selected driver license expired on {new_driver_lic_expiry}! Please select a driver with a valid license."
                     })
 
-                # 🛑 Prevent vehicle from being replaced if it's already active anywhere else
-                allotments_to_check = Vehicle_allotmentInfo.objects.none()
-                _reg_no = None
-
-                if str(new_vehicle_source_id) in ['1', '2'] and new_vehicle_id:
-                    allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_id=new_vehicle_id)
-                    try:
-                        vm = VehiclemasterInfo.objects.get(pk=new_vehicle_id)
-                        _reg_no = vm.vm_registrationnumber
-                    except VehiclemasterInfo.DoesNotExist:
-                        pass
-                elif str(new_vehicle_source_id) == '3' and new_vehicle_mkt:
-                    allotments_to_check = Vehicle_allotmentInfo.objects.filter(
-                        va_vehiclenumber_mkt__iexact=new_vehicle_mkt)
-                    _reg_no = new_vehicle_mkt
-
-                allotments_to_check = allotments_to_check.filter(
-                    Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
-                )
-
-                active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
-                is_really_busy = False
-                busy_enq_str = "Another Enquiry"
-
-                _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
-
-                for a in active_allotments:
-                    trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
-                    if not trips.exists():
-                        is_really_busy = True
-                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
-                        break
-                    has_active = False
-                    for t in trips:
-                        status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
-                        if status_id in [1, 12]:
-                            has_active = True
-                            break
-                    if has_active:
-                        is_really_busy = True
-                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
-                        break
-
-                if is_really_busy:
-                    return JsonResponse({
-                        'success': False,
-                        'message': f"🚫 Cannot complete replacement: This vehicle has been previously allotted in {busy_enq_str} and is currently active."
-                    })
+                # Validate vehicle registration format for market vehicles (Temporarily commented out)
+                # if str(new_vehicle_source_id) == '3' or new_vehicle_mkt:
+                #     if not validate_vehicle_number_format(new_vehicle_mkt):
+                #         return JsonResponse({
+                #             'success': False,
+                #             'message': f"Invalid vehicle number format '{new_vehicle_mkt}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
+                #         })
 
                 # Step 1: Create New Allotment
                 new_va = Vehicle_allotmentInfo.objects.create(
@@ -2059,9 +2097,9 @@ def vehicle_allotment_replace(request, allotment_id):
 
             # Step 3: Handle Active Trip of Old Vehicle (Way A)
             old_vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (
-                        old_va.va_vehiclenumber_mkt or '')
+                    old_va.va_vehiclenumber_mkt or '')
             new_vehicle_num = str(new_va.va_vehiclenumber) if new_va.va_vehiclenumber else (
-                        new_va.va_vehiclenumber_mkt or '')
+                    new_va.va_vehiclenumber_mkt or '')
 
             # Close active business trips for the old vehicle at the replacement handover point.
             # DO NOT overwrite vehicle or driver! The old trip was physically executed by the old vehicle.
@@ -2167,7 +2205,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     return JsonResponse({'success': True, 'new_id': existing_replacement.id})
 
                 old_vehicle_num_check = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (
-                            old_va.va_vehiclenumber_mkt or '')
+                        old_va.va_vehiclenumber_mkt or '')
                 restricted_trips = TripdetailInfo.objects.filter(
                     tr_enquirynumber=old_va.va_enquirynumber,
                     tc_financestatus_id__in=[4, 5, 7, 9]

@@ -293,7 +293,18 @@ def enquirynote_list(request):
     cs_users = User_extInfo.objects.select_related('user').filter(user_id=user_id)
 
 
-    if not is_admin_or_manager:
+    if first_name and 'naresh' in first_name.lower():
+        # Naresh sees only MAA branch details (Branch ID 2)
+        maa_user_ids = User_extInfo.objects.filter(
+            emp_branch_id=2,
+            user__is_active=True
+        ).values_list('user_id', flat=True)
+        enquirynote_queryset = enquirynote_queryset.filter(en_assignedto_id__in=maa_user_ids)
+        
+        if created_by_filter and created_by_filter != 'all':
+            enquirynote_queryset = enquirynote_queryset.filter(en_assignedto=created_by_filter)
+            
+    elif not is_admin_or_manager:
         if created_by_filter and created_by_filter != 'all':
             enquirynote_queryset = enquirynote_queryset.filter(en_assignedto=created_by_filter)
         elif created_by_filter == 'all':

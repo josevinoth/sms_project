@@ -1,6 +1,10 @@
+import io
 import json
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
+from django.template.loader import get_template
+from django.http import HttpResponse, JsonResponse
+from xhtml2pdf import pisa
 from ..forms import PkretrivalForm
 from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
 from ..sub_models.stock_maintenance_mod import StockMaintenance
@@ -313,3 +317,108 @@ def pk_retrival_multi_update(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+
+@login_required(login_url='login_page')
+def pk_stock_retrieval_pdf(request, job_no):
+    """
+    Generates a printable PDF Stock Retrieval Slip / Pick List for a specific Job.
+    Used by the stock/warehouse team as a reference checklist to physically retrieve items.
+    """
+    first_name = request.session.get('first_name', '')
+    user_full_name = request.user.get_full_name() or request.user.username if request.user.is_authenticated else first_name
+
+    costing_items = PkcostingInfo.objects.filter(
+        ct_job_no=job_no, 
+        ct_cost_type=8,
+        ct_stock_status__in=[1, 3]
+    ).order_by('ct_stock_type__pk_stocktype', 'ct_part_code__pc_code', 'id')
+
+    # If no items with status 1 or 3, fallback to all cost_type=8 items for this job
+    if not costing_items.exists():
+        costing_items = PkcostingInfo.objects.filter(
+            ct_job_no=job_no, 
+            ct_cost_type=8
+        ).order_by('ct_stock_type__pk_stocktype', 'ct_part_code__pc_code', 'id')
+
+    if not costing_items.exists():
+        return HttpResponse(f"No stock retrieval items found for Job {job_no}.", content_type="text/plain")
+
+    first_item = costing_items.first()
+    customer_name = (
+        first_item.ct_assessment_num.na_customer_name.cu_name 
+        if first_item.ct_assessment_num and first_item.ct_assessment_num.na_customer_name 
+        else (first_item.ct_customer_name.cu_name if first_item.ct_customer_name else '-')
+    )
+    customer_po = first_item.ct_customer_po.po_num if first_item.ct_customer_po else ''
+    product_item = first_item.ct_po_dimension.pod_item if first_item.ct_po_dimension else ''
+    assessment_num = str(first_item.ct_assessment_num) if first_item.ct_assessment_num else ''
+    job_qty = float(first_item.ct_na_quantity or 1.0)
+
+    # Group and aggregate quantities per partcode to match the retrieval list
+    grouped_items = {}
+    for item in costing_items:
+        pc_code = item.ct_part_code.pc_code if item.ct_part_code else 'General'
+        key = pc_code
+
+        # Format dimensions if wood
+        dims = ''
+        if item.ct_length_req or item.ct_width_req or item.ct_height_req:
+            l = float(item.ct_length_req or 0)
+            w = float(item.ct_width_req or 0)
+            h = float(item.ct_height_req or 0)
+            if l > 0 or w > 0 or h > 0:
+                dims = f"{l:g} x {w:g} x {h:g}"
+
+        description = (
+            item.ct_part_code.pc_stock_description.stock_description 
+            if item.ct_part_code and item.ct_part_code.pc_stock_description 
+            else (str(item.ct_stock_description) if item.ct_stock_description else '')
+        )
+        stock_type = str(item.ct_stock_type) if item.ct_stock_type else ''
+        uom = str(item.ct_uom) if item.ct_uom else (str(item.ct_part_code.pc_uom) if item.ct_part_code and item.ct_part_code.pc_uom else 'Nos')
+        item_qty = float(item.ct_na_quantity or 0) * float(item.ct_quantity_req or 0)
+
+        if key not in grouped_items:
+            grouped_items[key] = {
+                'part_code': pc_code,
+                'stock_type': stock_type,
+                'description': description,
+                'dimensions': dims,
+                'quantity': item_qty,
+                'uom': uom,
+            }
+        else:
+            grouped_items[key]['quantity'] += item_qty
+
+    items_list = list(grouped_items.values())
+    total_qty = sum(i['quantity'] for i in items_list)
+
+    context = {
+        'job_no': job_no,
+        'customer_name': customer_name,
+        'customer_po': customer_po,
+        'product_item': product_item,
+        'assessment_num': assessment_num,
+        'job_qty': job_qty,
+        'current_datetime': datetime.now().strftime('%d-%m-%Y %H:%M'),
+        'issued_by': user_full_name,
+        'items': items_list,
+        'total_count': len(items_list),
+        'total_qty': total_qty,
+    }
+
+    template = get_template('asset_mgt_app/pk_stock_retrieval_pdf.html')
+    html = template.render(context)
+
+    pdf_buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+    if pisa_status.err:
+        return HttpResponse("Error generating Stock Retrieval PDF.", content_type="text/plain")
+
+    clean_job_no = str(job_no).replace('/', '_').replace('\\', '_')
+    filename = f"Stock_Retrieval_{clean_job_no}.pdf"
+
+    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response

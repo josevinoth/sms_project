@@ -122,10 +122,23 @@ def pregateintruck_add(request, pregateintruck_id=0):
                         for g in gateins:
                             customer = g.gatein_customer
                             if customer.cu_automatic_email == 'YES':
+                                from ..sub_models.emailmaster_mod import Emailmaster
                                 recipient_list = [customer.cu_email]
+                                cc_list = []
+                                try:
+                                    email_master = Emailmaster.objects.filter(
+                                        em_Customer_name=customer,
+                                        em_emailtype__email_type__icontains='Alert'
+                                    ).first()
+                                    if email_master and email_master.em_to_names:
+                                        recipient_list = [e.strip() for e in email_master.em_to_names.split(',') if e.strip()]
+                                        if email_master.em_cc_names:
+                                            cc_list = [e.strip() for e in email_master.em_cc_names.split(',') if e.strip()]
+                                except Exception as em_err:
+                                    print(f"Error fetching Email Master for Truck Report: {em_err}")
                                 subject = f"{customer.cu_name} - Truck Wise Report (Auto)"
                                 message = "Dear Customer,\n\nPlease find the Gate-In Truck report attached.\n\nRegards,\nBVM Warehouse Team"
-                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message)
+                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message, cc_list=cc_list)
                                 break
                 except Exception as e:
                     print(f"Auto-Email Error: {e}")
@@ -171,10 +184,23 @@ def pregateintruck_add(request, pregateintruck_id=0):
                         for g in gateins:
                             customer = g.gatein_customer
                             if customer.cu_automatic_email == 'YES':
+                                from ..sub_models.emailmaster_mod import Emailmaster
                                 recipient_list = [customer.cu_email]
+                                cc_list = []
+                                try:
+                                    email_master = Emailmaster.objects.filter(
+                                        em_Customer_name=customer,
+                                        em_emailtype__email_type__icontains='Alert'
+                                    ).first()
+                                    if email_master and email_master.em_to_names:
+                                        recipient_list = [e.strip() for e in email_master.em_to_names.split(',') if e.strip()]
+                                        if email_master.em_cc_names:
+                                            cc_list = [e.strip() for e in email_master.em_cc_names.split(',') if e.strip()]
+                                except Exception as em_err:
+                                    print(f"Error fetching Email Master for Truck Report: {em_err}")
                                 subject = f"{customer.cu_name} - Truck Wise Report (Auto)"
                                 message = "Dear Customer,\n\nPlease find the Gate-In Truck report attached.\n\nRegards,\nBVM Warehouse Team"
-                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message)
+                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message, cc_list=cc_list)
                                 break
                 except Exception as e:
                     print(f"Auto-Email Error: {e}")
@@ -286,7 +312,7 @@ def pregatein_gatepass_pdf_download(request, pregatein_id):
 
 from datetime import datetime
 
-def send_truck_wise_report_logic(pre_gatein_id, recipient_list, subject, message):
+def send_truck_wise_report_logic(pre_gatein_id, recipient_list, subject, message, cc_list=None):
     # --- Excel setup ---
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -362,7 +388,8 @@ def send_truck_wise_report_logic(pre_gatein_id, recipient_list, subject, message
         recipient_list=recipient_list,
         attachment=excel_file,
         attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        file_name='Truck_Wise_Report.xlsx'
+        file_name='Truck_Wise_Report.xlsx',
+        cc_list=cc_list
     )
 
 @login_required(login_url='login_page')
@@ -444,9 +471,10 @@ def pregateintruck_list_ajax(request):
 
     data = []
     for item in queryset[start:start+length]:
+        gatein_pre_id = item.pregatein_number_id if item.pregatein_number_id else item.id
         edit_btn = f'''
         <div class="d-flex justify-content-center gap-1">
-            <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;" href="/SMS/pregateintruck_update/{item.id}" >
+            <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;" href="/SMS/gatein_pre_update/{gatein_pre_id}/" >
                 <i class="far fa-edit"></i>
             </a>
         </div>'''

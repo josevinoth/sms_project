@@ -261,6 +261,55 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                                    f"Cannot add more consignments. The limit of {total_allowed} consignments has been reached for this enquiry.")
                     return redirect('enquirynote_list')
 
+                status_id = int(request.POST.get('co_status') or 0)
+                posted_trip_id = request.POST.get('co_tripnumber')
+                trip_obj = None
+
+                # 1. Require trip selection for standard (non-cancellation) CNotes
+                if status_id not in [9, 10]:
+                    if not posted_trip_id or not str(posted_trip_id).strip():
+                        messages.error(request, "Trip Number is mandatory. Please select a valid Trip to create a Consignment Note.")
+                        return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enq_id}")
+
+                # 2. Validate trip if provided
+                if posted_trip_id and str(posted_trip_id).strip():
+                    try:
+                        t_id = int(posted_trip_id)
+                        trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=enq_id).first()
+                    except (ValueError, TypeError):
+                        trip_obj = None
+
+                    if not trip_obj and status_id not in [9, 10]:
+                        messages.error(request, "Selected Trip does not exist or does not belong to this enquiry.")
+                        return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enq_id}")
+
+                    if trip_obj and trip_obj.tr_consignmentnumber_id is not None:
+                        linked_cnote_num = trip_obj.tr_consignmentnumber.co_consignmentnumber if trip_obj.tr_consignmentnumber else ""
+                        messages.error(request, f"Trip '{trip_obj.tr_tripnumber}' is already linked to Consignment Note '{linked_cnote_num}'. Each trip can only have one Consignment Note.")
+                        return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enq_id}")
+
+                # 3. Determine vehicle number
+                target_vehicle = ""
+                if trip_obj and trip_obj.tr_vehiclenumber:
+                    target_vehicle = trip_obj.tr_vehiclenumber.strip()
+                elif request.POST.get('co_vehicelnumber'):
+                    target_vehicle = request.POST.get('co_vehicelnumber').strip()
+                elif consignment_detail.co_vehicelnumber:
+                    target_vehicle = consignment_detail.co_vehicelnumber.strip()
+
+                # 4. Check unique vehicle per enquiry
+                if target_vehicle:
+                    dup_cnote = ConsignmentdetailInfo.objects.filter(
+                        co_enquirynumber_id=enq_id,
+                        co_vehicelnumber__iexact=target_vehicle
+                    ).first()
+                    if dup_cnote:
+                        messages.error(
+                            request,
+                            f"Vehicle '{target_vehicle}' is already assigned to Consignment Note '{dup_cnote.co_consignmentnumber}' for this enquiry. Each vehicle can only have one Consignment Note per enquiry."
+                        )
+                        return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enq_id}")
+
                 # Determine branch name using centralized utility
                 branch_id = get_session_branch_id(request)
 
@@ -284,23 +333,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 
                 consignment_detail.co_vehicletype = vehicle_type
                 consignment_detail.co_createdby = request.user
+                if target_vehicle:
+                    consignment_detail.co_vehicelnumber = target_vehicle
                 consignment_detail.save()
 
-                # Link selected Trip to this consignment and inherit vehicle number (validate same enquiry)
-                posted_trip_id = request.POST.get('co_tripnumber')
-                if posted_trip_id:
-                    try:
-                        t_id = int(posted_trip_id)
-                        trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=enq_id).first()
-                        if trip_obj:
-                            trip_obj.tr_consignmentnumber = consignment_detail
-                            trip_obj.save()
-
-                            if not consignment_detail.co_vehicelnumber and trip_obj.tr_vehiclenumber:
-                                consignment_detail.co_vehicelnumber = trip_obj.tr_vehiclenumber
-                                consignment_detail.save(update_fields=['co_vehicelnumber'])
-                    except (ValueError, TypeError):
-                        pass
+                # Link selected Trip to this consignment and inherit vehicle number
+                if trip_obj:
+                    trip_obj.tr_consignmentnumber = consignment_detail
+                    trip_obj.save()
 
                 # --- NEW LOGIC: Handle Cancellation without Trip ---
                 status_id = int(request.POST.get('co_status') or 0)
@@ -329,6 +369,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             tr_vehicletype_placed=default_vehicletype,
                             tr_category=default_category,
                             tc_financestatus_id=trip_status_id,
+                            tr_operational_status_id=trip_status_id,
                             tc_cancellation=cancellation_charge,
                             tc_cancellation_check=(status_id == 9),
                             tr_updated_by=request.user
@@ -353,25 +394,61 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
                 con_det_form = ConsignmentdetailaddForm(request.POST, instance=consignmentdetail)
                 if con_det_form.is_valid():
-                    consignment_detail = con_det_form.save(commit=False)
-                    consignment_detail.co_vehicletype = vehicle_type
-                    consignment_detail.save()
-
-                    # Link selected Trip to this consignment and inherit vehicle number (Works for Edit mode too)
+                    enq_id = consignmentdetail.co_enquirynumber_id
+                    status_id = int(request.POST.get('co_status') or 0)
                     posted_trip_id = request.POST.get('co_tripnumber')
-                    if posted_trip_id:
+                    trip_obj = None
+
+                    # If trip is posted, validate it
+                    if posted_trip_id and str(posted_trip_id).strip():
                         try:
                             t_id = int(posted_trip_id)
-                            trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=consignment_detail.co_enquirynumber_id).first()
-                            if trip_obj:
-                                trip_obj.tr_consignmentnumber = consignment_detail
-                                trip_obj.save()
-
-                                if not consignment_detail.co_vehicelnumber and trip_obj.tr_vehiclenumber:
-                                    consignment_detail.co_vehicelnumber = trip_obj.tr_vehiclenumber
-                                    consignment_detail.save(update_fields=['co_vehicelnumber'])
+                            trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=enq_id).first()
                         except (ValueError, TypeError):
-                            pass
+                            trip_obj = None
+
+                        if not trip_obj and status_id not in [9, 10]:
+                            messages.error(request, "Selected Trip does not exist or does not belong to this enquiry.")
+                            return redirect(f"{reverse('consignmentdetail_update', kwargs={'consignmentdetail_id': consignmentdetail_id})}?enq_id={enq_id}")
+
+                        if trip_obj and trip_obj.tr_consignmentnumber_id and trip_obj.tr_consignmentnumber_id != consignmentdetail.id:
+                            linked_cnote_num = trip_obj.tr_consignmentnumber.co_consignmentnumber if trip_obj.tr_consignmentnumber else ""
+                            messages.error(request, f"Trip '{trip_obj.tr_tripnumber}' is already linked to Consignment Note '{linked_cnote_num}'. Each trip can only have one Consignment Note.")
+                            return redirect(f"{reverse('consignmentdetail_update', kwargs={'consignmentdetail_id': consignmentdetail_id})}?enq_id={enq_id}")
+
+                    # Determine target vehicle
+                    target_vehicle = ""
+                    if trip_obj and trip_obj.tr_vehiclenumber:
+                        target_vehicle = trip_obj.tr_vehiclenumber.strip()
+                    elif request.POST.get('co_vehicelnumber'):
+                        target_vehicle = request.POST.get('co_vehicelnumber').strip()
+                    elif consignmentdetail.co_vehicelnumber:
+                        target_vehicle = consignmentdetail.co_vehicelnumber.strip()
+
+                    # Check duplicate vehicle within same enquiry (exclude current CNote)
+                    if target_vehicle and enq_id:
+                        dup_cnote = ConsignmentdetailInfo.objects.filter(
+                            co_enquirynumber_id=enq_id,
+                            co_vehicelnumber__iexact=target_vehicle
+                        ).exclude(id=consignmentdetail.id).first()
+                        if dup_cnote:
+                            messages.error(
+                                request,
+                                f"Vehicle '{target_vehicle}' is already assigned to Consignment Note '{dup_cnote.co_consignmentnumber}' for this enquiry. Each vehicle can only have one Consignment Note per enquiry."
+                            )
+                            return redirect(f"{reverse('consignmentdetail_update', kwargs={'consignmentdetail_id': consignmentdetail_id})}?enq_id={enq_id}")
+
+                    consignment_detail = con_det_form.save(commit=False)
+                    consignment_detail.co_vehicletype = vehicle_type
+                    if target_vehicle:
+                        consignment_detail.co_vehicelnumber = target_vehicle
+                    consignment_detail.save()
+
+                    # Unlink any previous trip if trip changed, and link the new trip
+                    if trip_obj:
+                        TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).exclude(id=trip_obj.id).update(tr_consignmentnumber=None)
+                        trip_obj.tr_consignmentnumber = consignment_detail
+                        trip_obj.save()
                     status_id = int(request.POST.get('co_status') or 0)
                     if status_id in [9, 10]:
                         cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
@@ -398,6 +475,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                                 tr_vehicletype_placed=default_vehicletype,
                                 tr_category=default_category,
                                 tc_financestatus_id=trip_status_id,
+                                tr_operational_status_id=trip_status_id,
                                 tc_cancellation=cancellation_charge,
                                 tc_cancellation_check=(status_id == 9),
                                 tr_updated_by=request.user
@@ -407,6 +485,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             existing_dummy.tc_cancellation = cancellation_charge
                             existing_dummy.tc_cancellation_check = (status_id == 9)
                             existing_dummy.tc_financestatus_id = trip_status_id
+                            existing_dummy.tr_operational_status_id = trip_status_id
                             existing_dummy.save()
 
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
@@ -753,6 +832,8 @@ def consignment_note_pdf(request, consignment_note_id=0):
                 goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
             if goods.cg_hawbno:
                 goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+            if getattr(goods, 'cg_boeno', None):
+                goods.cg_boeno = goods.cg_boeno.replace('/', '/ ').replace(',', ', ')
             if goods.cg_ebillno:
                 goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
 

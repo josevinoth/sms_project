@@ -23,9 +23,14 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 @login_required(login_url='login_page')
 def home_page(request):
     first_name=request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    user_ext = User_extInfo.objects.get(user=user_id)
-    role=User_extInfo.objects.get(user=user_id).emp_role
+    user_id = request.session.get('ses_userID') or request.user.id
+    try:
+        user_ext = User_extInfo.objects.get(user=user_id)
+        if user_ext.linked_customer or (user_ext.emp_role and user_ext.emp_role.role_name.lower() == 'customer') or getattr(user_ext, 'is_lp_customer', False):
+            return redirect('customer_dashboard')
+    except User_extInfo.DoesNotExist:
+        user_ext = None
+    role=user_ext.emp_role if user_ext else None
     department=User_extInfo.objects.get(user=user_id).department
     bussiness_solution=User_extInfo.objects.get(user=user_id).emp_organisation
     ses_username = request.session.get('ses_username', request.POST.get('username'))
@@ -50,9 +55,10 @@ def home_page(request):
     approval_count = TripdetailInfo.objects.filter(
         Q(tr_category=1),
         Q(tr_dock_out_time__isnull=False),
+        Q(tr_departeddate__isnull=True),
         Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
     ).exclude(
-        tr_approval__ta_approval_status__id=1
+        tc_financestatus_id__in=[1, 2, 3, 4, 5, 7, 9, 10, 11]
     ).count()
     approval_count_wms1 = HighvalueInfo.objects.filter( ( Q(hc_commodity__id__gte=11, hc_commodity__id__lte=14) |
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=2)

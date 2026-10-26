@@ -11,7 +11,7 @@ def stock_description_add(request, sd_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     
-    sd_list = Stockdescription.objects.all().order_by('id')
+    sd_list = Stockdescription.objects.all().order_by('-id')
     page_number = request.GET.get('page')
     per_page = request.GET.get('per_page')
 

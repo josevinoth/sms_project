@@ -40,9 +40,15 @@
                 <i class="fas fa-arrow-left"></i> BACK
             </a>
             {% endif %}
+            {% if is_vendor_flow %}
+            <a href="{% url 'stock_maintenance_add_for_vendor' %}?new=1" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.85rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD NEW
+            </a>
+            {% else %}
             <a href="{% url 'stock_maintenance_add' %}?new=1" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.85rem; text-decoration: none;">
                 <i class="fas fa-plus"></i> ADD NEW
             </a>
+            {% endif %}
         </div>
     </div>
     
@@ -194,68 +200,8 @@
                 </div>
             </div>
         </div>
-    </form>m>
+    </form>
 
-    <div class="table-container-modern mt-4">
-        <div class="form-section-title"><i class="fas fa-list-ul"></i> Stock Maintenance Records</div>
-        <div class="table-responsive">
-            <table id="stock_maintenance_table" class="modern-table text-center">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Stock Purchase No</th>
-                        <th>Invoice Details</th>
-                        <th>Stock Type</th>
-                        <th>Part Code</th>
-                        <th>Description</th>
-                        <th>Dim (T x W x L)</th>
-                        <th>UOM</th>
-                        <th>Qty/Count</th>
-                        <th>Total Val (CFT/SQFT)</th>
-                        <th>Rate</th>
-                        <th>Total Price</th>
-                        <th>Updated By</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                    <tr class="modern-tr">
-                        <td class="font-weight-bold">#{{ item.id }}</td>
-                        <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
-                        <td>
-                            <div class="font-weight-bold text-dark">{{ item.sm_invoice_no }}</div>
-                            <div class="small text-muted">{{ item.sm_invoice_date }}</div>
-                        </td>
-                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
-                        <td class="font-weight-bold">{{ item.sm_partcode.pc_code }}</td>
-                        <td class="text-left" style="max-width: 200px; white-space: normal;">{{ item.sm_description }}</td>
-                        <td>{{ item.sm_thickness }} x {{ item.sm_width }} x {{ item.sm_length }}</td>
-                        <td>{{ item.sm_uom.unit_of_measure }}</td>
-                        <td class="font-weight-bold text-dark">{{ item.sm_count }}</td>
-                        <td class="font-weight-bold text-teal">{{ item.sm_total_cft }}</td>
-                        <td>₹{{ item.sm_per_unit_cost }}</td>
-                        <td class="font-weight-bold text-primary">₹{{ item.sm_total_price }}</td>
-                        <td style="font-size: 0.85rem;">
-                            <div class="font-weight-bold text-dark">{{ item.sm_updated_by.first_name|default:item.sm_updated_by.username|default:"System" }}</div>
-                            <div class="text-muted">{{ item.sm_updated_at|date:"d-M-Y H:i" }}</div>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center" style="gap: 8px;">
-                                <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem;" title="Edit">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                                <a href="{% url 'stock_maintenance_delete' item.id %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c !important;" title="Delete" onclick="return confirm('Are you sure you want to delete this item?');">
-                                    <i class="far fa-trash-alt"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 {% endblock content %}

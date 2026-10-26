@@ -11,6 +11,9 @@ PUBLIC_PREFIXES = (
     '/SMS/driver/',
     '/SMS/password_reset',
     '/SMS/privacy-policy',
+    '/SMS/customer_login',
+    '/SMS/customer_register',
+    '/SMS/ajax/get-customer-departments',
     '/admin/',
     '/static/',
     '/media/',
@@ -26,6 +29,9 @@ COMMON_PREFIXES = (
     '/SMS/asset_qr_id',
     '/SMS/goods_qr_id',
     '/SMS/api/',
+    '/SMS/SMS/customer_',
+    '/SMS/customer_',
+    '/SMS/ajax/',
 )
 
 # Module Route Prefixes Mapping
@@ -369,6 +375,14 @@ class GlobalModuleAuthorizationMiddleware:
             # If path matches one or more modules, check if user has access to AT LEAST ONE
             has_access = any(mod in allowed_modules for mod in matched_modules)
             if not has_access:
+                is_cust = getattr(user_ext, 'linked_customer', None) or (user_ext.emp_role and user_ext.emp_role.role_name.lower() == 'customer') or getattr(user_ext, 'is_lp_customer', False)
+                if is_cust:
+                    messages.error(
+                        request,
+                        f"Access Restricted: Customer accounts do not have access to internal staff modules ({', '.join(m.upper() for m in matched_modules)})."
+                    )
+                    return redirect('customer_dashboard')
+
                 messages.error(
                     request,
                     f"Access Denied: The {', '.join(m.upper() for m in matched_modules)} module is not enabled for your account."

@@ -288,13 +288,25 @@ def expense_ext_add(request, expense_ext_id=0):
 
 @login_required(login_url='login_page')
 def expense_ext_list(request):
-    first_name = request.session.get('first_name')  # If needed for context
-    # Fetch all expense attachments
-    expense_ext_list = ExpenseExtinfo.objects.all()
+    first_name = request.session.get('first_name')
+    show_all = request.GET.get('show_all') == 'true'
+
+    # Fetch expense attachments with select_related to optimize rendering
+    expense_ext_qs = ExpenseExtinfo.objects.select_related(
+        'exp_ext_expense_number', 'exp_ext_branch', 'exp_ext_unit', 'exp_ext_customer_name', 'exp_ext_credit_ledger'
+    ).order_by('-id')
+
+    if show_all:
+        page_obj = expense_ext_qs
+    else:
+        paginator = Paginator(expense_ext_qs, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
     context = {
-        'expense_ext_list': expense_ext_list,
+        'expense_ext_list': page_obj,
         'first_name': first_name,
+        'show_all': show_all,
     }
     return render(request, "asset_mgt_app/expense_ext_list.html", context)
 

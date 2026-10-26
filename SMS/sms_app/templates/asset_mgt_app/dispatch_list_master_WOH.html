@@ -1,5 +1,3 @@
-{% block content %}
-
 <hr>
 
 <!--    <div class="col-md-1">-->
@@ -7,11 +5,62 @@
 <!--        <i class="fas fa-arrow-left"></i>-->
 <!--      </a>-->
 <!--    </div>-->
+<style>
+/* E-way bill expired row highlighting: soft light red */
+#dispatch_master_list tbody tr.expired-row td,
+table#dispatch_master_list.dataTable tbody tr.expired-row td,
+table.dataTable.modern-table tbody tr.expired-row td {
+    background-color: #fee2e2 !important;
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #991b1b !important;
+    font-weight: 500;
+}
+#dispatch_master_list tbody tr.expired-row:hover td,
+table#dispatch_master_list.dataTable tbody tr.expired-row:hover td,
+table.dataTable.modern-table tbody tr.expired-row:hover td {
+    background-color: #fecaca !important;
+    background-color: rgba(239, 68, 68, 0.24) !important;
+    color: #7f1d1d !important;
+}
+#dispatch_master_list tbody tr.expired-row td a,
+#dispatch_master_list tbody tr.expired-row td span:not(.badge),
+#dispatch_master_list tbody tr.expired-row td b {
+    color: #991b1b !important;
+}
+#dispatch_master_list tbody tr.expired-row td.select-checkbox {
+    cursor: not-allowed !important;
+}
+#dispatch_master_list tbody tr.expired-row td.select-checkbox:before {
+    border-color: #ef4444 !important;
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+}
+
+/* Dark mode support */
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td,
+[data-theme="dark"] table#dispatch_master_list.dataTable tbody tr.expired-row td,
+[data-theme="dark"] table.dataTable.modern-table tbody tr.expired-row td {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+}
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row:hover td,
+[data-theme="dark"] table#dispatch_master_list.dataTable tbody tr.expired-row:hover td,
+[data-theme="dark"] table.dataTable.modern-table tbody tr.expired-row:hover td {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    color: #fee2e2 !important;
+}
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td a,
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td span:not(.badge),
+[data-theme="dark"] #dispatch_master_list tbody tr.expired-row td b {
+    color: #fca5a5 !important;
+}
+</style>
+
 <div class="container-fluid shadow-box-table p-3">
     <div class="col-md-1.5">
-        <a href="" id='add_btn' class="btn btn-warning" onclick="return confirm('Are you sure to Check-Out this stock?');">
-            <i class="fas fa-plus"></i> Check-Out
-        </a>
+        <button type="button" id='add_btn' class="btn btn-warning">
+            <i class="fas fa-plus mr-1"></i> Check-Out
+        </button>
     </div>
     <br>
     <table  id="dispatch_master_list" class="table table-hover modern-table w-100">
@@ -43,9 +92,9 @@
         </thead>
         <tbody>
         {% for goodsinfo in dispatch_master_list %}
-        <tr data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}">
+        <tr data-stock="{{ goodsinfo.wh_qr_rand_num|default:''|cut:' ' }}" data-expiry="{{ goodsinfo.loadingbay.lb_validity_date|date:'Y-m-d' }}" class="{% if goodsinfo.is_expired %}expired-row{% endif %}">
             <td></td>
-            <td><input type="checkbox" class="row-checkbox"></td>
+            <td></td>
             <td>{{ goodsinfo.wh_job_no }}</td>
             <td>{{ goodsinfo.wh_consigner }}</td>
             <td>{{ goodsinfo.wh_consignee }}</td>
@@ -145,9 +194,18 @@
 <!--} );-->
 <!--</script>-->
 <script>
-    $(document).ready(function () {
-    // Initialize DataTable
-    var table = new DataTable('#dispatch_master_list', {
+$(document).ready(function () {
+    // Helper function for user alerts (supports SweetAlert2 if loaded, fallback to native alert/confirm)
+    function notifyAlert(title, text, icon) {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({ title: title, text: text, icon: icon || 'info' });
+        } else {
+            alert((title ? title + ': ' : '') + text);
+        }
+    }
+
+    // Initialize DataTable with unique variable name
+    var masterTable = new DataTable('#dispatch_master_list', {
         responsive: {
             details: { type: 'inline', target: 0 }
         },
@@ -164,60 +222,38 @@
 
     // Function to highlight expired rows
     function highlightExpiredRows() {
+        let today = new Date().toISOString().split('T')[0];
         $('#dispatch_master_list tbody tr').each(function () {
             let expiry = $(this).data('expiry');
-            if (expiry) {
-                let today = new Date().toISOString().split('T')[0];
-                if (expiry < today) {
-                    $(this).css({ "background-color": "red", "color": "white" });
-                    let checkbox = $(this).find('.row-checkbox');
-                    checkbox.prop("disabled", true);
-
-                    // Remove old handlers to avoid duplicate alerts
-                    $(this).off('click').on('click', function () {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Expired!",
-                            text: "This stock is expired. You cannot select it!"
-                        });
-                    });
-                }
+            let isExpired = $(this).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+            if (isExpired) {
+                $(this).addClass('expired-row');
+                $(this).find('td').css({ "background-color": "rgba(239, 68, 68, 0.15)", "color": "#991b1b" });
             }
         });
     }
 
     // Highlight expired rows on load + redraw
     highlightExpiredRows();
-    table.on('draw', function () {
+    masterTable.on('draw', function () {
         highlightExpiredRows();
     });
 
-    // Checkbox confirmation with auto reload
-    $(document).on("change", ".expiry-checkbox", function () {
-        if (this.checked) {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to mark this as expired?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, mark it!",
-                cancelButtonText: "No, cancel"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: "Marked!",
-                        text: "The row has been marked as expired.",
-                        icon: "success",
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        // Auto refresh after success
-                        window.location.reload();
-                    });
-                } else {
-                    this.checked = false; // reset if cancelled
-                }
-            });
+    // Prevent selection of expired rows
+    masterTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+        let rowNode = dt.row(cell.index().row).node();
+        let expiry = $(rowNode).data('expiry');
+        let today = new Date().toISOString().split('T')[0];
+        if ($(rowNode).hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today)) {
+            e.preventDefault();
+            notifyAlert("Expired!", "This stock is expired. You cannot select it!", "error");
+        }
+    });
+
+    // Alert if user clicks on an expired row
+    $(document).on('click', '#dispatch_master_list tbody tr.expired-row', function (e) {
+        if (!$(e.target).closest('button, form, a, input').length) {
+            notifyAlert("Expired!", "This stock is expired. You cannot select it!", "error");
         }
     });
 
@@ -269,23 +305,44 @@
     // Add button logic
     $('#add_btn').on('click', function (e) {
         e.preventDefault();
-        let selectedIndexes = table.rows({ selected: true }).indexes();
-        let selectedData = table.rows({ selected: true }).data();
-        let len1 = selectedIndexes.length;
-        console.log("Total selected: ", len1);
+        let selectedRows = masterTable.rows({ selected: true });
+        let count = selectedRows.count();
+        console.log("Total selected: ", count);
+
+        if (count === 0) {
+            notifyAlert("No stock selected", "Please select at least one stock to check out.", "info");
+            return;
+        }
 
         var elements = [];
-        selectedIndexes.each(function (idx, loopIndex) {
-            let row = table.row(idx).node();
-            let expiry = $(row).data('expiry');
-            let today = new Date().toISOString().split('T')[0];
+        let today = new Date().toISOString().split('T')[0];
 
-            if (!expiry || expiry >= today) {
-                elements.push(selectedData[loopIndex][12]); // col 12 = WH Stock Number
+        selectedRows.every(function () {
+            let rowNode = this.node();
+            let $row = $(rowNode);
+            let expiry = $row.data('expiry');
+            let isExpired = $row.hasClass('expired-row') || (expiry && String(expiry).trim() !== '' && String(expiry).trim() < today);
+
+            if (!isExpired) {
+                let stockNum = $row.attr('data-stock') || $row.data('stock');
+                if (!stockNum) {
+                    let rowData = this.data();
+                    if (rowData && rowData[12]) {
+                        stockNum = $('<div>').html(rowData[12]).text().trim();
+                    }
+                }
+                if (stockNum && String(stockNum).trim() !== '') {
+                    elements.push(String(stockNum).trim());
+                }
             }
         });
 
-        if (elements.length > 0) {
+        if (elements.length === 0) {
+            notifyAlert("No valid items selected!", "Please select non-expired stock only.", "error");
+            return;
+        }
+
+        function executeCheckout() {
             $.ajax({
                 url: '{% url "dispatch_add_goods" %}',
                 type: 'POST',
@@ -293,19 +350,34 @@
                     'myList[]': elements,
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
-                success: function () {
+                success: function (response) {
                     location.reload();
+                },
+                error: function (xhr) {
+                    alert('Error: ' + (xhr.responseText || 'Failed to dispatch stock.'));
+                }
+            });
+        }
+
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                title: 'Check-Out Stock',
+                text: 'Are you sure you want to check out ' + elements.length + ' selected stock(s)?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Check-Out'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeCheckout();
                 }
             });
         } else {
-            Swal.fire({
-                icon: "error",
-                title: "No valid items selected!",
-                text: "Please select non-expired stock only."
-            });
+            if (confirm('Are you sure you want to check out ' + elements.length + ' selected stock(s)?')) {
+                executeCheckout();
+            }
         }
     });
 });
-
 </script>
-{% endblock content %}

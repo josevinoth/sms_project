@@ -56,7 +56,10 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['na_customer_new_name'] = customer_new_name_id
-            form = PkquotationsummaryForm(instance=quotationsummary)
+            # Ensure dependent costs (e.g. HT Cost per job type) are recalculated before aggregation
+            from .pk_quotation_view import recalculate_dependent_costs
+            recalculate_dependent_costs(needassessment_id, request)
+
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
 
             # Optimized single-pass aggregation
@@ -308,12 +311,24 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     terms_condition=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_terms_condition
     client_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_client_scope
     bvm_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_bvm_scope
+    if not needassessment_id and quotation_id:
+        qs_obj = PkquotationsummaryInfo.objects.filter(pk=quotation_id).first()
+        if qs_obj and qs_obj.qs_assessment_num:
+            needassessment_id = qs_obj.qs_assessment_num.id if hasattr(qs_obj.qs_assessment_num, 'id') else qs_obj.qs_assessment_num
+
     needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
-    quotation = list(Nadimension.objects.filter(nad_assess_num=needassessment_id))
-    for q in quotation:
-        q.formatted_assess_num = str(q.nad_assess_num.na_assessment_num).replace('_', '_ ')
-    # get requirement type from need assessment dimension model
-    na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+    
+    # Filter dimensions: Only include dimensions that were actually quoted (exist in PkquotationInfo for this assessment)
+    quoted_dim_ids = list(
+        PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
+        .values_list('pkqt_requirement_id', flat=True)
+        .distinct()
+    )
+
+    if quoted_dim_ids:
+        na_req = Nadimension.objects.filter(id__in=quoted_dim_ids)
+    else:
+        na_req = Nadimension.objects.filter(nad_assess_num=needassessment_id)
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
     margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
     gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
@@ -358,7 +373,17 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_total=0)
         # total_sum=round((total_sum+total_cost),2)
-    totalbox_cost = Nadimension.objects.filter(nad_assess_num=needassessment_id).aggregate(totalbox_cost=Sum('nad_cost_total'))['totalbox_cost'] or 0
+        
+    # Re-fetch only quoted dimensions with updated costs for the PDF
+    if quoted_dim_ids:
+        quotation = list(Nadimension.objects.filter(id__in=quoted_dim_ids))
+        totalbox_cost = Nadimension.objects.filter(id__in=quoted_dim_ids).aggregate(totalbox_cost=Sum('nad_cost_total'))['totalbox_cost'] or 0
+    else:
+        quotation = list(Nadimension.objects.filter(nad_assess_num=needassessment_id))
+        totalbox_cost = Nadimension.objects.filter(nad_assess_num=needassessment_id).aggregate(totalbox_cost=Sum('nad_cost_total'))['totalbox_cost'] or 0
+
+    for q in quotation:
+        q.formatted_assess_num = str(q.nad_assess_num.na_assessment_num).replace('_', '_ ')
 
     print('totalbox_cost',totalbox_cost)
     gst=round(totalbox_cost*gst_val/100,0)

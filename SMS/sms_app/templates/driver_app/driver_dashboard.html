@@ -189,6 +189,28 @@
             color: #ff6b6b;
         }
 
+        .btn-outline-primary {
+            background: rgba(0, 242, 254, 0.08);
+            border: 1px solid rgba(0, 242, 254, 0.5);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .btn-outline-primary:hover {
+            background: rgba(0, 242, 254, 0.2);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
         /* File Input Styling */
         input[type="file"] {
             background: rgba(255, 255, 255, 0.05);
@@ -232,11 +254,16 @@
                 <img src="/media/Company_Logo.png" alt="BVM" style="height: 30px; width: auto; max-width: 80px;">
                 <h4 class="header-title">DRIVER PORTAL</h4>
             </div>
-            <form method="POST" action="" style="margin: 0;">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="logout">
-                <button type="submit" class="btn-outline-danger">Logout</button>
-            </form>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" onclick="refreshDashboard(this)" class="btn-outline-primary" id="btn_refresh" title="Refresh Dashboard">
+                    <i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh
+                </button>
+                <form method="POST" action="" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="logout">
+                    <button type="submit" class="btn-outline-danger">Logout</button>
+                </form>
+            </div>
         </div>
 
         {% if messages %}
@@ -331,9 +358,8 @@
                         <i class="fas fa-check"></i> Loading Dock In ({{ trip.tr_loading_time|date:"H:i" }})
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="loading_dock_in" class="action-btn btn-success" {{
-                        trip.tr_departeddate_pickup|yesno:",disabled" }}
-                        style="{{ trip.tr_departeddate_pickup|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                    <button type="submit" name="action" value="loading_dock_in" class="action-btn btn-success" {% if not trip.tr_departeddate_pickup %}disabled{% endif %}
+                        style="{% if not trip.tr_departeddate_pickup %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-sign-in-alt"></i> Loading Dock In
                     </button>
                     {% endif %}
@@ -344,9 +370,8 @@
                         <i class="fas fa-check"></i> Loading Dock Out ({{ trip.tr_dock_out_time|date:"H:i" }})
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="loading_dock_out" class="action-btn btn-danger" {{
-                        trip.tr_loading_time|yesno:",disabled" }}
-                        style="{{ trip.tr_loading_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                    <button type="submit" name="action" value="loading_dock_out" class="action-btn btn-danger" {% if not trip.tr_loading_time %}disabled{% endif %}
+                        style="{% if not trip.tr_loading_time %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-sign-out-alt"></i> Loading Dock Out
                     </button>
                     {% endif %}
@@ -358,6 +383,17 @@
                         {% if trip.tr_departedkm %} - KM: {{ trip.tr_departedkm }}{% endif %}
                     </button>
                     {% else %}
+                    {% if trip.tr_dock_out_time and trip.tc_financestatus_id != 1 %}
+                    <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; padding: 10px 12px; border-radius: 10px; font-size: 0.82rem; margin-bottom: 10px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                        <div>
+                            <i class="fas fa-hourglass-half"></i> <strong>Awaiting Office Trip Approval</strong>
+                            <div style="font-size: 0.74rem; color: #fde68a; margin-top: 2px;">Office manager must approve trip before you can depart</div>
+                        </div>
+                        <button type="button" onclick="refreshDashboard(this)" style="background: rgba(245, 158, 11, 0.25); border: 1px solid #fbbf24; color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-sync-alt"></i> Check Status
+                        </button>
+                    </div>
+                    {% endif %}
                     <button type="button"
                         onclick="submitWithKM('vehicle_started', 'Enter Vehicle Started KM (Departing Origin):')"
                         class="action-btn btn-primary" 
@@ -500,6 +536,16 @@
     </div>
 
     <script>
+        function refreshDashboard(btn) {
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (icon) icon.classList.add('fa-spin');
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            }
+            window.location.reload();
+        }
+
         function submitWithKM(actionValue, promptText) {
             let km = prompt(promptText);
             if (km !== null && km.trim() !== '') {

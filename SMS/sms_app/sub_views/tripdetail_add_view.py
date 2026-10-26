@@ -203,7 +203,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
-                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
@@ -620,9 +620,28 @@ def tripdetail_add(request, tripdetail_id=0):
                 'is_replacement_trip': is_replacement_trip,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
-                'trip_attachments': TripAttachmentInfo.objects.filter(
-                    ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at'),
             }
+
+            # Auto-sync legacy single-file tc_pod_attachment into TripAttachmentInfo if not yet linked
+            if trip_instance and trip_instance.tc_pod_attachment and trip_instance.tr_tripnumber:
+                if not TripAttachmentInfo.objects.filter(ta_tripnumber=trip_instance.tr_tripnumber, ta_category='POD').exists():
+                    try:
+                        import os
+                        filename = os.path.basename(trip_instance.tc_pod_attachment.name)
+                        TripAttachmentInfo.objects.create(
+                            ta_tripnumber=trip_instance.tr_tripnumber,
+                            ta_file=trip_instance.tc_pod_attachment,
+                            ta_filename=filename,
+                            ta_category='POD'
+                        )
+                        if not trip_instance.tc_no_of_pods or trip_instance.tc_no_of_pods == 0:
+                            trip_instance.tc_no_of_pods = 1
+                            trip_instance.save(update_fields=['tc_no_of_pods'])
+                    except Exception as e:
+                        print(f"Error auto-syncing POD attachment: {e}")
+
+            context['trip_attachments'] = TripAttachmentInfo.objects.filter(
+                ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at')
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
@@ -728,7 +747,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 if vehicle_number and str(v_source_id) != "3":
                     last_trip_for_loc = TripdetailInfo.objects.filter(
                         tr_vehiclenumber=vehicle_number
-                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at', '-id').first()
 
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
@@ -834,6 +853,13 @@ def tripdetail_add(request, tripdetail_id=0):
                     ext = format.split('/')[-1]
                     data = ContentFile(base64.b64decode(imgstr), name=f'pod_signature.{ext}')
                     trip.td_pod = data
+
+                # Populate trip charges on creation from matched allotment / enquiry note rate
+                if not trip.tc_tripcost or float(trip.tc_tripcost) == 0.0:
+                    from .tripclosure_add_view import get_allotment_sale_rate
+                    initial_rate = get_allotment_sale_rate(trip)
+                    if initial_rate and initial_rate > 0:
+                        trip.tc_tripcost = initial_rate
 
                 trip.save()
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
@@ -1005,7 +1031,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost',
                     'tc_handlingcost_reason', 'tc_haltingcost', 'tc_total_halting_cost',
                     'tc_supervisorcost', 'tc_rtocost', 'tc_betacost', 'tc_cancellation',
-                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment',
+                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment', 'tc_no_of_pods',
                     'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
                     'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
                     'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
@@ -1851,24 +1877,22 @@ def get_last_reported_km(request):
             })
 
     last_trip = None
+    last_trip_loc = None
     if vehicle:
-        if enquiry_id:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
-
-        if not last_trip:
-            last_trip = (
-                TripdetailInfo.objects
-                .filter(tr_vehiclenumber=vehicle)
-                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
-                .order_by('-id')
-                .first()
-            )
+        last_trip = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+            .order_by('-id')
+            .first()
+        )
+        last_trip_loc = (
+            TripdetailInfo.objects
+            .filter(tr_vehiclenumber=vehicle)
+            .exclude(tr_reportedlocation__isnull=True)
+            .order_by('-tr_created_at', '-id')
+            .first()
+        )
 
     reported_dt_str = None
     if last_trip and last_trip.tr_reporteddate:
@@ -1879,9 +1903,9 @@ def get_last_reported_km(request):
 
     last_loc_id = None
     last_loc_name = None
-    if last_trip and last_trip.tr_reportedlocation:
-        last_loc_id = last_trip.tr_reportedlocation_id
-        last_loc_name = str(last_trip.tr_reportedlocation)
+    if last_trip_loc and last_trip_loc.tr_reportedlocation:
+        last_loc_id = last_trip_loc.tr_reportedlocation_id
+        last_loc_name = str(last_trip_loc.tr_reportedlocation)
 
     # If vehicle has a replacement breakdown place recorded, prioritize it if no post-replacement trip exists
     if not last_loc_id:
@@ -2484,6 +2508,3 @@ def view_combined_pod(request, trip_num):
     response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}.pdf"'
     return response
-
-
-

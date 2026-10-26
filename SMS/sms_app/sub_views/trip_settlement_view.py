@@ -253,7 +253,7 @@ def trip_settlement_edit(request, trip_id):
             'tc_financestatus', 'tr_iou', 'tc_parkingcost',
             'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost',
             'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost',
-            'tc_haltingcost', 'tc_no_of_days_halting', 'tc_rtocost', 'tc_betacost',
+            'tc_haltingcost', 'tc_no_of_days_halting', 'tc_total_halting_cost', 'tc_rtocost', 'tc_betacost',
             'tc_cancellation', 'tc_parkingcost_check', 'tc_tollcost_check',
             'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
             'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
@@ -277,6 +277,11 @@ def trip_settlement_edit(request, trip_id):
         if form.is_valid() and files_form.is_valid():
 
             trip_obj = form.save(commit=False)
+            if float(trip_obj.tc_haltingcost or 0) > 0:
+                days = float(trip_obj.tc_no_of_days_halting or 0)
+                if days <= 0:
+                    days = 1.0
+                trip_obj.tc_total_halting_cost = float(trip_obj.tc_haltingcost) * days
             trip_obj.tr_updated_by = request.user
             if trip_obj.tc_financestatus_id:
                 trip_obj.tr_operational_status_id = trip_obj.tc_financestatus_id
@@ -320,7 +325,7 @@ def trip_settlement_edit(request, trip_id):
             'tc_financestatus', 'tr_iou', 'tc_parkingcost',
             'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost',
             'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost',
-            'tc_haltingcost', 'tc_no_of_days_halting', 'tc_rtocost', 'tc_betacost',
+            'tc_haltingcost', 'tc_no_of_days_halting', 'tc_total_halting_cost', 'tc_rtocost', 'tc_betacost',
             'tc_cancellation', 'tc_parkingcost_check', 'tc_tollcost_check',
             'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
             'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
@@ -356,7 +361,8 @@ def trip_settlement_edit(request, trip_id):
         to_location = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else ''
 
     # Check if invoiced
-    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip).exists() or trip.tc_financestatus_id == 10
+    from .invoice_documents_view import check_trip_is_invoiced
+    is_invoiced = check_trip_is_invoiced(trip)
     
     user_ext = User_extInfo.objects.filter(user_id=request.session.get('ses_userID') or request.user.id).first()
     user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"

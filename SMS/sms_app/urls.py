@@ -4,9 +4,13 @@ from django.views.generic import TemplateView
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
+from .sub_views.md_dashboard_view import md_dashboard, get_md_dashboard_data
 from .sub_views.ar_receipt_view import ar_receipt_list
+from .sub_views.approval_views import petty_cash_approval_list, approve_petty_cash
 
 urlpatterns = [
+    path('petty_cash_approval_list/', petty_cash_approval_list, name='petty_cash_approval_list'),
+    path('approve_petty_cash/<str:sys_type>/<int:pc_id>/<str:action>/', approve_petty_cash, name='approve_petty_cash'),
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
     path('api/eway_expiry_alerts/', views.get_eway_expiry_alerts, name='get_eway_expiry_alerts'),
     path('api/verify_trip_eway_details/<int:trip_id>/', views.verify_trip_eway_details, name='verify_trip_eway_details'),
@@ -766,6 +770,7 @@ urlpatterns = [
     # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
+    path('pk_stock_retrieval_pdf/<str:job_no>/', views.pk_stock_retrieval_pdf, name='pk_stock_retrieval_pdf'),
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
     path('pk_retrival_update/<str:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),
@@ -1066,12 +1071,23 @@ urlpatterns = [
     path('get_wms_kpi_dashboard_data/', views.get_wms_kpi_dashboard_data, name='get_wms_kpi_dashboard_data'),
     path('tms_dashboard/', tms_dashboard, name='tms_dashboard'),
     path('get_tms_dashboard_data/', get_tms_dashboard_data, name='get_tms_dashboard_data'),
+    path('md_dashboard/', md_dashboard, name='md_dashboard'),
+    path('get_md_dashboard_data/', get_md_dashboard_data, name='get_md_dashboard_data'),
     path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
     path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
     path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),
     path('trip_report/', views.trip_report, name='trip_report'),
     path('trip_report_ajax/', views.trip_report_ajax, name='trip_report_ajax'),
+    path('get_customer_templates_ajax/', views.get_customer_templates_ajax, name='get_customer_templates_ajax'),
+    path('export_dmr_excel/', views.export_dmr_excel, name='export_dmr_excel'),
     path('trip_send_email/', views.trip_send_email, name='trip_send_email'),
+    path('dmr_templates/', views.dmr_template_list, name='dmr_template_list'),
+    path('dmr_template_create/', views.dmr_template_create_or_edit, name='dmr_template_create'),
+    path('dmr_template_edit/<int:template_id>/', views.dmr_template_create_or_edit, name='dmr_template_edit'),
+    path('dmr_template_delete/<int:template_id>/', views.dmr_template_delete, name='dmr_template_delete'),
+    path('dmr_template_duplicate/<int:template_id>/', views.dmr_template_duplicate, name='dmr_template_duplicate'),
+    path('dmr_template_save_ajax/', views.dmr_template_save_ajax, name='dmr_template_save_ajax'),
+    path('dmr_template_preview_ajax/', views.dmr_template_preview_ajax, name='dmr_template_preview_ajax'),
     path('incident_send_email/', views.incident_send_email, name='incident_send_email'),
     path('truck_send_email_view', views.truck_send_email_view, name='truck_send_email_view'),
     path('driver_settlement_add/', views.driver_settlement_add, name='driver_settlement_add'),
@@ -1271,6 +1287,8 @@ urlpatterns = [
     path('ajax/get_sale_details/', views.get_sale_details, name='get_sale_details'),
     path('invoice_documents_list/', views.invoice_documents_list, name='invoice_documents_list'),
     path('invoice_documents_list_ajax/', views.invoice_documents_list_ajax_view, name='invoice_documents_list_ajax'),
+    path('invoice_completed_documents_list/', views.invoice_completed_documents_list, name='invoice_completed_documents_list'),
+    path('invoice_completed_documents_list_ajax/', views.invoice_completed_documents_list_ajax_view, name='invoice_completed_documents_list_ajax'),
     path('invoice_documents_add/<int:trip_id>/', views.invoice_documents_add, name='invoice_documents_add'),
     path('view_invoice_combined_pdf/<str:trip_num>/', views.view_invoice_combined_pdf, name='view_invoice_combined_pdf'),
     path('pk_tool_master_list/', views.pk_tool_master_list, name='pk_tool_master_list'),

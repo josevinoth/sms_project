@@ -27,14 +27,22 @@ def driver_dashboard(request):
 
     trip = get_object_or_404(TripdetailInfo, id=trip_id)
 
-    # Only redirect for cancelled trips (status 3)
-    if trip.tc_financestatus_id == 3:
-        messages.info(request, "This trip has been cancelled.")
-        del request.session['driver_trip_id']
+    # Only allow active trip statuses (Work In Progress, Awaiting Trip Approval, Trip Started)
+    # Block settlement (4, 7), closed (2), cancelled (3, 10, 11), finance (5), etc.
+    if trip.tc_financestatus_id not in [1, 8, 12, None]:
+        messages.info(request, "This trip has been completed and closed.")
+        if 'driver_trip_id' in request.session:
+            del request.session['driver_trip_id']
         return redirect('driver_login')
 
-    # Flag for closed trips (read-only mode)
-    is_closed = trip.tc_financestatus_id in [2, 7]
+    # Driver App only supports loaded Business trips (Category 1)
+    if trip.tr_category_id and trip.tr_category_id != 1:
+        messages.warning(request, "Driver App only supports loaded Business trips.")
+        if 'driver_trip_id' in request.session:
+            del request.session['driver_trip_id']
+        return redirect('driver_login')
+
+    is_closed = False
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -88,9 +96,9 @@ def driver_dashboard(request):
             if not trip.tr_departeddate_pickup:
                 if km_value and km_value.isdigit():
                     val_km = int(km_value)
-                    # No previous trip KM to check against here usually, but let's be safe
+                    trip.tr_reportedkm_pickup = val_km
                     trip.tr_departedkm = val_km
-                    print(f"  >> SAVED tr_departedkm = {val_km}")
+                    print(f"  >> SAVED tr_reportedkm_pickup = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 trip.tr_departeddate_pickup = timezone.now()
@@ -109,33 +117,26 @@ def driver_dashboard(request):
         elif action == 'loading_dock_out':
             if not trip.tr_dock_out_time:
                 trip.tr_dock_out_time = timezone.now()
-                
-                # Check if consignment goods exist
-                has_goods = False
-                if trip.tr_consignmentnumber_id:
-                    has_goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber_id).exists()
-                
-                if trip.tr_category_id == 1:
-                    trip.tr_approval = None  # Reset approval status
-                    if has_goods:
-                        trip.tc_financestatus_id = 8  # Awaiting Trip Approval
-                    else:
-                        trip.tc_financestatus_id = 2  # Work In Progress
-                        
-                trip.save()
-                messages.success(request, "Loading Dock Out Reported!")
+            
+            if trip.tr_category_id == 1:
+                trip.tr_approval = None  # Reset approval status so it enters approval fresh
+                trip.tc_financestatus_id = 8  # Awaiting Trip Approval (never 2 which is Trip Closed!)
+                trip.tr_operational_status_id = 8
+                    
+            trip.save()
+            messages.success(request, "Loading Dock Out Reported!")
 
         # 3. Vehicle Started (Departing Origin) -> tr_departeddate & tr_departedkm
         elif action == 'vehicle_started':
             if not trip.tr_departeddate:
                 if km_value and km_value.isdigit():
                     val_km = int(km_value)
-                    prev_km = trip.tr_departedkm or 0
+                    prev_km = trip.tr_reportedkm_pickup or trip.tr_departedkm or 0
                     if val_km < prev_km:
                         messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
                         return redirect('driver_dashboard')
-                    trip.tr_reportedkm_pickup = val_km
-                    print(f"  >> SAVED tr_reportedkm_pickup = {val_km}")
+                    trip.tr_departedkm = val_km
+                    print(f"  >> SAVED tr_departedkm = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 trip.tr_departeddate = timezone.now()
@@ -148,7 +149,7 @@ def driver_dashboard(request):
             if not trip.tr_reporteddate:
                 if km_value and km_value.isdigit():
                     val_km = int(km_value)
-                    prev_km = trip.tr_reportedkm_pickup or trip.tr_departedkm or 0
+                    prev_km = trip.tr_departedkm or trip.tr_reportedkm_pickup or 0
                     if val_km < prev_km:
                         messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
                         return redirect('driver_dashboard')
@@ -180,7 +181,7 @@ def driver_dashboard(request):
             if not trip.tr_reporteddate_delivery:
                 if km_value and km_value.isdigit():
                     val_km = int(km_value)
-                    prev_km = trip.tr_reportedkm or trip.tr_reportedkm_pickup or 0
+                    prev_km = trip.tr_reportedkm or trip.tr_departedkm or trip.tr_reportedkm_pickup or 0
                     if val_km < prev_km:
                         messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
                         return redirect('driver_dashboard')
@@ -198,8 +199,31 @@ def driver_dashboard(request):
         # 8. POD Upload
         elif action == 'upload_pod':
             if 'pod_file' in request.FILES:
-                trip.tc_pod_attachment = request.FILES['pod_file']
+                pod_file = request.FILES['pod_file']
+                trip.tc_pod_attachment = pod_file
+                if not trip.tc_no_of_pods or trip.tc_no_of_pods == 0:
+                    trip.tc_no_of_pods = 1
                 trip.save()
+
+                # Sync into TripAttachmentInfo so it immediately displays in TMS and attachments list
+                from ..sub_models.tripdetail_mod import TripAttachmentInfo, Trip_closure_files_Info
+                if trip.tr_tripnumber:
+                    TripAttachmentInfo.objects.create(
+                        ta_tripnumber=trip.tr_tripnumber,
+                        ta_file=trip.tc_pod_attachment,
+                        ta_filename=pod_file.name,
+                        ta_category='POD'
+                    )
+
+                    # Also sync to Trip_closure_files_Info if present
+                    try:
+                        closure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+                        if closure_files and not closure_files.tcf_pod:
+                            closure_files.tcf_pod = trip.tc_pod_attachment
+                            closure_files.save()
+                    except Exception as e:
+                        print(f"Error syncing closure files on POD upload: {e}")
+
                 messages.success(request, "POD Uploaded Successfully!")
             else:
                 messages.error(request, "No file selected for POD.")

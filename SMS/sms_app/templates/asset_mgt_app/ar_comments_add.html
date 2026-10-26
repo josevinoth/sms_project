@@ -1,147 +1,219 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update AR Comments{% endblock %}
 {% block content %}
-<div class="col-md-1">
-	<a href="{% url 'ar_comments_list' %}" class="btn btn-primary btn-block btn-lg">
-		<i class="fas fa-arrow-left"></i> Back
-	</a>
-</div>
-<br>
-<form method="POST" action="">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update AR Comments</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Number</span>
-									</div>
-									{% render_field Ar_comments_form.arc_invoice_num id="arc_invoice_num" Readonly="True" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field Ar_comments_form.arc_customer id="arc_customer" class="form-control" %}
-								</div>
-							</div>
-							{% render_field Ar_comments_form.arc_updated_by id="arc_updated_by" hidden="True" class="form-control" %}
-							{% render_field Ar_comments_form.arc_invoice_list id="arc_invoice_list" hidden="True" class="form-control" %}
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Contact Name</span>
-									</div>
-									{% render_field Ar_comments_form.arc_customer_contact_name id="arc_customer_contact_name" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Contact Designation</span>
-									</div>
-									{% render_field Ar_comments_form.arc_customer_contact_designation id="arc_customer_contact_designation" class="form-control" %}
-								</div>
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Comments</span>
-								</div>
-								{% render_field Ar_comments_form.arc_comments id="arc_comments" class="form-control" %}
-							</div>
+
+<div class="container-fluid px-3 py-2 compact-form">
+	<!-- ══ Page Header ══ -->
+	<div class="modern-header d-flex justify-content-between align-items-center mb-3">
+		<h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+			<i class="fas fa-comment-dots mr-2"></i> Add / Update AR Comments
+		</h3>
+		<div>
+			<a href="{% url 'ar_comments_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+				<i class="fas fa-arrow-left mr-1"></i> Back
+			</a>
+		</div>
+	</div>
+
+	<!-- ══ Form Card ══ -->
+	<div class="modern-card p-3 mb-3 w-100">
+		<form method="POST" action="">
+			{% csrf_token %}
+			<div class="form-section p-3 mb-3">
+				<div class="form-section-title mb-3">
+					<i class="fas fa-edit text-primary mr-1"></i> Comment Details
+				</div>
+				<div class="row">
+					<div class="col-12 col-md-6">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Invoice Number</label>
+							{% render_field Ar_comments_form.arc_invoice_num id="arc_invoice_num" Readonly="True" class="form-control form-control-modern" placeholder="Select from table below or auto-populated" %}
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Customer Name</label>
+							{% render_field Ar_comments_form.arc_customer id="arc_customer" class="form-control form-control-modern" %}
 						</div>
-						<button type="submit" class="btn btn-success" id="save-btn" ><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'ar_comments_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+					</div>
+
+					{% render_field Ar_comments_form.arc_updated_by id="arc_updated_by" hidden="True" class="form-control" %}
+					{% render_field Ar_comments_form.arc_invoice_list id="arc_invoice_list" hidden="True" class="form-control" %}
+
+					<div class="col-12 col-md-6">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Customer Contact Name</label>
+							{% render_field Ar_comments_form.arc_customer_contact_name id="arc_customer_contact_name" class="form-control form-control-modern" placeholder="Enter contact name" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Contact Designation</label>
+							{% render_field Ar_comments_form.arc_customer_contact_designation id="arc_customer_contact_designation" class="form-control form-control-modern" placeholder="Enter designation" %}
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-12">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Comments</label>
+							{% render_field Ar_comments_form.arc_comments id="arc_comments" class="form-control form-control-modern" rows="3" placeholder="Enter comments here..." %}
+						</div>
 					</div>
 				</div>
 			</div>
+
+			<!-- Messages -->
+			{% if messages %}
+			<div class="row my-2">
+				<div class="col-12 message text-center">
+					{% for message in messages %}
+					<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+						{{ message }}
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+
+			<!-- Form Actions -->
+			<div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+				<button type="submit" class="btn-modern btn-submit py-1 px-4" id="save-btn">
+					<i class="fas fa-check mr-1"></i> Submit
+				</button>
+				<a href="{% url 'ar_comments_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+					<i class="fas fa-times mr-1"></i> Cancel
+				</a>
+			</div>
+		</form>
+	</div>
+
+	<!-- AR Invoice Selection Table -->
+	<div class="table-container-modern p-3" id="invoice_table_container">
+		<div class="d-flex justify-content-between align-items-center mb-2">
+			<h5 class="mb-0 font-weight-bold" style="font-size: 1rem; color: var(--text-main);">
+				<i class="fas fa-file-invoice mr-2 text-info"></i> Select Pending AR Invoices
+			</h5>
+			<small class="text-muted">Click row checkbox to attach invoice(s) to comment</small>
+		</div>
+		<div class="table-responsive">
+			<table id="ar_invoice_list" class="table table-striped table-bordered modern-table w-100">
+				<thead>
+					<tr style="white-space: nowrap;">
+						<th style="width: 30px;">Select</th>
+						<th>ID</th>
+						<th>Invoice Number</th>
+						<th>Customer</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for ar_invoiceinfo in ar_invoice_list %}
+					<tr>
+						<td></td>
+						<td class="font-weight-bold">{{ ar_invoiceinfo.id }}</td>
+						<td class="text-primary font-weight-bold">{{ ar_invoiceinfo.ar_invoice_num }}</td>
+						<td>{{ ar_invoiceinfo.ar_customer_name }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
 		</div>
 	</div>
-</form>
-
-<!--	Ar comments Table-->
-<div class="container-fluid">
-	<table  id="ar_invoice_list" class="table table-striped table-bordered">
-		<thead class="thead-dark">
-		<tr>
-			<th></th>
-			<th>ID</th>
-			<th>Invoice Number</th>
-			<th>Customer</th>
-		</thead>
-		<tbody>
-		{% for ar_invoiceinfo in ar_invoice_list %}
-		<tr>
-			<td></td>
-			<td> {{ar_invoiceinfo.id}}</td>
-			<td> {{ar_invoiceinfo.ar_invoice_num}}</td>
-			<td> {{ar_invoiceinfo.ar_customer_name}}</td>
-		</tr>
-		{% endfor %}
-		</tbody>
-	</table>
 </div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 80px !important;
+        min-height: 80px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
 	$(document).ready(function (){
-        document.getElementById("arc_updated_by").value ={{user_id}};
-      var table=new DataTable('#ar_invoice_list', {
-        columnDefs: [
-            {
-                orderable: false,
-                className: 'select-checkbox',
-                targets: 0
-            }
-        ],
-        select: {
-            style: 'os',
-            selector: 'td:first-child'
-        },
-        order: [[1, 'asc']]
-    });
+        // Initialize Select2 for Customer Name field
+        $('#arc_customer').select2({
+            width: '100%',
+            placeholder: "--Select--",
+            allowClear: true
+        });
 
-       // Handle form submission event
-       $('#save-btn').on('click', function(){
-              var rows_selected = table.column(0).selected();
-              let selectedValues = table.rows( { selected: true } ).data();
-              var len1=( selectedValues ).length;
-              console.log( len1 );
-              var len=( selectedValues[0] ).length;
-              console.log( selectedValues );
-              console.log( selectedValues[0] );
-              console.log( len );
-              var elements = [];
-              for (var i = 0; i < len1; i++) {
-                    console.log(selectedValues[i][2]);
+        var userId = "{{ user_id|default:'' }}";
+        if (userId) {
+            var updatedByElem = document.getElementById("arc_updated_by");
+            if (updatedByElem) {
+                updatedByElem.value = userId;
+            }
+        }
+
+        var table = $('#ar_invoice_list').DataTable({
+            columnDefs: [
+                {
+                    orderable: false,
+                    className: 'select-checkbox',
+                    targets: 0
+                }
+            ],
+            select: {
+                style: 'os',
+                selector: 'td:first-child'
+            },
+            order: [[1, 'asc']],
+            scrollX: true,
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+
+        // Handle form submission event
+        $('#save-btn').on('click', function(){
+            let selectedValues = table.rows({ selected: true }).data();
+            var len1 = selectedValues.length;
+            if (len1 > 0) {
+                var elements = [];
+                for (var i = 0; i < len1; i++) {
                     elements.push(selectedValues[i][2]);
                 }
-            document.getElementById("arc_invoice_num").value=elements;
-         });
-        invoice=document.getElementById("arc_invoice_num").value
-        if (invoice=="")
-            {
-                document.getElementById("arc_invoice_num").value =elements;
+                document.getElementById("arc_invoice_num").value = elements.join(',');
             }
-            else
-            {
-                document.getElementById("arc_invoice_num").value =invoice;
-                $('#ar_invoice_list').parents('div.dataTables_wrapper').first().hide();
-            }
+        });
+
+        var invoice = document.getElementById("arc_invoice_num").value;
+        if (invoice && invoice.trim() !== "") {
+            $('#invoice_table_container').hide();
+        }
     });
 </script>
 

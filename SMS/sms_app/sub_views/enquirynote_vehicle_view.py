@@ -145,6 +145,22 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                 if not instance.env_special_sale or float(instance.env_special_sale) == 0:
                     if instance.env_sale and float(instance.env_sale) > 0:
                         instance.env_special_sale = float(instance.env_sale)
+
+                # 🚫 DOUBLE-SUBMISSION / RAPID CLICK GUARD (Last 5 seconds check)
+                from datetime import timedelta
+                from django.utils import timezone
+                recent_duplicate = Enquirynotevehicle.objects.filter(
+                    env_enquirynumber=enquirynote,
+                    env_vehicletype_id=instance.env_vehicletype_id,
+                    env_vehiclecategory_id=instance.env_vehiclecategory_id,
+                    env_quantity=instance.env_quantity,
+                    env_created_at__gte=timezone.now() - timedelta(seconds=5)
+                ).exists()
+
+                if recent_duplicate:
+                    print("Duplicate vehicle detail submission blocked by 5-second guard")
+                    return redirect('/SMS/enquirynotevehicle_insert/')
+
                 instance.save()
                 form.save_m2m()
                 print("enquirynotevehicle Form is Valid")

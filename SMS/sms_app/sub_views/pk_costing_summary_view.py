@@ -69,14 +69,30 @@ def costingsummary_add(request,costingsummary_id=0):
             plywood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[4, 6], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             plywood_cost = round(plywood_cost, 2)
 
-            # Combined Total CFT (Wood=1, Hardwood=5)
-            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).aggregate(
+            # Combined Total CFT (Wood=1, Hardwood=5; excluding reused wood weight in Kg)
+            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
                 total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
             )['total'] or 0.0
             total_cft = round(total_cft, 2)
 
-            # Combined Total SQFT (Plywood=4, Marine Ply=6)
-            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).aggregate(
+            # Combined Total SQFT (Plywood=4, Marine Ply=6; excluding reused plywood weight in Kg)
+            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
                 total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
             )['total'] or 0.0
             total_sqft = round(total_sqft, 2)
@@ -210,19 +226,23 @@ def costingsummary_add(request,costingsummary_id=0):
                 part_code_id = part_code.id
                 key = f"{part_code_id}"
                 
+                req_qty = float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+                if req_qty <= 0:
+                    continue  # Skip absorbed / zero-quantity parts from Indent
+
                 if key not in grouped_indent:
                     grouped_indent[key] = {
                         'ids': [item.id],
                         'ct_part_code': part_code.pc_code,
                         'ct_part_code_name': part_code.pc_stock_description.stock_description if part_code.pc_stock_description else '',
                         'ct_uom': part_code.pc_uom.unit_of_measure if part_code.pc_uom else '',
-                        'total_quantity_req': float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1),
+                        'total_quantity_req': round(req_qty, 2),
                         'ct_stock_status': item.ct_stock_status.status_name if item.ct_stock_status else '',
                         'status_id': item.ct_stock_status.id if item.ct_stock_status else 1,
                     }
                 else:
                     grouped_indent[key]['ids'].append(item.id)
-                    grouped_indent[key]['total_quantity_req'] += float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+                    grouped_indent[key]['total_quantity_req'] = round(grouped_indent[key]['total_quantity_req'] + req_qty, 2)
             
             indent_summary_list = list(grouped_indent.values())
 

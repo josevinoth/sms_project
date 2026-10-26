@@ -64,7 +64,7 @@
 
             <div class="row row-compact">
                 <!-- Section 1: Basic Info (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_basic">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
                         <div class="form-row-modern">
@@ -76,7 +76,7 @@
                                 <label class="form-label-modern">Customer</label>
                                 {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control form-control-modern disable_a_href" %}
                             </div>
-                            <div class="form-group-modern">
+                            <div class="form-group-modern" id="grp_new_customer">
                                 <label class="form-label-modern">New Customer</label>
                                 {% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control form-control-modern disable_a_href" %}
                             </div>
@@ -107,7 +107,7 @@
                 </div>
 
                 <!-- Section 2: Stock & Part Code (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_part">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock</div>
                         <div class="form-row-modern">
@@ -145,7 +145,7 @@
                 </div>
 
                 <!-- Section 3: Item Specification & Dimensions (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_item">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-box-open"></i> Item Details</div>
                         <div class="form-row-modern">
@@ -196,11 +196,11 @@
                 </div>
 
                 <!-- Section 4: Calculations & Cost Information (3 Cols) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_calc">
                     <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
                         <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Calculations & Cost</div>
                         <div class="form-row-modern">
-                            <div class="row no-gutters">
+                            <div class="row no-gutters" id="grp_uom_row">
                                 <div class="col-6 pr-1">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern">Purch. UOM</label>
@@ -215,21 +215,21 @@
                                 </div>
                             </div>
                             <div class="row no-gutters">
-                                <div class="col-6 pr-1">
+                                <div class="col-6 pr-1" id="grp_qty_req">
                                     <div class="form-group-modern">
-                                        <label class="form-label-modern">Qty Req</label>
+                                        <label class="form-label-modern" id="qty_req_label">Qty Req</label>
                                         {% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
                                     </div>
                                 </div>
-                                <div class="col-6 pl-1">
+                                <div class="col-6 pl-1" id="grp_req_value">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern" id="req_value_label">Req Value <i class="fas fa-info-circle text-info ml-1" id="req_value_icon" data-toggle="tooltip" title="Calculated Volume (CFT) or Area (SQFT) required for calculation"></i></label>
                                         {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="row no-gutters">
-                                <div class="col-6 pr-1">
+                            <div class="row no-gutters" id="row_conv_cft">
+                                <div class="col-6 pr-1" id="grp_conversion">
                                     <div class="form-group-modern">
                                         <label class="form-label-modern">Conversion</label>
                                         {% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
@@ -237,12 +237,12 @@
                                 </div>
                                 <div class="col-6 pl-1">
                                     <div class="form-group-modern" id="total_cft">
-                                        <label class="form-label-modern">Proj. Total CFT</label>
+                                        <label class="form-label-modern">Job Total CFT (Wood)</label>
                                         {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group-modern">
+                            <div class="form-group-modern" id="grp_days">
                                 <label class="form-label-modern">Days/Hours</label>
                                 {% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                             </div>
@@ -280,6 +280,7 @@
             </div>
 
             <input type="hidden" id="hidden_pc_stock_description">
+            <input type="hidden" id="hidden_pc_code">
             {% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" %}
         </div>
     </form>
@@ -465,9 +466,17 @@
             if (document.getElementById("pkqt_uom")) document.getElementById("pkqt_uom").value = "";
         }
         
+        var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+        var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+        var part_code_check = part_code_code || part_code_text;
+        var desc_check = desc.toUpperCase();
+        var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
+
         if (jn == 8) {
             var jn1 = document.getElementById("pkqt_stock_type").value;
-            if (jn1 == 1 || jn1 == 5) {
+            if (is_reused) {
+                req_label_elem.html('Req Wt (Kg) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required Weight in Kg for reused material"></i>');
+            } else if (jn1 == 1 || jn1 == 5) {
                 req_label_elem.html('Req Vol (CFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Cubic Feet (CFT) volume"></i>');
             } else if (jn1 == 2) {
                 req_label_elem.html('Req Area (SQFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Box Surface Area in SQFT"></i>');
@@ -484,7 +493,30 @@
                 $('#pkqt_item').removeClass('disable_a_href');
             }
             var jn1 = document.getElementById("pkqt_stock_type").value;
-            if (jn1 == 1 || jn1 == 5) {
+            if (is_reused) {
+                $('#pkqt_stock_description').addClass('disable_a_href');
+                $('#pkqt_uom').addClass('disable_a_href');
+                $('#pkqt_quantity').removeClass('disable_a_href');
+                $('#pkqt_sqrt_req').addClass('disable_a_href');
+                $('#pkqt_days').addClass('disable_a_href');
+                document.getElementById("pkqt_days").value = 0;
+
+                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+                var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
+                // Reused material formula: Unit Cost = Qty Req (Kg) * Rate
+                var totalCost = rate * quantity_req;
+                document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+                var totalboxCost = totalCost * na_quantity;
+                document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
+                document.getElementById("pkqt_sqrt_req").value = quantity_req.toFixed(3);
+                if (document.getElementById("pkqt_cft")) {
+                    document.getElementById("pkqt_cft").value = "0.000";
+                }
+            }
+            else if (jn1 == 1 || jn1 == 5) {
                 $('#pkqt_stock_description').addClass('disable_a_href');
                 $('#pkqt_uom').addClass('disable_a_href');
                 $('#pkqt_quantity').removeClass('disable_a_href');
@@ -546,7 +578,7 @@
                     document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
                     var totalCost = rate * total_sqft * pkqt_weight_sqft * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
                 }
@@ -555,7 +587,7 @@
                     var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
                     var totalCost = rate * pkqt_sqrt_req * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
@@ -563,7 +595,7 @@
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
                     var totalCost = rate * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                    var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                     var totalboxCost = totalCost * na_quantity;
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
@@ -577,7 +609,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -597,15 +629,26 @@
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
             
-            // Bring in the Project's Aggregate Total CFT
-            document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
-            var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+            // Calculate CFT for the currently selected Job Type only
+            var selected_req = $('#pkqt_requirement').val();
+            var total_cft = 0;
+            if (window.jobCftMap && selected_req && window.jobCftMap[selected_req] !== undefined) {
+                total_cft = parseFloat(window.jobCftMap[selected_req]) || 0;
+            } else if (window.currentJobCft !== undefined) {
+                total_cft = window.currentJobCft;
+            } else {
+                total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+            }
+            
+            document.getElementById("pkqt_total_cft_display").value = total_cft.toFixed(3);
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             
-            if (document.getElementById("pkqt_cft_sqft_req")) { document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); }
+            if (document.getElementById("pkqt_cft_sqft_req")) { 
+                document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); 
+            }
             
-            // If total_cft is the project total, we divide by na_quantity to get unit cost per box
-            var unit_cft = total_cft / na_quantity;
+            // Unit CFT per box for this selected Job Type
+            var unit_cft = na_quantity > 0 ? (total_cft / na_quantity) : 0;
             if (document.getElementById("pkqt_sqrt_req")) {
                 document.getElementById("pkqt_sqrt_req").value = unit_cft.toFixed(3);
             }
@@ -623,7 +666,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -655,7 +698,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var days = parseFloat(document.getElementById("pkqt_days").value) || 1;
             var totalCost = rate * days * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
@@ -672,7 +715,7 @@
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-            var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 1;
+            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
             var totalCost = rate * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -737,6 +780,8 @@
 </script>
 
 <script>
+    window.jobCftMap = {{ job_cft_map_json|safe|default:"{}" }};
+
     function pk_store_na_dimension_id() {
         var pkqt_requirement_id = $('#pkqt_requirement').val();
 
@@ -755,6 +800,12 @@
                 var h = parseFloat(data.na_height);
                 var na_uom_val = data.na_uom;
                 var na_uom_id_val = data.na_uom_id;
+
+                if (data.job_total_cft !== undefined) {
+                    window.jobCftMap = window.jobCftMap || {};
+                    window.jobCftMap[pkqt_requirement_id] = parseFloat(data.job_total_cft) || 0;
+                    window.currentJobCft = parseFloat(data.job_total_cft) || 0;
+                }
 
                 document.getElementById("pkqt_requirement_size").value = na_dimension_box_val;
                 document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
@@ -777,6 +828,9 @@
                     } else {
                         document.getElementById("pkqt_sqrt_req").value = "0";
                     }
+                }
+                if (typeof change_cost_type === 'function') {
+                    change_cost_type();
                 }
             }
         });
@@ -1007,6 +1061,10 @@
                 }
 
 
+                if (data.pc_code && document.getElementById("hidden_pc_code")) {
+                    document.getElementById("hidden_pc_code").value = data.pc_code;
+                }
+
                 $('#pkqt_stock_type').removeClass('disable_a_href');
                 if (pc_stock_type_id == 1 || pc_stock_type_id == 4) {
                     $('#pkqt_item').removeClass('disable_a_href');
@@ -1022,14 +1080,20 @@
 <script>
     function toggleFields() {
         var stockType = $("#pkqt_stock_type").val();
+        var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+        var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+        var part_code_check = part_code_code || part_code_text;
+        var desc_check = ($('#hidden_pc_stock_description').val() || $('#pkqt_stock_description option:selected').text() || '').trim().toUpperCase();
+        var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
 
-        if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+        if (is_reused) {
+            $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group").hide();
+            $("#length_group, #width_group, #height_group").hide();
+        } else if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
             $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group ").hide();
             $("#length_group, #width_group, #height_group").show();
-
-        }
-        else {
-            $("#diameter_width_group, #con_length_group, #uom_group, weight_group, weight_sq_group ").show();
+        } else {
+            $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group ").show();
             $("#length_group, #width_group, #height_group").hide();
         }
     }
@@ -1060,6 +1124,17 @@
         placeholder: "Type 2+ letters to search...",
         allowClear: true,
         minimumInputLength: 2
+    });
+
+    $('#pkqt_part_code').on('select2:select change', function () {
+        fetchPartCodeDetails();
+    });
+
+    // Real-time calculation on typing / input change
+    $(document).on('input change', '#pkqt_rate, #pkqt_quantity_req, #pkqt_days, #pkqt_length_req, #pkqt_width_req, #pkqt_height_req, #pkqt_weight_sqft, #pkqt_sqrt_req, #pkqt_cost_type', function() {
+        if (typeof change_cost_type === 'function') {
+            change_cost_type();
+        }
     });
 
 </script>
@@ -1200,6 +1275,62 @@
             }
         });
     });
+</script>
+
+<script>
+    /*
+     * Cost-type driven layout: show only the fields that matter for the chosen cost type.
+     * Hidden inputs are still submitted, so no data/calculation logic is affected.
+     *   8 = Packing Material  -> Part & Stock + Item Details + stock-type specific fields
+     *   5 = HT Cost           -> Qty, Req Value (CFT), Proj. Total CFT, Rate
+     *   3/9 = Labour          -> Qty, Days/Hours, Rate
+     *   4 = Transport, 6 = Crane, others -> Qty, Rate
+     */
+    function applyCostTypeLayout() {
+        var jn = $('#pkqt_cost_type').val();
+        var st = $('#pkqt_stock_type').val();
+        var isPacking = (jn == '8');
+        var isConsumable = isPacking && st == '2';
+
+        // Whole sections
+        $('#sec_part, #sec_item').toggle(isPacking);
+        if (isPacking) {
+            $('#sec_basic, #sec_calc').removeClass('col-xl-6').addClass('col-xl-3');
+        } else {
+            $('#sec_basic, #sec_calc').removeClass('col-xl-3').addClass('col-xl-6');
+        }
+
+        // New customer only when it actually has a value
+        $('#grp_new_customer').toggle(!!$.trim($('#pkqt_customer_new_name2').val()));
+
+        // Calculation fields
+        $('#grp_uom_row').toggle(isConsumable);
+        $('#grp_conversion').toggle(isConsumable);
+        $('#grp_req_value').toggle(isPacking || jn == '5');
+        $('#grp_days').toggle(jn == '3' || jn == '9');
+        // #total_cft visibility is already handled by change_cost_type (HT only)
+        $('#row_conv_cft').toggle(isConsumable || jn == '5');
+    }
+
+    (function () {
+        if (typeof change_cost_type === 'function') {
+            var _origChangeCostType = change_cost_type;
+            window.change_cost_type = function () {
+                var r = _origChangeCostType.apply(this, arguments);
+                applyCostTypeLayout();
+                return r;
+            };
+        }
+        if (typeof toggleFields === 'function') {
+            var _origToggleFields = toggleFields;
+            window.toggleFields = function () {
+                var r = _origToggleFields.apply(this, arguments);
+                applyCostTypeLayout();
+                return r;
+            };
+        }
+        $(function () { applyCostTypeLayout(); });
+    })();
 </script>
 
 {% endblock extra_js %}

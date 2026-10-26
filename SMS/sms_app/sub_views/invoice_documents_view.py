@@ -403,6 +403,44 @@ def view_invoice_combined_pdf(request, trip_num):
     messages.error(request, f"No documents found to generate combined PDF for trip '{trip_num}'.")
     return redirect(request.META.get('HTTP_REFERER', 'invoice_documents_list'))
 
+def get_all_invoiced_trip_ids():
+    """
+    Returns list of trip IDs that are linked to completed/generated invoices,
+    either directly (ti_trip) or via consignment (ti_consignment / ti_goods).
+    """
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+    from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+
+    invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True))
+    invoiced_cons_ids = set(TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id', flat=True))
+    invoiced_goods_ids = list(TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True))
+
+    cons_from_goods = set(ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list(
+        'cg_consignmentnumber_id', flat=True))
+    all_cons = invoiced_cons_ids | cons_from_goods
+    trips_from_cons = set(TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=all_cons).values_list('id', flat=True))
+    return list(invoiced_trip_ids | trips_from_cons)
+
+
+def check_trip_is_invoiced(trip):
+    """
+    Check if a specific trip is already invoiced.
+    """
+    if not trip:
+        return False
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+    if TransInvoiceInfo.objects.filter(ti_trip=trip).exists():
+        return True
+    if trip.tr_consignmentnumber_id:
+        if TransInvoiceInfo.objects.filter(ti_consignment_id=trip.tr_consignmentnumber_id).exists():
+            return True
+        from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+        invoiced_goods_ids = TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True)
+        if ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids, cg_consignmentnumber_id=trip.tr_consignmentnumber_id).exists():
+            return True
+    return False
+
+
 @login_required
 def invoice_documents_list(request):
     veh_no = request.GET.get('veh_no', '').strip()
@@ -412,8 +450,8 @@ def invoice_documents_list(request):
 
     return render(request, 'asset_mgt_app/invoice_documents_list.html', {
         'veh_no': veh_no,
-        'date_from': date_from,
-        'date_to': date_to,
+        'date_from': date_from[:10] if date_from else '',
+        'date_to': date_to[:10] if date_to else '',
     })
 
 @login_required
@@ -434,20 +472,12 @@ def invoice_documents_list_ajax_view(request):
         from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 
         status_ids = list(Tripstatusinfo.objects.filter(
-            status__in=['Trip Settled', 'Ready for Invoice']
+            status__in=['Trip Settled', 'Ready for Invoice', 'Cancellation with Billing']
         ).values_list('id', flat=True))
         if not status_ids:
-            status_ids = [7, 9]
+            status_ids = [7, 9, 10]
 
-        # Materialize subqueries into Python lists to avoid slow MySQL NOT IN (SELECT ...)
-        invoiced_trip_ids = list(TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True))
-        invoiced_cons_ids = set(TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id', flat=True))
-        invoiced_goods_ids = list(TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True))
-
-        # Combine both consignment exclusion sources into one set
-        cons_from_goods = set(ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list(
-            'cg_consignmentnumber_id', flat=True))
-        excluded_cons_ids = list(invoiced_cons_ids | cons_from_goods)
+        all_invoiced_ids = get_all_invoiced_trip_ids()
 
         trip_list = TripdetailInfo.objects.select_related(
             'tr_enquirynumber',
@@ -463,9 +493,7 @@ def invoice_documents_list_ajax_view(request):
             Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
             Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
         ).exclude(
-            id__in=invoiced_trip_ids
-        ).exclude(
-            tr_consignmentnumber_id__in=excluded_cons_ids
+            id__in=all_invoiced_ids
         )
 
         if veh_no:
@@ -619,6 +647,197 @@ def invoice_documents_list_ajax_view(request):
         return JsonResponse({'error': str(e)})
 
 
+@login_required
+def invoice_completed_documents_list(request):
+    veh_no = request.GET.get('veh_no', '').strip()
+    date_from = request.GET.get('date_from', '').strip() or '2026-05-01T00:00:00+05:30'
+    date_to = request.GET.get('date_to', '').strip()
+
+    return render(request, 'asset_mgt_app/invoice_completed_documents_list.html', {
+        'veh_no': veh_no,
+        'date_from': date_from[:10] if date_from else '',
+        'date_to': date_to[:10] if date_to else '',
+    })
+
+
+@login_required
+def invoice_completed_documents_list_ajax_view(request):
+    from django.http import JsonResponse
+    try:
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        
+        veh_no = request.GET.get('veh_no', '').strip()
+        date_from = request.GET.get('date_from', '').strip() or '2026-05-01T00:00:00+05:30'
+        date_to = request.GET.get('date_to', '').strip()
+        search_value = request.GET.get('search[value]', '').strip()
+
+        all_invoiced_ids = get_all_invoiced_trip_ids()
+
+        trip_list = TripdetailInfo.objects.select_related(
+            'tr_enquirynumber',
+            'tr_enquirynumber__en_customername',
+            'tr_consignmentnumber',
+            'tc_financestatus',
+            'tr_departedlocation',
+            'tr_reportedlocation',
+        ).filter(
+            id__in=all_invoiced_ids,
+            tr_category_id__in=[1, 3]
+        ).filter(
+            Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+        )
+
+        if veh_no:
+            trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
+        if date_from:
+            trip_list = trip_list.filter(
+                Q(tr_departeddate_pickup__gte=date_from) |
+                Q(tr_departeddate__gte=date_from)
+            )
+        if date_to:
+            date_to_end = f"{date_to} 23:59:59"
+            trip_list = trip_list.filter(
+                Q(tr_departeddate_pickup__lte=date_to_end) |
+                Q(tr_departeddate__lte=date_to_end)
+            )
+
+        records_total = trip_list.count()
+
+        if search_value:
+            matching_invoice_trip_numbers = list(InvoiceDocumentInfo.objects.filter(
+                id_status__status__icontains=search_value
+            ).exclude(
+                id_tripnumber__isnull=True
+            ).exclude(
+                id_tripnumber__exact=''
+            ).values_list('id_tripnumber', flat=True))
+
+            q_objects = (
+                Q(tr_tripnumber__icontains=search_value) |
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
+                Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+                Q(tr_vehiclenumber__icontains=search_value) |
+                Q(tr_departedlocation__place_name__icontains=search_value) |
+                Q(tr_reportedlocation__place_name__icontains=search_value) |
+                Q(tc_financestatus__status__icontains=search_value)
+            )
+
+            if matching_invoice_trip_numbers:
+                q_objects |= Q(tr_tripnumber__in=matching_invoice_trip_numbers)
+
+            s_lower = search_value.lower()
+            if not ('completed'.startswith(s_lower) or 'invoice completed'.startswith(s_lower) or s_lower in 'invoice completed'):
+                trip_list = trip_list.filter(q_objects)
+
+        records_filtered = trip_list.count()
+
+        order_col = int(request.GET.get('order[0][column]', 3))
+        order_dir = request.GET.get('order[0][dir]', 'desc')
+
+        col_map = {
+            1: 'tr_enquirynumber__en_enquirynumber',
+            2: 'tr_consignmentnumber__co_consignmentnumber',
+            3: 'tr_tripnumber',
+            4: 'tr_enquirynumber__en_customername__cu_name',
+            5: 'tr_vehiclenumber',
+            6: 'tr_departedlocation__place_name',
+            7: 'tr_reportedlocation__place_name',
+            8: 'tr_departeddate_pickup',
+        }
+        
+        order_field = col_map.get(order_col, '-tr_tripnumber')
+        if order_dir == 'desc' and not order_field.startswith('-'):
+            order_field = '-' + order_field
+            
+        trip_list = trip_list.order_by(order_field)
+
+        if length != -1:
+            trip_list = trip_list[start:start + length]
+
+        trip_numbers = [t.tr_tripnumber for t in trip_list if t.tr_tripnumber]
+        invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers).select_related('id_status')
+        invoice_doc_map = {doc.id_tripnumber: doc for doc in invoice_docs}
+
+        attachment_trips_set = set(TripAttachmentInfo.objects.filter(
+            ta_tripnumber__in=trip_numbers
+        ).values_list('ta_tripnumber', flat=True).distinct())
+
+        from ..sub_models.tripdetail_mod import Trip_closure_files_Info
+        closure_trips_with_files = set(Trip_closure_files_Info.objects.filter(
+            tcf_tripnumber__in=trip_numbers
+        ).filter(
+            (Q(tcf_trip_cost__isnull=False) & ~Q(tcf_trip_cost='')) |
+            (Q(tcf_parking_cost__isnull=False) & ~Q(tcf_parking_cost='')) |
+            (Q(tcf_toll_cost__isnull=False) & ~Q(tcf_toll_cost='')) |
+            (Q(tcf_loading_cost__isnull=False) & ~Q(tcf_loading_cost='')) |
+            (Q(tcf_unloading_cost__isnull=False) & ~Q(tcf_unloading_cost='')) |
+            (Q(tcf_weighment_cost__isnull=False) & ~Q(tcf_weighment_cost='')) |
+            (Q(tcf_handling_cost__isnull=False) & ~Q(tcf_handling_cost='')) |
+            (Q(tcf_pod__isnull=False) & ~Q(tcf_pod=''))
+        ).values_list('tcf_tripnumber', flat=True).distinct())
+
+        from django.urls import reverse
+        data = []
+        for idx, trip in enumerate(trip_list):
+            doc = invoice_doc_map.get(trip.tr_tripnumber)
+            
+            invoice_status = '<span class="badge bg-success text-white" style="font-size:0.82rem; padding: 5px 10px; border-radius: 6px;">Invoice Completed</span>'
+
+            has_doc_files = bool(
+                doc and (
+                    doc.id_merged_pdf or
+                    doc.id_trip_cost_doc or doc.id_parking_doc or doc.id_toll_doc or
+                    doc.id_loading_doc or doc.id_unloading_doc or doc.id_weighment_doc or
+                    doc.id_handling_doc or doc.id_pod_doc or doc.id_sell_rate_doc
+                )
+            )
+            has_trip_files = bool(
+                (trip.tc_pod_attachment and trip.tc_pod_attachment.name) or
+                (trip.td_pod and trip.td_pod.name) or
+                (trip.tr_tripnumber in attachment_trips_set) or
+                (trip.tr_tripnumber in closure_trips_with_files)
+            )
+
+            if has_doc_files or has_trip_files:
+                view_url = reverse('view_invoice_combined_pdf', kwargs={'trip_num': trip.tr_tripnumber}) if trip.tr_tripnumber else '#'
+                pdf_btn = f'<a href="{view_url}" target="_blank" class="btn-modern btn-highlight-cyan py-1 px-2 d-inline-flex align-items-center" style="font-size:0.8rem;text-decoration:none;border-radius:8px;gap:5px;"><i class="fas fa-file-pdf"></i> PDF</a>'
+            else:
+                pdf_btn = '<span style="color:var(--text-muted);font-size:0.85rem;font-style:italic;">Not generated</span>'
+                
+            edit_url = reverse('invoice_documents_add', args=[trip.id])
+            view_btn = f'<a class="btn-modern btn-submit py-1 px-2 d-inline-flex align-items-center justify-content-center" href="{edit_url}" style="font-size:0.8rem;text-decoration:none;min-height:auto;border-radius:8px;gap:4px;" title="View Attachment Documents"><i class="fas fa-eye mr-1"></i> View</a>'
+            
+            data.append([
+                str(start + idx + 1),
+                str(trip.tr_enquirynumber) if trip.tr_enquirynumber else '',
+                str(trip.tr_consignmentnumber) if trip.tr_consignmentnumber else '',
+                str(trip.tr_tripnumber) if trip.tr_tripnumber else '',
+                str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else '',
+                str(trip.tr_vehiclenumber) if trip.tr_vehiclenumber else '',
+                str(trip.tr_departedlocation) if trip.tr_departedlocation else '',
+                str(trip.tr_reportedlocation) if trip.tr_reportedlocation else '',
+                timezone.localtime(trip.tr_departeddate_pickup).strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
+                invoice_status,
+                pdf_btn,
+                view_btn
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data
+        })
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)})
+
+
 def check_sell_rate_doc_required(trip, special_sell_val=None, is_special_sell_checked=None):
     """
     Sell Rate Doc is mandatory only when:
@@ -710,6 +929,11 @@ def check_sell_rate_doc_required(trip, special_sell_val=None, is_special_sell_ch
 @login_required
 def invoice_documents_add(request, trip_id):
     trip = get_object_or_404(TripdetailInfo, pk=trip_id)
+    is_invoiced = check_trip_is_invoiced(trip)
+
+    if is_invoiced and request.method == 'POST':
+        messages.warning(request, "This trip has already completed invoicing and is read-only.")
+        return redirect('invoice_completed_documents_list')
 
     # Load or initialise Trip_closure_files record (read-only display)
     files_instance = Trip_closure_files_Info.objects.filter(
@@ -775,6 +999,7 @@ def invoice_documents_add(request, trip_id):
         'tc_handlingcost', 'tc_handlingcost_check',
         'tc_supervisorcost', 'tc_supervisorcost_check',
         'tc_haltingcost', 'tc_haltingcost_check',
+        'tc_no_of_days_halting', 'tc_no_of_pods', 'tc_total_halting_cost', 'tc_total_halting_cost_check',
         'tc_rtocost', 'tc_rtocost_check',
         'tc_betacost', 'tc_betacost_check',
         'tc_cancellation', 'tc_cancellation_check',
@@ -796,11 +1021,11 @@ def invoice_documents_add(request, trip_id):
             Q(id=9) | Q(id=current_status_id)
         )
 
-        # Disable all settlement fields except status
+        # Disable all settlement fields except editable_fields
         for field in settlement_form.fields:
             if field not in editable_fields:
                 settlement_form.fields[field].disabled = True
-                settlement_form.fields[field].required = False
+            settlement_form.fields[field].required = False
 
         # All file-upload (closure) fields optional
         for field in files_form.fields:
@@ -824,12 +1049,13 @@ def invoice_documents_add(request, trip_id):
             messages.error(request, "At least one reference field is required: Customer Ref No, Consigner Invoice, HAWB, or MAWB.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
-        # Validate either Trip Charges or Special Sell must be checked
+        # Validate either Trip Charges, Special Sell, or Cancellation must be checked
         is_tripcost_checked = bool(request.POST.get('tc_tripcost_check'))
         is_special_sell_checked = bool(request.POST.get('special_sell_check'))
+        is_cancellation_checked = bool(request.POST.get('tc_cancellation_check'))
 
-        if not is_tripcost_checked and not is_special_sell_checked:
-            messages.error(request, "Either Trip Charges or Special Sell must be checked to bill to the customer.")
+        if not is_tripcost_checked and not is_special_sell_checked and not is_cancellation_checked:
+            messages.error(request, "Either Trip Charges, Special Sell, or Cancellation must be checked to bill to the customer.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate Special Sell cannot be less than actual/standard rate
@@ -851,6 +1077,36 @@ def invoice_documents_add(request, trip_id):
             has_sell_rate_doc = 'id_sell_rate_doc' in request.FILES or (invoice_doc and invoice_doc.id_sell_rate_doc and not request.POST.get('id_sell_rate_doc-clear'))
             if not has_sell_rate_doc:
                 messages.error(request, "Sell Rate Doc is mandatory because Special Sell is higher than Standard Sell / Trip Charges.")
+                return redirect('invoice_documents_add', trip_id=trip_id)
+
+        # Validate No of POD's matching POD attachments (less or more not allowed)
+        no_of_pods_raw = request.POST.get('tc_no_of_pods')
+        expected_pods = 0
+        if no_of_pods_raw not in (None, ''):
+            try:
+                expected_pods = int(no_of_pods_raw)
+            except (ValueError, TypeError):
+                expected_pods = 0
+        if expected_pods == 0 and trip.tc_no_of_pods:
+            expected_pods = int(trip.tc_no_of_pods)
+
+        existing_pod_count = TripAttachmentInfo.objects.filter(
+            ta_tripnumber=trip.tr_tripnumber,
+            ta_category='POD'
+        ).count()
+        if (invoice_doc and invoice_doc.id_pod_doc) and existing_pod_count == 0:
+            existing_pod_count = 1
+
+        new_pod_count = len(request.FILES.getlist('id_pod_files'))
+        if 'id_pod_doc' in request.FILES:
+            new_pod_count += 1
+
+        total_pod_attachments = existing_pod_count + new_pod_count
+
+        if expected_pods > 0:
+            if total_pod_attachments != expected_pods:
+                diff_msg = "less than" if total_pod_attachments < expected_pods else "more than"
+                messages.error(request, f"Number of POD attachments ({total_pod_attachments}) is {diff_msg} No of POD's ({expected_pods}). Please attach exactly {expected_pods} POD attachment(s) to submit.")
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
@@ -889,7 +1145,31 @@ def invoice_documents_add(request, trip_id):
                 trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
                 trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
 
+            # Ensure cancellation charge and any blank float cost fields default cleanly and persist to TripdetailInfo
+            cancellation_val = request.POST.get('tc_cancellation', '').strip()
+            if cancellation_val not in (None, ''):
+                try:
+                    trip_obj.tc_cancellation = float(cancellation_val)
+                except (ValueError, TypeError):
+                    trip_obj.tc_cancellation = 0.0
+            elif trip_obj.tc_cancellation is None:
+                trip_obj.tc_cancellation = 0.0
 
+            float_cost_fields = [
+                'tc_tripcost', 'tc_parkingcost', 'tc_tollcost', 'tc_loadingcost',
+                'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost',
+                'tc_supervisorcost', 'tc_haltingcost', 'tc_total_halting_cost',
+                'tc_rtocost', 'tc_betacost', 'tc_cancellation'
+            ]
+            for cf in float_cost_fields:
+                if getattr(trip_obj, cf, None) is None:
+                    setattr(trip_obj, cf, 0.0)
+
+            if float(trip_obj.tc_haltingcost or 0) > 0:
+                days = float(trip_obj.tc_no_of_days_halting or 0)
+                if days <= 0:
+                    days = 1.0
+                trip_obj.tc_total_halting_cost = float(trip_obj.tc_haltingcost) * days
 
             # Store special sell on trip_obj if provided
             special_sell_val = request.POST.get('special_sell', '').strip() or settlement_form.cleaned_data.get('special_sell')
@@ -901,6 +1181,7 @@ def invoice_documents_add(request, trip_id):
             elif is_special_sell_checked and (not trip_obj.tc_special_sell or trip_obj.tc_special_sell <= 0):
                 trip_obj.tc_special_sell = get_enquiry_special_sell(trip_obj)
 
+            trip_obj.tc_no_of_pods = expected_pods
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
 
@@ -1011,6 +1292,8 @@ def invoice_documents_add(request, trip_id):
             _try_merge_pdfs(inv_obj, files_obj)
 
             messages.success(request, 'Invoice documents saved successfully.')
+            if check_trip_is_invoiced(trip):
+                return redirect('invoice_completed_documents_list')
             return redirect('invoice_documents_list')
 
     else:
@@ -1036,22 +1319,28 @@ def invoice_documents_add(request, trip_id):
         
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        # Map Ready for Invoice status by its ID 9
+        # Determine appropriate target status: if trip is Cancellation with Billing (10), keep 10, else default to Ready for Invoice (9)
         ready_status = Tripstatusinfo.objects.filter(id=9).first()
-        if invoice_doc and not invoice_doc.id_status and ready_status:
-            invoice_doc.id_status = ready_status
+        if trip.tc_financestatus_id == 10:
+            target_status_id = 10
+            target_status = Tripstatusinfo.objects.filter(id=10).first()
+        else:
+            target_status_id = 9
+            target_status = ready_status
+
+        if invoice_doc and not invoice_doc.id_status and target_status:
+            invoice_doc.id_status = target_status
 
         if not invoice_doc:
-            invoice_form = InvoiceDocumentForm(initial={'id_status': ready_status})
+            invoice_form = InvoiceDocumentForm(initial={'id_status': target_status})
         else:
-            # Force the form to default to 'Ready for Invoice' for user convenience
-            if invoice_doc and invoice_doc.id_status_id != 9:
-                invoice_doc.id_status_id = 9
+            if invoice_doc and invoice_doc.id_status_id != target_status_id:
+                invoice_doc.id_status_id = target_status_id
                 
             invoice_form = InvoiceDocumentForm(instance=invoice_doc)
         
         # Only show 'Ready for Invoice' (ID 9) and the actual trip's current status (so it doesn't fail validation)
-        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else 9
+        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else target_status_id
         invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(
             Q(id=9) | Q(id=current_status_id)
         )
@@ -1067,13 +1356,12 @@ def invoice_documents_add(request, trip_id):
             )
 
         # Only show 'Ready for Invoice' (ID 9) and the current status
-        current_status_id = trip.tc_financestatus_id if trip.tc_financestatus_id else 9
         settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             Q(id=9) | Q(id=current_status_id)
         )
         
-        # Default to 'Ready for Invoice' (ID 9) so they don't have to manually select it
-        settlement_form.fields['tc_financestatus'].initial = 9
+        # Default to appropriate status
+        settlement_form.fields['tc_financestatus'].initial = target_status_id
         # Restrict huge querysets for disabled fields to speed up page loading
         if trip.tr_enquirynumber_id:
             settlement_form.fields['tr_enquirynumber'].queryset = settlement_form.fields['tr_enquirynumber'].queryset.filter(id=trip.tr_enquirynumber_id)
@@ -1092,14 +1380,25 @@ def invoice_documents_add(request, trip_id):
         if trip.tr_category_id:
             settlement_form.fields['tr_category'].queryset = settlement_form.fields['tr_category'].queryset.filter(id=trip.tr_category_id)
 
-        # Disable all settlement fields except status
-        for field in settlement_form.fields:
-            if field not in editable_fields:
+        if is_invoiced:
+            for field in settlement_form.fields:
                 settlement_form.fields[field].disabled = True
                 settlement_form.fields[field].required = False
+            for field in files_form.fields:
+                files_form.fields[field].disabled = True
+                files_form.fields[field].required = False
+            for field in invoice_form.fields:
+                invoice_form.fields[field].disabled = True
+                invoice_form.fields[field].required = False
+        else:
+            # Disable all settlement fields except status
+            for field in settlement_form.fields:
+                if field not in editable_fields:
+                    settlement_form.fields[field].disabled = True
+                    settlement_form.fields[field].required = False
 
-        for field in files_form.fields:
-            files_form.fields[field].required = False
+            for field in files_form.fields:
+                files_form.fields[field].required = False
 
     # Sell value for display
     from .tripclosure_add_view import get_allotment_sale_rate
@@ -1129,7 +1428,7 @@ def invoice_documents_add(request, trip_id):
         attachments_by_cat.setdefault(att.ta_category, []).append(att)
 
     # Check if invoiced
-    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip).exists() or trip.tc_financestatus_id == 10
+    is_invoiced = check_trip_is_invoiced(trip)
     
     user_ext = User_extInfo.objects.filter(user_id=request.session.get('ses_userID') or request.user.id).first()
     user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"

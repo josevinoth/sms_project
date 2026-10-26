@@ -1,210 +1,214 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Expense Distribution{% endblock %}
 {% block content %}
 
-<form method="POST" action="" id="expense_ext_add" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <a href="{% url 'expense_ext_add' %}" class="btn btn-primary float-right" id="add-new-btn">
-                            <i class="fas fa-plus"></i> Add
-                        </a>
-                        <h3 style="display: inline-block;">Add/Update Expense</h3>
+<div class="container-fluid px-3 py-2 compact-form">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-sitemap mr-2"></i> Add / Update Expense Distribution
+        </h3>
+        <div>
+            <a href="{% url 'expense_ext_add' %}" class="btn-modern btn-submit py-1 px-3 mr-2" id="add-new-btn" style="text-decoration: none;">
+                <i class="fas fa-plus mr-1"></i> Add
+            </a>
+            <a href="{% url 'expense_ext_cancel' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Form Card ══ -->
+    <div class="modern-card p-3 mb-3 w-100">
+        <form method="POST" action="" id="expense_ext_add" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-section p-3 mb-3">
+                <div class="form-section-title mb-3">
+                    <i class="fas fa-edit text-primary mr-1"></i> Distribution Details
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Expense Number</label>
+                            {% render_field form.exp_ext_expense_number id="exp_ext_expense_number" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Name</label>
+                            {% render_field form.exp_ext_customer_name id="exp_ext_customer_name" onchange="fetchCustomerDetails()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">New Customer</label>
+                            {% render_field form.exp_ext_customer_new_name id="exp_ext_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Business Model</label>
+                            {% render_field form.exp_ext_businessmodel id="exp_ext_businessmodel" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Credit Ledger</label>
+                            {% render_field form.exp_ext_credit_ledger id="exp_ext_credit_ledger" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <div class="col">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Expense Number</span>
-                                    </div>
-                                    {% render_field form.exp_ext_expense_number id="exp_ext_expense_number" class="form-control disable_a_href"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Name</span>
-                                    </div>
-                                    {% render_field form.exp_ext_customer_name id="exp_ext_customer_name"  onchange="fetchCustomerDetails()"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">New Customer</span>
-                                    </div>
-                                    {% render_field form.exp_ext_customer_new_name id="exp_ext_customer_new_name"  class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Business model</span>
-                                    </div>
-                                    {% render_field form.exp_ext_businessmodel id="exp_ext_businessmodel"  class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Credit Ledger</span>
-                                    </div>
-                                    {% render_field form.exp_ext_credit_ledger id="exp_ext_credit_ledger" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Branch</span>
-                                    </div>
-                                    {% render_field form.exp_ext_branch id="exp_ext_branch"  class="form-control" %}
-                                </div>
-                                {% if "bvm trans solutions" in parent_business|lower %}
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vehicle Source</span>
-                                    </div>
-                                    {% render_field form.exp_ext_vehicle_source id="exp_ext_vehicle_source" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
-                                    </div>
-                                    <select name="exp_ext_department" id="exp_ext_department" class="form-control">
-                                        <option value="">--Select--</option>
-                                        <option value="M-Dept"{% if form.instance.exp_ext_department == 'M-Dept' %} selected{% endif %}>M-Dept</option>
-                                        <option value="B-Dept"{% if form.instance.exp_ext_department == 'B-Dept' %} selected{% endif %}>B-Dept</option>
-                                    </select>
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vehicle Number</span>
-                                    </div>
-                                    {% render_field form.exp_ext_vehicle_number id="exp_ext_vehicle_number" class="form-control select2" %}
-                                </div>
-                                {% else %}
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
-                                    </div>
-                                    {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" %}
-                                </div>
-                                {% endif %}
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Amount</span>
-                                    </div>
-                                    {% render_field form.exp_ext_amount id="exp_ext_amount" class="form-control" %}
-                                </div>
-                                {% render_field form.exp_ext_updated_by id="exp_ext_updated_by" hidden="True" class="form-control" %}
-                            </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Branch</label>
+                            {% render_field form.exp_ext_branch id="exp_ext_branch" class="form-control form-control-modern" %}
                         </div>
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
+                        {% if "bvm trans solutions" in parent_business|lower %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vehicle Source</label>
+                            {% render_field form.exp_ext_vehicle_source id="exp_ext_vehicle_source" class="form-control form-control-modern" %}
                         </div>
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'expense_ext_cancel'  %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Department</label>
+                            <select name="exp_ext_department" id="exp_ext_department" class="form-control form-control-modern">
+                                <option value="">--Select--</option>
+                                <option value="M-Dept"{% if form.instance.exp_ext_department == 'M-Dept' %} selected{% endif %}>M-Dept</option>
+                                <option value="B-Dept"{% if form.instance.exp_ext_department == 'B-Dept' %} selected{% endif %}>B-Dept</option>
+                            </select>
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vehicle Number</label>
+                            {% render_field form.exp_ext_vehicle_number id="exp_ext_vehicle_number" class="form-control form-control-modern" %}
+                        </div>
+                        {% else %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Unit</label>
+                            {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        {% endif %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Amount</label>
+                            {% render_field form.exp_ext_amount id="exp_ext_amount" class="form-control form-control-modern" %}
+                        </div>
+                        {% render_field form.exp_ext_updated_by id="exp_ext_updated_by" hidden="True" class="form-control" %}
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row my-2">
+                <div class="col-12 message text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit py-1 px-4" id="save-btn">
+                    <i class="fas fa-check mr-1"></i> Submit
+                </button>
+                <a href="{% url 'expense_ext_cancel' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
     </div>
-</form>
+</div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
 
 <script>
 	$(document).ready(function() {
-            {
-                var expense_id = document.getElementById("exp_ext_expense_number").value
-                if (expense_id == "")
-                {
-                    document.getElementById("exp_ext_expense_number").value='{{expense_id}}'
-                }
-                else
-                {
-                    document.getElementById("exp_ext_expense_number").value=expense_id;
-                }
-            }
+        var expense_id = document.getElementById("exp_ext_expense_number").value;
+        if (expense_id == "") {
+            document.getElementById("exp_ext_expense_number").value = '{{expense_id}}';
+        } else {
+            document.getElementById("exp_ext_expense_number").value = expense_id;
+        }
 
-            {
-                var updated_by = document.getElementById("exp_ext_updated_by").value
-                if (updated_by == "")
-                {
-                    document.getElementById("exp_ext_updated_by").value='{{user_id}}'
-                }
-                else
-                {
-                    document.getElementById("exp_ext_updated_by").value=updated_by;
-                }
-            }
+        var updated_by = document.getElementById("exp_ext_updated_by").value;
+        if (updated_by == "") {
+            document.getElementById("exp_ext_updated_by").value = '{{user_id}}';
+        } else {
+            document.getElementById("exp_ext_updated_by").value = updated_by;
+        }
 
-            function initializeSelect2() {
-                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-                    window.jQuery('#exp_ext_vehicle_number').select2({
-                        placeholder: "--Select Vehicle--",
-                        allowClear: true,
-                        width: 'resolve'
-                    });
-                }
-            }
-
-            if (!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2)) {
-                // If Select2 is not loaded on the active jQuery instance (due to jQuery being reloaded at the bottom of base.html),
-                // we load it dynamically.
-                var script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js";
-                script.onload = function() {
-                    initializeSelect2();
-                };
-                document.head.appendChild(script);
-            } else {
-                initializeSelect2();
-            }
-
-            fetchCustomerDetails();
-
-            function toggleTransFields(changedField) {
-                var vehicleSource = $('#exp_ext_vehicle_source').val();
-                var department = $('#exp_ext_department').val();
-                
-                if (changedField === 'department' && department !== "") {
-                    $('#exp_ext_vehicle_source').val("");
-                }
-                
-                if (changedField === 'source' && vehicleSource !== "") {
-                    $('#exp_ext_department').val("");
-                }
-                
-                // Re-evaluate
-                vehicleSource = $('#exp_ext_vehicle_source').val();
-                department = $('#exp_ext_department').val();
-                
-                if (vehicleSource !== "") {
-                    $('#exp_ext_department').prop('disabled', true);
-                    $('#exp_ext_department').addClass('disable_a_href');
-                } else {
-                    $('#exp_ext_department').prop('disabled', false);
-                    $('#exp_ext_department').removeClass('disable_a_href');
-                }
-                
-                if (department !== "") {
-                    $('#exp_ext_vehicle_source').prop('disabled', true).addClass('disable_a_href');
-                } else {
-                    $('#exp_ext_vehicle_source').prop('disabled', false).removeClass('disable_a_href');
-                }
-            }
-
-            $('#exp_ext_vehicle_source').change(function() { toggleTransFields('source'); });
-            $('#exp_ext_department').change(function() { toggleTransFields('department'); });
-            toggleTransFields(); // run on load
+        $('#exp_ext_customer_name, #exp_ext_branch, #exp_ext_vehicle_source, #exp_ext_vehicle_number, #exp_ext_department').select2({
+            width: '100%',
+            placeholder: "--Select--",
+            allowClear: true
         });
+
+        fetchCustomerDetails();
+
+        function toggleTransFields(changedField) {
+            var vehicleSource = $('#exp_ext_vehicle_source').val();
+            var department = $('#exp_ext_department').val();
+            
+            if (changedField === 'department' && department !== "") {
+                $('#exp_ext_vehicle_source').val("");
+            }
+            
+            if (changedField === 'source' && vehicleSource !== "") {
+                $('#exp_ext_department').val("");
+            }
+            
+            vehicleSource = $('#exp_ext_vehicle_source').val();
+            department = $('#exp_ext_department').val();
+            
+            if (vehicleSource !== "") {
+                $('#exp_ext_department').prop('disabled', true);
+                $('#exp_ext_department').addClass('disable_a_href');
+            } else {
+                $('#exp_ext_department').prop('disabled', false);
+                $('#exp_ext_department').removeClass('disable_a_href');
+            }
+            
+            if (department !== "") {
+                $('#exp_ext_vehicle_source').prop('disabled', true).addClass('disable_a_href');
+            } else {
+                $('#exp_ext_vehicle_source').prop('disabled', false).removeClass('disable_a_href');
+            }
+        }
+
+        $('#exp_ext_vehicle_source').change(function() { toggleTransFields('source'); });
+        $('#exp_ext_department').change(function() { toggleTransFields('department'); });
+        toggleTransFields();
+    });
 </script>
 
 <script>
@@ -216,83 +220,45 @@
            'branchId': branchId,
          },
          success: function (data) {
-             console.log(data);
              $('#exp_ext_unit').removeClass('disable_a_href');
              $("#exp_ext_unit").empty();
-             $('#wh_bay').empty().append("<option value='0'>--Select--</option>");
-             $("#wh_stack_layer").val($("#selectBox option:first").val());
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
+             var unit_name = JSON.parse(data)["unit_name_list"];
+             var unit_id = JSON.parse(data)["unit_id"];
              var len = (unit_name).length;
              $('#exp_ext_unit').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#exp_ext_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
+             for (var i = 0; i < len; i++) {
+                 $("#exp_ext_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
              }
          }
        });
      });
 </script>
+
 <script>
     function fetchCustomerDetails() {
-    var customerId = $("#exp_ext_customer_name").val();  // Get selected customer ID
+        var customerId = $("#exp_ext_customer_name").val();
 
-    if (customerId == "210") {   // match string or int
-        $("#exp_ext_customer_new_name").closest(".input-group").show();   // show whole field row
-    } else {
-        $("#exp_ext_customer_new_name").closest(".input-group").hide();   // hide whole field row
-        $("#exp_ext_customer_new_name").val("");  // clear input
+        if (customerId == "210") {
+            $("#exp_ext_customer_new_name").closest(".form-group-modern").show();
+        } else {
+            $("#exp_ext_customer_new_name").closest(".form-group-modern").hide();
+            $("#exp_ext_customer_new_name").val("");
+        }
+
+        if (customerId) {
+            $.ajax({
+                url: "{% url 'get_customer_details' %}",
+                type: "GET",
+                data: { customer_id: customerId },
+                success: function(response) {
+                    $("#exp_ext_businessmodel").val(response.customer_businessmodel_id);
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error fetching customer details:", error);
+                }
+            });
+        }
     }
-
-    if (customerId) {
-        $.ajax({
-            url: "{% url 'get_customer_details' %}",
-            type: "GET",
-            data: { customer_id: customerId },
-            success: function(response) {
-                $("#exp_ext_businessmodel").val(response.customer_businessmodel_id);
-            },
-            error: function(xhr, status, error) {
-                console.log("Error fetching customer details:", error);
-            }
-        });
-    }
-}
-
 </script>
-<style>
-    .input-group-text {
-        width: 150px;
-        font-size: 13px;
-        white-space: normal;
-        text-align: left;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 0.2rem 0.5rem;
-        background-color: #9fe9f0 !important;
-        color: #333;
-        font-weight: 600;
-        border: 1px solid #7ed2d9;
-        line-height: 1.2;
-    }
-    
-    /* Ensure Select2 containers occupy remaining space inside bootstrap input-group */
-    .input-group > .select2-container--default {
-        flex: 1 1 auto;
-        width: 1% !important;
-    }
-    .input-group > .select2-container--default .select2-selection--single {
-        height: 100% !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 0 4px 4px 0 !important;
-        padding-top: 2px;
-    }
-    .input-group > .select2-container--default .select2-selection__rendered {
-        padding-left: .75rem !important;
-        line-height: 24px !important;
-    }
-    .input-group > .select2-container--default .select2-selection__arrow {
-        height: 100% !important;
-    }
-</style>
+
 {% endblock content %}

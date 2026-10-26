@@ -264,19 +264,23 @@ def send_gate_in_email_logic(pre_gatein_id, request=None):
                 em_emailtype__email_type__icontains='Alert'
             ).first()
             
+            cc_list = []
             if email_master and email_master.em_to_names:
                 recipient_list = [email.strip() for email in email_master.em_to_names.split(',') if email.strip()]
+                if email_master.em_cc_names:
+                    cc_list = [email.strip() for email in email_master.em_cc_names.split(',') if email.strip()]
             else:
                 # Fallback to customer list if not found
                 recipient_list = [customer.cu_email]
         except Exception as e:
             print(f"Error fetching from Email Master: {e}")
             recipient_list = [customer.cu_email]
+            cc_list = []
             
         message = f"Dear Customer,\n\nPlease find the Gate-In DSR report for {customer_name} attached.\n\nRegards,\nBVM Warehouse Team"
         
         # Call the email sending function
-        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer_id, subject=subject, recipient_list=recipient_list, message=message)
+        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer_id, subject=subject, recipient_list=recipient_list, message=message, cc_list=cc_list)
         
         # Update email count
         Gatein_pre_info.objects.filter(pk=pre_gatein_id).update(gatein_pre_email_count=F('gatein_pre_email_count') + 1)

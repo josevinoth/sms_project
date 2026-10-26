@@ -129,6 +129,10 @@
             </button>
             <div class="collapse d-md-block" id="sidebarMenu">
                 <div class="sidenav shadow-lg" style="overflow-y: auto;">
+<!--                    <a id="md_dashboard_btn" href="{% url 'md_dashboard' %}" target="_blank" style="background: linear-gradient(135deg, #091235, #1e3a8a); color: #38bdf8; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin: 8px 8px 12px 8px; border-radius: 6px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25); text-decoration: none;">-->
+<!--                        <span><i class="fas fa-tv" style="margin-right: 8px; color: #38bdf8;"></i> MD Executive Pulse</span>-->
+<!--                        <span class="badge" style="background: #0284c7; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px;">TV KIOSK</span>-->
+<!--                    </a>-->
                     <button type="button" id='administration' class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
                     <div class="content">
                         <a href="{% url 'department_list' %}"><i class="far fa-building"></i> Departments</a>
@@ -278,6 +282,9 @@
                         <a href="{% url 'business_revenue_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Business Revenue</a>
                         <a href="{% url 'expense_search' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Expenses</a>
                         <a href="{% url 'iou_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> IOU</a>
+                        {% if 'Admin' in request.session.ses_role or request.user.id == 115 or request.user.id == 28 or request.user.id == 74 or request.user.id == 27 %}
+                        <a href="{% url 'petty_cash_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Petty Cash Approvals</a>
+                        {% endif %}
                         <a href="{% url 'performance_audit_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Performance Audit</a>
                         <a href="{% url 'finance_reports' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Reports</a>
                     </div>
@@ -343,7 +350,8 @@
                         <!-- Billing Group -->
                         <div class="nav-category-header">Billing & Invoicing</div>
                         <a href="{% url 'trans_invoice_list' %}"><i class="fa fa-file-invoice" aria-hidden="true"></i> Invoice List </a>
-                        <a href="{% url 'invoice_documents_list' %}"><i class="fa fa-file-alt" aria-hidden="true"></i> Invoice Supportings </a>
+                        <a href="{% url 'invoice_documents_list' %}"><i class="fa fa-file-alt" aria-hidden="true"></i> Supportings </a>
+                        <a href="{% url 'invoice_completed_documents_list' %}"><i class="fa fa-check-double" aria-hidden="true"></i> Completed Invoices </a>
                         <a href="{% url 'attached_bill_list' %}"><i class="fa fa-paperclip" aria-hidden="true"></i> Attached bill </a>
                         <a href="{% url 'market_bill_list' %}"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Market bill </a>
 

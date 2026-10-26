@@ -3,7 +3,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
 from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo,Costtype,Pkstocktype,pk_itemInfo,PkpartcodeInfo,Pkwooddescription,pk_stock_statusinfo
@@ -114,6 +114,44 @@ def costing_add(request, costing_id=0):
         print('DEBUG: na_assessment_num_id=', na_assessment_num_id, 'ses_customer_po_id=', ses_customer_po_id, 'ses_costing_summary_id=', request.session.get('ses_costing_summary_id'))
         print('DEBUG: job_no_list_qs=', job_no_list_qs)
 
+        # Calculate total wood CFT per requirement for the current job number (Wood: 1, 5; excluding reused wood weight in Kg)
+        job_cft_qs = PkcostingInfo.objects.filter(
+            ct_job_no=current_job_no_val,
+            ct_cost_type=8,
+            ct_stock_type__in=[1, 5]
+        ).exclude(
+            ct_part_code__pc_code__icontains='RE'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='RE - Used'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='RE-Used'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='Reused'
+        ).values('ct_requirement').annotate(
+            total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
+        )
+        job_cft_map = {}
+        for j in job_cft_qs:
+            if j['ct_requirement']:
+                job_cft_map[str(j['ct_requirement'])] = round(j['total'] or 0.0, 3)
+        job_cft_map_json = json.dumps(job_cft_map)
+
+        # Dynamic total CFT for the current job/assessment
+        aggregate_cft = PkcostingInfo.objects.filter(
+            ct_job_no=current_job_no_val,
+            ct_cost_type=8,
+            ct_stock_type__in=[1, 5]
+        ).exclude(
+            ct_part_code__pc_code__icontains='RE'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='RE - Used'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='RE-Used'
+        ).exclude(
+            ct_stock_description__stock_description__icontains='Reused'
+        ).aggregate(total=Sum(F('ct_sqrt_req') * F('ct_na_quantity')))['total']
+        total_cft_display_val = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
+
         context = {
             'form': form,
             'first_name': first_name,
@@ -126,7 +164,8 @@ def costing_add(request, costing_id=0):
                 ct_job_no=current_job_no_val
             ).order_by('-id'),
             'excess_costing_list': PkcostingInfo.objects.all(),
-            'total_cft_display': request.session.get('ct_total_cft_display', 0),
+            'total_cft_display': total_cft_display_val,
+            'job_cft_map_json': job_cft_map_json,
             'job_no_list': job_no_list_qs,
             # Preserve user's selected job number (if any) so the manual select keeps the choice on error
             'current_job_no': current_job_no_val
@@ -151,17 +190,73 @@ def costing_add(request, costing_id=0):
             # --- BACKEND OVERRIDE FOR TOTAL COST ---
             # To ensure the total cost is always correctly calculated regardless of JS calculation errors
             costing_temp = form.save(commit=False)
-            unit_cost = float(costing_temp.ct_total_cost or 0)
             qty = float(costing_temp.ct_na_quantity or 0)
-            form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
-            # ---------------------------------------
-            
+
             # Be defensive: ct_cost_type may be missing or empty (e.g. placeholder). Default to 0.
             cost_type_raw = request.POST.get('ct_cost_type') or '0'
             try:
                 cost_type_id = int(cost_type_raw)
             except (ValueError, TypeError):
                 cost_type_id = 0
+
+            if cost_type_id in [3, 9]:  # Labour Cost (In-house / On-site)
+                rate = float(costing_temp.ct_rate or 0)
+                days = float(costing_temp.ct_days or 1)
+                qty_req = float(costing_temp.ct_quantity_req or 1)
+                unit_cost = rate * days * qty_req
+                form.instance.ct_total_cost = round(unit_cost, 2)
+                form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            elif cost_type_id == 5:  # HT Cost
+                rate = float(costing_temp.ct_rate or 0)
+                unit_cft = float(costing_temp.ct_sqrt_req or 0)
+                unit_cost = rate * unit_cft
+                form.instance.ct_total_cost = round(unit_cost, 2)
+                form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            elif cost_type_id == 8:  # Packing Material Cost
+                part_code_obj = costing_temp.ct_part_code
+                pc_code_val = (part_code_obj.pc_code if part_code_obj and part_code_obj.pc_code else '').upper()
+                desc_val = str(costing_temp.ct_stock_description or '').upper()
+                is_reused = ('RE' in pc_code_val) or ('RE - USED' in desc_val) or ('RE-USED' in desc_val) or ('REUSED' in desc_val)
+
+                rate = float(costing_temp.ct_rate or 0)
+                q_req = float(costing_temp.ct_quantity_req or 0)
+
+                if is_reused:
+                    unit_cost = round(rate * q_req, 2)
+                    form.instance.ct_sqrt_req = round(q_req, 3)
+                    form.instance.ct_cft = 0.0
+                    form.instance.ct_total_cost = unit_cost
+                    form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+                else:
+                    unit_cost = float(costing_temp.ct_total_cost or 0)
+                    # If unit_cost came in as 0 or <= 0, recalculate from dimensions & rate
+                    if unit_cost <= 0:
+                        stock_type_raw = request.POST.get('ct_stock_type') or (costing_temp.ct_stock_type.id if costing_temp.ct_stock_type else 0)
+                        try:
+                            st_id = int(stock_type_raw)
+                        except (ValueError, TypeError):
+                            st_id = 0
+                        if st_id in [1, 5]:  # Wood
+                            l = float(costing_temp.ct_length_req or 0)
+                            w = float(costing_temp.ct_width_req or 0)
+                            h = float(costing_temp.ct_height_req or 0)
+                            cft_unit = (l * w * h / 144) * (q_req if q_req else 1)
+                            unit_cost = round(rate * cft_unit, 2)
+                            form.instance.ct_sqrt_req = round(cft_unit, 3)
+                        elif st_id in [4, 6]:  # Plywood
+                            l = float(costing_temp.ct_length_req or 0)
+                            w = float(costing_temp.ct_width_req or 0)
+                            sqft_unit = ((l * w) / 144.0) * (q_req if q_req else 1)
+                            unit_cost = round(rate * sqft_unit, 2)
+                            form.instance.ct_sqrt_req = round(sqft_unit, 3)
+                        else:
+                            unit_cost = round(rate * q_req, 2)
+                    form.instance.ct_total_cost = round(unit_cost, 2)
+                    form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            else:
+                unit_cost = float(costing_temp.ct_total_cost or 0)
+                form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            # ---------------------------------------
 
             if cost_type_id == 8:  # For stock-related cost types
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
@@ -200,12 +295,12 @@ def costing_add(request, costing_id=0):
                             stock_type = costing.ct_stock_type.id
                             assessment_id = costing.ct_assessment_num.id
 
-                            if cost_type == 8 and stock_type == 1:
+                            if cost_type == 8 and stock_type in [1, 5]:
                                 total_cft = PkcostingInfo.objects.filter(
                                     ct_assessment_num=assessment_id,
                                     ct_cost_type=8,
-                                    ct_stock_type=1
-                                ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+                                    ct_stock_type__in=[1, 5]
+                                ).aggregate(total=Sum(F('ct_sqrt_req') * F('ct_na_quantity')))['total'] or 0.0
                                 print("total_cft", total_cft)
                                 request.session['ct_total_cft_display'] = round(total_cft, 2)
                             else:
@@ -380,20 +475,23 @@ def costing_delete(request,costing_id):
 
 @login_required(login_url='login_page')
 def load_stock_description(request):
-    stock_description_id= []
     stock_type = request.GET.get('stock_type')
-    # Fetch cost_description Details
-    stock_description = list(Stockdescription.objects.filter(stock_type=stock_type).values_list('stock_description', flat=True).distinct())
-    stock_description.sort()
-    for j in stock_description:
-        stock_obj = Stockdescription.objects.filter(stock_description=j).first()
-        if stock_obj:
-            stock_description_id.append(stock_obj.id)
+    stock_description = []
+    stock_description_id = []
+    if stock_type:
+        seen = set()
+        qs = Stockdescription.objects.filter(stock_type=stock_type).order_by('stock_description').values('id', 'stock_description')
+        for item in qs:
+            desc = item['stock_description']
+            if desc and desc not in seen:
+                seen.add(desc)
+                stock_description.append(desc)
+                stock_description_id.append(item['id'])
     data = {
-        'stock_description':stock_description,
+        'stock_description': stock_description,
         'stock_description_id': stock_description_id,
     }
-    return HttpResponse(json.dumps(data))
+    return HttpResponse(json.dumps(data), content_type='application/json')
 @login_required(login_url='login_page')
 def load_pk_wood_description(request):
     stock_type = request.GET.get('stock_type')
@@ -455,31 +553,70 @@ def pk_item_search_page_costing(request):
 
     # 2. Calculate FIFO stock batches for all matching parts
     formatted_results = []
-    for p_id in p_ids:
-        p = PkpartcodeInfo.objects.select_related('pc_stock_description', 'pc_stock_type', 'pc_uom').get(id=p_id)
+    if p_ids:
+        parts_dict = {
+            p.id: p
+            for p in PkpartcodeInfo.objects.filter(id__in=p_ids).select_related(
+                'pc_stock_description', 'pc_stock_type', 'pc_uom'
+            )
+        }
 
-        # Vendor returns are stored as negative Return rows against the original GRN.
-        # Production returns remain positive stock-in batches.
+        # Bulk fetch retrieved quantities (Stock Type 2)
+        retrieved_qs = (
+            StockMaintenance.objects.filter(
+                sm_partcode_id__in=p_ids,
+                sm_stock_type_id=2
+            ).values('sm_partcode_id', 'sm_invoice_no').annotate(total=Sum('sm_count'))
+        )
+        retrieved_map = {
+            (r['sm_partcode_id'], r['sm_invoice_no']): abs(float(r['total'] or 0.0))
+            for r in retrieved_qs
+        }
+
+        # Bulk fetch vendor returned quantities (Stock Type 3)
+        returned_qs = (
+            StockMaintenance.objects.filter(
+                sm_partcode_id__in=p_ids,
+                sm_stock_type_id=3,
+                sm_vendor__isnull=False
+            ).values('sm_partcode_id', 'sm_stock_purchase_number', 'sm_vendor_id').annotate(total=Sum('sm_count'))
+        )
+        returned_map = {
+            (r['sm_partcode_id'], r['sm_stock_purchase_number'], r['sm_vendor_id']): abs(float(r['total'] or 0.0))
+            for r in returned_qs
+        }
+
         in_batches = (
             StockMaintenance.objects
-            .filter(sm_partcode_id=p_id)
+            .filter(sm_partcode_id__in=p_ids)
             .filter(Q(sm_stock_type_id=1) | Q(sm_stock_type_id=3, sm_count__gt=0))
             .exclude(sm_stock_type_id=3, sm_vendor__isnull=False, sm_description__startswith='Vendor Return')
             .order_by('sm_invoice_date', 'id')
         )
 
         for batch in in_batches:
-            batch_qty = batch.sm_count or 0.0
-            batch_cft = batch.sm_total_cft or 0.0
-            available_qty = _available_qty_for_stock_entry(batch)
-            available_ratio = (available_qty / float(batch_qty)) if batch_qty else 0.0
-            available_cft = float(batch_cft or 0.0) * available_ratio
+            p = parts_dict.get(batch.sm_partcode_id)
+            if not p:
+                continue
 
-            # Only show batches that currently have available stock > 0
+            ref = _stock_entry_ref(batch)
+            retrieved_qty = retrieved_map.get((batch.sm_partcode_id, ref), 0.0)
+            vendor_returned_qty = (
+                returned_map.get((batch.sm_partcode_id, ref, batch.sm_vendor_id), 0.0)
+                if batch.sm_vendor_id else 0.0
+            )
+
+            original_qty = float(batch.sm_count or 0.0)
+            available_qty = max(0.0, original_qty - retrieved_qty - vendor_returned_qty)
+
             if available_qty > 0:
+                batch_cft = batch.sm_total_cft or 0.0
+                available_ratio = (available_qty / original_qty) if original_qty else 0.0
+                available_cft = float(batch_cft or 0.0) * available_ratio
+
                 formatted_results.append({
-                    'id': batch.id, # Link directly to the batch record
-                    'partcode_id': p.id, # PkpartcodeInfo primary key ID
+                    'id': batch.id,
+                    'partcode_id': p.id,
                     'sp_vendor_bill_id': batch.sm_invoice_no,
                     'sp_stock_in_date': batch.sm_invoice_date.strftime('%d-%m-%Y') if batch.sm_invoice_date else '',
                     'sp_purchase_num': batch.sm_stock_purchase_number or batch.sm_invoice_no,
@@ -567,35 +704,39 @@ def pk_get_po_requirement_type(request):
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
     ct_customer_po_id = request.GET.get('ct_customer_po_id')
     job_no = request.GET.get('job_no')
-    print('job_no', job_no)
 
-    # Initial filtering by assessment and customer PO
-    po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num=ct_customer_po_id)
+    filter_q = Q()
+    if ct_assessment_num_id:
+        if str(ct_assessment_num_id).isdigit():
+            filter_q &= Q(pod_assess_num_id=ct_assessment_num_id)
+        else:
+            filter_q &= Q(pod_assess_num__na_assessment_num=ct_assessment_num_id)
+
+    if ct_customer_po_id:
+        po_str = str(ct_customer_po_id)
+        if po_str.isdigit() and len(po_str) < 8:
+            filter_q &= (Q(pod_po_num_id=ct_customer_po_id) | Q(pod_po_num__po_num=ct_customer_po_id))
+        else:
+            filter_q &= Q(pod_po_num__po_num=ct_customer_po_id)
+
+    po_dimensions = POdimension.objects.filter(filter_q).select_related('pod_nad', 'pod_type_of_req')
 
     # If job_no is provided, narrow down to items used in that specific job
     if job_no:
-        used_nad_ids = PkcostingInfo.objects.filter(ct_job_no=job_no).values_list('ct_requirement_id', flat=True).distinct()
-        po_dimensions = po_dimensions.filter(pod_nad_id__in=used_nad_ids).distinct()
-
-    # Fetch requirement type from Need Assessment dimension
-    # Try to filter by ID first, then by PO Number string if ID is not found or invalid
-    try:
-        if not po_dimensions.exists():
-            po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num__po_num=ct_customer_po_id)
-    except:
-        po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num__po_num=ct_customer_po_id)
+        used_nad_ids = list(PkcostingInfo.objects.filter(ct_job_no=job_no).values_list('ct_requirement_id', flat=True).distinct())
+        if used_nad_ids:
+            po_dimensions = po_dimensions.filter(pod_nad_id__in=used_nad_ids)
 
     po_requirement_type_id = []
     po_requirement_type_val = []
-    po_dimension_id = []  # Keep track of POdimension IDs for pk_store_po_dimension_id
+    po_dimension_id = []
 
     for dimension in po_dimensions:
-        # Use the linked Nadimension ID (pod_nad) as the option value so ct_requirement
-        # saves a valid Nadimension FK. Fall back to POdimension ID if pod_nad is missing.
         nad_id = dimension.pod_nad.id if dimension.pod_nad else dimension.id
         po_requirement_type_id.append(nad_id)
-        po_requirement_type_val.append(f"{dimension.pod_item} ({dimension.pod_type_of_req} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
-        po_dimension_id.append(dimension.id)  # POdimension ID stored separately for JS
+        type_str = str(dimension.pod_type_of_req) if dimension.pod_type_of_req else ""
+        po_requirement_type_val.append(f"{dimension.pod_item} ({type_str} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
+        po_dimension_id.append(dimension.id)
 
     data = {
         'po_requirement_type_val': po_requirement_type_val,
@@ -609,22 +750,31 @@ def pk_store_po_dimension_id(request):
     ct_requirement_id = request.GET.get('ct_requirement_id')
     ct_customer_po = request.GET.get('ct_customer_po')
     job_no = request.GET.get('job_no')
-    print('ct_requirement_id',ct_requirement_id, 'job_no', job_no)
     
     # Validation: Return empty response if required parameters are missing
     if not ct_requirement_id or not ct_customer_po:
         return JsonResponse({'error': 'Missing parameters'}, status=200)
 
+    b = None
     try:
-        b = POdimension.objects.get(id=ct_requirement_id)
+        b = POdimension.objects.select_related('pod_nad', 'pod_type_of_req', 'pod_uom').get(id=ct_requirement_id)
     except (POdimension.DoesNotExist, ValueError):
+        pass
+
+    if not b:
         # Fallback if ct_requirement_id is the Nadimension ID instead of POdimension ID
-        b = POdimension.objects.filter(pod_nad_id=ct_requirement_id, pod_po_num=ct_customer_po).order_by('-id').first()
-        if not b:
-            return JsonResponse({'error': 'Not found'}, status=200)
+        po_str = str(ct_customer_po)
+        po_filter = Q(pod_po_num__po_num=po_str)
+        if po_str.isdigit() and len(po_str) < 8:
+            po_filter |= Q(pod_po_num_id=po_str)
+        b = POdimension.objects.filter(
+            Q(pod_nad_id=ct_requirement_id) & po_filter
+        ).select_related('pod_nad', 'pod_type_of_req', 'pod_uom').order_by('-id').first()
+
+    if not b:
+        return JsonResponse({'error': 'Not found'}, status=200)
 
     # pod_quantity for costing calculation always comes from POdimension (quantity given when creating job number)
-    # This ensures cost calculations use the job-level quantity, NOT the NA assessment quantity
     pod_quantity = b.pod_quantity
     pod_item_id = ""
     pod_itemdescription_id = ""
@@ -670,6 +820,24 @@ def pk_store_po_dimension_id(request):
     # Return the Nadimension ID (pod_nad) so the form field ct_requirement is set correctly
     pod_nad_id = str(b.pod_nad.id) if b.pod_nad else ""
 
+    # Calculate wood CFT for this job and requirement (Pine Wood=1, Rubber Wood=5)
+    job_wood_cft = 0.0
+    if b.pod_nad and job_no:
+        total_cft_val = PkcostingInfo.objects.filter(
+            ct_job_no=job_no,
+            ct_requirement=b.pod_nad,
+            ct_cost_type=8,
+            ct_stock_type__in=[1, 5]
+        ).aggregate(total=Sum(F('ct_sqrt_req') * F('ct_na_quantity')))['total']
+        job_wood_cft = round(total_cft_val, 3) if total_cft_val is not None else 0.0
+    elif b.pod_nad:
+        total_cft_val = PkcostingInfo.objects.filter(
+            ct_requirement=b.pod_nad,
+            ct_cost_type=8,
+            ct_stock_type__in=[1, 5]
+        ).aggregate(total=Sum(F('ct_sqrt_req') * F('ct_na_quantity')))['total']
+        job_wood_cft = round(total_cft_val, 3) if total_cft_val is not None else 0.0
+
     data = {
         'po_dimension_box_val': po_dimension_box_val,
         'pod_dimension_type': pod_dimension_type,
@@ -684,6 +852,7 @@ def pk_store_po_dimension_id(request):
         'pod_item_id': pod_item_id,
         'pod_itemdescription_id': pod_itemdescription_id,
         'pod_nad_id': pod_nad_id,
+        'job_total_cft': job_wood_cft,
     }
 
     return JsonResponse(data)

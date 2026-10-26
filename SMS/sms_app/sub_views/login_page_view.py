@@ -69,6 +69,9 @@ def login_page(request):
                 except UnitInfo.DoesNotExist:
                     request.session['ses_unit_name'] = None
 
+            if user_ext.linked_customer or (user_ext.emp_role and user_ext.emp_role.role_name.lower() == 'customer') or getattr(user_ext, 'is_lp_customer', False):
+                return redirect('customer_dashboard')
+
             return redirect('home_page')
         else:
             print(f"[login_page] Authentication failed for user '{username}'")  # Debug print

@@ -199,13 +199,8 @@ def wms_petty_cash_list(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(wpc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(wpc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(wpc_branch__loc_name__icontains=search_branch)
 
     wpc_list = WMSPettyCashInfo.objects.filter(filters).select_related(
         'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',
@@ -460,13 +455,8 @@ def wms_petty_cash_export_tally(request):
         except Exception:
             pass
 
-    if not is_admin_or_supervisor:
-        branch_id = get_session_branch_id(request)
-        if branch_id:
-            filters &= Q(wpc_branch_id=branch_id)
-    else:
-        if search_branch:
-            filters &= Q(wpc_branch__loc_name__icontains=search_branch)
+    if search_branch:
+        filters &= Q(wpc_branch__loc_name__icontains=search_branch)
 
     wpc_list = WMSPettyCashInfo.objects.filter(filters).select_related(
         'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',

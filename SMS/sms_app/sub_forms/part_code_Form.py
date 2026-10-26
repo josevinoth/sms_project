@@ -16,10 +16,11 @@ class Part_codeForm(forms.ModelForm):
         pc_code = self.cleaned_data.get('pc_code', '').strip().upper()
         self.cleaned_data['pc_code'] = pc_code  # Normalize and set back
 
-        qs = PkpartcodeInfo.objects.filter(pc_code=pc_code)
+        qs = PkpartcodeInfo.objects.filter(pc_code__iexact=pc_code)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)  # Exclude current instance on update
 
         if qs.exists():
-            raise forms.ValidationError("Part Code already exists.")
+            existing = qs.first()
+            raise forms.ValidationError(f"Part Code '{pc_code}' already exists in database (Record #{existing.id}).")
         return pc_code
