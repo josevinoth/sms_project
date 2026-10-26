@@ -37,13 +37,13 @@ class DmrTemplateMaster(models.Model):
 
 class DmrTemplateColumn(models.Model):
     PAGE_CHOICES = [
-        ('ENQUIRY', 'Enquiry / Indent Page'),
-        ('CONSIGNMENT', 'Consignment & Goods Page'),
-        ('ALLOTMENT', 'Vehicle Allotment Page'),
-        ('TRIP_LOADING', 'Dispatch & Loading Page'),
-        ('TRIP_UNLOADING', 'Unloading & Delivery Page'),
-        ('CHARGES_FINANCE', 'Charges & Finance Page'),
-        ('SYSTEM', 'System / Calculated / Custom'),
+        ('ENQUIRY', 'Booking Note'),
+        ('CONSIGNMENT', 'Consignment Detail'),
+        ('ALLOTMENT', 'Vehicle Allotment'),
+        ('TRIP_LOADING', 'Trip Detail - Loading Details'),
+        ('TRIP_UNLOADING', 'Trip Detail - Unloading Details'),
+        ('CHARGES_FINANCE', 'Trip Closure - Trip Charges'),
+        ('SYSTEM', 'System & Custom Fields'),
     ]
 
     template = models.ForeignKey(

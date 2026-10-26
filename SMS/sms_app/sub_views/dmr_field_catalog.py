@@ -17,7 +17,7 @@ AVAILABLE_CHARGES = [
 DMR_PAGE_CATALOG = [
     {
         "id": "ENQUIRY",
-        "title": "Enquiry & Indent Page",
+        "title": "Booking Note",
         "icon": "fas fa-clipboard-list",
         "color": "primary",
         "fields": [
@@ -32,21 +32,21 @@ DMR_PAGE_CATALOG = [
             {"key": "en_assignedto", "label": "CS Name / Requestor", "type": "string", "desc": "Customer service assigned user"},
             {"key": "en_fromlocation", "label": "From Location", "type": "string", "desc": "Enquiry pickup place"},
             {"key": "en_tolocation", "label": "To Location / Destination", "type": "string", "desc": "Enquiry delivery place"},
-            {"key": "booking_no", "label": "Booking No / PO #", "type": "string", "desc": "Customer booking or PO reference"},
             {"key": "en_branch", "label": "Branch", "type": "string", "desc": "Operating BVM branch"},
         ]
     },
     {
         "id": "CONSIGNMENT",
-        "title": "Consignment & Goods Page",
+        "title": "Consignment Detail",
         "icon": "fas fa-boxes",
         "color": "success",
         "fields": [
             {"key": "co_consignmentnumber", "label": "Consignment No / LR / Job No", "type": "string", "desc": "C-Note / LLR / BVM Job No"},
+            {"key": "cg_consignerinvoice", "label": "Consigner Invoice / Invoice No", "type": "string", "desc": "Consigner Invoice number (from Consignment Goods)"},
+            {"key": "co_cusrefnum", "label": "Customer Reference No", "type": "string", "desc": "Customer Reference No (from Consignment Detail)"},
             {"key": "cg_consigner", "label": "Shipper Name / Consignor", "type": "string", "desc": "Shipper / Supplier name"},
             {"key": "cg_consignee", "label": "Consignee Name", "type": "string", "desc": "Consignee / Receiver name"},
             {"key": "cg_deliverylocation", "label": "Delivery Place", "type": "string", "desc": "Goods specific delivery point"},
-            {"key": "co_cusrefnum", "label": "Invoice No / Customer Ref No", "type": "string", "desc": "Master Invoice # / Ref #"},
             {"key": "cg_hawbno", "label": "HAWB # / HBL #", "type": "string", "desc": "House Airway Bill / House Bill of Lading"},
             {"key": "cg_mawbno", "label": "MAWB #", "type": "string", "desc": "Master Airway Bill"},
             {"key": "cg_boeno", "label": "BOE #", "type": "string", "desc": "Bill of Entry"},
@@ -62,7 +62,7 @@ DMR_PAGE_CATALOG = [
     },
     {
         "id": "ALLOTMENT",
-        "title": "Vehicle Allotment Page",
+        "title": "Vehicle Allotment",
         "icon": "fas fa-truck-moving",
         "color": "warning",
         "fields": [
@@ -80,8 +80,8 @@ DMR_PAGE_CATALOG = [
     },
     {
         "id": "TRIP_LOADING",
-        "title": "Dispatch & Loading Page",
-        "icon": "fas fa-stopwatch",
+        "title": "Trip Detail - Loading Details",
+        "icon": "fas fa-box-open",
         "color": "info",
         "fields": [
             {"key": "tr_tripnumber", "label": "Trip Sheet No / Trip No", "type": "string", "desc": "BVM internal trip number"},
@@ -98,8 +98,8 @@ DMR_PAGE_CATALOG = [
     },
     {
         "id": "TRIP_UNLOADING",
-        "title": "Unloading & Delivery Page",
-        "icon": "fas fa-flag-checkered",
+        "title": "Trip Detail - Unloading Details",
+        "icon": "fas fa-boxes",
         "color": "secondary",
         "fields": [
             {"key": "tr_reportedlocation", "label": "Unloading Point / Destination", "type": "string", "desc": "Unloading plant / hub location"},
@@ -120,7 +120,7 @@ DMR_PAGE_CATALOG = [
     },
     {
         "id": "CHARGES_FINANCE",
-        "title": "Charges & Finance Page",
+        "title": "Trip Closure - Trip Charges",
         "icon": "fas fa-rupee-sign",
         "color": "danger",
         "fields": [
@@ -186,7 +186,8 @@ CARGO_GOODS_FIELD_KEYS = {
     'cg_boeno',              # BOE #
     'cg_ebillno',            # E-Way Bill #
     'cg_ewaybill',           # E-Way Bill alias
-    'co_cusrefnum',          # Invoice No / Customer Ref No
+    'cg_consignerinvoice',   # Consigner Invoice (per package/good)
+    'co_cusrefnum',          # Customer Reference No
     'cg_qty',                # No of Pieces / Pkgs
     'cg_weight',             # Actual Weight (Kgs)
     'chargeable_weight',     # Chargeable Weight
@@ -319,6 +320,8 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
     # 3. Consignment & Goods Page
     if fk == "co_consignmentnumber":
         return _safe_str(cons_detail.co_consignmentnumber if cons_detail else "")
+    if fk in ("cg_consignerinvoice", "consigner_invoice", "invoice_no"):
+        return _safe_str(cons_goods.cg_consignerinvoice if cons_goods and getattr(cons_goods, "cg_consignerinvoice", None) else "")
     if fk == "cg_consigner":
         return _safe_str(cons_goods.cg_consigner if cons_goods else "")
     if fk == "cg_consignee":
