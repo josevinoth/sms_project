@@ -3,7 +3,8 @@ import re
 from datetime import datetime, timedelta, time
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.db.models import Count, Sum, Q, F, FloatField, Func
+from django.db.models import Count, Sum, Q, F, FloatField, Func, Case, When
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from ..sub_models.tripdetail_mod import TripdetailInfo
@@ -333,67 +334,171 @@ def get_md_dashboard_data(request):
 
     # -------------------------------------------------------------
     # Executive Revenue & Billing Breakdown (Overall + Branch-Wise)
-    # Total Revenue = Invoiced (Billed) + Not Invoiced (Unbilled Pipeline)
+    # Strictly aligned with Location P&L Report logic
+    # Total Revenue = Invoiced (Billed) + Not Invoiced (Unbilled Operational Revenue)
     # -------------------------------------------------------------
-    inv_month_qs = TransInvoiceInfo.objects.filter(
-        Q(ti_inv_date__range=(cur_month_start, target_date)) |
-        Q(ti_created_at__range=(cur_m_start_dt, cur_m_end_dt))
-    )
-    overall_invoiced = inv_month_qs.aggregate(s=Sum('ti_total'))['s'] or 0.0
-    maa_invoiced = inv_month_qs.filter(
-        Q(ti_inv_no__icontains='MAA') | Q(ti_customer__cu_name__icontains='MAA')
-    ).aggregate(s=Sum('ti_total'))['s'] or 0.0
-    blr_invoiced = inv_month_qs.filter(
-        Q(ti_inv_no__icontains='BLR') | Q(ti_customer__cu_name__icontains='BLR')
-    ).aggregate(s=Sum('ti_total'))['s'] or 0.0
+    from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
 
-    # Ensure robust baseline if local DB has few completed invoices for current month
-    if overall_invoiced < 100000.0:
-        overall_invoiced = invoiced_mtd_val or 6991000.0
-        maa_invoiced = round(overall_invoiced * 0.58, 2)
-        blr_invoiced = round(overall_invoiced * 0.42, 2)
-    elif maa_invoiced == 0.0 and blr_invoiced == 0.0:
-        maa_invoiced = round(overall_invoiced * 0.58, 2)
-        blr_invoiced = round(overall_invoiced * 0.42, 2)
+    # Fetch trips matching location P&L report criteria for current month
+    pl_trips_qs = TripdetailInfo.objects.filter(
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber'
+    ).annotate(
+        resolved_date=Case(
+            When(tr_category_id=1, then=F('tr_departeddate')),
+            default=Coalesce(
+                'tr_departeddate_pickup', 'tr_departeddate', 'tr_loading_time',
+                'tr_reporteddate', 'tr_reporteddate_pickup', 'tr_reporteddate_delivery',
+                'tr_unloading_time', 'tr_dock_in_time', 'tr_dock_out_time', 'tr_created_at'
+            )
+        )
+    ).filter(resolved_date__date__range=[cur_month_start, target_date])
+    pl_trips = [t for t in pl_trips_qs if t.tr_category_id not in [2, 3]]
+    pl_trip_ids = [t.id for t in pl_trips]
+    trip_enquiries = [t.tr_enquirynumber_id for t in pl_trips]
 
-    # Not Invoiced (Unbilled Pipeline) from operational trips
-    invoiced_t_ids = set(TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True))
-    unbilled_qs = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
-        tr_created_at__range=(cur_m_start_dt, cur_m_end_dt)
-    ).exclude(id__in=invoiced_t_ids)
+    chunk_size = 900
+    pl_invoices = []
+    for i in range(0, len(pl_trip_ids), chunk_size):
+        pl_invoices.extend(list(TransInvoiceInfo.objects.filter(ti_trip_id__in=pl_trip_ids[i:i+chunk_size])))
+    pl_inv_map = {inv.ti_trip_id: inv for inv in pl_invoices}
 
-    overall_unbilled = unbilled_qs.aggregate(
-        s=Sum(F('tc_tripcost') + F('tc_tollcost') + F('tc_loadingcost') + F('tc_unloadingcost'))
-    )['s'] or 0.0
+    va_map = {}
+    for i in range(0, len(trip_enquiries), chunk_size):
+        chunk = trip_enquiries[i:i+chunk_size]
+        for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=chunk).select_related('va_vendor'):
+            va_map[va.va_enquirynumber_id] = va
 
-    maa_unbilled = unbilled_qs.filter(
-        Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
-        Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
-        Q(tr_tripnumber__icontains='MAA')
-    ).aggregate(
-        s=Sum(F('tc_tripcost') + F('tc_tollcost') + F('tc_loadingcost') + F('tc_unloadingcost'))
-    )['s'] or 0.0
+    def _safe_float(v):
+        try:
+            return float(v or 0.0)
+        except:
+            return 0.0
 
-    blr_unbilled = unbilled_qs.filter(
-        Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') |
-        Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR') |
-        Q(tr_tripnumber__icontains='BLR')
-    ).aggregate(
-        s=Sum(F('tc_tripcost') + F('tc_tollcost') + F('tc_loadingcost') + F('tc_unloadingcost'))
-    )['s'] or 0.0
+    overall_revenue = 0.0
+    overall_invoiced = 0.0
+    overall_unbilled = 0.0
 
-    if overall_unbilled < 50000.0:
-        overall_unbilled = ready_invoice_val or 1240000.0
-        maa_unbilled = round(overall_unbilled * 0.55, 2)
-        blr_unbilled = round(overall_unbilled * 0.45, 2)
-    elif maa_unbilled == 0.0 and blr_unbilled == 0.0:
-        maa_unbilled = round(overall_unbilled * 0.55, 2)
-        blr_unbilled = round(overall_unbilled * 0.45, 2)
+    maa_revenue = 0.0
+    maa_invoiced = 0.0
+    maa_unbilled = 0.0
 
-    overall_revenue = overall_invoiced + overall_unbilled
-    maa_revenue = maa_invoiced + maa_unbilled
-    blr_revenue = blr_invoiced + blr_unbilled
+    blr_revenue = 0.0
+    blr_invoiced = 0.0
+    blr_unbilled = 0.0
+
+    for t in pl_trips:
+        v_source = t.tr_vehiclesource_id
+        inv = pl_inv_map.get(t.id)
+
+        if v_source == 1:
+            selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=va_map.get(t.tr_enquirynumber_id))
+            selling_toll = (_safe_float(t.tc_tollcost) if (
+                    getattr(t, 'tc_tollcost_check', True) and _safe_float(t.tc_tollcost) > 0) else (
+                _safe_float(inv.ti_toll_charges) if inv else 0.0))
+            selling_parking = (_safe_float(t.tc_parkingcost) if (
+                    getattr(t, 'tc_parkingcost_check', True) and _safe_float(t.tc_parkingcost) > 0) else (
+                _safe_float(inv.ti_parking_charges) if inv else 0.0))
+            selling_loading = (_safe_float(t.tc_loadingcost) if (
+                    getattr(t, 'tc_loadingcost_check', True) and _safe_float(t.tc_loadingcost) > 0) else (
+                _safe_float(inv.ti_loading_charges) if inv else 0.0))
+            selling_unloading = (_safe_float(t.tc_unloadingcost) if (
+                    getattr(t, 'tc_unloadingcost_check', True) and _safe_float(t.tc_unloadingcost) > 0) else (
+                _safe_float(inv.ti_unloading_charges) if inv else 0.0))
+            selling_weighment = (_safe_float(t.tc_weighmentcost) if (
+                    getattr(t, 'tc_weighmentcost_check', True) and _safe_float(t.tc_weighmentcost) > 0) else (
+                _safe_float(inv.ti_weighment_charges) if inv else 0.0))
+            selling_handling = (_safe_float(t.tc_handlingcost) if (
+                    getattr(t, 'tc_handlingcost_check', True) and _safe_float(t.tc_handlingcost) > 0) else (
+                _safe_float(inv.ti_handling_charges) if inv else 0.0))
+
+            # Halting Logic
+            halting_days = _safe_float(t.tc_no_of_days_halting)
+            if getattr(t, 'tc_total_halting_cost_check', False) and _safe_float(t.tc_total_halting_cost) > 0:
+                selling_halting = _safe_float(t.tc_total_halting_cost)
+            elif getattr(t, 'tc_haltingcost_check', False) and _safe_float(t.tc_haltingcost) > 0:
+                selling_halting = _safe_float(t.tc_haltingcost) * halting_days
+            elif inv:
+                selling_halting = _safe_float(inv.ti_halting_charges)
+            else:
+                selling_halting = 0.0
+
+            selling_supervisor = 0.0  # Exclude supervisor cost for own vehicles
+            selling_rto = (_safe_float(t.tc_rtocost) if getattr(t, 'tc_rtocost_check', True) else 0.0)
+            selling_beta = (_safe_float(t.tc_betacost) if getattr(t, 'tc_betacost_check', True) else 0.0)
+            selling_cancellation = (_safe_float(t.tc_cancellation) if (
+                    getattr(t, 'tc_cancellation_check', True) and _safe_float(t.tc_cancellation) > 0) else (
+                _safe_float(inv.ti_cancellation_charges) if inv else 0.0))
+
+            trip_selling_tot = (
+                selling_trip + selling_toll + selling_parking + selling_loading +
+                selling_unloading + selling_weighment + selling_handling +
+                selling_halting + selling_supervisor + selling_rto +
+                selling_beta + selling_cancellation
+            )
+        else:
+            # Market & Attached (v_source in [2, 3])
+            selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=va_map.get(t.tr_enquirynumber_id))
+            selling_toll = _safe_float(inv.ti_toll_charges) if inv else (_safe_float(t.tc_tollcost) if getattr(t, 'tc_tollcost_check', True) else 0.0)
+            selling_parking = _safe_float(inv.ti_parking_charges) if inv else (_safe_float(t.tc_parkingcost) if getattr(t, 'tc_parkingcost_check', True) else 0.0)
+            selling_loading = _safe_float(inv.ti_loading_charges) if inv else (_safe_float(t.tc_loadingcost) if getattr(t, 'tc_loadingcost_check', True) else 0.0)
+            selling_unloading = _safe_float(inv.ti_unloading_charges) if inv else (_safe_float(t.tc_unloadingcost) if getattr(t, 'tc_unloadingcost_check', True) else 0.0)
+            selling_weighment = _safe_float(inv.ti_weighment_charges) if inv else (_safe_float(t.tc_weighmentcost) if getattr(t, 'tc_weighmentcost_check', True) else 0.0)
+            selling_handling = _safe_float(inv.ti_handling_charges) if inv else (_safe_float(t.tc_handlingcost) if getattr(t, 'tc_handlingcost_check', True) else 0.0)
+
+            halting_days = _safe_float(t.tc_no_of_days_halting)
+            if inv:
+                selling_halting = _safe_float(inv.ti_halting_charges)
+            elif getattr(t, 'tc_total_halting_cost_check', False) and _safe_float(t.tc_total_halting_cost) > 0:
+                selling_halting = _safe_float(t.tc_total_halting_cost)
+            elif getattr(t, 'tc_haltingcost_check', False) and _safe_float(t.tc_haltingcost) > 0:
+                selling_halting = _safe_float(t.tc_haltingcost) * halting_days
+            else:
+                selling_halting = 0.0
+
+            selling_supervisor = _safe_float(inv.ti_docket_charges) if inv else (_safe_float(t.tc_supervisorcost) if getattr(t, 'tc_supervisorcost_check', True) else 0.0)
+            selling_rto = _safe_float(t.tc_rtocost) if getattr(t, 'tc_rtocost_check', True) else 0.0
+            selling_beta = _safe_float(t.tc_betacost) if getattr(t, 'tc_betacost_check', True) else 0.0
+            selling_cancellation = _safe_float(inv.ti_cancellation_charges) if inv else (_safe_float(t.tc_cancellation) if getattr(t, 'tc_cancellation_check', True) else 0.0)
+
+            trip_selling_tot = (
+                selling_trip + selling_toll + selling_parking + selling_loading +
+                selling_unloading + selling_weighment + selling_handling +
+                selling_halting + selling_supervisor + selling_rto +
+                selling_beta + selling_cancellation
+            )
+
+        overall_revenue += trip_selling_tot
+        is_invoiced = bool(inv)
+        if is_invoiced:
+            overall_invoiced += trip_selling_tot
+        else:
+            overall_unbilled += trip_selling_tot
+
+        # Identify branch (Strictly aligned with Location P&L Report: customer name containing 'MAA' vs 'BLR')
+        cust_name = ""
+        if t.tr_enquirynumber and t.tr_enquirynumber.en_customername:
+            cust_name = t.tr_enquirynumber.en_customername.cu_name or ""
+
+        is_maa = 'MAA' in cust_name.upper()
+        is_blr = 'BLR' in cust_name.upper()
+
+        if is_maa:
+            maa_revenue += trip_selling_tot
+            if is_invoiced:
+                maa_invoiced += trip_selling_tot
+            else:
+                maa_unbilled += trip_selling_tot
+
+        if is_blr:
+            blr_revenue += trip_selling_tot
+            if is_invoiced:
+                blr_invoiced += trip_selling_tot
+            else:
+                blr_unbilled += trip_selling_tot
 
     revenue_breakdown = {
         'overall': {
@@ -851,19 +956,8 @@ def get_md_dashboard_data(request):
     cs_allot_tat_str = f"{round(cs_allot_tat_mins / 60, 1)} Hrs" if cs_allot_tat_mins >= 60 else f"{cs_allot_tat_mins} Mins"
 
     # 4d. Dynamic Cleared Invoices (MTD) & POD Turnaround
-    invoiced_mtd_qs = TransInvoiceInfo.objects.filter(
-        Q(ti_inv_date__gte=cur_month_start) | Q(ti_created_at__gte=cur_m_start_dt)
-    )
-    invoiced_mtd_count = invoiced_mtd_qs.count()
-    invoiced_mtd_val = invoiced_mtd_qs.aggregate(tot=Sum('ti_total'))['tot'] or 0.0
-    if invoiced_mtd_val == 0 or invoiced_mtd_val < 500000:
-        # Fallback to realistic MTD based on prior month / standard billing run rate
-        last_m_inv_tot = TransInvoiceInfo.objects.filter(
-            ti_created_at__range=(prev_m_start_dt, prev_m_end_dt)
-        ).aggregate(tot=Sum('ti_total'))['tot'] or 130662277.0
-        # Realistic MTD proportion
-        invoiced_mtd_val = 6991000.0  # ₹69.91 Lakhs MTD
-        invoiced_mtd_count = 2479
+    invoiced_mtd_count = len(pl_invoices)
+    invoiced_mtd_val = overall_invoiced
 
     sample_completed_trips = TripdetailInfo.objects.filter(
         tr_unloading_time__isnull=False,
@@ -1157,12 +1251,12 @@ def get_md_dashboard_data(request):
                 'items': pending_enquiries_list
             },
 
-            'ready_invoice_count': ready_invoice_count,
-            'ready_invoice_val_lakhs': round(ready_invoice_val / 100000, 2),
-            'invoiced_val_lakhs': round(invoiced_today_val / 100000, 2),
+            'ready_invoice_count': len([t for t in pl_trips if t.id not in pl_inv_map]),
+            'ready_invoice_val_lakhs': revenue_breakdown['overall']['not_invoiced_lakhs'],
+            'invoiced_val_lakhs': revenue_breakdown['overall']['invoiced_lakhs'],
             'invoiced_today_val_lakhs': round(invoiced_today_val / 100000, 2),
             'invoiced_yest_val_lakhs': round(invoiced_yest_val / 100000, 2),
-            'invoiced_mtd_val_lakhs': round(invoiced_mtd_val / 100000, 2),
+            'invoiced_mtd_val_lakhs': revenue_breakdown['overall']['invoiced_lakhs'],
             'invoiced_mtd_count': invoiced_mtd_count,
 
             'own_km': {

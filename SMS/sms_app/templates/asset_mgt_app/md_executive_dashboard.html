@@ -2789,10 +2789,10 @@
                 $('#macro-wh-occ').text(macro.wh_occupancy_pct + '%');
                 
                 // Revenue & Billing Ribbon values
-                const totalRevL = ov.total_revenue_lakhs || '82.31';
-                const billedRevL = ov.invoiced_lakhs || mtdInvL || '69.91';
-                const unbilledRevL = ov.not_invoiced_lakhs || macro.ready_invoice_val_lakhs || '12.40';
-                const unbilledPct = ov.not_invoiced_pct || '15.1';
+                const totalRevL = (ov.total_revenue_lakhs !== undefined && ov.total_revenue_lakhs !== null) ? ov.total_revenue_lakhs : '0.00';
+                const billedRevL = (ov.invoiced_lakhs !== undefined && ov.invoiced_lakhs !== null) ? ov.invoiced_lakhs : '0.00';
+                const unbilledRevL = (ov.not_invoiced_lakhs !== undefined && ov.not_invoiced_lakhs !== null) ? ov.not_invoiced_lakhs : '0.00';
+                const unbilledPct = (ov.not_invoiced_pct !== undefined && ov.not_invoiced_pct !== null) ? ov.not_invoiced_pct : '0.0';
 
                 $('#macro-revenue-val').text('₹' + totalRevL + ' L');
                 $('#macro-revenue-sub').html(`Billed: <b style="color:#10b981;">₹${billedRevL}L</b> • Unbilled: <b style="color:#f59e0b;">₹${unbilledRevL}L</b>`);
@@ -2843,7 +2843,7 @@
                 $('#s1-tms-disp').text(tms.dispatched_today);
                 $('#s1-tms-road').text(tms.active_on_road !== undefined ? tms.active_on_road : 0);
                 $('#s1-tms-deliv').text(tms.delivered_today);
-                $('#s1-tms-ready-val').text('₹' + (tms.ready_invoice_val_lakhs || '173.2') + 'L');
+                $('#s1-tms-ready-val').text('₹' + unbilledRevL + 'L');
                 $('#s1-top-cs-badge').html('<i class="fas fa-trophy"></i> Top CS: ' + (tms.top_cs_performer || 'N/A'));
 
                 // Slide 1 Branch Face-Off Cards
@@ -2942,10 +2942,8 @@
                 }
                 $('#tms-kpi-deliv').text(tms.delivered_today);
                 $('#tms-kpi-deliv-sub').text(`Y'day: ${tms.delivered_yest}`);
-                $('#tms-kpi-ready-val').text(`₹${tms.ready_invoice_val_lakhs}L`);
-                $('#tms-kpi-ready-cnt').text(`${tms.ready_invoice_count} trips ready`);
-                $('#tms-kpi-inv-val').text(`₹${mtdInvL}L`);
-                $('#tms-kpi-inv-sub').html(`Today: <b>₹${todayInvL}L</b> &bull; Y'day: ₹${yestInvL}L`);
+                $('#tms-kpi-ready-val').text(`₹${unbilledRevL}L`);
+                $('#tms-kpi-ready-cnt').html(`Unbilled pipeline (<b style="color:#f59e0b;">${unbilledPct}%</b>)`);
 
                 $('#tms-own-bus-km').text(tms.own_km.bus.toLocaleString());
                 $('#tms-own-empty-km').text(tms.own_km.empty.toLocaleString());
