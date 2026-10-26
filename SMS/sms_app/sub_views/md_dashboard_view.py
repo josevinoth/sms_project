@@ -232,7 +232,7 @@ def get_md_dashboard_data(request):
         .exclude(co_customer__cu_name__isnull=True)
         .values('co_customer__cu_name')
         .annotate(trips=Count('id'))
-        .order_by('-trips')[:8]
+        .order_by('-trips')[:9]
     )
 
     tms_top_customers = []
@@ -263,7 +263,7 @@ def get_md_dashboard_data(request):
             .exclude(co_customer__cu_name__isnull=True)
             .values('co_customer__cu_name')
             .annotate(trips=Count('id'))
-            .order_by('-trips')[:8]
+            .order_by('-trips')[:9]
         )
         for c in top_prev_month:
             c_name = c['co_customer__cu_name']
@@ -340,8 +340,13 @@ def get_md_dashboard_data(request):
     from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
 
     # Fetch trips matching location P&L report criteria for current month
+    # Pre-filter using tr_created_at with 90-day buffer matching location_pl_report_view
+    pl_dt_start = cur_month_start - timedelta(days=90)
+    pl_dt_end = target_date + timedelta(days=90)
+
     pl_trips_qs = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
+        tr_created_at__range=[pl_dt_start, pl_dt_end]
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -378,7 +383,10 @@ def get_md_dashboard_data(request):
         except:
             return 0.0
 
-    overall_revenue = 0.0
+    own_rev = 0.0
+    att_rev = 0.0
+    mkt_rev = 0.0
+
     overall_invoiced = 0.0
     overall_unbilled = 0.0
 
@@ -439,7 +447,8 @@ def get_md_dashboard_data(request):
                 selling_halting + selling_supervisor + selling_rto +
                 selling_beta + selling_cancellation
             )
-        else:
+            own_rev += trip_selling_tot
+        elif v_source in [2, 3]:
             # Market & Attached (v_source in [2, 3])
             selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=va_map.get(t.tr_enquirynumber_id))
             selling_toll = _safe_float(inv.ti_toll_charges) if inv else (_safe_float(t.tc_tollcost) if getattr(t, 'tc_tollcost_check', True) else 0.0)
@@ -470,8 +479,13 @@ def get_md_dashboard_data(request):
                 selling_halting + selling_supervisor + selling_rto +
                 selling_beta + selling_cancellation
             )
+            if v_source == 2:
+                att_rev += trip_selling_tot
+            else:
+                mkt_rev += trip_selling_tot
+        else:
+            continue
 
-        overall_revenue += trip_selling_tot
         is_invoiced = bool(inv)
         if is_invoiced:
             overall_invoiced += trip_selling_tot
@@ -483,22 +497,21 @@ def get_md_dashboard_data(request):
         if t.tr_enquirynumber and t.tr_enquirynumber.en_customername:
             cust_name = t.tr_enquirynumber.en_customername.cu_name or ""
 
-        is_maa = 'MAA' in cust_name.upper()
-        is_blr = 'BLR' in cust_name.upper()
-
-        if is_maa:
+        if 'MAA' in cust_name.upper():
             maa_revenue += trip_selling_tot
             if is_invoiced:
                 maa_invoiced += trip_selling_tot
             else:
                 maa_unbilled += trip_selling_tot
 
-        if is_blr:
+        if 'BLR' in cust_name.upper():
             blr_revenue += trip_selling_tot
             if is_invoiced:
                 blr_invoiced += trip_selling_tot
             else:
                 blr_unbilled += trip_selling_tot
+
+    overall_revenue = own_rev + att_rev + mkt_rev
 
     revenue_breakdown = {
         'overall': {
@@ -755,6 +768,22 @@ def get_md_dashboard_data(request):
     outward_pkg_yest = outward_yest_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
     outward_weight_today = outward_today_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
     outward_weight_yest = outward_yest_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
+
+    # MTD Cumulative Throughput Movements (100% Real DB)
+    inward_mtd_qs = Warehouse_goods_info.objects.filter(
+        wh_checkin_time__range=(cur_m_start_dt, t_end)
+    )
+    outward_mtd_qs = Warehouse_goods_info.objects.filter(
+        wh_checkout_time__range=(cur_m_start_dt, t_end)
+    )
+    if branch_id and branch_id != 'all':
+        inward_mtd_qs = inward_mtd_qs.filter(wh_branch_id=branch_id)
+        outward_mtd_qs = outward_mtd_qs.filter(wh_branch_id=branch_id)
+
+    inward_pkg_mtd = inward_mtd_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
+    inward_weight_mtd = inward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
+    outward_pkg_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
+    outward_weight_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
 
     # Space Utilization (from LocationmasterInfo)
     loc_qs = LocationmasterInfo.objects.all()
@@ -1070,10 +1099,10 @@ def get_md_dashboard_data(request):
     # 7. Dynamic Storage Package Mix from Warehouse_goods_info
     pkg_type_counts = list(Warehouse_goods_info.objects.values(
         'wh_goods_package_type__package_type'
-    ).annotate(c=Count('id')).order_by('-c')[:4])
+    ).annotate(c=Count('id')).order_by('-c')[:6])
 
     tot_pkgs = sum(p['c'] for p in pkg_type_counts) or 1
-    pkg_colors = ['#36d1ff', '#10b981', '#f59e0b', '#a855f7']
+    pkg_colors = ['#36d1ff', '#10b981', '#f59e0b', '#a855f7', '#ec4899', '#06b6d4']
     commodity_mix = []
     for i, p in enumerate(pkg_type_counts):
         p_name = p['wh_goods_package_type__package_type'] or 'Carton Box'
@@ -1369,6 +1398,13 @@ def get_md_dashboard_data(request):
             'outward_pkg_yest': outward_pkg_yest,
             'outward_weight_mt': round(outward_weight_today, 1),
             'outward_weight_yest_mt': round(outward_weight_yest, 1),
+
+            'inward_weight_mtd_mt': round(inward_weight_mtd / 1000, 1),
+            'inward_pkg_mtd': inward_pkg_mtd,
+            'outward_weight_mtd_mt': round(outward_weight_mtd / 1000, 1),
+            'outward_pkg_mtd': outward_pkg_mtd,
+            'total_movement_mtd_mt': round((inward_weight_mtd + outward_weight_mtd) / 1000, 1),
+            'total_movement_mtd_pkgs': inward_pkg_mtd + outward_pkg_mtd,
 
             'total_area_sqft': int(total_wh_area),
             'occupied_area_sqft': int(occupied_wh_area),
