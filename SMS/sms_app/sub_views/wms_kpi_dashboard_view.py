@@ -78,14 +78,7 @@ def wms_kpi_dashboard(request):
     month_start_date = today.replace(day=1).strftime('%Y-%m-%d')
     today_date = today.strftime('%Y-%m-%d')
 
-    is_ajax = (request.headers.get('x-requested-with') == 'XMLHttpRequest' or 
-               request.GET.get('ajax') == '1' or
-               request.path.rstrip('/').endswith('warehouse_dashboard'))
-    base_template = 'asset_mgt_app/base_blank.html' if is_ajax else 'asset_mgt_app/base_1.html'
-
     context = {
-        'base_template': base_template,
-        'is_ajax': is_ajax,
         'first_name': first_name,
         'branches': branches,
         'units': units,
