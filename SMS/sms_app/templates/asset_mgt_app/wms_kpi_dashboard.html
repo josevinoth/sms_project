@@ -1,0 +1,2191 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261023-05">
+
+<style>
+    /* Global Page Fit & Cockpit Architecture */
+    @media screen and (min-width: 992px) {
+        html, body {
+            overflow: hidden !important;
+            height: 100% !important;
+            background: #030718 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            color: #e2e8f0;
+        }
+        body {
+            padding-top: var(--app-header-height, 69px) !important;
+        }
+        /* Strip out all parent padding and margins that cause black dead space */
+        body > .container-fluid,
+        .container-fluid {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        #main-content {
+            padding: 2px 4px 0 4px !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            height: calc(100vh - var(--app-header-height, 69px)) !important;
+            max-height: calc(100vh - var(--app-header-height, 69px)) !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+    }
+
+    @media screen and (max-width: 991px) {
+        html, body {
+            overflow: auto !important;
+            height: auto !important;
+            background: #030718 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        .wms-dashboard-root {
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0.4rem !important;
+            gap: 0.4rem !important;
+        }
+        .wms-top-kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.35rem !important;
+        }
+        .wms-middle-grid,
+        .wms-bottom-grid {
+            grid-template-columns: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            gap: 0.4rem !important;
+        }
+        .wms-panel {
+            min-height: 260px !important;
+            height: auto !important;
+        }
+    }
+
+    /* Master Root Container - Uses 100% of Available Space With Zero Wasted Margins */
+    .wms-dashboard-root {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+        padding: 2px 4px 4px 4px !important;
+        gap: 4px !important;
+        box-sizing: border-box;
+        background: radial-gradient(circle at 15% 10%, #081136 0%, #030718 100%);
+        overflow: hidden !important;
+        min-width: 0;
+        position: relative;
+    }
+
+    .wms-dashboard-root::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    .wms-dashboard-root::-webkit-scrollbar-track {
+        background: #030718;
+    }
+    .wms-dashboard-root::-webkit-scrollbar-thumb {
+        background: rgba(56, 189, 248, 0.25);
+        border-radius: 4px;
+    }
+
+    /* 1. Top Command Header & Filter Bar */
+    .wms-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        width: 100%;
+        flex-shrink: 0;
+        background: rgba(8, 17, 54, 0.94);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        border-radius: 6px;
+        padding: 3px 6px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+        box-sizing: border-box;
+        min-width: 0;
+        flex-wrap: nowrap;
+    }
+
+    .wms-brand-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .wms-brand-icon {
+        width: 22px;
+        height: 22px;
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.7rem;
+        box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);
+    }
+
+    .live-pulse-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.56rem;
+        font-weight: 700;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        color: #86efac;
+        padding: 1.5px 6px;
+        border-radius: 20px;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+    }
+
+    .pulse-dot {
+        width: 5px;
+        height: 5px;
+        background: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #10b981;
+        animation: pulseAnimation 1.8s infinite;
+    }
+
+    @keyframes pulseAnimation {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    /* Filter Strip */
+    .wms-filter-strip {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .wms-select-pill {
+        background: #0b1537;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        border-radius: 5px;
+        padding: 0.1rem 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: 26px;
+        box-sizing: border-box;
+    }
+
+    .wms-select-pill label {
+        font-size: 0.58rem;
+        color: #38bdf8;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    .wms-select-pill select, .wms-select-pill input[type="date"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 2px;
+        height: 20px;
+        line-height: 1;
+        max-width: 110px;
+    }
+
+    .wms-select-pill select option {
+        background: #081136;
+        color: #fff;
+    }
+
+    .wms-select-pill input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+    }
+
+    .btn-wms-action {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        color: #fff;
+        border: 1px solid #38bdf8;
+        border-radius: 5px;
+        padding: 0 0.55rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        box-shadow: 0 0 8px rgba(2, 132, 199, 0.4);
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .btn-wms-action:hover {
+        background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+
+    .btn-wms-secondary {
+        background: rgba(3, 7, 24, 0.85);
+        color: #94a3b8;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        border-radius: 5px;
+        padding: 0 0.55rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .btn-wms-secondary:hover {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border-color: #38bdf8;
+    }
+
+    /* 2. Top Row: Executive KPI Cards Grid */
+    .wms-top-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 4px;
+        width: 100%;
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+
+    /* When Sidenav is Expanded (Hover or Active) or on screens below 1580px, wrap to 3 columns */
+    @media (max-width: 1580px) {
+        body.sidenav-expanded .wms-top-kpi-grid,
+        body:has(.sidenav:hover) .wms-top-kpi-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .wms-top-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .wms-kpi-card {
+        background: linear-gradient(145deg, rgba(10, 22, 66, 0.92) 0%, rgba(5, 12, 38, 0.96) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 6px;
+        padding: 0.35rem 0.55rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 64px;
+        max-height: 72px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.38);
+        position: relative;
+        overflow: hidden;
+        min-width: 0;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .wms-kpi-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(56, 189, 248, 0.5);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+    }
+
+    .wms-kpi-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2.5px;
+        width: 100%;
+        background: var(--card-accent, #38bdf8);
+        opacity: 0.85;
+    }
+
+    .card-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .card-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: 0.35px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .card-icon-box {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--card-accent, #38bdf8);
+        flex-shrink: 0;
+        margin-left: 4px;
+    }
+
+    .card-val-row {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin: 1px 0;
+        min-width: 0;
+    }
+
+    .card-main-val {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.1;
+        letter-spacing: -0.3px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .card-bottom-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        font-size: 0.55rem;
+        gap: 4px;
+    }
+
+    .card-subtext {
+        color: rgba(255, 255, 255, 0.65);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+        font-size: 0.55rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .card-badge {
+        font-size: 0.52rem;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .badge-green { background: rgba(16, 185, 129, 0.2); color: #86efac; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-orange { background: rgba(245, 158, 11, 0.2); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-blue { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-purple { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .badge-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    /* 3. Middle Section: Visual Throughput Hub */
+    .wms-middle-grid {
+        display: grid;
+        grid-template-columns: 58% calc(42% - 4px);
+        gap: 4px;
+        width: 100%;
+        flex: 1.05;
+        min-height: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    body.sidenav-expanded .wms-middle-grid,
+    body:has(.sidenav:hover) .wms-middle-grid {
+        grid-template-columns: 55% calc(45% - 4px);
+    }
+
+    @media (max-width: 1350px) {
+        .wms-middle-grid {
+            grid-template-columns: 55% calc(45% - 4px);
+        }
+    }
+
+    @media (max-width: 1050px) {
+        .wms-middle-grid {
+            grid-template-columns: 100%;
+            min-height: auto;
+        }
+    }
+
+    .wms-panel {
+        background: linear-gradient(145deg, rgba(10, 22, 66, 0.9) 0%, rgba(5, 12, 38, 0.95) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 6px;
+        padding: 0.35rem 0.55rem;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.2rem;
+        padding-bottom: 0.15rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .panel-title {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .panel-title i {
+        color: #38bdf8;
+    }
+
+    .panel-extra {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.62rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Chart Container */
+    .chart-container-box {
+        flex: 1;
+        width: 100%;
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .chart-summary-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding-top: 0.2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.6rem;
+        color: #94a3b8;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .chart-summary-item strong {
+        color: #ffffff;
+        font-size: 0.68rem;
+    }
+
+    /* Storage Unit Allocation Bars - 2 Column Grid with ZERO Vertical Scrolling */
+    .unit-allocation-list {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px 6px;
+        align-content: stretch;
+        min-height: 0;
+        overflow: hidden !important;
+        padding: 1px 0;
+        box-sizing: border-box;
+    }
+
+    .unit-allocation-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .unit-row {
+        background: rgba(3, 7, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        padding: 2.5px 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .unit-row:hover {
+        background: rgba(56, 189, 248, 0.09);
+        border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .unit-row-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.61rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .unit-name {
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.61rem;
+    }
+
+    .unit-stat {
+        color: #94a3b8;
+        font-size: 0.55rem;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .unit-progress-bg {
+        width: 100%;
+        height: 4.5px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .unit-progress-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+    }
+
+    /* Allocation View Toggle (Units vs Bays) */
+    .allocation-tab-group {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(3, 7, 24, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 4px;
+        padding: 1.5px;
+        margin-left: 8px;
+        gap: 2px;
+    }
+
+    .btn-alloc-toggle {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 1.5px 7px;
+        border-radius: 3px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.15s ease;
+    }
+
+    .btn-alloc-toggle:hover {
+        color: #fff;
+    }
+
+    .btn-alloc-toggle.active {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 0 6px rgba(2, 132, 199, 0.5);
+    }
+
+    /* Bay Allocation Grid */
+    .bay-allocation-list {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px 6px;
+        align-content: start;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 1px 2px 1px 0;
+        box-sizing: border-box;
+    }
+
+    .bay-allocation-list::-webkit-scrollbar {
+        width: 3px;
+    }
+    .bay-allocation-list::-webkit-scrollbar-thumb {
+        background: rgba(56, 189, 248, 0.35);
+        border-radius: 3px;
+    }
+
+    /* 4. Bottom Section: 3 Specialized Modules */
+    .wms-bottom-grid {
+        display: grid;
+        grid-template-columns: 36% 32% calc(32% - 4px);
+        gap: 4px;
+        width: 100%;
+        flex: 0.95;
+        min-height: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    body.sidenav-expanded .wms-bottom-grid,
+    body:has(.sidenav:hover) .wms-bottom-grid {
+        grid-template-columns: 38% 31% calc(31% - 4px);
+    }
+
+    @media (max-width: 1400px) {
+        .wms-bottom-grid {
+            grid-template-columns: 38% 31% calc(31% - 4px);
+        }
+    }
+
+    @media (max-width: 1150px) {
+        .wms-bottom-grid {
+            grid-template-columns: 100%;
+            min-height: auto;
+        }
+    }
+
+    /* Pipeline Visual Stepper Cards - Split 50/50 so Both Rows are 100% Visible */
+    .pipeline-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 3px;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 900px) {
+        .pipeline-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: auto;
+        }
+    }
+
+    .pipeline-step-card {
+        background: rgba(3, 7, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 5px;
+        padding: 0.2rem 0.35rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+        min-width: 0;
+    }
+
+    .pipeline-step-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .step-card-anchor {
+        border-left: 3px solid #facc15 !important;
+        background: rgba(234, 179, 8, 0.1) !important;
+    }
+
+    .step-card-green {
+        border-left: 3px solid #10b981 !important;
+        background: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .step-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .step-num {
+        font-size: 0.52rem;
+        font-weight: 800;
+        color: #94a3b8;
+    }
+
+    .step-icon {
+        font-size: 0.65rem;
+        opacity: 0.85;
+    }
+
+    .step-count {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .step-title {
+        font-size: 0.54rem;
+        font-weight: 700;
+        color: #cbd5e1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .step-sub {
+        font-size: 0.48rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Tables in Bottom Cards - Snug, Informative & Perfectly Sized */
+    .wms-mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.62rem;
+        color: #cbd5e1;
+        table-layout: fixed;
+    }
+
+    .wms-mini-table th {
+        font-size: 0.54rem;
+        text-transform: uppercase;
+        color: #94a3b8;
+        font-weight: 700;
+        padding: 2.5px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wms-mini-table td {
+        padding: 2.5px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        line-height: 1.15;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wms-mini-table tr:hover {
+        background: rgba(56, 189, 248, 0.06);
+    }
+
+    .wms-mini-table .num-col {
+        text-align: right;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .wms-mini-table .center-col {
+        text-align: center;
+    }
+
+    /* Compliance & Safety Health Strip - Fills space wisely with high-impact status */
+    .compliance-footer-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 3px 6px;
+        margin-top: 3px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(3, 7, 24, 0.45);
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .compliance-kpi-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+    }
+
+    .compliance-kpi-lbl {
+        font-size: 0.52rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .compliance-kpi-val {
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    /* Billing & Revenue Realization Strip - Fills space wisely with visual progress */
+    .revenue-realization-box {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 3px 6px;
+        margin-top: 3px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(3, 7, 24, 0.45);
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .realization-bar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.54rem;
+        color: #94a3b8;
+    }
+
+    .realization-segmented-bar {
+        width: 100%;
+        height: 5.5px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .bar-segment {
+        height: 100%;
+        transition: width 0.6s ease;
+    }
+
+    .bar-billed {
+        background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    }
+
+    .bar-unbilled {
+        background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
+    }
+
+    .realization-bar-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.54rem;
+        color: #cbd5e1;
+    }
+
+    .realization-bar-footer strong {
+        font-weight: 800;
+    }
+
+    .stat-billed strong {
+        color: #86efac;
+    }
+
+    .stat-unbilled strong {
+        color: #fde68a;
+    }
+
+    /* Modal Operations Calendar Drawer */
+    .calendar-modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calendar-modal-content {
+        background: linear-gradient(145deg, #0a1642 0%, #050c26 100%);
+        border: 1px solid #38bdf8;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 580px;
+        padding: 0.85rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.4rem;
+    }
+
+    .modal-head h4 {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-close-modal {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    .btn-close-modal:hover {
+        color: #fff;
+    }
+
+    .cal-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 3px;
+    }
+
+    .cal-modal-day {
+        background: rgba(3, 7, 24, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        height: 38px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .cal-modal-day:hover {
+        transform: scale(1.08);
+        border-color: #38bdf8;
+        z-index: 2;
+    }
+
+    .cal-modal-day.day-green { background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #86efac; }
+    .cal-modal-day.day-orange { background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fde68a; }
+    .cal-modal-day.day-red { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; color: #fca5a5; }
+    .cal-modal-day.day-blue { background: rgba(56, 189, 248, 0.25); border-color: #38bdf8; color: #7dd3fc; }
+
+    /* Heatmap Color Scale Box & Legend */
+    .cal-scale-box {
+        background: rgba(3, 7, 24, 0.65);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 6px;
+        padding: 5px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 2px;
+    }
+
+    .cal-scale-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.58rem;
+        font-weight: 700;
+        color: #cbd5e1;
+    }
+
+    .cal-scale-bar {
+        display: flex;
+        width: 100%;
+        height: 14px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .scale-segment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.52rem;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .scale-red {
+        background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+        color: #ffffff;
+    }
+
+    .scale-orange {
+        background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
+        color: #ffffff;
+    }
+
+    .scale-green {
+        background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+        color: #ffffff;
+    }
+
+    .scale-blue {
+        background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+        color: #ffffff;
+    }
+
+    .cal-scale-legend {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        flex-wrap: nowrap;
+        padding-top: 2px;
+    }
+
+    .scale-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.53rem;
+        white-space: nowrap;
+    }
+
+    .legend-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot-red { background: #ef4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.7); }
+    .dot-orange { background: #f59e0b; box-shadow: 0 0 5px rgba(245, 158, 11, 0.7); }
+    .dot-green { background: #10b981; box-shadow: 0 0 5px rgba(16, 185, 129, 0.7); }
+    .dot-blue { background: #38bdf8; box-shadow: 0 0 5px rgba(56, 189, 248, 0.7); }
+    .dot-dark { background: #475569; }
+
+    .legend-title {
+        color: #e2e8f0;
+        font-weight: 700;
+    }
+
+    .legend-sub {
+        color: #94a3b8;
+        font-size: 0.48rem;
+    }
+</style>
+
+<div class="wms-dashboard-root">
+    <!-- 1. TOP COMMAND & CONTROL TOOLBAR -->
+    <div class="wms-header-bar">
+        <!-- Brand & Live Pulse -->
+        <div class="wms-brand-title">
+            <div class="wms-brand-icon"><i class="fas fa-warehouse"></i></div>
+            <span>WMS Operations Center</span>
+            <div class="live-pulse-badge">
+                <span class="pulse-dot"></span>
+                <span id="header-branch-pill">{{ default_branch_id|default:"BVM MAA" }}</span>
+            </div>
+        </div>
+
+        <!-- Filter Strip -->
+        <div class="wms-filter-strip">
+            <!-- Branch -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-map-marker-alt"></i> Branch:</label>
+                <select id="filter-branch">
+                    <option value="all">All Branches</option>
+                    {% for br in branches %}
+                    <option value="{{ br.id }}" {% if br.id|stringformat:"s" == default_branch_id %}selected{% endif %}>
+                        {{ br.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Warehouse Unit -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-cubes"></i> Unit:</label>
+                <select id="filter-unit">
+                    <option value="all" data-branch="all">All Units</option>
+                    {% for u in units %}
+                    <option value="{{ u.id }}" data-branch="{{ u.ui_branch_name_id|default:'' }}">
+                        {{ u.unit_name }}{% if u.ui_branch_name %} ({{ u.ui_branch_name.loc_name }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Warehouse Bay -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-layer-group"></i> Bay:</label>
+                <select id="filter-bay">
+                    <option value="all" data-branch="all" data-unit="all">All Bays</option>
+                    {% for b in bays %}
+                    <option value="{{ b.id }}" data-branch="{{ b.bay_branch_name_id|default:'' }}" data-unit="{{ b.Bay_unit_name_id|default:'' }}">
+                        {{ b.bay_bayname }}{% if b.Bay_unit_name %} ({{ b.Bay_unit_name.unit_name }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Customer -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-user-tag"></i> Customer:</label>
+                <select id="filter-customer">
+                    <option value="all">All Customers</option>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}">{{ c.cu_name|truncatechars:18 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- From Date -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-calendar-alt"></i> From:</label>
+                <input type="date" id="filter-from-date" value="{{ from_date_default }}">
+            </div>
+
+            <!-- To Date -->
+            <div class="wms-select-pill">
+                <label><i class="fas fa-calendar-alt"></i> To:</label>
+                <input type="date" id="filter-to-date" value="{{ to_date_default }}">
+            </div>
+
+            <!-- Apply Button -->
+            <button type="button" class="btn-wms-action" id="btn-apply-filters">
+                <i class="fas fa-play"></i> Apply
+            </button>
+
+            <!-- Calendar Drawer Toggle -->
+            <button type="button" class="btn-wms-secondary" id="btn-open-calendar">
+                <i class="fas fa-calendar-check"></i> Calendar
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. TOP EXECUTIVE OVERVIEW: 6 HIGH-IMPACT METRIC CARDS -->
+    <div class="wms-top-kpi-grid">
+        <!-- Card 1: Inbound Throughput -->
+        <div class="wms-kpi-card" style="--card-accent: #38bdf8;">
+            <div class="card-top-row">
+                <span class="card-label">Inbound Receiving</span>
+                <div class="card-icon-box"><i class="fas fa-truck-loading"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-inbound-val">0</span>
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">GRN Jobs</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-inbound-sub">0 Trucks Arrived</span>
+                <span class="card-badge badge-green" id="kpi-inbound-badge">0% SLA</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Active Floor Inventory -->
+        <div class="wms-kpi-card" style="--card-accent: #60a5fa;">
+            <div class="card-top-row">
+                <span class="card-label">Active Floor Stock</span>
+                <div class="card-icon-box"><i class="fas fa-boxes"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-inventory-val">0</span>
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">Lots</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-inventory-sub">0 Pcs · 0 CBM</span>
+                <span class="card-badge badge-blue">In Storage</span>
+            </div>
+        </div>
+
+        <!-- Card 3: Space Occupancy Rate -->
+        <div class="wms-kpi-card" style="--card-accent: #f59e0b;">
+            <div class="card-top-row">
+                <span class="card-label">Warehouse Occupancy</span>
+                <div class="card-icon-box"><i class="fas fa-warehouse"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-occupancy-val" style="color:#fde68a;">0.0%</span>
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">Capacity</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-occupancy-sub">0 / 0 Sq.Ft</span>
+                <span class="card-badge badge-orange" id="kpi-occupancy-badge">0 Free</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Outbound Dispatch Fulfillment -->
+        <div class="wms-kpi-card" style="--card-accent: #10b981;">
+            <div class="card-top-row">
+                <span class="card-label">Outbound Fulfillment</span>
+                <div class="card-icon-box"><i class="fas fa-shipping-fast"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-dispatch-val" style="color:#86efac;">0</span>
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">Dispatched</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-dispatch-sub">0 Outward Orders</span>
+                <span class="card-badge badge-green" id="kpi-dispatch-badge">0% SLA</span>
+            </div>
+        </div>
+
+        <!-- Card 5: Quality & Safety Compliance -->
+        <div class="wms-kpi-card" style="--card-accent: #a855f7;">
+            <div class="card-top-row">
+                <span class="card-label">Safety & Quality Index</span>
+                <div class="card-icon-box"><i class="fas fa-shield-alt"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-safety-val" style="color:#d8b4fe;">100%</span>
+                <span style="font-size:0.65rem; color:#94a3b8; font-weight:600;">Damage-Free</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-safety-sub">0 Audits Passed</span>
+                <span class="card-badge badge-green" id="kpi-safety-badge">Compliant</span>
+            </div>
+        </div>
+
+        <!-- Card 6: Billable Revenue -->
+        <div class="wms-kpi-card" style="--card-accent: #c084fc;">
+            <div class="card-top-row">
+                <span class="card-label">Total WMS Revenue</span>
+                <div class="card-icon-box"><i class="fas fa-coins"></i></div>
+            </div>
+            <div class="card-val-row">
+                <span class="card-main-val" id="kpi-revenue-val" style="color:#f3e8ff; font-size:1.25rem;">₹ 0.00</span>
+            </div>
+            <div class="card-bottom-row">
+                <span class="card-subtext" id="kpi-revenue-sub">₹ 0 Billed (0%)</span>
+                <span class="card-badge badge-purple" id="kpi-revenue-badge">₹ 0 Unbilled</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MIDDLE SECTION: VISUAL THROUGHPUT HUB (60% / 40%) -->
+    <div class="wms-middle-grid">
+        <!-- Left: Interactive Daily Inbound vs Outbound Flow (Chart.js) -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-chart-line"></i> Daily Throughput Velocity (Inbound vs Outbound)
+                </div>
+                <div class="panel-extra">
+                    <span><i class="fas fa-square" style="color:#38bdf8;"></i> Inbound</span>
+                    <span><i class="fas fa-square" style="color:#10b981;"></i> Outbound</span>
+                </div>
+            </div>
+
+            <div class="chart-container-box">
+                <canvas id="wmsThroughputChart"></canvas>
+            </div>
+
+            <div class="chart-summary-strip">
+                <div class="chart-summary-item">Inbound Volume: <strong id="sum-chart-inbound">0 Jobs</strong></div>
+                <div class="chart-summary-item">Outbound Volume: <strong id="sum-chart-outbound">0 Jobs</strong></div>
+                <div class="chart-summary-item">Net Flow Velocity: <strong id="sum-chart-net">0 Lots</strong></div>
+            </div>
+        </div>
+
+        <!-- Right: Warehouse Storage Space & Unit / Bay Capacity Allocation -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-th"></i> Space Allocation
+                    <div class="allocation-tab-group">
+                        <button type="button" class="btn-alloc-toggle active" id="btn-toggle-units" data-target="units">
+                            <i class="fas fa-cubes"></i> Units
+                        </button>
+                        <button type="button" class="btn-alloc-toggle" id="btn-toggle-bays" data-target="bays">
+                            <i class="fas fa-layer-group"></i> Bays (<span id="alloc-bay-count">0</span>)
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-extra">
+                    <span id="sum-total-space-label"><i class="fas fa-warehouse text-info"></i> Total: 30,583 Sq.Ft</span>
+                </div>
+            </div>
+
+            <!-- Units Container (Active by default, 2-column zero-scroll) -->
+            <div class="unit-allocation-list" id="unit-capacity-container">
+                <!-- Dynamically populated via renderUnitCapacity() in a 2-column zero-scroll grid -->
+            </div>
+
+            <!-- Bays Container (Shown when Bays toggle is active) -->
+            <div class="bay-allocation-list" id="bay-capacity-container" style="display:none;">
+                <!-- Dynamically populated via renderBayCapacity() -->
+            </div>
+
+            <div class="chart-summary-strip" id="unit-summary-strip">
+                <div class="chart-summary-item">Total Space: <strong id="unit-sum-total">30,583 Sq.Ft</strong></div>
+                <div class="chart-summary-item">Occupied: <strong id="unit-sum-occ" style="color:#f59e0b;">11,647 Sq.Ft</strong></div>
+                <div class="chart-summary-item">Available: <strong id="unit-sum-avail" style="color:#10b981;">18,936 Sq.Ft</strong></div>
+                <div class="chart-summary-item">Bays Active: <strong id="unit-sum-bays" style="color:#38bdf8;">0</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. BOTTOM SECTION: 3 SPECIALIZED OPERATIONAL MODULES -->
+    <div class="wms-bottom-grid">
+        <!-- Module 1: End-to-End Inventory Movement Pipeline -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-stream"></i> Inventory Movement Pipeline
+                </div>
+                <span class="live-pulse-badge" style="font-size:0.5rem;"><i class="fas fa-check-circle"></i> Live Sync</span>
+            </div>
+
+            <div class="pipeline-grid" id="pipeline-steps-container">
+                <!-- Populated dynamically via renderPipeline() -->
+            </div>
+        </div>
+
+        <!-- Module 2: WMS Compliance, Safety & Audits -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-user-shield"></i> Compliance & Safety
+                </div>
+                <span class="panel-extra" id="compliance-header-badge" style="color:#10b981; font-weight:700;"><i class="fas fa-clipboard-check"></i> Controls</span>
+            </div>
+
+            <div style="flex:1; min-height:0; overflow:hidden;">
+                <table class="wms-mini-table">
+                    <colgroup>
+                        <col style="width: 58%;">
+                        <col style="width: 17%;">
+                        <col style="width: 25%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Operational Control</th>
+                            <th class="num-col">Count</th>
+                            <th class="center-col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compliance-table-body">
+                        <!-- Populated dynamically (6 rows) -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bottom Health & Compliance Summary Strip -->
+            <div class="compliance-footer-bar">
+                <div class="compliance-kpi-item">
+                    <span class="compliance-kpi-lbl"><i class="fas fa-shield-alt text-success"></i> Audit Pass</span>
+                    <strong class="compliance-kpi-val" style="color:#86efac;" id="compliance-kpi-audit">99.8%</strong>
+                </div>
+                <div class="compliance-kpi-item">
+                    <span class="compliance-kpi-lbl"><i class="fas fa-exclamation-triangle text-info"></i> Claims</span>
+                    <strong class="compliance-kpi-val" style="color:#38bdf8;" id="compliance-kpi-claims">0 Open</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: WMS Billing & Revenue Realization -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-file-invoice-dollar"></i> Billing & Revenue
+                </div>
+                <span class="panel-extra" id="rev-total-pill" style="color:#38bdf8; font-weight:800; font-size:0.65rem;">₹ 0.00</span>
+            </div>
+
+            <div style="flex:1; min-height:0; overflow:hidden;">
+                <table class="wms-mini-table">
+                    <colgroup>
+                        <col style="width: 44%;">
+                        <col style="width: 38%;">
+                        <col style="width: 18%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Revenue Stream</th>
+                            <th class="num-col">Amount (₹)</th>
+                            <th class="center-col">Share</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenue-table-body">
+                        <!-- Populated dynamically (6 rows) -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bottom Revenue Realization Progress Strip -->
+            <div class="revenue-realization-box">
+                <div class="realization-bar-header">
+                    <span><i class="fas fa-chart-pie text-info"></i> Revenue Realization Pipeline</span>
+                    <span id="rev-realization-ratio" style="font-weight:700; color:#cbd5e1;">54% Billed · 46% Pending</span>
+                </div>
+                <div class="realization-segmented-bar">
+                    <div class="bar-segment bar-billed" id="bar-seg-billed" style="width: 54%;" title="Invoiced & Billed"></div>
+                    <div class="bar-segment bar-unbilled" id="bar-seg-unbilled" style="width: 46%;" title="Unbilled Accruals"></div>
+                </div>
+                <div class="realization-bar-footer">
+                    <span class="stat-billed"><i class="fas fa-circle" style="color:#10b981; font-size:0.45rem;"></i> Billed: <strong id="realize-billed-val">₹ 0</strong></span>
+                    <span class="stat-unbilled"><i class="fas fa-circle" style="color:#f59e0b; font-size:0.45rem;"></i> Unbilled: <strong id="realize-unbilled-val">₹ 0</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. FLOATING CALENDAR MODAL / OPERATIONS HEATMAP -->
+<div class="calendar-modal-backdrop" id="calendar-modal">
+    <div class="calendar-modal-content">
+        <div class="modal-head">
+            <h4><i class="fas fa-calendar-alt text-info"></i> Operations Activity Heatmap</h4>
+            <button type="button" class="btn-close-modal" id="btn-close-calendar">&times;</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.68rem; color:#cbd5e1;">
+            <button type="button" class="btn-wms-secondary" id="cal-prev-btn">&lt; Prev Month</button>
+            <strong id="cal-modal-month-label" style="font-size:0.78rem; text-transform:uppercase; color:#38bdf8;">October 2026</strong>
+            <button type="button" class="btn-wms-secondary" id="cal-next-btn">Next Month &gt;</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); text-align:center; font-size:0.58rem; font-weight:800; color:#94a3b8; text-transform:uppercase; margin-top:4px;">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+        </div>
+
+        <div class="cal-modal-grid" id="cal-modal-days-grid">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Operations Activity & Velocity Color Scale -->
+        <div class="cal-scale-box">
+            <div class="cal-scale-header">
+                <span><i class="fas fa-tachometer-alt text-info"></i> Operations Activity & Velocity Scale:</span>
+                <span style="font-size:0.52rem; color:#94a3b8; font-weight:600;">Fulfillment Rate = (Dispatched / Inward) &times; 100</span>
+            </div>
+
+            <!-- Visual Segmented Color Scale Bar -->
+            <div class="cal-scale-bar">
+                <div class="scale-segment scale-red" style="width: 25%;" title="Critical / Low Fulfillment (&le; 35%)">
+                    <span>&le; 35%</span>
+                </div>
+                <div class="scale-segment scale-orange" style="width: 25%;" title="Moderate Flow (36% - 70%)">
+                    <span>36% - 70%</span>
+                </div>
+                <div class="scale-segment scale-green" style="width: 25%;" title="Optimal SLA Fulfillment (71% - 100%)">
+                    <span>71% - 100%</span>
+                </div>
+                <div class="scale-segment scale-blue" style="width: 25%;" title="Peak Velocity / High Outflow (&gt; 100%)">
+                    <span>&gt; 100%</span>
+                </div>
+            </div>
+
+            <!-- Scale Legend Items -->
+            <div class="cal-scale-legend">
+                <div class="scale-legend-item">
+                    <span class="legend-dot dot-red"></span>
+                    <span class="legend-title">Critical / Low</span>
+                    <span class="legend-sub">(&le; 35%)</span>
+                </div>
+                <div class="scale-legend-item">
+                    <span class="legend-dot dot-orange"></span>
+                    <span class="legend-title">Moderate Flow</span>
+                    <span class="legend-sub">(36% - 70%)</span>
+                </div>
+                <div class="scale-legend-item">
+                    <span class="legend-dot dot-green"></span>
+                    <span class="legend-title">Optimal SLA</span>
+                    <span class="legend-sub">(71% - 100%)</span>
+                </div>
+                <div class="scale-legend-item">
+                    <span class="legend-dot dot-blue"></span>
+                    <span class="legend-title">Peak Outflow</span>
+                    <span class="legend-sub">(&gt; 100%)</span>
+                </div>
+                <div class="scale-legend-item">
+                    <span class="legend-dot dot-dark"></span>
+                    <span class="legend-title">Zero Activity</span>
+                    <span class="legend-sub">(0 / 0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.6rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:4px;">
+            <span><i class="fas fa-mouse-pointer text-info"></i> Click any day to filter dashboard data</span>
+            <button type="button" class="btn-wms-action" style="height:22px; font-size:0.58rem;" id="cal-select-today">Jump to Today</button>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let throughputChart = null;
+    let currentDate = new Date();
+    let monthlyCalendarMap = {};
+
+    const initialDateStr = "{{ to_date_default }}";
+    if (initialDateStr) {
+        const parts = initialDateStr.split('-');
+        if (parts.length === 3) {
+            currentDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        }
+    }
+
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+
+    function formatDateInput(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    // Initialize or Update Throughput Velocity Chart
+    function renderThroughputChart(chartData) {
+        if (!chartData) return;
+
+        const canvasEl = document.getElementById('wmsThroughputChart');
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+
+        if (throughputChart) {
+            throughputChart.destroy();
+        }
+
+        // Gradient fills
+        const gradInbound = ctx.createLinearGradient(0, 0, 0, 180);
+        gradInbound.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+        gradInbound.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+        const gradOutbound = ctx.createLinearGradient(0, 0, 0, 180);
+        gradOutbound.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+        gradOutbound.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+        throughputChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Inbound Receiving',
+                        data: chartData.inward,
+                        borderColor: '#38bdf8',
+                        backgroundColor: gradInbound,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#38bdf8',
+                    },
+                    {
+                        label: 'Outbound Dispatched',
+                        data: chartData.outward,
+                        borderColor: '#10b981',
+                        backgroundColor: gradOutbound,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#10b981',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 50,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(3, 7, 24, 0.95)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1,
+                        titleFont: { size: 10, weight: 'bold' },
+                        bodyFont: { size: 9 },
+                        padding: 7,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        ticks: { color: '#94a3b8', font: { size: 8 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', font: { size: 8 } }
+                    }
+                }
+            }
+        });
+
+        $('#sum-chart-inbound').text(chartData.total_inward + ' Jobs');
+        $('#sum-chart-outbound').text(chartData.total_outward + ' Jobs');
+        $('#sum-chart-net').text((chartData.net_flow >= 0 ? '+' : '') + chartData.net_flow + ' Lots');
+    }
+
+    // Auto-Resize Chart on Sidenav Hover/Transition
+    let chartResizeDebounce = null;
+    function triggerChartResize() {
+        clearTimeout(chartResizeDebounce);
+        chartResizeDebounce = setTimeout(function() {
+            if (throughputChart) {
+                throughputChart.resize();
+            }
+        }, 60);
+    }
+
+    $(window).on('resize', triggerChartResize);
+
+    // Observer for chart container width changes
+    const chartContainerEl = document.querySelector('.chart-container-box');
+    if (chartContainerEl && window.ResizeObserver) {
+        const ro = new ResizeObserver(function() {
+            triggerChartResize();
+        });
+        ro.observe(chartContainerEl);
+    }
+
+    // Main content transition listener
+    const mainContentElem = document.getElementById('main-content');
+    if (mainContentElem) {
+        mainContentElem.addEventListener('transitionend', function(e) {
+            triggerChartResize();
+        });
+    }
+
+    // Render Storage Unit Allocation Bars
+    function renderUnitCapacity(units) {
+        if (!units || !units.length) return;
+
+        let html = '';
+        units.forEach(function(u) {
+            const displayName = u.display_name || u.unit_name;
+            html += `
+                <div class="unit-row" title="${displayName}: ${u.occ_area} occupied of ${u.tot_area} (${u.percentage}%)">
+                    <div class="unit-row-top">
+                        <span class="unit-name"><i class="fas fa-cubes text-info"></i> ${displayName}</span>
+                        <span class="unit-stat">${u.occ_area} / ${u.tot_area} (${u.percentage}%)</span>
+                    </div>
+                    <div class="unit-progress-bg">
+                        <div class="unit-progress-bar" style="width: ${Math.min(u.percentage, 100)}%; background: ${u.color};"></div>
+                    </div>
+                </div>
+            `;
+        });
+        $('#unit-capacity-container').html(html);
+    }
+
+    // Render Bay Allocation Bars
+    function renderBayCapacity(bays) {
+        if (!bays || !bays.length) {
+            $('#bay-capacity-container').html(`
+                <div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; font-size: 0.65rem; padding: 1.5rem 0.5rem;">
+                    <i class="fas fa-layer-group text-info"></i> No bays mapped for the selected unit/branch.
+                </div>
+            `);
+            $('#alloc-bay-count').text('0');
+            return;
+        }
+
+        $('#alloc-bay-count').text(bays.length);
+
+        let html = '';
+        bays.forEach(function(b) {
+            const displayName = b.bay_name || ('Bay ' + b.raw_name);
+            const isOver = b.percentage > 100;
+            const overBadge = isOver ? `<span class="card-badge badge-red" style="font-size:0.46rem; padding:0 3px;">Over-Cap</span>` : '';
+            html += `
+                <div class="unit-row" data-bay-id="${b.bay_id}" style="cursor: pointer;" title="Click to filter by ${displayName}: ${b.occ_area} occupied of ${b.tot_area} (${b.percentage}%)">
+                    <div class="unit-row-top">
+                        <span class="unit-name" title="${displayName}">
+                            <i class="fas fa-layer-group text-info"></i> ${displayName} ${overBadge}
+                        </span>
+                        <span class="unit-stat">${b.occ_area} / ${b.tot_area} (${b.percentage}%)</span>
+                    </div>
+                    <div class="unit-progress-bg">
+                        <div class="unit-progress-bar" style="width: ${Math.min(Math.max(b.percentage, 0), 100)}%; background: ${b.color};"></div>
+                    </div>
+                </div>
+            `;
+        });
+        $('#bay-capacity-container').html(html);
+    }
+
+    // Toggle Units vs Bays Allocation View
+    $('#btn-toggle-units').on('click', function() {
+        $(this).addClass('active');
+        $('#btn-toggle-bays').removeClass('active');
+        $('#unit-capacity-container').show();
+        $('#bay-capacity-container').hide();
+    });
+
+    $('#btn-toggle-bays').on('click', function() {
+        $(this).addClass('active');
+        $('#btn-toggle-units').removeClass('active');
+        $('#unit-capacity-container').hide();
+        $('#bay-capacity-container').show();
+    });
+
+    // Quick filter by clicking a Bay in the Bay Allocation list
+    $(document).on('click', '#bay-capacity-container .unit-row[data-bay-id]', function() {
+        const bId = $(this).data('bay-id');
+        if (bId) {
+            $('#filter-bay').val(bId);
+            updateDashboardData();
+        }
+    });
+
+    // Render Inventory Movement Pipeline Cards
+    function renderPipeline(steps) {
+        if (!steps || !steps.length) return;
+
+        let html = '';
+        steps.forEach(function(s) {
+            let classes = 'pipeline-step-card';
+            if (s.highlight) classes += ' step-card-anchor';
+            if (s.highlight_green) classes += ' step-card-green';
+
+            html += `
+                <div class="${classes}">
+                    <div class="step-header">
+                        <span class="step-num">#${s.step}</span>
+                        <i class="fas ${s.icon} step-icon" style="color: ${s.color};"></i>
+                    </div>
+                    <div class="step-count" style="color: ${s.highlight ? '#fef08a' : (s.highlight_green ? '#86efac' : '#fff')};">${s.count}</div>
+                    <div class="step-title">${s.title}</div>
+                    <div class="step-sub">${s.subtitle}</div>
+                </div>
+            `;
+        });
+        $('#pipeline-steps-container').html(html);
+    }
+
+    // Render Compliance Table & Health Summary
+    function renderCompliance(controls, summary) {
+        if (!controls || !controls.length) return;
+
+        let html = '';
+        controls.forEach(function(c) {
+            let pillClass = c.status_type === 'green' ? 'badge-green' : (c.status_type === 'amber' ? 'badge-orange' : 'badge-blue');
+            html += `
+                <tr>
+                    <td title="${c.parameter} - ${c.sub}">
+                        <div style="font-weight:700; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <i class="fas ${c.icon} text-info" style="width:13px;"></i> ${c.parameter}
+                        </div>
+                        <div style="font-size:0.48rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.sub}</div>
+                    </td>
+                    <td class="num-col" style="color:#ffffff;">${c.count}</td>
+                    <td class="center-col"><span class="card-badge ${pillClass}">${c.status}</span></td>
+                </tr>
+            `;
+        });
+        $('#compliance-table-body').html(html);
+
+        if (summary) {
+            $('#compliance-kpi-audit').text(summary.audit_score || '99.8%');
+            $('#compliance-kpi-claims').text(summary.claims_text || '0 Open').css('color', summary.claims_color || '#86efac');
+        }
+    }
+
+    // Render Revenue Table & Realization Progress Strip
+    function renderRevenue(rev) {
+        if (!rev) return;
+
+        $('#rev-total-pill').text(rev.total_revenue);
+
+        let html = `
+            <tr>
+                <td title="Total Warehouse Revenue"><strong style="color:#fff;"><i class="fas fa-coins text-warning"></i> Total Revenue</strong></td>
+                <td class="num-col" style="color:#38bdf8; font-weight:800;">${rev.total_revenue}</td>
+                <td class="center-col"><span class="card-badge badge-blue">100%</span></td>
+            </tr>
+            <tr>
+                <td title="Storage Charges (Accrued & Realized)"><i class="fas fa-warehouse text-info"></i> Storage Accrued</td>
+                <td class="num-col" style="color:#e2e8f0;">${rev.storage_charges}</td>
+                <td class="center-col"><span class="card-badge badge-green">${rev.storage_share_pct}</span></td>
+            </tr>
+            <tr>
+                <td title="Handling & Unloading Charges"><i class="fas fa-dolly text-primary"></i> Handling & Unload</td>
+                <td class="num-col" style="color:#e2e8f0;">${rev.handling_charges}</td>
+                <td class="center-col"><span class="card-badge badge-green">${rev.handling_share_pct}</span></td>
+            </tr>
+            <tr>
+                <td title="Total Invoiced (Billed Vouchers)"><i class="fas fa-file-invoice text-success"></i> Invoiced (Billed)</td>
+                <td class="num-col" style="color:#10b981; font-weight:800;">${rev.billed_revenue}</td>
+                <td class="center-col"><span class="card-badge badge-green">${rev.billed_share_pct}</span></td>
+            </tr>
+            <tr>
+                <td title="Unbilled Accruals (Pending Generation)"><i class="fas fa-clock text-warning"></i> Unbilled Accruals</td>
+                <td class="num-col" style="color:#f59e0b; font-weight:800;">${rev.unbilled_charges}</td>
+                <td class="center-col"><span class="card-badge badge-orange">${rev.unbilled_share_pct}</span></td>
+            </tr>
+            <tr>
+                <td title="Revenue Density per Occupied Area"><i class="fas fa-chart-line" style="color:#c084fc;"></i> Space Rev Yield</td>
+                <td class="num-col" style="color:#d8b4fe; font-weight:700;">${rev.space_yield || '₹ 0.63 / Sq.Ft'}</td>
+                <td class="center-col"><span class="card-badge badge-purple">Yield</span></td>
+            </tr>
+        `;
+        $('#revenue-table-body').html(html);
+
+        // Update Realization Progress Strip
+        const billedPct = rev.billed_pct_num || 54.0;
+        const unbilledPct = rev.unbilled_pct_num || 46.0;
+        $('#bar-seg-billed').css('width', billedPct + '%');
+        $('#bar-seg-unbilled').css('width', unbilledPct + '%');
+        $('#rev-realization-ratio').text(`${billedPct}% Billed · ${unbilledPct}% Pending`);
+        $('#realize-billed-val').text(rev.billed_revenue);
+        $('#realize-unbilled-val').text(rev.unbilled_charges);
+    }
+
+    // Render Calendar Modal
+    function renderCalendarModal() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        $('#cal-modal-month-label').text(`${monthNames[month]} ${year}`);
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        let daysHtml = '';
+        for (let x = 0; x < firstDay; x++) {
+            daysHtml += `<div class="cal-modal-day" style="opacity:0.2;"></div>`;
+        }
+
+        for (let i = 1; i <= lastDay; i++) {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            let dayStatus = 'none';
+            let inCount = 0;
+            let outCount = 0;
+
+            if (monthlyCalendarMap && monthlyCalendarMap[dateKey]) {
+                dayStatus = monthlyCalendarMap[dateKey].status;
+                inCount = monthlyCalendarMap[dateKey].inward || 0;
+                outCount = monthlyCalendarMap[dateKey].dispatch || 0;
+            }
+
+            let classes = 'cal-modal-day';
+            let statusText = 'No Activity';
+            if (dayStatus === 'green') {
+                classes += ' day-green';
+                statusText = 'Optimal SLA (71% - 100%)';
+            } else if (dayStatus === 'orange') {
+                classes += ' day-orange';
+                statusText = 'Moderate (36% - 70%)';
+            } else if (dayStatus === 'red') {
+                classes += ' day-red';
+                statusText = 'Critical / Low (≤ 35%)';
+            } else if (dayStatus === 'blue') {
+                classes += ' day-blue';
+                statusText = 'Peak Outflow (> 100%)';
+            }
+
+            let tooltip = `${dateKey} | Inward: ${inCount}, Outward: ${outCount}`;
+            if (inCount > 0 || outCount > 0) {
+                const rate = inCount > 0 ? Math.round((outCount / inCount) * 100) : (outCount > 0 ? 100 : 0);
+                tooltip += ` | Rate: ${rate}% (${statusText})`;
+            }
+
+            daysHtml += `
+                <div class="${classes}" data-date="${dateKey}" title="${tooltip}">
+                    <span>${i}</span>
+                    <span style="font-size:0.48rem; opacity:0.85;">${inCount}/${outCount}</span>
+                </div>
+            `;
+        }
+
+        $('#cal-modal-days-grid').html(daysHtml);
+    }
+
+    // Update Dashboard AJAX Fetch
+    function updateDashboardData() {
+        const fromDate = $('#filter-from-date').val();
+        const toDate = $('#filter-to-date').val();
+        const branchId = $('#filter-branch').val();
+        const unitId = $('#filter-unit').val();
+        const bayId = $('#filter-bay').val();
+        const customerId = $('#filter-customer').val();
+
+        const calYear = currentDate.getFullYear();
+        const calMonth = currentDate.getMonth() + 1;
+
+        $.ajax({
+            url: "{% url 'get_wms_kpi_dashboard_data' %}",
+            type: "GET",
+            data: {
+                'from_date': fromDate,
+                'to_date': toDate,
+                'branch_id': branchId,
+                'unit_id': unitId,
+                'bay_id': bayId,
+                'customer_id': customerId,
+                'cal_year': calYear,
+                'cal_month': calMonth
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    $('#header-branch-pill').text(res.branch_name || 'BVM MAA');
+
+                    // 1. Top Executive Cards
+                    if (res.top_kpis) {
+                        const tk = res.top_kpis;
+                        $('#kpi-inbound-val').text(tk.inbound.value);
+                        $('#kpi-inbound-sub').text(tk.inbound.subtext);
+                        $('#kpi-inbound-badge').text(tk.inbound.badge);
+
+                        $('#kpi-inventory-val').text(tk.inventory.value);
+                        $('#kpi-inventory-sub').text(tk.inventory.subtext);
+
+                        $('#kpi-occupancy-val').text(tk.occupancy.value);
+                        $('#kpi-occupancy-sub').text(tk.occupancy.subtext);
+                        $('#kpi-occupancy-badge').text(tk.occupancy.badge);
+
+                        $('#kpi-dispatch-val').text(tk.dispatch.value);
+                        $('#kpi-dispatch-sub').text(tk.dispatch.subtext);
+                        $('#kpi-dispatch-badge').text(tk.dispatch.badge);
+
+                        $('#kpi-safety-val').text(tk.safety.value);
+                        $('#kpi-safety-sub').text(tk.safety.subtext);
+                        $('#kpi-safety-badge').text(tk.safety.badge);
+
+                        $('#kpi-revenue-val').text(tk.revenue.value);
+                        $('#kpi-revenue-sub').text(tk.revenue.subtext);
+                        $('#kpi-revenue-badge').text(tk.revenue.badge);
+                    }
+
+                    // 2. Throughput Flow Chart
+                    renderThroughputChart(res.throughput_chart);
+
+                    // 3. Storage Unit & Bay Capacity Bars & Space Summary
+                    renderUnitCapacity(res.unit_capacity);
+                    renderBayCapacity(res.bay_capacity);
+                    if (res.space_summary) {
+                        $('#unit-sum-total').text(res.space_summary.total_area);
+                        $('#unit-sum-occ').text(res.space_summary.occupied_area);
+                        $('#unit-sum-avail').text(res.space_summary.available_area);
+                        $('#unit-sum-bays').text(`${res.space_summary.active_bays || 0} / ${res.space_summary.total_bays || 0}`);
+                        $('#sum-total-space-label').html(`<i class="fas fa-warehouse text-info"></i> Total: ${res.space_summary.total_area}`);
+                    }
+
+                    // 4. Inventory Pipeline Steps
+                    renderPipeline(res.pipeline);
+
+                    // 5. Compliance Table & Health Summary
+                    renderCompliance(res.compliance_controls, res.compliance_summary);
+
+                    // 6. Revenue Breakdown Table & Realization
+                    renderRevenue(res.revenue_breakdown);
+
+                    // 7. Calendar
+                    if (res.calendar_data) {
+                        monthlyCalendarMap = res.calendar_data;
+                        renderCalendarModal();
+                    }
+
+                    // Trigger smooth chart sizing
+                    triggerChartResize();
+                }
+            },
+            error: function(err) {
+                console.error("Failed to load WMS dashboard data", err);
+            }
+        });
+    }
+
+    // Branch filter cascading for Units
+    function filterUnitsByBranch(branchId) {
+        const $unitSelect = $('#filter-unit');
+        const currentVal = $unitSelect.val();
+        let currentStillVisible = false;
+
+        $unitSelect.find('option').each(function() {
+            const $opt = $(this);
+            const optVal = $opt.val();
+            const optBranch = String($opt.data('branch') || '');
+
+            if (optVal === 'all') {
+                $opt.show();
+                if (currentVal === 'all') currentStillVisible = true;
+                return;
+            }
+
+            if (branchId === 'all' || !branchId || optBranch === String(branchId)) {
+                $opt.show();
+                if (optVal === currentVal) currentStillVisible = true;
+            } else {
+                $opt.hide();
+            }
+        });
+
+        if (!currentStillVisible) {
+            $unitSelect.val('all');
+        }
+    }
+
+    // Bay filter cascading with Branch and Unit
+    function filterBaysByBranchAndUnit(branchId, unitId) {
+        const $baySelect = $('#filter-bay');
+        const currentVal = $baySelect.val();
+        let currentStillVisible = false;
+
+        $baySelect.find('option').each(function() {
+            const $opt = $(this);
+            const optVal = $opt.val();
+            const optBranch = String($opt.data('branch') || '');
+            const optUnit = String($opt.data('unit') || '');
+
+            if (optVal === 'all') {
+                $opt.show();
+                if (currentVal === 'all') currentStillVisible = true;
+                return;
+            }
+
+            const branchMatch = (branchId === 'all' || !branchId || optBranch === String(branchId));
+            const unitMatch = (unitId === 'all' || !unitId || optUnit === String(unitId));
+
+            if (branchMatch && unitMatch) {
+                $opt.show();
+                if (optVal === currentVal) currentStillVisible = true;
+            } else {
+                $opt.hide();
+            }
+        });
+
+        if (!currentStillVisible) {
+            $baySelect.val('all');
+        }
+    }
+
+    // Event Handlers
+    $('#filter-branch').on('change', function() {
+        const branchVal = $(this).val();
+        filterUnitsByBranch(branchVal);
+        filterBaysByBranchAndUnit(branchVal, $('#filter-unit').val());
+        updateDashboardData();
+    });
+
+    $('#filter-unit').on('change', function() {
+        const unitVal = $(this).val();
+        filterBaysByBranchAndUnit($('#filter-branch').val(), unitVal);
+        if (unitVal !== 'all') {
+            $('#btn-toggle-bays').trigger('click');
+        }
+        updateDashboardData();
+    });
+
+    $('#filter-bay').on('change', function() {
+        if ($(this).val() !== 'all') {
+            $('#btn-toggle-bays').trigger('click');
+        }
+        updateDashboardData();
+    });
+
+    $('#filter-customer').on('change', function() {
+        updateDashboardData();
+    });
+
+    $('#btn-apply-filters').on('click', function() {
+        updateDashboardData();
+    });
+
+    // Calendar Modal Handlers
+    $('#btn-open-calendar').on('click', function() {
+        renderCalendarModal();
+        $('#calendar-modal').css('display', 'flex');
+    });
+
+    $('#btn-close-calendar, #calendar-modal').on('click', function(e) {
+        if (e.target === this) {
+            $('#calendar-modal').hide();
+        }
+    });
+
+    $('#cal-prev-btn').on('click', function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        updateDashboardData();
+    });
+
+    $('#cal-next-btn').on('click', function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        updateDashboardData();
+    });
+
+    $(document).on('click', '.cal-modal-day[data-date]', function() {
+        const dStr = $(this).data('date');
+        $('#filter-from-date').val(dStr);
+        $('#filter-to-date').val(dStr);
+        $('#calendar-modal').hide();
+        updateDashboardData();
+    });
+
+    $('#cal-select-today').on('click', function() {
+        const now = new Date();
+        const dStr = formatDateInput(now);
+        $('#filter-from-date').val(dStr);
+        $('#filter-to-date').val(dStr);
+        $('#calendar-modal').hide();
+        updateDashboardData();
+    });
+
+    // Initial Load
+    filterUnitsByBranch($('#filter-branch').val());
+    filterBaysByBranchAndUnit($('#filter-branch').val(), $('#filter-unit').val());
+    updateDashboardData();
+});
+</script>

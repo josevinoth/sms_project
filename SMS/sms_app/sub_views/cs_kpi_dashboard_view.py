@@ -622,6 +622,11 @@ def get_cs_kpi_dashboard_data(request):
         total_revenue = 450000.0
         total_billed = 180000.0
         total_unbilled = 270000.0
+        shares = {
+            'own': {'name': 'Own', 'total': 90000.0, 'share_pct': '20.0%', 'billed': 45000.0, 'unbilled': 45000.0, 'total_formatted': '₹ 90,000.00', 'billed_formatted': '₹ 45,000.00', 'unbilled_formatted': '₹ 45,000.00', 'trips': 6, 'icon': 'fa-truck-moving', 'color': '#38bdf8'},
+            'attached': {'name': 'Attached', 'total': 60000.0, 'share_pct': '13.3%', 'billed': 20000.0, 'unbilled': 40000.0, 'total_formatted': '₹ 60,000.00', 'billed_formatted': '₹ 20,000.00', 'unbilled_formatted': '₹ 40,000.00', 'trips': 4, 'icon': 'fa-link', 'color': '#fbbf24'},
+            'market': {'name': 'Market', 'total': 300000.0, 'share_pct': '66.7%', 'billed': 115000.0, 'unbilled': 185000.0, 'total_formatted': '₹ 300,000.00', 'billed_formatted': '₹ 115,000.00', 'unbilled_formatted': '₹ 185,000.00', 'trips': 20, 'icon': 'fa-store', 'color': '#a78bfa'},
+        }
     else:
         def safe_num(val):
             if val is None or val == '':
@@ -630,6 +635,12 @@ def get_cs_kpi_dashboard_data(request):
                 return float(val)
             except (ValueError, TypeError):
                 return 0.0
+
+        shares = {
+            'own': {'name': 'Own', 'billed': 0.0, 'unbilled': 0.0, 'trips': 0, 'icon': 'fa-truck-moving', 'color': '#38bdf8'},
+            'attached': {'name': 'Attached', 'billed': 0.0, 'unbilled': 0.0, 'trips': 0, 'icon': 'fa-link', 'color': '#fbbf24'},
+            'market': {'name': 'Market', 'billed': 0.0, 'unbilled': 0.0, 'trips': 0, 'icon': 'fa-store', 'color': '#a78bfa'},
+        }
 
         # Invoices map for billed trips / C-Notes
         invoices_by_trip = dict(
@@ -652,6 +663,11 @@ def get_cs_kpi_dashboard_data(request):
             else:
                 val = calculate_trip_invoice_total(trip) or safe_num(trip.tc_tripcost)
             total_billed += val
+
+            src_id = trip.tr_vehiclesource_id
+            cat = 'own' if src_id == 1 else ('attached' if src_id == 2 else 'market')
+            shares[cat]['billed'] += val
+            shares[cat]['trips'] += 1
 
         # Value Unbilled: Calculated inline using the SAME logic as Invoice Pending Report
         # (no import from transport_reports_view needed - logic is self-contained here)
@@ -754,16 +770,23 @@ def get_cs_kpi_dashboard_data(request):
                 row_total = safe_num(trip.tc_tripcost)
             total_unbilled += row_total
 
+            src_id = trip.tr_vehiclesource_id
+            cat = 'own' if src_id == 1 else ('attached' if src_id == 2 else 'market')
+            shares[cat]['unbilled'] += row_total
+            shares[cat]['trips'] += 1
+
         # Include C-Notes without any trips (rate from Enquirynotevehicle)
         trips_cnote_ids = set(trips_qs.values_list('tr_consignmentnumber_id', flat=True))
         cnotes_without_trip = cnotes_qs.exclude(id__in=trips_cnote_ids)
         for cn in cnotes_without_trip:
             al_list = allotment_map.get(cn.co_enquirynumber_id, [])
+            rate = 0.0
+            src_id = None
             if al_list:
                 al = al_list[0]
+                src_id = getattr(al, 'va_vehiclesource_id', None)
                 # Fetch from Enquirynotevehicle first; va_sale/va_special_sale are NULL for new allotments
                 vt_id = getattr(al, 'va_vehicletype_placed_id', None) or getattr(al, 'va_vehicletype_id', None)
-                rate = 0.0
                 if vt_id:
                     env = Enquirynotevehicle.objects.filter(
                         env_enquirynumber_id=cn.co_enquirynumber_id,
@@ -773,10 +796,23 @@ def get_cs_kpi_dashboard_data(request):
                         rate = float(env.env_special_sale or env.env_sale or 0)
                 if rate <= 0:
                     rate = safe_num(al.va_special_sale) or safe_num(al.va_sale)
-                total_unbilled += rate
+            total_unbilled += rate
+
+            cat = 'own' if src_id == 1 else ('attached' if src_id == 2 else 'market')
+            shares[cat]['unbilled'] += rate
+            shares[cat]['trips'] += 1
 
         total_revenue = total_billed + total_unbilled
 
+        for cat in ['own', 'attached', 'market']:
+            cat_tot = shares[cat]['billed'] + shares[cat]['unbilled']
+            shares[cat]['total'] = round(cat_tot, 2)
+            shares[cat]['billed'] = round(shares[cat]['billed'], 2)
+            shares[cat]['unbilled'] = round(shares[cat]['unbilled'], 2)
+            shares[cat]['share_pct'] = f"{round((cat_tot / total_revenue) * 100, 1)}%" if total_revenue > 0 else "0.0%"
+            shares[cat]['total_formatted'] = f"₹ {cat_tot:,.2f}"
+            shares[cat]['billed_formatted'] = f"₹ {shares[cat]['billed']:,.2f}"
+            shares[cat]['unbilled_formatted'] = f"₹ {shares[cat]['unbilled']:,.2f}"
 
     billed_share_pct = round((total_billed / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
     unbilled_share_pct = round((total_unbilled / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
@@ -790,6 +826,7 @@ def get_cs_kpi_dashboard_data(request):
         'value_unbilled_formatted': f"₹ {total_unbilled:,.2f}",
         'billed_share_pct': f"{billed_share_pct}%",
         'unbilled_share_pct': f"{unbilled_share_pct}%",
+        'share_breakdown': shares,
     }
 
     # Monthly Calendar Map

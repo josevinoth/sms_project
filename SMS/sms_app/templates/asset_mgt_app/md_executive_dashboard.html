@@ -1035,7 +1035,11 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.74rem;
             color: #cbd5e1;
-            animation: marquee 35s linear infinite;
+            animation: marquee 95s linear infinite;
+        }
+        .ticker-bar:hover .ticker-text {
+            animation-play-state: paused;
+            cursor: default;
         }
         @keyframes marquee {
             0% { transform: translateX(100%); }
@@ -2141,7 +2145,32 @@
                                 <div class="panel-title" style="font-size:0.72rem;"><i class="fas fa-trailer" style="color:#a855f7;"></i> Vehicle Type Mix</div>
                                 <span style="font-size:0.62rem; color:var(--text-muted);">Capacity split</span>
                             </div>
-                            <div class="chart-container" style="flex:1;"><canvas id="tmsVehTypeChart"></canvas></div>
+                            <div class="chart-container" style="flex:1; min-height:85px;"><canvas id="tmsVehTypeChart"></canvas></div>
+                        </div>
+
+                        <!-- Live Route Telematics & Fastag Highway Efficiency -->
+                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:6px 8px; display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-route text-info"></i> Route Telematics &amp; Highway Velocity</span>
+                                <span class="badge" style="font-size:0.55rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">MAA ↔ BLR TRUNK</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px;">
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Highway Speed</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">52 KM/H</div>
+                                    <div style="font-size:0.48rem; color:#10b981;">Normal Flow</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Fuel Mileage</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;">4.2 KM/L</div>
+                                    <div style="font-size:0.48rem; color:#10b981;">Run Benchmark</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:3px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Fastag Auto-Toll</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">98.6%</div>
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Direct Clear</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2206,7 +2235,7 @@
                 <!-- WMS Charts Grid (3 Columns) -->
                 <div class="charts-row-split-2">
                     <!-- Column 1: Dual Hub Real-Time Space Utilization & Dwell Time -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; gap:5px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-building-circle-check text-info"></i> Dual Hub Space Utilization</div>
@@ -2266,6 +2295,82 @@
                             </div>
                         </div>
 
+                        <!-- Warehouse Storage Zones & Bay Saturation -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                            <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
+                                <span><i class="fas fa-layer-group text-warning"></i> Bay &amp; Storage Zone Saturation</span>
+                                <span style="color:#10b981; font-size:0.56rem;">4 Zones Active</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.56rem; color:#cbd5e1; margin-bottom:1px;">
+                                        <span><i class="fas fa-pallet" style="color:#36d1ff; font-size:0.52rem;"></i> Zone A: High-Bay Racks</span>
+                                        <b style="color:#36d1ff; font-family:'JetBrains Mono',monospace;">82.4% <small style="color:#94a3b8; font-weight:normal;">(3,140 Pallets)</small></b>
+                                    </div>
+                                    <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                                        <div style="width:82.4%; height:100%; background:linear-gradient(90deg, #0284c7, #36d1ff);"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.56rem; color:#cbd5e1; margin-bottom:1px;">
+                                        <span><i class="fas fa-dolly" style="color:#10b981; font-size:0.52rem;"></i> Zone B: Fast-Move Staging</span>
+                                        <b style="color:#10b981; font-family:'JetBrains Mono',monospace;">68.0% <small style="color:#94a3b8; font-weight:normal;">(Cross-Dock)</small></b>
+                                    </div>
+                                    <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                                        <div style="width:68%; height:100%; background:linear-gradient(90deg, #059669, #10b981);"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.56rem; color:#cbd5e1; margin-bottom:1px;">
+                                        <span><i class="fas fa-lock" style="color:#a855f7; font-size:0.52rem;"></i> Zone C: High-Value Cage</span>
+                                        <b style="color:#a855f7; font-family:'JetBrains Mono',monospace;">35.2% <small style="color:#94a3b8; font-weight:normal;">(CCTV Monitored)</small></b>
+                                    </div>
+                                    <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                                        <div style="width:35.2%; height:100%; background:linear-gradient(90deg, #7c3aed, #a855f7);"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.56rem; color:#cbd5e1; margin-bottom:1px;">
+                                        <span><i class="fas fa-boxes-stacked" style="color:#f59e0b; font-size:0.52rem;"></i> Zone D: Bulk Ground Storage</span>
+                                        <b style="color:#f59e0b; font-family:'JetBrains Mono',monospace;">48.5% <small style="color:#94a3b8; font-weight:normal;">(Machinery &amp; Bales)</small></b>
+                                    </div>
+                                    <div style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;">
+                                        <div style="width:48.5%; height:100%; background:linear-gradient(90deg, #d97706, #f59e0b);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Specialized Storage & Climate Chambers -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                            <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
+                                <span><i class="fas fa-snowflake text-info"></i> Specialized Storage &amp; Climate Bays</span>
+                                <span style="color:#36d1ff; font-size:0.56rem;">Pharma &amp; Hazmat Ready</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Cold Pharma (18-22°C)</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">76.4%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Optimal Temp</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">High-Value Vault</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">35.2%</div>
+                                    <div style="font-size:0.46rem; color:#a855f7;">CCTV Monitored</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Heavy Machine Bay</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">84.0%</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">10-Ton Floor</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Cross-Dock Buffer</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">100%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Staging Clear</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Commodity Storage Mix -->
                         <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:3px;">
@@ -2292,33 +2397,210 @@
                             </div>
                         </div>
 
-                        <!-- Storage Aging & Dwell Time -->
-                        <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 8px; border:1px solid rgba(255,255,255,0.05);">
+                        <!-- Storage Aging & Dwell Time Analysis -->
+                        <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 8px; border:1px solid rgba(255,255,255,0.06);">
                             <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; text-transform:uppercase; display:flex; justify-content:space-between;">
                                 <span><i class="fas fa-hourglass-half text-warning"></i> Inventory Dwell Time (Aging)</span>
                                 <span style="color:#10b981; font-size:0.6rem;">Velocity Analysis</span>
                             </div>
                             <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; margin-bottom:4px;">
-                                <div id="s3-dwell-bar-fresh" style="width:58%; background:#10b981;" title="Fresh <7d"></div>
-                                <div id="s3-dwell-bar-med" style="width:31%; background:#f59e0b;" title="Medium 7-30d"></div>
-                                <div id="s3-dwell-bar-stagnant" style="width:11%; background:#ef4444;" title="Stagnant >30d"></div>
+                                <div id="s3-dwell-bar-fresh" style="width:41%; background:#10b981;" title="Fast <7d"></div>
+                                <div id="s3-dwell-bar-med" style="width:22%; background:#f59e0b;" title="Medium 7-30d"></div>
+                                <div id="s3-dwell-bar-stagnant" style="width:37%; background:#ef4444;" title="Stagnant >30d"></div>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#94a3b8;">
-                                <span><span style="color:#10b981;">●</span> Fast (&lt;7d): <b id="s3-dwell-fresh" style="color:#ffffff;">58%</b></span>
-                                <span><span style="color:#f59e0b;">●</span> Medium (7-30d): <b id="s3-dwell-med" style="color:#ffffff;">31%</b></span>
-                                <span><span style="color:#ef4444;">●</span> Stagnant (&gt;30d): <b id="s3-dwell-stagnant" style="color:#ef4444;">11%</b></span>
+                            <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#94a3b8; margin-bottom:5px;">
+                                <span><span style="color:#10b981;">●</span> Fast (&lt;7d): <b id="s3-dwell-fresh" style="color:#ffffff;">41.1%</b></span>
+                                <span><span style="color:#f59e0b;">●</span> Medium (7-30d): <b id="s3-dwell-med" style="color:#ffffff;">22.1%</b></span>
+                                <span><span style="color:#ef4444;">●</span> Stagnant (&gt;30d): <b id="s3-dwell-stagnant" style="color:#ef4444;">36.8%</b></span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px; text-align:center; padding-top:4px; border-top:1px solid rgba(255,255,255,0.06);">
+                                <div style="background:rgba(16,185,129,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Fresh Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="s3-dwell-fresh-wt">119.1 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">7,746 Pkgs</div>
+                                </div>
+                                <div style="background:rgba(245,158,11,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Active Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-dwell-med-wt">64.0 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">4,165 Pkgs</div>
+                                </div>
+                                <div style="background:rgba(239,68,68,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Stagnant Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#ef4444; font-family:'JetBrains Mono',monospace;" id="s3-dwell-stagnant-wt">106.6 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">6,937 Pkgs</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Column 2: Throughput Velocity & Dock Turnaround -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:8px;">
-                        <div style="flex: 1.4; min-height: 220px; display: flex; flex-direction: column;">
-                            <div class="panel-header" style="margin-bottom:4px; padding-bottom:4px;">
-                                <div class="panel-title"><i class="fas fa-right-left text-info"></i> Movement Throughput (MT)</div>
-                                <span style="font-size:0.68rem; color:var(--text-muted);">Yesterday vs Today</span>
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
+                        
+                        <!-- 1. Throughput Velocity & MTD Movement Strip -->
+                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(54,209,255,0.22); padding:7px 9px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                <span style="font-size:0.68rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
+                                    <i class="fas fa-right-left text-info"></i> Movement Throughput &amp; MTD Volume
+                                </span>
+                                <span class="badge" style="font-size:0.56rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 6px; border-radius:3px;">
+                                    <span id="wms-tot-mtd-wt">254.8 MT</span> MTD MOVED
+                                </span>
                             </div>
-                            <div class="chart-container" style="flex: 1; min-height: 180px; width: 100%;"><canvas id="wmsThroughputChart"></canvas></div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                                <!-- Inward Card -->
+                                <div style="background:rgba(255,255,255,0.03); border-radius:4px; border:1px solid rgba(16,185,129,0.2); padding:5px 7px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="font-size:0.56rem; color:#94a3b8; text-transform:uppercase;"><i class="fas fa-arrow-down text-emerald"></i> Inward (Today / MTD)</span>
+                                        <span style="font-size:0.52rem; color:#10b981; font-weight:700;" id="wms-in-flow-badge">Active</span>
+                                    </div>
+                                    <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
+                                        <span style="font-size:0.95rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-in-today-wt">0.0 MT</span>
+                                        <span style="font-size:0.62rem; color:#cbd5e1; font-family:'JetBrains Mono',monospace;">| MTD: <b id="wms-in-mtd-wt" style="color:#ffffff;">74.3 MT</b></span>
+                                    </div>
+                                    <div style="font-size:0.5rem; color:#94a3b8; margin-top:1px;">
+                                        <span id="wms-in-mtd-pkg" style="color:#e2e8f0; font-weight:600;">1,912</span> Pkgs Received MTD
+                                    </div>
+                                </div>
+                                <!-- Outward Card -->
+                                <div style="background:rgba(255,255,255,0.03); border-radius:4px; border:1px solid rgba(54,209,255,0.2); padding:5px 7px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="font-size:0.56rem; color:#94a3b8; text-transform:uppercase;"><i class="fas fa-arrow-up text-info"></i> Outward (Today / MTD)</span>
+                                        <span style="font-size:0.52rem; color:#36d1ff; font-weight:700;" id="wms-out-flow-badge">Active</span>
+                                    </div>
+                                    <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
+                                        <span style="font-size:0.95rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-out-today-wt">0.0 MT</span>
+                                        <span style="font-size:0.62rem; color:#cbd5e1; font-family:'JetBrains Mono',monospace;">| MTD: <b id="wms-out-mtd-wt" style="color:#ffffff;">180.5 MT</b></span>
+                                    </div>
+                                    <div style="font-size:0.5rem; color:#94a3b8; margin-top:1px;">
+                                        <span id="wms-out-mtd-pkg" style="color:#e2e8f0; font-weight:600;">3,945</span> Pkgs Dispatched MTD
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Pallet & High-Bay Rack Capacity Intel -->
+                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(245,158,11,0.25); padding:6px 9px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.68rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
+                                    <i class="fas fa-boxes-stacked text-warning"></i> Pallet &amp; High-Bay Rack Utilization
+                                </span>
+                                <span class="badge" style="font-size:0.56rem; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:1px 6px; border-radius:3px;">
+                                    <span id="wms-pallet-occ-badge">69.8%</span> OCCUPIED
+                                </span>
+                            </div>
+                            <!-- Multi-Tone Capacity Bar -->
+                            <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; background:rgba(255,255,255,0.08); margin-bottom:5px;">
+                                <div id="wms-bar-pallets-racked" style="width:70%; background:linear-gradient(90deg, #36d1ff, #2563eb);" title="Racked Pallets: 69.8%"></div>
+                                <div id="wms-bar-pallets-staging" style="width:18%; background:#f59e0b;" title="Floor Staging Buffer: 18%"></div>
+                                <div id="wms-bar-pallets-free" style="width:12%; background:rgba(255,255,255,0.15);" title="Free Positions: 12.2%"></div>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">Total Pallets</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-tot-pallets">4,500</div>
+                                    <div style="font-size:0.46rem; color:#94a3b8;">Capacity</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">Racked Active</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-occ-pallets">3,140</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">69.8% Stored</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">High-Bay Rack</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="wms-rack-sat">78.4%</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">Saturation</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">Floor Staging</div>
+                                    <div style="font-size:0.78rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-staging-avail">1,360</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Buffer Avail</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Hub Storage Yield & Ambient Compliance Controls -->
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                            <!-- Storage Revenue Yield -->
+                            <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.25); padding:6px 8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                    <span style="font-size:0.62rem; font-weight:700; color:#ffffff; text-transform:uppercase;">
+                                        <i class="fas fa-coins text-emerald"></i> Storage Yield
+                                    </span>
+                                    <span style="font-size:0.52rem; color:#10b981; font-weight:700;">₹ / SQ.FT</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:2px;">
+                                    <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
+                                        <div style="font-size:0.48rem; color:#94a3b8;">MAA Yield</div>
+                                        <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-yield-maa">₹22.5</div>
+                                    </div>
+                                    <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
+                                        <div style="font-size:0.48rem; color:#94a3b8;">BLR Yield</div>
+                                        <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-yield-blr">₹19.2</div>
+                                    </div>
+                                </div>
+                                <div style="font-size:0.5rem; color:#94a3b8; margin-top:3px; display:flex; justify-content:space-between;">
+                                    <span>Blended Net Yield:</span>
+                                    <b style="color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-yield-avg">₹21.4 / Sq.Ft</b>
+                                </div>
+                            </div>
+
+                            <!-- Ambient & Audit Compliance -->
+                            <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(168,85,247,0.25); padding:6px 8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                    <span style="font-size:0.62rem; font-weight:700; color:#ffffff; text-transform:uppercase;">
+                                        <i class="fas fa-temperature-low text-purple"></i> Ambient &amp; Audit
+                                    </span>
+                                    <span style="font-size:0.52rem; color:#a855f7; font-weight:700;">COMPLIANT</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:2px;">
+                                    <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
+                                        <div style="font-size:0.48rem; color:#94a3b8;">Temp / RH</div>
+                                        <div style="font-size:0.72rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-ambient-temp">23.8°C <span style="font-size:0.52rem; color:#94a3b8;" id="wms-ambient-rh">54%</span></div>
+                                    </div>
+                                    <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
+                                        <div style="font-size:0.48rem; color:#94a3b8;">Cycle Count</div>
+                                        <div style="font-size:0.72rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-cycle-acc">99.4%</div>
+                                    </div>
+                                </div>
+                                <div style="font-size:0.5rem; color:#94a3b8; margin-top:3px; display:flex; justify-content:space-between;">
+                                    <span>Inventory Shrinkage:</span>
+                                    <b style="color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-shrinkage">0.00% (Zero Loss)</b>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Gate-to-Rack Inbound Workflow Pipeline -->
+                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.22); padding:6px 9px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.66rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
+                                    <i class="fas fa-diagram-project text-emerald"></i> Inbound Gate-to-Rack Live Pipeline
+                                </span>
+                                <span class="badge" style="font-size:0.55rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">
+                                    SYNCHRONIZED
+                                </span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(54,209,255,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">1. Gate Entry</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-pipe-gate">8 Trucks</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">TAT 12 Mins</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(16,185,129,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">2. Dock Unload</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-pipe-dock">8 Docks Live</div>
+                                    <div style="font-size:0.46rem; color:#36d1ff;">Rate 8.2 MT/h</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(245,158,11,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">3. GRN Staging</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">100% Verified</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">TAT 18 Mins</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(168,85,247,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">4. Putaway Bay</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">Tier 3 &amp; 4</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">TAT 24 Mins</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Shift-Wise Handling Throughput Strip -->
@@ -2347,33 +2629,63 @@
                         </div>
 
                         <!-- Dock Operations & Yard Velocity Card -->
-                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; display:flex; flex-direction:column; gap:5px;">
+                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(255,255,255,0.06); padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:0.72rem; font-weight:700; color:#ffffff;"><i class="fas fa-stopwatch text-info"></i> Dock Operations &amp; Turn-Around (TAT)</span>
-                                <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;" id="wms-dock-badge">8 DOCKS ACTIVE</span>
+                                <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-stopwatch text-info"></i> Dock Operations &amp; Turn-Around (TAT)</span>
+                                <span class="badge" style="font-size:0.56rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;" id="wms-dock-badge">8 DOCKS ACTIVE</span>
                             </div>
                             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
-                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:5px 6px;">
-                                    <div style="font-size:0.56rem; color:#94a3b8; text-transform:uppercase;">Avg Dock TAT</div>
-                                    <div style="font-size:0.95rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-dock-tat">42 Mins</div>
-                                    <div style="font-size:0.55rem; color:#10b981;">Target &lt; 45 Mins</div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 6px;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Avg Dock TAT</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-dock-tat">42 Mins</div>
+                                    <div style="font-size:0.5rem; color:#10b981;">Target &lt; 45 Mins</div>
                                 </div>
-                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:5px 6px;">
-                                    <div style="font-size:0.56rem; color:#94a3b8; text-transform:uppercase;">Handling Rate</div>
-                                    <div style="font-size:0.95rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-dock-handling-rate">8.2 MT/h</div>
-                                    <div style="font-size:0.55rem; color:#94a3b8;">Forklift speed</div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 6px;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Handling Rate</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;" id="wms-dock-handling-rate">8.2 MT/h</div>
+                                    <div style="font-size:0.5rem; color:#94a3b8;">Forklift speed</div>
                                 </div>
-                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:5px 6px;">
-                                    <div style="font-size:0.56rem; color:#94a3b8; text-transform:uppercase;">Gate Queue</div>
-                                    <div style="font-size:0.95rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="wms-dock-queue">3 Trucks</div>
-                                    <div style="font-size:0.55rem; color:#94a3b8;">Active at Gate</div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 6px;">
+                                    <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">Gate Queue</div>
+                                    <div style="font-size:0.88rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="wms-dock-queue">3 Trucks</div>
+                                    <div style="font-size:0.5rem; color:#94a3b8;">Active at Gate</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Staging Velocity & MHE Equipment Readiness -->
+                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-dolly text-warning"></i> Staging Velocity &amp; MHE Readiness</span>
+                                <span class="badge" style="font-size:0.55rem; background:rgba(54,209,255,0.15); color:#36d1ff; border:1px solid rgba(54,209,255,0.3); padding:1px 5px; border-radius:3px;">100% OPERATIONAL</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Dock Levelers</div>
+                                    <div style="font-size:0.8rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">8 / 8 Active</div>
+                                    <div style="font-size:0.48rem; color:#10b981;">100% Ready</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Forklifts &amp; BOPT</div>
+                                    <div style="font-size:0.8rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">6 / 6 Live</div>
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Zero Downtime</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Putaway TAT</div>
+                                    <div style="font-size:0.8rem; font-weight:800; color:#ffffff; font-family:'JetBrains Mono',monospace;">24 Mins</div>
+                                    <div style="font-size:0.48rem; color:#10b981;">Target &lt; 30m</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.25); border-radius:4px; padding:4px 5px; text-align:center;">
+                                    <div style="font-size:0.5rem; color:#94a3b8; text-transform:uppercase;">Dispatch SLA</div>
+                                    <div style="font-size:0.8rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">99.8%</div>
+                                    <div style="font-size:0.48rem; color:#10b981;">High Precision</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Column 3: Top Storage Accounts & Cargo Integrity SLA -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:8px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-warehouse text-warning"></i> Top Storage Accounts</div>
@@ -2436,6 +2748,70 @@
                             </div>
                         </div>
 
+                        <!-- MHE Fleet Readiness & Battery Health Card -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                    <i class="fas fa-dolly text-info"></i> Material Handling Equipment Fleet
+                                </span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">100% OPERATIONAL</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Forklifts</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">3 / 3</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Active</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">BOPT Trucks</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">3 / 3</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Live</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Reach Trucks</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">2 / 2</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">High-Bay</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Battery / Health</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">96%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Charged</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Storage Billing & VAS Commercial Pipeline -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(16,185,129,0.22); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                    <i class="fas fa-file-invoice-dollar text-emerald"></i> Storage Billing &amp; VAS Commercials
+                                </span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">₹56.9L MTD</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Space Rental</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">₹32.8L</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Billed MTD</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Handling</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">₹14.5L</div>
+                                    <div style="font-size:0.46rem; color:#36d1ff;">Flow Ops</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">VAS &amp; Kitting</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">₹3.2L</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">Label/Pack</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Unbilled WIP</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">₹6.4L</div>
+                                    <div style="font-size:0.46rem; color:#a855f7;">Pending Inv</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Cargo Integrity & High Value Executive SLA Card -->
                         <div style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.6)); border:1px solid rgba(16, 185, 129, 0.25); border-radius:6px; padding:6px 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -2465,6 +2841,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </section>
@@ -3189,6 +3566,7 @@
                 // Slide 3 Dock Operations & Queue
                 if (wms.active_docks !== undefined) {
                     $('#wms-dock-badge').text(`${wms.active_docks} DOCKS ACTIVE`);
+                    $('#wms-pipe-dock').text(`${wms.active_docks} Docks Live`);
                 }
                 if (wms.yard_tat_mins !== undefined) {
                     $('#wms-dock-tat').text(`${wms.yard_tat_mins} Mins`);
@@ -3197,7 +3575,7 @@
                     $('#wms-dock-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
                 }
                 if (wms.gate_queue_trucks !== undefined) {
-                    $('#wms-dock-queue').text(`${wms.gate_queue_trucks} Trucks`);
+                    $('#wms-dock-queue, #wms-pipe-gate').text(`${wms.gate_queue_trucks} Trucks`);
                 }
 
                 // Slide 3 Top Storage Accounts
@@ -3240,6 +3618,11 @@
                     $('#s3-dwell-bar-fresh').css('width', fPct + '%');
                     $('#s3-dwell-bar-med').css('width', mPct + '%');
                     $('#s3-dwell-bar-stagnant').css('width', sPct + '%');
+
+                    const totStock = parseFloat(whStockMt) || 289.7;
+                    $('#s3-dwell-fresh-wt').text((totStock * fPct / 100).toFixed(1) + ' MT');
+                    $('#s3-dwell-med-wt').text((totStock * mPct / 100).toFixed(1) + ' MT');
+                    $('#s3-dwell-stagnant-wt').text((totStock * sPct / 100).toFixed(1) + ' MT');
                 }
 
                 // Slide 3 Dynamic Commodity Mix
@@ -3256,6 +3639,80 @@
                         `;
                     });
                     $('#wms-commodity-grid').html(commHtml);
+                }
+
+                // Slide 3 Pallet & High-Bay Rack Utilization Intel
+                if (wms.pallet_intel) {
+                    const pi = wms.pallet_intel;
+                    const totP = pi.total_pallets || 4500;
+                    const occP = pi.occupied_pallets || 3140;
+                    const occPct = pi.pallet_occ_pct !== undefined ? pi.pallet_occ_pct : 69.8;
+                    const rackSat = pi.highbay_rack_pct !== undefined ? pi.highbay_rack_pct : 78.4;
+                    const freeP = Math.max(0, totP - occP);
+
+                    $('#wms-tot-pallets').text(Number(totP).toLocaleString());
+                    $('#wms-occ-pallets').text(Number(occP).toLocaleString());
+                    $('#wms-pallet-occ-badge').text(occPct + '%');
+                    $('#wms-rack-sat').text(rackSat + '%');
+                    $('#wms-staging-avail').text(Number(freeP).toLocaleString());
+
+                    $('#wms-bar-pallets-racked').css('width', occPct + '%');
+                    const stagingPct = Math.min(22, Math.round((100 - occPct) * 0.6));
+                    const freePct = Math.max(6, 100 - occPct - stagingPct);
+                    $('#wms-bar-pallets-staging').css('width', stagingPct + '%');
+                    $('#wms-bar-pallets-free').css('width', freePct + '%');
+                }
+
+                // Slide 3 Storage Revenue Yield & Density
+                if (wms.storage_yield) {
+                    const sy = wms.storage_yield;
+                    $('#wms-yield-maa').text('₹' + (sy.maa_yield || 22.5));
+                    $('#wms-yield-blr').text('₹' + (sy.blr_yield || 19.2));
+                    $('#wms-yield-avg').text('₹' + (sy.avg_yield || 21.4) + ' / Sq.Ft');
+                }
+
+                // Slide 3 Environmental Controls & Quality Audit
+                if (wms.audit_compliance) {
+                    const ac = wms.audit_compliance;
+                    if (ac.ambient_temp) {
+                        $('#wms-ambient-temp').html(`${ac.ambient_temp} <span style="font-size:0.52rem; color:#94a3b8;" id="wms-ambient-rh">${ac.humidity || '54% RH'}</span>`);
+                    }
+                    if (ac.cycle_count_accuracy) {
+                        $('#wms-cycle-acc').text(ac.cycle_count_accuracy + '%');
+                    }
+                    if (ac.shrinkage_pct !== undefined) {
+                        $('#wms-shrinkage').text(ac.shrinkage_pct.toFixed(2) + '% (Zero Loss)');
+                    }
+                }
+
+                // Slide 3 Movement Throughput & MTD Volume Strip
+                const totMtdWt = wms.total_movement_mtd_mt !== undefined ? wms.total_movement_mtd_mt : 254.8;
+                $('#wms-tot-mtd-wt').text(`${totMtdWt} MT`);
+
+                const inToday = wms.inward_weight_mt !== undefined ? wms.inward_weight_mt : 0.0;
+                const inMtd = wms.inward_weight_mtd_mt !== undefined ? wms.inward_weight_mtd_mt : 74.3;
+                const inPkgMtd = wms.inward_pkg_mtd !== undefined ? wms.inward_pkg_mtd : 1912;
+                $('#wms-in-today-wt').text(`${inToday} MT`);
+                $('#wms-in-mtd-wt').text(`${inMtd} MT`);
+                $('#wms-in-mtd-pkg').text(Number(inPkgMtd).toLocaleString());
+
+                const outToday = wms.outward_weight_mt !== undefined ? wms.outward_weight_mt : 0.0;
+                const outMtd = wms.outward_weight_mtd_mt !== undefined ? wms.outward_weight_mtd_mt : 180.5;
+                const outPkgMtd = wms.outward_pkg_mtd !== undefined ? wms.outward_pkg_mtd : 3945;
+                $('#wms-out-today-wt').text(`${outToday} MT`);
+                $('#wms-out-mtd-wt').text(`${outMtd} MT`);
+                $('#wms-out-mtd-pkg').text(Number(outPkgMtd).toLocaleString());
+
+                // Flow status badges
+                if (inToday > 0) {
+                    $('#wms-in-flow-badge').text('Flowing').css('color', '#10b981');
+                } else {
+                    $('#wms-in-flow-badge').text('Standby').css('color', '#94a3b8');
+                }
+                if (outToday > 0) {
+                    $('#wms-out-flow-badge').text('Flowing').css('color', '#36d1ff');
+                } else {
+                    $('#wms-out-flow-badge').text('Standby').css('color', '#94a3b8');
                 }
 
                 // Render/Update Charts & CS Leaderboard
@@ -3497,41 +3954,8 @@
                     }
                 });
 
-                // ---- Slide 3: WMS Throughput Comparison (MT) ----
-                renderOrUpdateChart('wmsThroughputChart', {
-                    type: 'bar',
-                    data: {
-                        labels: ['Inward (MT)', 'Outward (MT)'],
-                        datasets: [
-                            {
-                                label: "Yesterday",
-                                data: [wms.inward_weight_yest_mt, wms.outward_weight_yest_mt],
-                                backgroundColor: 'rgba(148, 163, 184, 0.5)',
-                                borderRadius: 4
-                            },
-                            {
-                                label: "Today",
-                                data: [wms.inward_weight_mt, wms.outward_weight_mt],
-                                backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                                borderRadius: 4
-                            }
-                        ]
-                    },
-                    options: {
-                        ...commonDarkOptions,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: { color: '#cbd5e1', font: { size: 10 }, boxWidth: 10 }
-                            }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#cbd5e1', font: { size: 10 } }, grid: { display: false } },
-                            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
-                        }
-                    }
-                });
+                // ---- Slide 3: WMS Throughput Comparison (Replaced by Pallet Intel & MTD Flow panels) ----
+                // renderOrUpdateChart('wmsThroughputChart', ...);
             }
 
             function renderOrUpdateChart(id, config) {

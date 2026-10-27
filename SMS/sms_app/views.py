@@ -24,6 +24,7 @@ from .sub_views.service_add_view import service_add,service_list,service_delete
 from .sub_views.stock_add_view import stock_add,stock_list,stock_delete
 from .sub_views.user_add_view import user_add,user_list,user_delete
 from .sub_views.user_approval_view import user_approval_list, user_approve, user_reject
+from .sub_views.user_control_view import (user_control_view,user_control_get_user_pages,user_control_toggle_page,user_control_bulk_save,user_control_save_permissions,user_control_copy_access,)
 from .sub_views.vendor_add_view import vendor_add,vendor_list,vendor_delete
 from .sub_views.country_add_view import country_list,country_delete,country_add
 from .sub_views.state_add_view import state_list,state_delete,state_add
@@ -211,6 +212,8 @@ from .sub_views.wms_petty_cash_view import wms_petty_cash_add, wms_petty_cash_de
 from .sub_views.pms_petty_cash_view import pms_petty_cash_add, pms_petty_cash_delete, pms_petty_cash_list, generate_pms_petty_cash_number, get_pms_job_details, pms_petty_cash_export_tally, get_pms_customers_by_unit, get_pms_jobs_by_customer, pms_petty_cash_voucher_print, add_pms_vehicle
 from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_consumption_logs, delete_manpower_consumption
 from .sub_views.cs_kpi_dashboard_view import cs_kpi_dashboard, get_cs_kpi_dashboard_data
+from .sub_views.wms_kpi_dashboard_view import wms_kpi_dashboard, get_wms_kpi_dashboard_data
+warehouse_dashboard = wms_kpi_dashboard
 from .sub_views.pk_consumption_report_view import export_consumption_excel, export_consumption_pdf
 from .sub_views.transport_reports_view import vendor_rate_report, customer_rate_report, vendor_rate_report_ajax, customer_rate_report_ajax
 from .sub_views.dmr_template_studio_view import (

@@ -56,6 +56,11 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_parking_cost"})
     )
 
+    mb_weighment_cost = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_weighment_cost"})
+    )
+
     mb_halting_cost = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_halting_cost"})
@@ -108,6 +113,7 @@ class MarketBillForm(forms.ModelForm):
             'mb_loading_cost',
             'mb_unloading_cost',
             'mb_parking_cost',
+            'mb_weighment_cost',
             'mb_halting_cost',
             'mb_halting_days',
             'mb_total_cost',
@@ -129,6 +135,10 @@ class MarketBillForm(forms.ModelForm):
         val = self.cleaned_data.get('mb_parking_cost')
         return val if val is not None else 0.0
 
+    def clean_mb_weighment_cost(self):
+        val = self.cleaned_data.get('mb_weighment_cost')
+        return val if val is not None else 0.0
+
     def clean_mb_halting_cost(self):
         val = self.cleaned_data.get('mb_halting_cost')
         return val if val is not None else 0.0
@@ -142,13 +152,15 @@ class MarketBillForm(forms.ModelForm):
         bill_no = cleaned_data.get('mb_bill_no')
         selected_trips = cleaned_data.get('mb_selected_trips')
 
-        # 1. Unique check for mb_bill_no
-        if bill_no:
-            qs = MarketBillInfo.objects.filter(mb_bill_no__iexact=bill_no)
+        # 1. Unique check for mb_bill_no (per vendor)
+        vendor = cleaned_data.get('mb_vendor')
+        if bill_no and vendor:
+            qs = MarketBillInfo.objects.filter(mb_vendor=vendor, mb_bill_no__iexact=bill_no)
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
-                self.add_error('mb_bill_no', 'A market bill with this Bill No already exists.')
+                vendor_label = getattr(vendor, 'vend_name', str(vendor))
+                self.add_error('mb_bill_no', f"A market bill with Bill No '{bill_no}' already exists for vendor '{vendor_label}'.")
 
         # 2. Unique check for selected trips (ensure they are not in any other market bill)
         if selected_trips:

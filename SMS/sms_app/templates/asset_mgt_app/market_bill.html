@@ -209,11 +209,17 @@
                             </div>
                             <div class="col-6">
                                 <div class="form-group-modern">
+                                    <label class="form-label-modern">Weighment Cost</label>
+                                    {% render_field form.mb_weighment_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
                                     <label class="form-label-modern">Halting Cost</label>
                                     {% render_field form.mb_halting_cost class="form-control form-control-modern" %}
                                 </div>
                             </div>
-                            <div class="col-6">
+                            <div class="col-12">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Total Cost</label>
                                     {% render_field form.mb_total_cost class="form-control form-control-modern" %}
@@ -328,6 +334,7 @@
                                 <th style="width: 90px;">Loading Cost</th>
                                 <th style="width: 90px;">Unloading Cost</th>
                                 <th style="width: 90px;">Parking Cost</th>
+                                <th style="width: 90px;">Weighment Cost</th>
                                 <th style="width: 80px;">Halting Days</th>
                                 <th style="width: 110px;">Halting Cost</th>
                                 <th style="width: 110px;">Total Cost</th>
@@ -344,6 +351,7 @@
                                         data-loading="{{ trip.loading_cost }}"
                                         data-unloading="{{ trip.unloading_cost }}"
                                         data-parking="{{ trip.parking_cost }}"
+                                        data-weighment="{{ trip.weighment_cost }}"
                                         data-halting-days="{{ trip.halting_days }}"
                                         data-halting-cost="{{ trip.halting_cost }}"
                                         data-halting-rate="{{ trip.halting_rate }}"
@@ -395,6 +403,15 @@
                                         style="width: 85px;">
                                 </td>
                                 <td>
+                                    <input type="number" name="weighment_cost_{{ trip.id }}"
+                                        class="form-control weighment-cost-input {% if trip.tc_weighmentcost_vendor_check %}vendor-highlighted{% endif %}"
+                                        value="{{ trip.weighment_cost }}" placeholder="{{ trip.closure_weighment_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_weighment_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
+                                        {% if trip.tc_weighmentcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
+                                        style="width: 85px;">
+                                </td>
+                                <td>
                                     <input type="number" name="halting_days_{{ trip.id }}"
                                         class="form-control halting-days-input {% if trip.tc_haltingcost_vendor_check %}vendor-highlighted{% endif %}"
                                         value="{{ trip.halting_days }}" placeholder="{{ trip.closure_halting_days }}"
@@ -437,7 +454,7 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="16" class="text-center text-muted">{% if record.id %}No trips found in this bill{% else %}Select a vendor to view trips{% endif %}</td>
+                                <td colspan="17" class="text-center text-muted">{% if record.id %}No trips found in this bill{% else %}Select a vendor to view trips{% endif %}</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -494,6 +511,7 @@
         let totalLoading = 0;
         let totalUnloading = 0;
         let totalParking = 0;
+        let totalWeighment = 0;
         let totalHalting = 0;
         let totalHaltingDays = 0;
 
@@ -526,17 +544,22 @@
             const parkingVal = parkingInput ? parkingInput.value.trim() : "";
             const parkingCost = parkingVal !== "" ? (parseFloat(parkingVal) || 0) : 0;
 
+            const weighmentInput = row.querySelector(".weighment-cost-input");
+            const weighmentVal = weighmentInput ? weighmentInput.value.trim() : "";
+            const weighmentCost = weighmentVal !== "" ? (parseFloat(weighmentVal) || 0) : 0;
+
             const tripInput = row.querySelector(".trip-cost-input");
             const special = parseFloat(tripInput?.value) || 0;
             totalTrip += special;
             totalLoading += loadingCost;
             totalUnloading += unloadingCost;
             totalParking += parkingCost;
+            totalWeighment += weighmentCost;
             totalHalting += haltingCost;
             totalHaltingDays += days;
 
             // Calculate and display row total cost (including halting cost)
-            const rowTotal = special + loadingCost + unloadingCost + parkingCost + haltingCost;
+            const rowTotal = special + loadingCost + unloadingCost + parkingCost + weighmentCost + haltingCost;
             const rowTotalCell = row.querySelector(".row-total-cost-cell");
             if (rowTotalCell) {
                 rowTotalCell.textContent = rowTotal.toFixed(2);
@@ -555,9 +578,11 @@
         document.getElementById("mb_loading_cost").value = totalLoading.toFixed(2);
         document.getElementById("mb_unloading_cost").value = totalUnloading.toFixed(2);
         document.getElementById("mb_parking_cost").value = totalParking.toFixed(2);
+        const weighmentEl = document.getElementById("mb_weighment_cost");
+        if (weighmentEl) weighmentEl.value = totalWeighment.toFixed(2);
         document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
         document.getElementById("mb_halting_days").value = totalHaltingDays;
-        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalHalting;
+        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalWeighment + totalHalting;
         document.getElementById("mb_total_cost").value = grandTotal.toFixed(2);
 
         // Recalculate TDS and Payable Amount
@@ -571,6 +596,7 @@
         if (e.target.classList.contains("loading-cost-input") ||
             e.target.classList.contains("unloading-cost-input") ||
             e.target.classList.contains("parking-cost-input") ||
+            e.target.classList.contains("weighment-cost-input") ||
             e.target.classList.contains("halting-days-input") ||
             e.target.classList.contains("halting-cost-input")) {
             const closureVal = parseFloat(e.target.getAttribute('data-closure') || 0);
@@ -621,14 +647,20 @@
         updateTdsAndPayable();
     }
 
-    // On page load: if editing an existing bill, run once to reflect saved TDS type
+    // On page load: only auto-set TDS % in ADD mode if not already entered
     $(document).ready(function () {
-        const savedType = document.getElementById("mb_tds_type_hidden")?.value || '';
-        if (savedType) { setTdsByType(); }
+        if (!isEditMode) {
+            const tdsPercentEl = document.getElementById("mb_tds_percent");
+            const savedType = document.getElementById("mb_tds_type_hidden")?.value || '';
+            if (savedType && (!tdsPercentEl || tdsPercentEl.value.trim() === '')) {
+                setTdsByType();
+            }
+        }
 
-        // Initialize Select2 on the vendor field
+        // Initialize Select2 on the vendor field (locked in edit mode)
         $('#mb_vendor').select2({
-            width: '100%'
+            width: '100%',
+            disabled: isEditMode
         });
     });
 
@@ -637,7 +669,7 @@
 
     // Export options configuration for Trips DataTable
     const tripsExportOptions = {
-        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         format: {
             body: function (data, row, column, node) {
                 const input = $(node).find('input');
@@ -683,7 +715,7 @@
         tripsDataTable = $('#tripsTable').DataTable({
             order: hasData ? [[1, 'desc']] : [], // Sort by Cnote column by default when data exists
             columnDefs: [
-                { orderable: false, targets: [0, 15] } // Checkbox and Mail Attach columns
+                { orderable: false, targets: [0, 16] } // Checkbox and Mail Attach columns
             ],
             destroy: true,
             paging: true,
@@ -760,7 +792,7 @@
             return;
         }
 
-        tbody.innerHTML = '<tr><td colspan="16" class="text-center"><i class="fas fa-spinner fa-spin mr-1"></i> Loading trips...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="17" class="text-center"><i class="fas fa-spinner fa-spin mr-1"></i> Loading trips...</td></tr>';
 
         // ---- Auto-set TDS Type from vendor PAN ----
         fetch("{% url 'get_vendor_pan' %}?vendor_id=" + vendorId)
@@ -807,6 +839,7 @@
                         data-loading="${trip.loading_cost}"
                         data-unloading="${trip.unloading_cost}"
                         data-parking="${trip.parking_cost}"
+                        data-weighment="${trip.weighment_cost}"
                         data-halting-days="${trip.halting_days}"
                         data-halting-cost="${trip.halting_cost}"
                         data-halting-rate="${trip.halting_rate}"></td>
@@ -836,6 +869,11 @@
                         <input type="number" name="parking_cost_${trip.id}" class="form-control parking-cost-input ${trip.tc_parkingcost_vendor_check ? 'vendor-highlighted' : ''}" 
                             value="" placeholder="${trip.parking_cost.toFixed(2)}" data-closure="${trip.parking_cost}" min="0" step="0.01"
                             ${trip.tc_parkingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 85px;">
+                    </td>
+                    <td>
+                        <input type="number" name="weighment_cost_${trip.id}" class="form-control weighment-cost-input ${trip.tc_weighmentcost_vendor_check ? 'vendor-highlighted' : ''}" 
+                            value="" placeholder="${trip.weighment_cost.toFixed(2)}" data-closure="${trip.weighment_cost}" min="0" step="0.01"
+                            ${trip.tc_weighmentcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 85px;">
                     </td>
                     <td>
                         <input type="number" name="halting_days_${trip.id}" class="form-control halting-days-input ${trip.tc_haltingcost_vendor_check ? 'vendor-highlighted' : ''}" 
@@ -1009,32 +1047,35 @@
             return false;
         }
 
-        // Validate that Loading, Unloading, Parking charges, Halting Days, and Halting Cost are explicitly entered for all selected trips
+        // Validate that Loading, Unloading, Parking, Weighment charges, Halting Days, and Halting Cost are explicitly entered for all selected trips
         let missingInputs = [];
         let firstInvalidInput = null;
 
         selectedTripIds.forEach(tripId => {
-            let lInput, uInput, pInput, hInput, hcInput;
+            let lInput, uInput, pInput, wInput, hInput, hcInput;
             if (tripsDataTable) {
                 const lMatches = tripsDataTable.$('input[name="loading_cost_' + tripId + '"]');
                 const uMatches = tripsDataTable.$('input[name="unloading_cost_' + tripId + '"]');
                 const pMatches = tripsDataTable.$('input[name="parking_cost_' + tripId + '"]');
+                const wMatches = tripsDataTable.$('input[name="weighment_cost_' + tripId + '"]');
                 const hMatches = tripsDataTable.$('input[name="halting_days_' + tripId + '"]');
                 const hcMatches = tripsDataTable.$('input[name="halting_cost_' + tripId + '"]');
                 lInput = lMatches.length ? lMatches[0] : null;
                 uInput = uMatches.length ? uMatches[0] : null;
                 pInput = pMatches.length ? pMatches[0] : null;
+                wInput = wMatches.length ? wMatches[0] : null;
                 hInput = hMatches.length ? hMatches[0] : null;
                 hcInput = hcMatches.length ? hcMatches[0] : null;
             } else {
                 lInput = document.querySelector('input[name="loading_cost_' + tripId + '"]');
                 uInput = document.querySelector('input[name="unloading_cost_' + tripId + '"]');
                 pInput = document.querySelector('input[name="parking_cost_' + tripId + '"]');
+                wInput = document.querySelector('input[name="weighment_cost_' + tripId + '"]');
                 hInput = document.querySelector('input[name="halting_days_' + tripId + '"]');
                 hcInput = document.querySelector('input[name="halting_cost_' + tripId + '"]');
             }
 
-            [lInput, uInput, pInput, hInput, hcInput].forEach(inp => {
+            [lInput, uInput, pInput, wInput, hInput, hcInput].forEach(inp => {
                 if (inp) {
                     const closureVal = parseFloat(inp.getAttribute('data-closure') || 0);
                     const val = inp.value.trim();
