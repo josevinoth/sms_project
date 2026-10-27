@@ -264,7 +264,7 @@ def get_attached_vehicle_details(request):
             # for the vehicle in the period, regardless of billing status).
             all_period_trips = TripdetailInfo.objects.filter(filters).filter(
                 tr_category_id__in=[1, 2, 3],  # Regular + Empty + Business Empty
-                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]
             )
             total_km_run_sum = 0
             for t in all_period_trips:
@@ -302,8 +302,8 @@ def get_attached_vehicle_details(request):
             # Empty/Business Empty trips aren't individually billable line items.
             # We also filter by financestatus so 'Trip Started' etc. are excluded (matches P&L report).
             trips = TripdetailInfo.objects.filter(filters).filter(
-                tr_category_id=1,
-                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+                Q(tr_category_id=1) | Q(tc_financestatus_id=10),
+                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]
             ).order_by('tr_departeddate')
 
             saved_costs = {}
@@ -673,7 +673,7 @@ def attached_bill_summary(request, id):
         )
         all_km_trips = TripdetailInfo.objects.filter(km_filters).filter(
             tr_vehiclesource_id__in=[1, 2],
-            tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+            tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]
         )
         for t in all_km_trips:
             if t.tr_category_id in [2, 3]:

@@ -275,6 +275,7 @@ from .sub_models.wms_expense_type_mod import WMSExpenseTypeInfo
 from .sub_models.wms_petty_cash_mod import WMSPettyCashInfo
 from .sub_models.pms_petty_cash_mod import PMSPettyCashInfo
 from .sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
+from .sub_models.pms_vehicle_mod import PMSVehicleInfo
 from .sub_models.agreementtype_mod import AgreementType
 from .sub_models.vendorratemaster1_history_mod import VendorratemasterHistory
 from .sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn

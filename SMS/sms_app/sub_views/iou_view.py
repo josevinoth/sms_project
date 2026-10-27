@@ -83,3 +83,25 @@ def get_full_name_iou(request):
         full_name = user.get_full_name()
         return JsonResponse({'full_name': full_name})
     return JsonResponse({'error': 'Username not provided'}, status=400)
+
+@login_required(login_url='login_page')
+def get_staff_by_business_iou(request):
+    business_id = request.GET.get('business_id', None)
+    staff_list = []
+    if business_id:
+        from ..models import User_extInfo
+        user_exts = User_extInfo.objects.filter(
+            emp_organisation_id=business_id,
+            user__is_active=True
+        ).select_related('user').order_by('user__first_name', 'user__last_name')
+        
+        seen_usernames = set()
+        for ue in user_exts:
+            if ue.user and ue.user.username not in seen_usernames:
+                seen_usernames.add(ue.user.username)
+                full_name = ue.user.get_full_name().strip() or ue.user.username
+                staff_list.append({
+                    'username': ue.user.username,
+                    'full_name': full_name
+                })
+    return JsonResponse({'staff_list': staff_list})

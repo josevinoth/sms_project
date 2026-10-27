@@ -9,6 +9,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+from ..sub_models.pms_vehicle_mod import PMSVehicleInfo
+from django.views.decorators.csrf import csrf_exempt
 from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo, Warehouse_goods_info, UnitInfo
@@ -179,11 +181,11 @@ def pms_petty_cash_list(request):
     if ppc_number:
         filters &= Q(ppc_number__icontains=ppc_number)
     if search_date:
-        filters &= Q(ppc_transaction_date=search_date)
+        filters &= (Q(ppc_date=search_date) | Q(ppc_transaction_date=search_date))
     if from_date:
-        filters &= Q(ppc_transaction_date__gte=from_date)
+        filters &= (Q(ppc_date__gte=from_date) | Q(ppc_date__isnull=True, ppc_transaction_date__gte=from_date))
     if to_date:
-        filters &= Q(ppc_transaction_date__lte=to_date)
+        filters &= (Q(ppc_date__lte=to_date) | Q(ppc_date__isnull=True, ppc_transaction_date__lte=to_date))
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
@@ -205,7 +207,7 @@ def pms_petty_cash_list(request):
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
-        'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 
+        'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 'ppc_vehicle_number', 
         'ppc_created_by', 'ppc_updated_by'
     ).order_by('-id')
 
@@ -417,11 +419,11 @@ def pms_petty_cash_export_tally(request):
     if ppc_number:
         filters &= Q(ppc_number__icontains=ppc_number)
     if search_date:
-        filters &= Q(ppc_transaction_date=search_date)
+        filters &= (Q(ppc_date=search_date) | Q(ppc_transaction_date=search_date))
     if from_date:
-        filters &= Q(ppc_transaction_date__gte=from_date)
+        filters &= (Q(ppc_date__gte=from_date) | Q(ppc_date__isnull=True, ppc_transaction_date__gte=from_date))
     if to_date:
-        filters &= Q(ppc_transaction_date__lte=to_date)
+        filters &= (Q(ppc_date__lte=to_date) | Q(ppc_date__isnull=True, ppc_transaction_date__lte=to_date))
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
@@ -443,7 +445,7 @@ def pms_petty_cash_export_tally(request):
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
-        'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 
+        'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 'ppc_vehicle_number', 
     ).order_by('-id')
 
     wb = Workbook()
@@ -464,7 +466,8 @@ def pms_petty_cash_export_tally(request):
         cell.alignment = Alignment(horizontal="center")
 
     for wpc in ppc_list:
-        date_str = wpc.ppc_transaction_date.strftime("%d-%m-%Y") if wpc.ppc_transaction_date else ""
+        tally_date = wpc.ppc_date or wpc.ppc_transaction_date
+        date_str = tally_date.strftime("%d-%m-%Y") if tally_date else ""
         vou_no = wpc.ppc_number or ""
         debit = wpc.ppc_expense_type.pms_exp_type_name if wpc.ppc_expense_type else ""
         credit = wpc.ppc_credit_ledger.ledger_name if wpc.ppc_credit_ledger else ""
@@ -474,7 +477,9 @@ def pms_petty_cash_export_tally(request):
 
         # Lookup vehicle number if available from Gatein or Goods
         veh_no = "N/A(V)"
-        if job_no:
+        if getattr(wpc, "ppc_vehicle_number", None):
+            veh_no = wpc.ppc_vehicle_number.vehicle_number
+        elif job_no:
             gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
             if gatein and gatein.gatein_truck_number:
                 veh_no = gatein.gatein_truck_number
@@ -497,3 +502,31 @@ def pms_petty_cash_export_tally(request):
     response['Content-Disposition'] = 'attachment; filename="PMS_Petty_Cash_Tally_Export.xlsx"'
     wb.save(response)
     return response
+
+
+@csrf_exempt
+def add_pms_vehicle(request):
+    if request.method == "POST":
+        vehicle_num = request.POST.get("vehicle_number", "").strip().upper()
+        if not vehicle_num:
+            return JsonResponse({"success": False, "error": "Vehicle number cannot be empty."})
+
+        existing = PMSVehicleInfo.objects.filter(vehicle_number__iexact=vehicle_num).first()
+        if existing:
+            if not existing.is_active:
+                existing.is_active = True
+                existing.save()
+            return JsonResponse({
+                "success": True,
+                "id": existing.id,
+                "vehicle_number": existing.vehicle_number,
+                "message": "Vehicle already exists."
+            })
+
+        new_veh = PMSVehicleInfo.objects.create(vehicle_number=vehicle_num)
+        return JsonResponse({
+            "success": True,
+            "id": new_veh.id,
+            "vehicle_number": new_veh.vehicle_number
+        })
+    return JsonResponse({"success": False, "error": "Invalid request method."})

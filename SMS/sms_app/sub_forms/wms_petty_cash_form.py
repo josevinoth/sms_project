@@ -7,6 +7,7 @@ class WMSPettyCashForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['wpc_created_on', 'wpc_created_by', 'wpc_updated_at', 'wpc_updated_by', 'wpc_number']
         widgets = {
+            'wpc_date': forms.DateInput(attrs={'type': 'date'}),
             'wpc_transaction_date': forms.DateInput(attrs={'type': 'date'}),
             'wpc_remarks': forms.Textarea(attrs={'rows': 2}),
             'wpc_bill_attachment': forms.FileInput(attrs={'class': 'form-control form-control-modern', 'style': 'height: 34px; padding: 3px 6px; font-size: 0.85rem;'}),

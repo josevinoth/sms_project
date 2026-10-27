@@ -103,10 +103,9 @@
 
                 <div class="form-group-modern mb-0">
                     <label class="form-label-modern fw-bold">Trip Category</label>
-                    <select name="trip_category" id="trip_category" class="form-control form-control-modern select2">
-                        <option value="">All Categories</option>
+                    <select name="trip_category" id="trip_category" class="form-control form-control-modern select2" multiple="multiple">
                         {% for cat in all_trip_categories %}
-                        <option value="{{ cat.id }}" {% if trip_category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                        <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" in trip_category_ids %}selected{% endif %}>
                             {{ cat.category }}
                         </option>
                         {% endfor %}
@@ -188,6 +187,7 @@
         $('#trip_category').select2({
             placeholder: "All Categories",
             allowClear: true,
+            closeOnSelect: false,
             width: '100%'
         });
 
@@ -210,7 +210,13 @@
                     d.to_date = $('#to_date').val();
                     d.vehicle_source = $('#vehicle_source').val();
                     d.trip_type = $('#trip_type').val();
-                    d.trip_category = $('#trip_category').val();
+                    var tripCat = $('#trip_category').val();
+                    if (tripCat && tripCat.length > 0) {
+                        d['trip_category[]'] = tripCat;
+                        d.trip_category = Array.isArray(tripCat) ? tripCat.join(',') : tripCat;
+                    } else {
+                        d.trip_category = '';
+                    }
                 }
             },
             "dom": '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
@@ -377,6 +383,77 @@
         height: 40px !important;
         line-height: 40px !important;
         margin-right: 20px !important;
+    }
+
+    /* Select2 Multiple Alignment & Styling */
+    .select2-container--default .select2-selection--multiple {
+        background-color: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        border-radius: 8px !important;
+        min-height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        padding: 2px 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #0A3278 !important;
+        border: 1px solid #0A3278 !important;
+        color: #ffffff !important;
+        border-radius: 6px !important;
+        padding: 2px 8px !important;
+        margin: 2px 0 !important;
+        font-size: 0.82rem !important;
+        font-weight: 500 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: #ffffff !important;
+        margin-right: 6px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        float: none !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: #ffb4b4 !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-search--inline {
+        margin: 0 !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field {
+        margin-top: 0 !important;
+        color: var(--text-main) !important;
+        font-size: 0.85rem !important;
+        height: 36px !important;
+        line-height: 36px !important;
+        padding-left: 4px !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field::placeholder {
+        color: var(--text-muted, #6c757d) !important;
+        opacity: 0.8 !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: var(--accent-blue, #3b82f6) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
     }
 
     #vehicle_log_report_table {

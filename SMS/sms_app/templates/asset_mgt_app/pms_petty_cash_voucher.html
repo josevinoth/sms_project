@@ -292,7 +292,7 @@
             </span>
 
             <span class="value">
-                {{ ppc.ppc_transaction_date|date:"d-m-Y" }}
+                {{ ppc.ppc_date|default:ppc.ppc_transaction_date|date:"d-m-Y" }}
             </span>
 
         </div>
@@ -442,6 +442,19 @@
 
     </div>
 
+
+        {% if ppc.ppc_vehicle_number %}
+    <div class="row">
+        <div class="field grow">
+            <span class="label">
+                Vehicle No
+            </span>
+            <span class="value">
+                {{ ppc.ppc_vehicle_number.vehicle_number }}
+            </span>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- =========================
          NARRATION

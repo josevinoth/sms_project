@@ -133,6 +133,7 @@
                 <tr><th>Total Trips</th><td id="sum_total_trips">{{ summary_data.total_trips }}</td></tr>
                 <tr><th>Trip Index</th><td id="sum_trip_index">{{ summary_data.trip_index }} trips</td></tr>
                 <tr><th>Total KM</th><td id="sum_total_km">{{ summary_data.total_km }}</td></tr>
+                <tr><th>Business KM</th><td id="sum_business_km">{{ summary_data.business_km }}</td></tr>
                 <tr><th>Empty KM</th><td id="sum_empty_km">{{ summary_data.empty_km }}</td></tr>
                 <tr><th>Business Empty KM</th><td id="sum_business_empty_km">{{ summary_data.business_empty_km }}</td></tr>
                 <tr><th>Revenue</th><td id="sum_revenue">{{ summary_data.revenue }}</td></tr>
@@ -173,26 +174,6 @@
                     d.to_location = $('select[name="to_location"]').val();
                 },
                 dataSrc: function (json) {
-                    if (json.summary) {
-                        $('#sum_month').text(json.summary.month);
-                        $('#sum_vehicle_no').text(json.summary.vehicle_no);
-                        $('#sum_vehicle_type').text(json.summary.vehicle_type);
-                        $('#sum_days_working').text(json.summary.days_working);
-                        $('#sum_idle_days').text(json.summary.idle_days);
-                        $('#sum_total_trips').text(json.summary.total_trips);
-                        $('#sum_trip_index').text(json.summary.trip_index + ' trips');
-                        $('#sum_total_km').text(json.summary.total_km);
-                        $('#sum_empty_km').text(json.summary.empty_km);
-                        $('#sum_business_empty_km').text(json.summary.business_empty_km);
-                        $('#sum_revenue').text(json.summary.revenue);
-                        $('#sum_buy_cost').text(json.summary.buy_cost);
-                        $('#sum_empty_km_cost').text(json.summary.empty_km_cost);
-                        $('#sum_toll_cost').text(json.summary.toll_cost);
-                        $('#sum_business_empty_km_cost').text(json.summary.business_empty_km_cost);
-                        $('#sum_total_expenses').text(json.summary.total_expenses);
-                        $('#sum_profit').text(json.summary.profit);
-                        $('#sum_profit_pct').text(json.summary.profit_pct + '%');
-                    }
                     return json.data;
                 }
             },
@@ -228,6 +209,55 @@
         // Re-align header and body on window resize
         $(window).on('resize', function () {
             table.columns.adjust();
+        });
+
+        // On-demand Summary Modal loading
+        function loadSummary() {
+            var $cells = $('#summaryModal table td');
+            $cells.html('<span class="spinner-border spinner-border-sm text-warning" role="status"></span>');
+            $.ajax({
+                url: "{% url 'vendor_p_l_attached_report_ajax' %}",
+                data: {
+                    action: 'summary',
+                    vendor_id: $('#vendor_select').val(),
+                    veh_no: $('#vehicle_number').val(),
+                    date_from: $('input[name="date_from"]').val(),
+                    date_to: $('input[name="date_to"]').val(),
+                    from_location: $('select[name="from_location"]').val(),
+                    to_location: $('select[name="to_location"]').val(),
+                    'search[value]': table.search() || ''
+                },
+                success: function (json) {
+                    if (json.summary) {
+                        $('#sum_month').text(json.summary.month);
+                        $('#sum_vehicle_no').text(json.summary.vehicle_no);
+                        $('#sum_vehicle_type').text(json.summary.vehicle_type);
+                        $('#sum_days_working').text(json.summary.days_working);
+                        $('#sum_idle_days').text(json.summary.idle_days);
+                        $('#sum_total_trips').text(json.summary.total_trips);
+                        $('#sum_trip_index').text(json.summary.trip_index + ' trips');
+                        $('#sum_total_km').text(json.summary.total_km);
+                        $('#sum_business_km').text(json.summary.business_km);
+                        $('#sum_empty_km').text(json.summary.empty_km);
+                        $('#sum_business_empty_km').text(json.summary.business_empty_km);
+                        $('#sum_revenue').text(json.summary.revenue);
+                        $('#sum_buy_cost').text(json.summary.buy_cost);
+                        $('#sum_empty_km_cost').text(json.summary.empty_km_cost);
+                        $('#sum_toll_cost').text(json.summary.toll_cost);
+                        $('#sum_business_empty_km_cost').text(json.summary.business_empty_km_cost);
+                        $('#sum_total_expenses').text(json.summary.total_expenses);
+                        $('#sum_profit').text(json.summary.profit);
+                        $('#sum_profit_pct').text(json.summary.profit_pct + '%');
+                    }
+                },
+                error: function () {
+                    $cells.text('-');
+                }
+            });
+        }
+
+        $('#summaryModal').on('show.bs.modal', function () {
+            loadSummary();
         });
 
         // Vendor change: reload the vehicle list. The vehicle change handler reloads the table.

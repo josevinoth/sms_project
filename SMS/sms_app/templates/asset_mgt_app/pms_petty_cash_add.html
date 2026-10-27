@@ -46,7 +46,7 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Date</label>
+                            <label class="form-label-modern">Voucher Date</label>
                             {% render_field form.ppc_date id="ppc_date" class="form-control form-control-modern" type="date" %}
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                 <!-- ========== COLUMN 3: WAREHOUSE & JOB ========== -->
                 <div class="col-12 col-md-3">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE & JOB</div>
+                        <div class="form-section-title"><i class="fas fa-box"></i> PACKAGE & JOB</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Transaction Date</label>
@@ -113,6 +113,18 @@
                                 <option value="{{ form.instance.ppc_job_no }}" selected>{{ form.instance.ppc_job_no }}</option>
                                 {% endif %}
                             </select>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle No</label>
+                            <div class="d-flex align-items-center" style="gap:6px; width:100%;">
+                                <div style="flex:1; min-width:0;">
+                                    {% render_field form.ppc_vehicle_number id="ppc_vehicle_number" class="form-control form-control-modern select2" %}
+                                </div>
+                                <button type="button" class="btn btn-sm" data-toggle="modal" data-target="#addVehicleModal" style="height: 31px; padding: 0 10px; font-size: 0.78rem; font-weight: 700; border-radius: 6px; background: #f59e0b; color: #ffffff; border: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25);" title="Add New Vehicle">
+                                    <i class="fas fa-plus" style="font-size: 0.72rem;"></i> Add
+                                </button>
+                            </div>
                         </div>
 
                         <div class="form-group-modern">
@@ -270,6 +282,39 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ================= ADD VEHICLE MODAL ================= -->
+<div class="modal fade" id="addVehicleModal" tabindex="-1" role="dialog" aria-labelledby="addVehicleModalLabel" aria-hidden="true" style="z-index: 1055;">
+  <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 440px;">
+    <form id="addVehicleForm">
+      {% csrf_token %}
+      <div class="modal-content" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 15px 35px rgba(0,0,0,0.2); overflow: hidden;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 14px 20px; border-bottom: none;">
+          <h5 class="modal-title font-weight-bold" id="addVehicleModalLabel" style="font-size: 1.05rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-truck"></i> Add New Vehicle Number
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 20px; background: #ffffff;">
+          <div class="form-group-modern mb-0">
+            <label class="form-label-modern font-weight-bold" style="font-size: 0.85rem; color: #475569; margin-bottom: 6px;">Vehicle Registration No <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-modern text-uppercase" name="vehicle_number" id="modal_vehicle_number" placeholder="e.g. TN01AB1234" required style="font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px;">
+            <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Vehicle number will be stored in the database and added to the dropdown.</small>
+          </div>
+          <div id="addVehicleError" class="alert alert-danger py-2 px-3 mt-3 mb-0" style="display:none; font-size: 0.85rem; border-radius: 8px;"></div>
+        </div>
+        <div class="modal-footer" style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" class="btn btn-light" data-dismiss="modal" style="border-radius: 8px; padding: 7px 16px; font-weight: 600; font-size: 0.85rem;">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveVehicle" style="border-radius: 8px; padding: 7px 18px; font-weight: 600; font-size: 0.85rem; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none;">
+            <i class="fas fa-check mr-1"></i> Save Vehicle
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -440,6 +485,53 @@
         if ($('#ppc_credit_ledger').val()) {
             updateLedgerBalance();
         }
+
+        // ================= ADD VEHICLE MODAL AJAX =================
+        $('#addVehicleForm').on('submit', function(e) {
+            e.preventDefault();
+            var vehNum = $('#modal_vehicle_number').val().trim().toUpperCase();
+            if (!vehNum) {
+                $('#addVehicleError').text('Please enter a vehicle number.').show();
+                return;
+            }
+            $('#addVehicleError').hide();
+            var $btn = $('#btnSaveVehicle');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+            $.ajax({
+                url: "{% url 'add_pms_vehicle' %}",
+                type: 'POST',
+                data: {
+                    'vehicle_number': vehNum,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Save Vehicle');
+                    if (response.success) {
+                        var $select = $('#ppc_vehicle_number');
+                        if ($select.find('option[value="' + response.id + '"]').length === 0) {
+                            var newOption = new Option(response.vehicle_number, response.id, true, true);
+                            $select.append(newOption);
+                        }
+                        $select.val(response.id).trigger('change');
+                        $('#addVehicleModal').modal('hide');
+                        $('#addVehicleForm')[0].reset();
+                    } else {
+                        $('#addVehicleError').text(response.error || 'Failed to save vehicle.').show();
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Save Vehicle');
+                    $('#addVehicleError').text('An error occurred while saving. Please try again.').show();
+                }
+            });
+        });
+
+        $('#addVehicleModal').on('shown.bs.modal', function () {
+            $('#modal_vehicle_number').focus();
+            $('#addVehicleError').hide();
+        });
+
     });
 
         // Real-time calculation for GST Amount and Total Amount

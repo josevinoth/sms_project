@@ -28,6 +28,7 @@ class WMSPettyCashInfo(models.Model):
     wpc_branch = models.ForeignKey(Location_info, on_delete=models.CASCADE, null=True)
     wpc_category = models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE, null=True)
     wpc_number = models.CharField(blank=True, null=True, max_length=50)
+    wpc_date = models.DateField(blank=True, null=True)
     wpc_transaction_date = models.DateField(blank=True, null=True)
     wpc_expense_type = models.ForeignKey(WMSExpenseTypeInfo, on_delete=models.CASCADE, null=True)
     wpc_credit_ledger = models.ForeignKey(CreditLedgerInfo, on_delete=models.SET_NULL, blank=True, null=True)

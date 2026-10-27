@@ -91,7 +91,7 @@
                     <tr>
                         <th>S.No</th>
                         <th>Voucher No</th>
-                        <th>Date</th>
+                        <th>Voucher Date</th>
                         <th>Trx Date</th>
                         <th>Business</th>
                         <th>Branch</th>
@@ -101,6 +101,7 @@
                         <th>To Person</th>
                         <th>Unit</th>
                         <th>Job No</th>
+                        <th>Vehicle No</th>
                         <th>Customer</th>
                         <th>Bill No</th>
                         <th>Bill Amt</th>
@@ -132,6 +133,7 @@
                         </td>
                         <td>{{ wpc.ppc_unit|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_job_no|default_if_none:"-" }}</td>
+                        <td>{{ wpc.ppc_vehicle_number.vehicle_number|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_customer|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_bill_no|default_if_none:"-" }}</td>
                         <td>₹{{ wpc.ppc_bill_amount|floatformat:2 }}</td>
@@ -156,7 +158,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="17" class="text-center text-muted py-4">No PMS Petty Cash records found.</td>
+                        <td colspan="18" class="text-center text-muted py-4">No PMS Petty Cash records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

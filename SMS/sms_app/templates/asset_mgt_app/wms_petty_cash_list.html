@@ -91,7 +91,8 @@
                     <tr>
                         <th>S.No</th>
                         <th>Voucher No</th>
-                        <th>Date</th>
+                        <th>Voucher Date</th>
+                        <th>Trx Date</th>
                         <th>Business</th>
                         <th>Branch</th>
                         <th>Expense Type</th>
@@ -112,6 +113,7 @@
                     <tr>
                         <td>{{ forloop.counter0|add:wpc_list.start_index }}</td>
                         <td><strong>{{ wpc.wpc_number }}</strong></td>
+                        <td>{{ wpc.wpc_date|date:"d-m-Y"|default:"-" }}</td>
                         <td>{{ wpc.wpc_transaction_date|date:"d-m-Y"|default:"-" }}</td>
                         <td>{{ wpc.wpc_business|default_if_none:"-" }}</td>
                         <td>{{ wpc.wpc_branch|default_if_none:"-" }}</td>

@@ -119,6 +119,7 @@
                 <tr><th>Total Trips</th><td id="sum_total_trips">{{ summary_data.total_trips }}</td></tr>
                 <tr><th>Trip Index</th><td id="sum_trip_index">{{ summary_data.trip_index }} trips</td></tr>
                 <tr><th>Total KM</th><td id="sum_total_km">{{ summary_data.total_km }}</td></tr>
+                <tr><th>Business KM</th><td id="sum_business_km">{{ summary_data.business_km }}</td></tr>
                 <tr><th>Empty KM</th><td id="sum_empty_km">{{ summary_data.empty_km }}</td></tr>
                 <tr><th>Business Empty KM</th><td id="sum_business_empty_km">{{ summary_data.business_empty_km }}</td></tr>
                 <tr><th>Revenue</th><td id="sum_revenue">{{ summary_data.revenue }}</td></tr>
@@ -167,6 +168,7 @@ $(document).ready(function () {
                     $('#sum_total_trips').text(json.summary.total_trips);
                     $('#sum_trip_index').text(json.summary.trip_index + ' trips');
                     $('#sum_total_km').text(json.summary.total_km);
+                    $('#sum_business_km').text(json.summary.business_km);
                     $('#sum_empty_km').text(json.summary.empty_km);
                     $('#sum_business_empty_km').text(json.summary.business_empty_km);
                     $('#sum_revenue').text(json.summary.revenue);

@@ -178,11 +178,11 @@ def wms_petty_cash_list(request):
     if wpc_number:
         filters &= Q(wpc_number__icontains=wpc_number)
     if search_date:
-        filters &= Q(wpc_transaction_date=search_date)
+        filters &= (Q(wpc_date=search_date) | Q(wpc_transaction_date=search_date))
     if from_date:
-        filters &= Q(wpc_transaction_date__gte=from_date)
+        filters &= (Q(wpc_date__gte=from_date) | Q(wpc_date__isnull=True, wpc_transaction_date__gte=from_date))
     if to_date:
-        filters &= Q(wpc_transaction_date__lte=to_date)
+        filters &= (Q(wpc_date__lte=to_date) | Q(wpc_date__isnull=True, wpc_transaction_date__lte=to_date))
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
@@ -434,11 +434,11 @@ def wms_petty_cash_export_tally(request):
     if wpc_number:
         filters &= Q(wpc_number__icontains=wpc_number)
     if search_date:
-        filters &= Q(wpc_transaction_date=search_date)
+        filters &= (Q(wpc_date=search_date) | Q(wpc_transaction_date=search_date))
     if from_date:
-        filters &= Q(wpc_transaction_date__gte=from_date)
+        filters &= (Q(wpc_date__gte=from_date) | Q(wpc_date__isnull=True, wpc_transaction_date__gte=from_date))
     if to_date:
-        filters &= Q(wpc_transaction_date__lte=to_date)
+        filters &= (Q(wpc_date__lte=to_date) | Q(wpc_date__isnull=True, wpc_transaction_date__lte=to_date))
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
@@ -481,7 +481,8 @@ def wms_petty_cash_export_tally(request):
         cell.alignment = Alignment(horizontal="center")
 
     for wpc in wpc_list:
-        date_str = wpc.wpc_transaction_date.strftime("%d-%m-%Y") if wpc.wpc_transaction_date else ""
+        tally_date = wpc.wpc_date or wpc.wpc_transaction_date
+        date_str = tally_date.strftime("%d-%m-%Y") if tally_date else ""
         vou_no = wpc.wpc_number or ""
         debit = wpc.wpc_expense_type.wms_exp_type_name if wpc.wpc_expense_type else ""
         credit = wpc.wpc_credit_ledger.ledger_name if wpc.wpc_credit_ledger else ""

@@ -292,7 +292,7 @@
             </span>
 
             <span class="value">
-                {{ wpc.wpc_transaction_date|date:"d-m-Y" }}
+                {{ wpc.wpc_date|default:wpc.wpc_transaction_date|date:"d-m-Y" }}
             </span>
 
         </div>

@@ -469,6 +469,7 @@ urlpatterns = [
     path('get_pms_job_details/', views.get_pms_job_details, name='get_pms_job_details'),
     path('get_pms_customers_by_unit/', views.get_pms_customers_by_unit, name='get_pms_customers_by_unit'),
     path('get_pms_jobs_by_customer/', views.get_pms_jobs_by_customer, name='get_pms_jobs_by_customer'),
+    path('add_pms_vehicle/', views.add_pms_vehicle, name='add_pms_vehicle'),
     path('expense_update/<int:expense_id>', views.expense_add, name='expense_update'),  # update expense
     path('expense_delete/<int:expense_id>', views.expense_delete, name='expense_delete'),  # delete expense
     path('expense_search/', views.expense_search, name='expense_search'),  # search expense
@@ -752,7 +753,8 @@ urlpatterns = [
          name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
     path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges,
          name='transport_calculate_trip_charges'),  # transport_calculate_trip_charges
-    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),  # iou_get_full_name
+    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),
+    path('iou_get_staff_by_business/', views.get_staff_by_business_iou, name='iou_get_staff_by_business'),  # iou_get_full_name
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU

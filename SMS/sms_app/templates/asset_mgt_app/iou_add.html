@@ -1,117 +1,262 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update IOU{% endblock %}
 {% block content %}
 
-<form method="POST" action="">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update IOU</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">IOU Number </span>
-									</div>
-									{% render_field form.iou_number id="iou_number" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business Type</span>
-									</div>
-									{% render_field form.business_type id="business_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Staff ID</span>
-									</div>
-									{% render_field form.staff_id class="form-control" id="staff_id" onchange="getFullName()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Staff Name</span>
-									</div>
-									{% render_field form.staff_name id="staff_name" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Transaction Date</span>
-									</div>
-									{% render_field form.transaction_date id="transaction_date" type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Transaction Type</span>
-									</div>
-									{% render_field form.transaction_type id="transaction_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Amount</span>
-									</div>
-									{% render_field form.amount id="amount" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Credit Ledger</span>
-									</div>
-									{% render_field form.iou_credit_ledger id="iou_credit_ledger" class="form-control" %}
-								</div>
-								{% render_field form.iou_updated_by id="iou_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'iou_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-<script>
-$(document).ready(function() {
-	document.getElementById("iou_updated_by").value ='{{user_id}}';
-  });
-</script>
+<div class="container-fluid px-3 py-2 compact-form">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-hand-holding-usd mr-2"></i> Add / Update IOU
+        </h3>
+        <div>
+            <a href="{% url 'iou_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Form Card ══ -->
+    <div class="modern-card p-3 mb-3 w-100">
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div class="form-section p-3 mb-3">
+                <div class="form-section-title mb-3">
+                    <i class="fas fa-info-circle text-primary mr-1"></i> IOU Details
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">IOU Number</label>
+                            {% render_field form.iou_number id="iou_number" class="form-control form-control-modern disable_a_href" placeholder="Auto-generated on creation" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Business Type</label>
+                            {% render_field form.business_type id="business_type" class="form-control form-control-modern" %}
+                        </div>
+                        <!-- Swapped: Staff Name dropdown placed first -->
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Staff Name</label>
+                            <select id="staff_name_select" class="form-control form-control-modern">
+                                <option value="">--Select Business First--</option>
+                            </select>
+                            <!-- Hidden actual field for Django Form submission -->
+                            {% render_field form.staff_name id="staff_name" type="hidden" %}
+                        </div>
+                        <!-- Swapped: Staff ID auto-populated and placed second -->
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Staff ID</label>
+                            <input type="text" id="staff_id_display" class="form-control form-control-modern" readonly placeholder="Auto-populated on Staff Name selection" style="background-color: var(--bg-hover, #f8fafc);">
+                            <!-- Hidden actual field for Django Form submission -->
+                            <div style="display: none;">
+                                {% render_field form.staff_id id="staff_id" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Transaction Date</label>
+                            {% render_field form.transaction_date id="transaction_date" type="Date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Transaction Type</label>
+                            {% render_field form.transaction_type id="transaction_type" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Amount</label>
+                            {% render_field form.amount id="amount" class="form-control form-control-modern" placeholder="0.00" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Credit Ledger</label>
+                            {% render_field form.iou_credit_ledger id="iou_credit_ledger" class="form-control form-control-modern" %}
+                        </div>
+                        {% render_field form.iou_updated_by id="iou_updated_by" hidden="True" class="form-control" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row my-2">
+                <div class="col-12 message text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit py-1 px-4">
+                    <i class="fas fa-check mr-1"></i> Submit
+                </button>
+                <a href="{% url 'iou_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration: none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.65rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.78rem !important;
+        margin-bottom: 4px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 36px !important;
+        min-height: 36px !important;
+        font-size: 0.85rem !important;
+        padding: 5px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1.2rem 1.6rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.88rem !important;
+        margin-bottom: 0.75rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0.35rem 1.4rem !important;
+        font-size: 0.88rem !important;
+        border-radius: 10px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #ced4da) !important;
+        background-color: var(--bg-card, #fff) !important;
+        color: var(--text-main, #333) !important;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px !important;
+        padding-left: 10px !important;
+        color: var(--text-main, #333) !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
 
 <script>
-    function getFullName() {
-        var selectedUsername = $("#staff_id").val();
-        // Use AJAX to fetch the full name based on the selected username
-        $.ajax({
-            url: '{% url 'iou_get_full_name' %}',  // Update this URL based on your project structure
-            data: {'username': selectedUsername},
-            dataType: 'json',
-            success: function(data) {
-                if ('full_name' in data) {
-                    // Update the staff_name field in the form with the retrieved full name
-                    $("#staff_name").val(data.full_name);
-                } else {
-                    console.error('Error fetching full name:', data.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
+    $(document).ready(function() {
+        var updatedBy = document.getElementById("iou_updated_by");
+        if (updatedBy) {
+            updatedBy.value = '{{user_id}}';
+        }
+
+        // Initialize Select2 on dropdowns
+        if ($.fn.select2) {
+            $('#business_type, #staff_name_select, #transaction_type, #iou_credit_ledger').select2({
+                width: '100%',
+                allowClear: true,
+                placeholder: "--Select--"
+            });
+        }
+
+        var currentStaffId = $("#staff_id").val();
+        var currentStaffName = $("#staff_name").val();
+
+        // If editing an existing record, initialize Staff ID display
+        if (currentStaffId) {
+            $("#staff_id_display").val(currentStaffId);
+        }
+
+        // Function to load staff by business
+        function loadStaffByBusiness(businessId, preselectUsername) {
+            var $staffSelect = $("#staff_name_select");
+            $staffSelect.empty().append('<option value="">--Loading Staff...--</option>');
+            if ($.fn.select2) {
+                $staffSelect.trigger('change.select2');
             }
+
+            if (!businessId) {
+                $staffSelect.empty().append('<option value="">--Select Business First--</option>');
+                if ($.fn.select2) {
+                    $staffSelect.trigger('change.select2');
+                }
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "iou_get_staff_by_business" %}',
+                data: {'business_id': businessId},
+                dataType: 'json',
+                success: function(data) {
+                    $staffSelect.empty().append('<option value="">--Select Staff Name--</option>');
+                    if (data.staff_list && data.staff_list.length > 0) {
+                        $.each(data.staff_list, function(index, staff) {
+                            var option = $('<option></option>')
+                                .attr('value', staff.username)
+                                .attr('data-fullname', staff.full_name)
+                                .text(staff.full_name + ' (' + staff.username + ')');
+                            $staffSelect.append(option);
+                        });
+                    } else {
+                        $staffSelect.append('<option value="">No Staff found for this business</option>');
+                    }
+
+                    if (preselectUsername) {
+                        $staffSelect.val(preselectUsername);
+                        $("#staff_id_display").val(preselectUsername);
+                        $("#staff_id").val(preselectUsername);
+                    }
+
+                    if ($.fn.select2) {
+                        $staffSelect.trigger('change.select2');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching staff list:', error);
+                    $staffSelect.empty().append('<option value="">Error loading staff</option>');
+                }
+            });
+        }
+
+        // On business_type change -> fetch staff list
+        $("#business_type").on('change', function() {
+            var businessId = $(this).val();
+            // Clear current selection
+            $("#staff_id").val('');
+            $("#staff_name").val('');
+            $("#staff_id_display").val('');
+            loadStaffByBusiness(businessId, null);
         });
-    }
+
+        // On staff_name_select change -> update Staff ID & Staff Name
+        $("#staff_name_select").on('change', function() {
+            var username = $(this).val();
+            var fullName = $(this).find('option:selected').attr('data-fullname') || '';
+            
+            $("#staff_id").val(username);
+            $("#staff_id_display").val(username);
+            $("#staff_name").val(fullName);
+        });
+
+        // Initial load for update mode
+        var initialBusinessId = $("#business_type").val();
+        if (initialBusinessId) {
+            loadStaffByBusiness(initialBusinessId, currentStaffId);
+        }
+    });
 </script>
+
 {% endblock content %}

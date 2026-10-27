@@ -2,6 +2,7 @@ from django.db import models
 from .credit_ledger_mod import CreditLedgerInfo
 from .customer_mod import CustomerInfo
 from .pms_expense_type_mod import PMSExpenseTypeInfo
+from .pms_vehicle_mod import PMSVehicleInfo
 from .trbusinesstype_mod import TrbusinesstypeInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, MyUser
 
@@ -40,6 +41,7 @@ class PMSPettyCashInfo(models.Model):
     ppc_unit = models.CharField(max_length=50, blank=True, null=True, choices=UNIT_CHOICES)
     ppc_job_no = models.CharField(max_length=100, blank=True, null=True)
     ppc_customer = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, blank=True, null=True)
+    ppc_vehicle_number = models.ForeignKey(PMSVehicleInfo, on_delete=models.SET_NULL, blank=True, null=True, related_name='pms_petty_cash_records')
     ppc_remarks = models.TextField(max_length=500, blank=True, null=True)
 
     # Bill & Amount Fields
