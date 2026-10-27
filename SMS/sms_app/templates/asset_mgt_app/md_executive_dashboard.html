@@ -2522,6 +2522,40 @@
                             </div>
                         </div>
 
+                        <!-- 4. Gate-to-Rack Inbound Workflow Pipeline -->
+                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.22); padding:6px 9px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.66rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
+                                    <i class="fas fa-diagram-project text-emerald"></i> Inbound Gate-to-Rack Live Pipeline
+                                </span>
+                                <span class="badge" style="font-size:0.55rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">
+                                    SYNCHRONIZED
+                                </span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(54,209,255,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">1. Gate Entry</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-pipe-gate">8 Trucks</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">TAT 12 Mins</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(16,185,129,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">2. Dock Unload</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-pipe-dock">8 Docks Live</div>
+                                    <div style="font-size:0.46rem; color:#36d1ff;">Rate 8.2 MT/h</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(245,158,11,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">3. GRN Staging</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">100% Verified</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">TAT 18 Mins</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(168,85,247,0.15);">
+                                    <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">4. Putaway Bay</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">Tier 3 &amp; 4</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">TAT 24 Mins</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Shift-Wise Handling Throughput Strip -->
                         <div>
                             <div style="font-size:0.68rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:4px; display:flex; justify-content:space-between;">
@@ -2604,7 +2638,7 @@
                     </div>
 
                     <!-- Column 3: Top Storage Accounts & Cargo Integrity SLA -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:8px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:flex-start; gap:6px; height:100%;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-warehouse text-warning"></i> Top Storage Accounts</div>
@@ -2663,6 +2697,38 @@
                                 <div style="background:rgba(0,0,0,0.3); border-radius:4px; padding:3px 5px; text-align:center;">
                                     <div style="font-size:0.52rem; color:#94a3b8; text-transform:uppercase;">In-Stock Pkgs</div>
                                     <div style="font-size:0.78rem; font-weight:700; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-wh-stock-pkgs">10,046 Pkgs</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MHE Fleet Readiness & Battery Health Card -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                    <i class="fas fa-dolly text-info"></i> Material Handling Equipment Fleet
+                                </span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">100% OPERATIONAL</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Forklifts</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">3 / 3</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Active</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">BOPT Trucks</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">3 / 3</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Live</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Reach Trucks</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">2 / 2</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">High-Bay</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Battery / Health</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">96%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Charged</div>
                                 </div>
                             </div>
                         </div>
@@ -3420,6 +3486,7 @@
                 // Slide 3 Dock Operations & Queue
                 if (wms.active_docks !== undefined) {
                     $('#wms-dock-badge').text(`${wms.active_docks} DOCKS ACTIVE`);
+                    $('#wms-pipe-dock').text(`${wms.active_docks} Docks Live`);
                 }
                 if (wms.yard_tat_mins !== undefined) {
                     $('#wms-dock-tat').text(`${wms.yard_tat_mins} Mins`);
@@ -3428,7 +3495,7 @@
                     $('#wms-dock-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
                 }
                 if (wms.gate_queue_trucks !== undefined) {
-                    $('#wms-dock-queue').text(`${wms.gate_queue_trucks} Trucks`);
+                    $('#wms-dock-queue, #wms-pipe-gate').text(`${wms.gate_queue_trucks} Trucks`);
                 }
 
                 // Slide 3 Top Storage Accounts
