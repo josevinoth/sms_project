@@ -2235,7 +2235,7 @@
                 <!-- WMS Charts Grid (3 Columns) -->
                 <div class="charts-row-split-2">
                     <!-- Column 1: Dual Hub Real-Time Space Utilization & Dwell Time -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:flex-start; gap:6px; height:100%;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-building-circle-check text-info"></i> Dual Hub Space Utilization</div>
@@ -2341,6 +2341,36 @@
                             </div>
                         </div>
 
+                        <!-- Specialized Storage & Climate Chambers -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                            <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
+                                <span><i class="fas fa-snowflake text-info"></i> Specialized Storage &amp; Climate Bays</span>
+                                <span style="color:#36d1ff; font-size:0.56rem;">Pharma &amp; Hazmat Ready</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Cold Pharma (18-22°C)</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">76.4%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Optimal Temp</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">High-Value Vault</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">35.2%</div>
+                                    <div style="font-size:0.46rem; color:#a855f7;">CCTV Monitored</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Heavy Machine Bay</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">84.0%</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">10-Ton Floor</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Cross-Dock Buffer</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">100%</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Staging Clear</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Commodity Storage Mix -->
                         <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:3px;">
@@ -2367,27 +2397,44 @@
                             </div>
                         </div>
 
-                        <!-- Storage Aging & Dwell Time -->
-                        <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 8px; border:1px solid rgba(255,255,255,0.05);">
+                        <!-- Storage Aging & Dwell Time Analysis -->
+                        <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:6px 8px; border:1px solid rgba(255,255,255,0.06);">
                             <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; text-transform:uppercase; display:flex; justify-content:space-between;">
                                 <span><i class="fas fa-hourglass-half text-warning"></i> Inventory Dwell Time (Aging)</span>
                                 <span style="color:#10b981; font-size:0.6rem;">Velocity Analysis</span>
                             </div>
                             <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; margin-bottom:4px;">
-                                <div id="s3-dwell-bar-fresh" style="width:58%; background:#10b981;" title="Fresh <7d"></div>
-                                <div id="s3-dwell-bar-med" style="width:31%; background:#f59e0b;" title="Medium 7-30d"></div>
-                                <div id="s3-dwell-bar-stagnant" style="width:11%; background:#ef4444;" title="Stagnant >30d"></div>
+                                <div id="s3-dwell-bar-fresh" style="width:41%; background:#10b981;" title="Fast <7d"></div>
+                                <div id="s3-dwell-bar-med" style="width:22%; background:#f59e0b;" title="Medium 7-30d"></div>
+                                <div id="s3-dwell-bar-stagnant" style="width:37%; background:#ef4444;" title="Stagnant >30d"></div>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#94a3b8;">
-                                <span><span style="color:#10b981;">●</span> Fast (&lt;7d): <b id="s3-dwell-fresh" style="color:#ffffff;">58%</b></span>
-                                <span><span style="color:#f59e0b;">●</span> Medium (7-30d): <b id="s3-dwell-med" style="color:#ffffff;">31%</b></span>
-                                <span><span style="color:#ef4444;">●</span> Stagnant (&gt;30d): <b id="s3-dwell-stagnant" style="color:#ef4444;">11%</b></span>
+                            <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#94a3b8; margin-bottom:5px;">
+                                <span><span style="color:#10b981;">●</span> Fast (&lt;7d): <b id="s3-dwell-fresh" style="color:#ffffff;">41.1%</b></span>
+                                <span><span style="color:#f59e0b;">●</span> Medium (7-30d): <b id="s3-dwell-med" style="color:#ffffff;">22.1%</b></span>
+                                <span><span style="color:#ef4444;">●</span> Stagnant (&gt;30d): <b id="s3-dwell-stagnant" style="color:#ef4444;">36.8%</b></span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:4px; text-align:center; padding-top:4px; border-top:1px solid rgba(255,255,255,0.06);">
+                                <div style="background:rgba(16,185,129,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Fresh Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="s3-dwell-fresh-wt">119.1 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">7,746 Pkgs</div>
+                                </div>
+                                <div style="background:rgba(245,158,11,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Active Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-dwell-med-wt">64.0 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">4,165 Pkgs</div>
+                                </div>
+                                <div style="background:rgba(239,68,68,0.08); border-radius:3px; padding:2px 3px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Stagnant Stock</div>
+                                    <div style="font-size:0.72rem; font-weight:800; color:#ef4444; font-family:'JetBrains Mono',monospace;" id="s3-dwell-stagnant-wt">106.6 MT</div>
+                                    <div style="font-size:0.46rem; color:#cbd5e1;">6,937 Pkgs</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Column 2: Throughput Velocity & Dock Turnaround -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:flex-start; gap:6px; height:100%;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
                         
                         <!-- 1. Throughput Velocity & MTD Movement Strip -->
                         <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(54,209,255,0.22); padding:7px 9px;">
@@ -2638,7 +2685,7 @@
                     </div>
 
                     <!-- Column 3: Top Storage Accounts & Cargo Integrity SLA -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:flex-start; gap:6px; height:100%;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-warehouse text-warning"></i> Top Storage Accounts</div>
@@ -2733,6 +2780,38 @@
                             </div>
                         </div>
 
+                        <!-- Storage Billing & VAS Commercial Pipeline -->
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(16,185,129,0.22); border-radius:6px; padding:6px 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                                    <i class="fas fa-file-invoice-dollar text-emerald"></i> Storage Billing &amp; VAS Commercials
+                                </span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">₹56.9L MTD</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Space Rental</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">₹32.8L</div>
+                                    <div style="font-size:0.46rem; color:#10b981;">Billed MTD</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Handling</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">₹14.5L</div>
+                                    <div style="font-size:0.46rem; color:#36d1ff;">Flow Ops</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">VAS &amp; Kitting</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">₹3.2L</div>
+                                    <div style="font-size:0.46rem; color:#f59e0b;">Label/Pack</div>
+                                </div>
+                                <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
+                                    <div style="font-size:0.48rem; color:#94a3b8;">Unbilled WIP</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">₹6.4L</div>
+                                    <div style="font-size:0.46rem; color:#a855f7;">Pending Inv</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Cargo Integrity & High Value Executive SLA Card -->
                         <div style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.6)); border:1px solid rgba(16, 185, 129, 0.25); border-radius:6px; padding:6px 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -2762,6 +2841,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </section>
@@ -3538,6 +3618,11 @@
                     $('#s3-dwell-bar-fresh').css('width', fPct + '%');
                     $('#s3-dwell-bar-med').css('width', mPct + '%');
                     $('#s3-dwell-bar-stagnant').css('width', sPct + '%');
+
+                    const totStock = parseFloat(whStockMt) || 289.7;
+                    $('#s3-dwell-fresh-wt').text((totStock * fPct / 100).toFixed(1) + ' MT');
+                    $('#s3-dwell-med-wt').text((totStock * mPct / 100).toFixed(1) + ' MT');
+                    $('#s3-dwell-stagnant-wt').text((totStock * sPct / 100).toFixed(1) + ' MT');
                 }
 
                 // Slide 3 Dynamic Commodity Mix
