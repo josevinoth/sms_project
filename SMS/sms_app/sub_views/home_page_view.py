@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import json
 from .general_utils import is_tms_manager
+from ..utils.page_catalog import get_user_navigation_permissions
 
 from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
@@ -257,6 +258,7 @@ def home_page(request):
                'selected_bay_id': selected_bay_id,
                # TMS-only flag: hides all non-TMS sidebar sections for BVM Trans Managers
                'is_tms_only': is_tms_manager(user_id),
+               'nav_permissions_json': json.dumps(get_user_navigation_permissions(request.user)),
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

@@ -24,15 +24,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
     if not trip_ids:
         return selected_trips_data
 
-    eligible_status_ids = [7, 9, 10]
-    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
-    invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
     selected_trips = TripdetailInfo.objects.filter(
-        Q(id__in=trip_ids) & (
-            Q(tc_financestatus_id__in=eligible_status_ids) |
-            Q(tr_operational_status_id=10) |
-            Q(id__in=invoiced_trip_ids)
-        )
+        id__in=trip_ids
     ).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
     for trip in selected_trips:
@@ -72,6 +65,7 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
         closure_loading = float(trip.tc_loadingcost or 0)
         closure_unloading = float(trip.tc_unloadingcost or 0)
         closure_parking = float(trip.tc_parkingcost or 0)
+        closure_weighment = float(trip.tc_weighmentcost or 0)
         closure_halting_days = int(trip.tc_no_of_days_halting or 0)
         closure_halting_cost = float(trip.tc_total_halting_cost or 0) or float(trip.tc_haltingcost or 0)
 
@@ -81,6 +75,7 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             loading_cost = post_data.get(f'loading_cost_{trip.id}', '')
             unloading_cost = post_data.get(f'unloading_cost_{trip.id}', '')
             parking_cost = post_data.get(f'parking_cost_{trip.id}', '')
+            weighment_cost = post_data.get(f'weighment_cost_{trip.id}', '')
             halting_days = post_data.get(f'halting_days_{trip.id}', '')
             halting_cost = post_data.get(f'halting_cost_{trip.id}', '')
             special_cost = float(post_data.get(f'trip_cost_{trip.id}') or 0)
@@ -89,12 +84,14 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             loading_cost = saved_detail.get('loading_cost')
             unloading_cost = saved_detail.get('unloading_cost')
             parking_cost = saved_detail.get('parking_cost')
+            weighment_cost = saved_detail.get('weighment_cost')
             halting_days = saved_detail.get('halting_days')
             halting_cost = saved_detail.get('halting_cost')
         else:
             loading_cost = ''
             unloading_cost = ''
             parking_cost = ''
+            weighment_cost = ''
             halting_days = ''
             halting_cost = ''
             special_cost = 0
@@ -166,9 +163,11 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             'loading_cost': loading_cost if loading_cost is not None else '',
             'unloading_cost': unloading_cost if unloading_cost is not None else '',
             'parking_cost': parking_cost if parking_cost is not None else '',
+            'weighment_cost': weighment_cost if weighment_cost is not None else '',
             'closure_loading_cost': closure_loading,
             'closure_unloading_cost': closure_unloading,
             'closure_parking_cost': closure_parking,
+            'closure_weighment_cost': closure_weighment,
             'halting_days': halting_days if halting_days is not None else '',
             'closure_halting_days': closure_halting_days,
             'halting_cost': halting_cost if halting_cost is not None else '',
@@ -218,12 +217,14 @@ def market_bill_add(request):
                     closure_l = float(getattr(t_obj, 'tc_loadingcost', 0) or 0) if t_obj else 0.0
                     closure_u = float(getattr(t_obj, 'tc_unloadingcost', 0) or 0) if t_obj else 0.0
                     closure_p = float(getattr(t_obj, 'tc_parkingcost', 0) or 0) if t_obj else 0.0
+                    closure_w = float(getattr(t_obj, 'tc_weighmentcost', 0) or 0) if t_obj else 0.0
                     closure_h_days = int(getattr(t_obj, 'tc_no_of_days_halting', 0) or 0) if t_obj else 0
                     closure_h_cost = (float(getattr(t_obj, 'tc_total_halting_cost', 0) or 0) or float(getattr(t_obj, 'tc_haltingcost', 0) or 0)) if t_obj else 0.0
 
                     l_raw = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_raw = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                     p_raw = (request.POST.get(f'parking_cost_{tid}') or '').strip()
+                    w_raw = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                     h_days_raw = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost_raw = (request.POST.get(f'halting_cost_{tid}') or '').strip()
 
@@ -237,6 +238,9 @@ def market_bill_add(request):
                         break
                     if closure_p > 0 and p_raw == '':
                         missing_msg = f"Please enter Parking Cost for Trip {trip_no} (recorded as ₹{closure_p:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
+                    if closure_w > 0 and w_raw == '':
+                        missing_msg = f"Please enter Weighment Cost for Trip {trip_no} (recorded as ₹{closure_w:.2f} in Trip Closure; enter 0 if none/waived)."
                         break
                     if closure_h_days > 0 and h_days_raw == '':
                         missing_msg = f"Please enter Halting Days for Trip {trip_no} (recorded as {closure_h_days} days in Trip Closure; enter 0 if none/waived)."
@@ -260,6 +264,7 @@ def market_bill_add(request):
                     l_cost = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_cost = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                     p_cost = (request.POST.get(f'parking_cost_{tid}') or '').strip()
+                    w_cost = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                     h_days = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost = (request.POST.get(f'halting_cost_{tid}') or '').strip()
                     t_cost = (request.POST.get(f'trip_cost_{tid}') or '').strip()
@@ -267,6 +272,7 @@ def market_bill_add(request):
                     l_cost_val = float(l_cost) if l_cost else 0.0
                     u_cost_val = float(u_cost) if u_cost else 0.0
                     p_cost_val = float(p_cost) if p_cost else 0.0
+                    w_cost_val = float(w_cost) if w_cost else 0.0
                     h_days_val = int(h_days) if h_days else 0
                     h_cost_val = float(h_cost) if h_cost else 0.0
                     t_cost_val = float(t_cost) if t_cost else 0.0
@@ -276,6 +282,7 @@ def market_bill_add(request):
                         'loading_cost': l_cost_val,
                         'unloading_cost': u_cost_val,
                         'parking_cost': p_cost_val,
+                        'weighment_cost': w_cost_val,
                         'halting_days': h_days_val,
                         'halting_cost': h_cost_val,
                     }
@@ -376,6 +383,7 @@ def market_bill_edit(request, id):
 
     if request.method == "POST":
         form = MarketBillForm(request.POST, request.FILES, instance=record)
+        form.fields['mb_vendor'].disabled = True
 
         if form.is_valid():
             # Save per-trip costs and halting data to TripdetailInfo and mb_trip_details
@@ -391,12 +399,14 @@ def market_bill_edit(request, id):
                     closure_l = float(getattr(t_obj, 'tc_loadingcost', 0) or 0) if t_obj else 0.0
                     closure_u = float(getattr(t_obj, 'tc_unloadingcost', 0) or 0) if t_obj else 0.0
                     closure_p = float(getattr(t_obj, 'tc_parkingcost', 0) or 0) if t_obj else 0.0
+                    closure_w = float(getattr(t_obj, 'tc_weighmentcost', 0) or 0) if t_obj else 0.0
                     closure_h_days = int(getattr(t_obj, 'tc_no_of_days_halting', 0) or 0) if t_obj else 0
                     closure_h_cost = (float(getattr(t_obj, 'tc_total_halting_cost', 0) or 0) or float(getattr(t_obj, 'tc_haltingcost', 0) or 0)) if t_obj else 0.0
 
                     l_raw = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_raw = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                     p_raw = (request.POST.get(f'parking_cost_{tid}') or '').strip()
+                    w_raw = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                     h_days_raw = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost_raw = (request.POST.get(f'halting_cost_{tid}') or '').strip()
 
@@ -410,6 +420,9 @@ def market_bill_edit(request, id):
                         break
                     if closure_p > 0 and p_raw == '':
                         missing_msg = f"Please enter Parking Cost for Trip {trip_no} (recorded as ₹{closure_p:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
+                    if closure_w > 0 and w_raw == '':
+                        missing_msg = f"Please enter Weighment Cost for Trip {trip_no} (recorded as ₹{closure_w:.2f} in Trip Closure; enter 0 if none/waived)."
                         break
                     if closure_h_days > 0 and h_days_raw == '':
                         missing_msg = f"Please enter Halting Days for Trip {trip_no} (recorded as {closure_h_days} days in Trip Closure; enter 0 if none/waived)."
@@ -425,6 +438,7 @@ def market_bill_edit(request, id):
                         l_cost = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                         u_cost = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                         p_cost = (request.POST.get(f'parking_cost_{tid}') or '').strip()
+                        w_cost = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                         h_days = (request.POST.get(f'halting_days_{tid}') or '').strip()
                         h_cost = (request.POST.get(f'halting_cost_{tid}') or '').strip()
                         t_cost = (request.POST.get(f'trip_cost_{tid}') or '').strip()
@@ -432,6 +446,7 @@ def market_bill_edit(request, id):
                         l_cost_val = float(l_cost) if l_cost else 0.0
                         u_cost_val = float(u_cost) if u_cost else 0.0
                         p_cost_val = float(p_cost) if p_cost else 0.0
+                        w_cost_val = float(w_cost) if w_cost else 0.0
                         h_days_val = int(h_days) if h_days else 0
                         h_cost_val = float(h_cost) if h_cost else 0.0
                         t_cost_val = float(t_cost) if t_cost else 0.0
@@ -441,6 +456,7 @@ def market_bill_edit(request, id):
                             'loading_cost': l_cost_val,
                             'unloading_cost': u_cost_val,
                             'parking_cost': p_cost_val,
+                            'weighment_cost': w_cost_val,
                             'halting_days': h_days_val,
                             'halting_cost': h_cost_val,
                         }
@@ -466,6 +482,7 @@ def market_bill_edit(request, id):
                     messages.error(request, f"{field}: {error}")
     else:
         form = MarketBillForm(instance=record)
+        form.fields['mb_vendor'].disabled = True
 
     # Fetch selected trips data for the edit page table
     selected_trips_data = []
@@ -709,6 +726,7 @@ def get_trips_by_vendor(request):
             'loading_cost': float(trip.tc_loadingcost or 0),
             'unloading_cost': float(trip.tc_unloadingcost or 0),
             'parking_cost': float(trip.tc_parkingcost or 0),
+            'weighment_cost': float(trip.tc_weighmentcost or 0),
             'halting_days': halting_days,
             'halting_cost': float(halting_cost),
             'halting_rate': float(halting_rate),
@@ -914,6 +932,7 @@ def market_bill_export_tally(request):
                 loading_cost = float(trip_detail.get('loading_cost', 0))
                 unloading_cost = float(trip_detail.get('unloading_cost', 0))
                 parking_cost = float(trip_detail.get('parking_cost', 0))
+                weighment_cost = float(trip_detail.get('weighment_cost', 0))
                 halting_cost = float(trip_detail.get('halting_cost', 0))
             else:
                 transport_cost = 0.0
@@ -930,6 +949,7 @@ def market_bill_export_tally(request):
                 loading_cost = float(trip.tc_loadingcost or 0)
                 unloading_cost = float(trip.tc_unloadingcost or 0)
                 parking_cost = float(trip.tc_parkingcost or 0)
+                weighment_cost = float(trip.tc_weighmentcost or 0)
                 halting_cost = float(trip.tc_haltingcost or 0)
                 
             expenses = []
@@ -937,6 +957,7 @@ def market_bill_export_tally(request):
             if loading_cost > 0: expenses.append(("Loading", loading_cost))
             if unloading_cost > 0: expenses.append(("Unloading", unloading_cost))
             if parking_cost > 0: expenses.append(("Parking", parking_cost))
+            if weighment_cost > 0: expenses.append(("Weighment", weighment_cost))
             if halting_cost > 0: expenses.append(("Halting", halting_cost))
             
             for exp_name, amt in expenses:

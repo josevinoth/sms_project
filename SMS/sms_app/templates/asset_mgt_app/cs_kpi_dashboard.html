@@ -650,7 +650,7 @@
         background: linear-gradient(180deg, rgba(14, 28, 75, 0.95) 0%, rgba(8, 16, 48, 0.98) 100%);
         border: 1px solid rgba(54, 209, 255, 0.32);
         border-radius: 8px;
-        padding: 7px 10px;
+        padding: 8px 11px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -672,7 +672,7 @@
     }
 
     .kpi-target-card-title {
-        font-size: 0.8rem;
+        font-size: 0.81rem;
         font-weight: 900;
         letter-spacing: 0.5px;
         text-transform: uppercase;
@@ -681,7 +681,7 @@
     }
 
     .kpi-target-card-check {
-        font-size: 1.15rem;
+        font-size: 1.10rem;
         line-height: 1;
         display: inline-flex;
         align-items: center;
@@ -694,25 +694,25 @@
     }
 
     .kpi-target-card-sub {
-        font-size: 0.73rem;
+        font-size: 0.74rem;
         color: #94a3b8;
         font-weight: 600;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
     }
 
     .kpi-target-card-sub strong {
         color: #f8fafc;
-        font-size: 0.78rem;
+        font-size: 0.79rem;
     }
 
     .kpi-target-card-gauge {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 2px 0;
+        padding: 3px 0 4px 0;
     }
 
     .kpi-gauge-svg {
@@ -724,9 +724,9 @@
 
     .kpi-sla-badge {
         margin-top: 3px;
-        padding: 3px 6px;
+        padding: 3.5px 7px;
         border-radius: 4px;
-        font-size: 0.65rem;
+        font-size: 0.66rem;
         font-weight: 700;
         text-align: center;
         display: flex;
@@ -769,13 +769,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 5px 8px;
-        font-size: 0.72rem;
+        padding: 4px 8px;
+        font-size: 0.70rem;
         font-weight: 700;
         color: #8fa0c9;
         border-bottom: 1px solid rgba(54, 209, 255, 0.2);
         letter-spacing: 0.3px;
         flex-shrink: 0;
+        line-height: 1.2;
     }
 
     .kpi-table-wrap {
@@ -802,8 +803,8 @@
     }
 
     .kpi-display-table th {
-        padding: 5px 8px !important;
-        font-size: 0.68rem !important;
+        padding: 3.5px 6px !important;
+        font-size: 0.66rem !important;
         line-height: 1.2;
     }
 
@@ -812,21 +813,21 @@
     }
 
     .kpi-display-table td {
-        padding: 6px 8px !important;
-        font-size: 0.76rem !important;
-        line-height: 1.3;
+        padding: 3.5px 6px !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2;
         vertical-align: middle;
     }
 
     /* Color Code Badges */
     .status-pill {
         display: inline-block;
-        padding: 2px 6px;
+        padding: 1.5px 5px;
         border-radius: 3px;
-        font-size: 0.7rem;
+        font-size: 0.67rem;
         font-weight: 800;
         text-align: center;
-        min-width: 36px;
+        min-width: 34px;
     }
 
     .pill-red { background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #fca5a5; }
@@ -1033,6 +1034,64 @@
         min-width: 175px;
         line-height: 1.4;
     }
+
+    /* Floating Revenue Tooltip */
+    #revenue-hover-tooltip {
+        position: fixed;
+        display: none;
+        z-index: 99999;
+        background: rgba(10, 15, 38, 0.98);
+        border: 1px solid #c084fc;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(192, 132, 252, 0.3);
+        border-radius: 6px;
+        padding: 9px 12px;
+        font-size: 0.68rem;
+        color: #ffffff;
+        pointer-events: none;
+        min-width: 380px;
+        line-height: 1.4;
+        backdrop-filter: blur(8px);
+    }
+
+    .rev-tooltip-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+        font-size: 0.66rem;
+    }
+
+    .rev-tooltip-table th {
+        color: #94a3b8;
+        font-weight: 600;
+        text-align: right;
+        padding: 3px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        white-space: nowrap;
+    }
+
+    .rev-tooltip-table th:first-child {
+        text-align: left;
+        padding-left: 2px;
+    }
+
+    .rev-tooltip-table td {
+        padding: 3px 6px;
+        text-align: right;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        white-space: nowrap;
+    }
+
+    .rev-tooltip-table td:first-child {
+        text-align: left;
+        padding-left: 2px;
+    }
+
+    .rev-tooltip-table tfoot td {
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+        border-bottom: none;
+        font-weight: 700;
+        padding-top: 5px;
+    }
 </style>
 
 <div class="cs-dashboard-root">
@@ -1052,6 +1111,11 @@
             <strong id="tip-invoiced" style="color:#86efac;">0</strong>
         </div>
         <div id="tip-status-badge" style="margin-top:4px; font-weight:700; font-size:0.63rem; text-align:center; padding:2px; border-radius:3px;"></div>
+    </div>
+
+    <!-- Floating Revenue Splitup Tooltip -->
+    <div id="revenue-hover-tooltip">
+        <div id="rev-tooltip-content"></div>
     </div>
 
     <!-- Top Filter Bar -->
@@ -1197,7 +1261,7 @@
         </div>
 
         <!-- Card 8: Total Revenue -->
-        <div class="top-kpi-card card-bg-revenue">
+        <div class="top-kpi-card card-bg-revenue hover-revenue-trigger" style="cursor: pointer;">
             <div class="top-kpi-content">
                 <span class="top-kpi-title"><i class="fas fa-coins" style="color:#c084fc;"></i> Total Revenue</span>
                 <div class="top-kpi-main-val">
@@ -1398,18 +1462,18 @@
                 <!-- Bottom Row: Additional Operational Tracking & Revenue & Billing Side-by-Side -->
                 <div class="kpi-bottom-row">
                     <!-- Left: Additional Operational Tracking -->
-                    <div class="kpi-display-section" style="flex: 1.05;">
+                    <div class="kpi-display-section" style="flex: 0.82;">
                         <div class="kpi-display-header">
                             <span><i class="fas fa-clipboard-check text-info"></i> Additional Operational Tracking</span>
-                            <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Records & Documentation)</span>
+                            <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Records)</span>
                         </div>
                         <div class="kpi-table-wrap">
                             <table class="cs-table kpi-display-table">
                                 <thead>
                                     <tr>
                                         <th>Parameter</th>
-                                        <th class="col-num" style="width: 85px;">Count / Log</th>
-                                        <th class="col-center" style="width: 90px;">Status</th>
+                                        <th class="col-num" style="width: 70px; white-space: nowrap;">Count</th>
+                                        <th class="col-center" style="width: 80px; white-space: nowrap;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="kpi-display-table-body">
@@ -1420,7 +1484,7 @@
                     </div>
 
                     <!-- Right: Revenue & Billing Tracking -->
-                    <div class="kpi-display-section" style="flex: 0.95;">
+                    <div class="kpi-display-section" style="flex: 1.18;">
                         <div class="kpi-display-header">
                             <span><i class="fas fa-file-invoice-dollar text-warning"></i> Revenue & Billing</span>
                             <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Financial Overview)</span>
@@ -1429,9 +1493,9 @@
                             <table class="cs-table kpi-display-table">
                                 <thead>
                                     <tr>
-                                        <th>Revenue Metric</th>
-                                        <th class="col-num" style="width: 110px;">Amount (₹)</th>
-                                        <th class="col-center" style="width: 95px;">Percentage</th>
+                                        <th style="white-space: nowrap;">Revenue Metric</th>
+                                        <th class="col-num" style="width: 125px; white-space: nowrap;">Amount (₹)</th>
+                                        <th class="col-center" style="width: 75px; white-space: nowrap;">Percentage</th>
                                     </tr>
                                 </thead>
                                 <tbody id="kpi-revenue-table-body">
@@ -1486,6 +1550,7 @@ $(document).ready(function() {
     let currentDate = new Date();
     let selectedDate = new Date();
     let monthlyCalendarMap = {};
+    let currentRevenueMetrics = null;
 
     const initialDateStr = "{{ today_date }}";
     if (initialDateStr) {
@@ -1626,6 +1691,129 @@ $(document).ready(function() {
 
     $(document).on('mouseleave', '.cal-day', function() {
         $('#cal-hover-tooltip').hide();
+    });
+
+    // Floating Revenue Tooltip on Hover
+    function populateRevenueTooltip() {
+        if (!currentRevenueMetrics || !currentRevenueMetrics.share_breakdown) {
+            $('#rev-tooltip-content').html('<div style="color:#94a3b8; text-align:center; padding:10px;">No revenue data available</div>');
+            return;
+        }
+        const b = currentRevenueMetrics.share_breakdown;
+        const rev = currentRevenueMetrics;
+
+        const own = b.own || { total_formatted: '₹ 0.00', billed_formatted: '₹ 0.00', unbilled_formatted: '₹ 0.00', share_pct: '0.0%', trips: 0 };
+        const att = b.attached || { total_formatted: '₹ 0.00', billed_formatted: '₹ 0.00', unbilled_formatted: '₹ 0.00', share_pct: '0.0%', trips: 0 };
+        const mkt = b.market || { total_formatted: '₹ 0.00', billed_formatted: '₹ 0.00', unbilled_formatted: '₹ 0.00', share_pct: '0.0%', trips: 0 };
+
+        let html = `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:5px; margin-bottom:6px;">
+                <div style="font-weight:800; color:#c084fc; font-size:0.75rem;">
+                    <i class="fas fa-chart-pie"></i> Revenue Splitup (Branchwise P&L)
+                </div>
+                <span style="font-size:0.60rem; color:#a78bfa; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); padding:1px 6px; border-radius:3px;">
+                    Selling Total
+                </span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; background:rgba(255,255,255,0.03); padding:4px 6px; border-radius:4px; font-size:0.65rem;">
+                <div><span style="color:#94a3b8;">Total Rev:</span> <strong style="color:#38bdf8;">${rev.total_revenue_formatted}</strong></div>
+                <div><span style="color:#94a3b8;">Billed:</span> <strong style="color:#10b981;">${rev.total_billed_formatted}</strong> <span style="color:#6ee7b7; font-size:0.6rem;">(${rev.billed_share_pct})</span></div>
+                <div><span style="color:#94a3b8;">Unbilled:</span> <strong style="color:#f59e0b;">${rev.value_unbilled_formatted}</strong> <span style="color:#fde68a; font-size:0.6rem;">(${rev.unbilled_share_pct})</span></div>
+            </div>
+
+            <table class="rev-tooltip-table">
+                <thead>
+                    <tr>
+                        <th>Share Category</th>
+                        <th>Share %</th>
+                        <th>Billed</th>
+                        <th>Unbilled</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#38bdf8; margin-right:4px;"></span>
+                            <strong style="color:#e2e8f0;">Own Share</strong>
+                            <span style="font-size:0.6rem; color:#94a3b8;">(${own.trips || 0} trips)</span>
+                        </td>
+                        <td style="color:#38bdf8; font-weight:700;">${own.share_pct}</td>
+                        <td style="color:#10b981;">${own.billed_formatted}</td>
+                        <td style="color:#f59e0b;">${own.unbilled_formatted}</td>
+                        <td style="color:#ffffff; font-weight:700;">${own.total_formatted}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#a855f7; margin-right:4px;"></span>
+                            <strong style="color:#e2e8f0;">Attached Share</strong>
+                            <span style="font-size:0.6rem; color:#94a3b8;">(${att.trips || 0} trips)</span>
+                        </td>
+                        <td style="color:#a855f7; font-weight:700;">${att.share_pct}</td>
+                        <td style="color:#10b981;">${att.billed_formatted}</td>
+                        <td style="color:#f59e0b;">${att.unbilled_formatted}</td>
+                        <td style="color:#ffffff; font-weight:700;">${att.total_formatted}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f97316; margin-right:4px;"></span>
+                            <strong style="color:#e2e8f0;">Market Share</strong>
+                            <span style="font-size:0.6rem; color:#94a3b8;">(${mkt.trips || 0} trips)</span>
+                        </td>
+                        <td style="color:#f97316; font-weight:700;">${mkt.share_pct}</td>
+                        <td style="color:#10b981;">${mkt.billed_formatted}</td>
+                        <td style="color:#f59e0b;">${mkt.unbilled_formatted}</td>
+                        <td style="color:#ffffff; font-weight:700;">${mkt.total_formatted}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td style="color:#cbd5e1;">Total</td>
+                        <td style="color:#38bdf8;">100%</td>
+                        <td style="color:#10b981;">${rev.total_billed_formatted}</td>
+                        <td style="color:#f59e0b;">${rev.value_unbilled_formatted}</td>
+                        <td style="color:#38bdf8; font-size:0.72rem;">${rev.total_revenue_formatted}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        `;
+        $('#rev-tooltip-content').html(html);
+    }
+
+    function positionRevenueTooltip(e) {
+        const $tip = $('#revenue-hover-tooltip');
+        const tipWidth = $tip.outerWidth() || 380;
+        const tipHeight = $tip.outerHeight() || 190;
+        
+        let top = e.clientY + 15;
+        let left = e.clientX - 100;
+
+        if (left + tipWidth > window.innerWidth - 15) {
+            left = window.innerWidth - tipWidth - 15;
+        }
+        if (left < 10) left = 10;
+
+        if (top + tipHeight > window.innerHeight - 15) {
+            top = e.clientY - tipHeight - 15;
+        }
+        if (top < 10) top = 10;
+
+        $tip.css({ top: top + 'px', left: left + 'px' });
+    }
+
+    $(document).on('mouseenter', '.hover-revenue-trigger', function(e) {
+        populateRevenueTooltip();
+        positionRevenueTooltip(e);
+        $('#revenue-hover-tooltip').stop(true, true).fadeIn(120);
+    });
+
+    $(document).on('mousemove', '.hover-revenue-trigger', function(e) {
+        positionRevenueTooltip(e);
+    });
+
+    $(document).on('mouseleave', '.hover-revenue-trigger', function() {
+        $('#revenue-hover-tooltip').stop(true, true).fadeOut(100);
     });
 
     // Calendar Navigation
@@ -1842,7 +2030,7 @@ $(document).ready(function() {
                     <div class="kpi-target-card-divider"></div>
                     <div class="kpi-target-card-sub">${subtext}</div>
                     <div class="kpi-target-card-gauge">
-                        <svg class="kpi-gauge-svg" viewBox="0 0 120 62" width="114" height="57">
+                        <svg class="kpi-gauge-svg" viewBox="0 0 120 62" width="122" height="61">
                             <!-- Background Track Arc -->
                             <path d="M 12 56 A 48 48 0 0 1 108 56" 
                                   fill="none" 
@@ -1915,35 +2103,35 @@ $(document).ready(function() {
         const unbilledSharePct = rev.unbilled_share_pct || '0.0%';
 
         let revenueHtml = `
-            <tr>
-                <td>
+            <tr class="hover-revenue-trigger" style="cursor: pointer;">
+                <td style="white-space: nowrap;">
                     <div class="metric-name-wrap">
                         <i class="fas fa-coins text-warning metric-icon"></i>
                         <span style="font-weight:700; color:#f8fafc;">Total Revenue</span>
                     </div>
                 </td>
-                <td class="col-num" style="font-weight:800; color:#38bdf8;">${totalRevFormatted}</td>
-                <td class="col-center"><span class="status-pill pill-blue"><i class="fas fa-chart-pie"></i> 100%</span></td>
+                <td class="col-num" style="font-weight:800; color:#38bdf8; white-space: nowrap;">${totalRevFormatted}</td>
+                <td class="col-center" style="white-space: nowrap;"><span class="status-pill pill-blue"><i class="fas fa-chart-pie"></i> 100%</span></td>
             </tr>
             <tr>
-                <td>
+                <td style="white-space: nowrap;">
                     <div class="metric-name-wrap">
                         <i class="fas fa-file-invoice text-success metric-icon"></i>
                         <span style="font-weight:600; color:#cbd5e1;">Total Value Billed</span>
                     </div>
                 </td>
-                <td class="col-num" style="font-weight:800; color:#10b981;">${totalBilledFormatted}</td>
-                <td class="col-center"><span class="status-pill pill-green"><i class="fas fa-check-circle"></i> ${billedSharePct}</span></td>
+                <td class="col-num" style="font-weight:800; color:#10b981; white-space: nowrap;">${totalBilledFormatted}</td>
+                <td class="col-center" style="white-space: nowrap;"><span class="status-pill pill-green"><i class="fas fa-check-circle"></i> ${billedSharePct}</span></td>
             </tr>
             <tr>
-                <td>
+                <td style="white-space: nowrap;">
                     <div class="metric-name-wrap">
                         <i class="fas fa-hourglass-half text-danger metric-icon"></i>
                         <span style="font-weight:600; color:#cbd5e1;">Value Unbilled</span>
                     </div>
                 </td>
-                <td class="col-num" style="font-weight:800; color:#f59e0b;">${valueUnbilledFormatted}</td>
-                <td class="col-center"><span class="status-pill pill-orange"><i class="fas fa-clock"></i> ${unbilledSharePct}</span></td>
+                <td class="col-num" style="font-weight:800; color:#f59e0b; white-space: nowrap;">${valueUnbilledFormatted}</td>
+                <td class="col-center" style="white-space: nowrap;"><span class="status-pill pill-orange"><i class="fas fa-clock"></i> ${unbilledSharePct}</span></td>
             </tr>
         `;
         $('#kpi-revenue-table-body').html(revenueHtml);
@@ -1971,6 +2159,7 @@ $(document).ready(function() {
             },
             success: function(res) {
                 if (res.status === 'success') {
+                    currentRevenueMetrics = res.revenue_metrics || null;
                     const f = res.funnel;
                     $('#val-veh-requested').text(f.veh_requested);
                     $('#val-veh-not-allotted').text(f.veh_not_allotted);

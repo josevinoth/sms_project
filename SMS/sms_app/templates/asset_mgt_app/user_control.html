@@ -1,0 +1,1535 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+
+{% block title %}User Access Management | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       BVM MODERN USER ACCESS MANAGEMENT (MATCHING VEHICLE AVAILABILITY STYLE)
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Force modern container & header styling */
+    .modern-header {
+        border-radius: 14px !important;
+        padding: 0.85rem 1.4rem !important;
+        position: relative;
+        overflow: hidden;
+    }
+    .modern-header h3 {
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        font-size: 1.3rem;
+    }
+
+    /* Filter Summary Pills matching vehicleavailability_list */
+    .avail-filter-btn {
+        border-radius: 50px !important;
+        font-weight: 700 !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.5px !important;
+        padding: 0.45rem 1.15rem !important;
+        text-transform: uppercase !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        background: #ffffff;
+    }
+    [data-theme="dark"] .avail-filter-btn {
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    .avail-filter-btn.active {
+        box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35) !important;
+    }
+    .avail-filter-btn.btn-outline-info.active {
+        background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-success.active {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-danger.active {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-warning.active {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-primary.active {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-purple {
+        color: #9333ea !important;
+        border-color: #c084fc !important;
+    }
+    .avail-filter-btn.btn-outline-purple.active {
+        background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .badge-purple {
+        background-color: #9333ea !important;
+        color: #ffffff !important;
+    }
+    .avail-filter-btn.active .badge-purple {
+        background-color: #ffffff !important;
+        color: #7e22ce !important;
+    }
+    .avail-filter-btn.btn-outline-pink {
+        color: #db2777 !important;
+        border-color: #f472b6 !important;
+    }
+    .avail-filter-btn.btn-outline-pink.active {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .badge-pink {
+        background-color: #db2777 !important;
+        color: #ffffff !important;
+    }
+    .avail-filter-btn.active .badge-pink {
+        background-color: #ffffff !important;
+        color: #be185d !important;
+    }
+    .avail-filter-btn.btn-outline-secondary.active {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.btn-outline-dark.active {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+    .avail-filter-btn.active .badge {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+    .avail-filter-btn .badge {
+        font-size: 0.75rem !important;
+        padding: 0.25em 0.55em !important;
+        border-radius: 50px !important;
+    }
+
+    /* Main modern card */
+    .modern-card-container {
+        border-radius: 14px !important;
+        border: 1px solid var(--border-light, #e2e8f0) !important;
+        background: var(--bg-card, #ffffff);
+        box-shadow: 0 4px 20px var(--shadow-main, rgba(0, 0, 0, 0.06));
+    }
+    [data-theme="dark"] .modern-card-container {
+        background: #111e33 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Layout Split */
+    .uam-layout-split {
+        display: flex;
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+    .uam-sidebar-col {
+        flex: 0 0 320px;
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-light, #f1f5f9);
+        padding-right: 1.25rem;
+    }
+    [data-theme="dark"] .uam-sidebar-col {
+        border-right-color: rgba(255, 255, 255, 0.08);
+    }
+    .uam-content-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (max-width: 991px) {
+        .uam-layout-split {
+            flex-direction: column;
+        }
+        .uam-sidebar-col {
+            flex: 0 0 100%;
+            max-width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border-light, #f1f5f9);
+            padding-right: 0;
+            padding-bottom: 1.25rem;
+        }
+    }
+
+    /* Left Sidebar: User Directory */
+    .uam-search-box {
+        position: relative;
+        margin-bottom: 0.6rem;
+    }
+    .uam-search-box .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+    .uam-search-input {
+        padding-left: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #e2e8f0) !important;
+        font-size: 0.85rem !important;
+        background: var(--bg-page, #f8fafc) !important;
+        color: var(--text-main, #0f172a) !important;
+        height: 38px;
+        width: 100%;
+    }
+    [data-theme="dark"] .uam-search-input {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    .uam-dept-filter-wrap {
+        position: relative;
+        margin-bottom: 0.85rem;
+    }
+    .uam-dept-filter-wrap .dept-filter-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+    .uam-dept-filter-select {
+        padding-left: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #e2e8f0) !important;
+        font-size: 0.825rem !important;
+        background: var(--bg-page, #f8fafc) !important;
+        color: var(--text-main, #0f172a) !important;
+        height: 38px;
+        width: 100%;
+        cursor: pointer;
+    }
+    [data-theme="dark"] .uam-dept-filter-select {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+    .uam-dept-filter-select option {
+        background: #ffffff;
+        color: #0f172a;
+    }
+    [data-theme="dark"] .uam-dept-filter-select option {
+        background: #1e293b;
+        color: #f8fafc;
+    }
+
+    .uam-user-dept-badge {
+        color: #2563eb;
+        font-weight: 500;
+    }
+    [data-theme="dark"] .uam-user-dept-badge {
+        color: #60a5fa;
+    }
+
+    .uam-users-list-scroll {
+        max-height: calc(100vh - 355px);
+        min-height: 480px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    .uam-user-card-item {
+        display: flex;
+        align-items: center;
+        padding: 9px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 4px;
+        transition: all 0.15s ease;
+        user-select: none;
+        border: 1px solid transparent;
+    }
+    .uam-user-card-item:hover {
+        background: var(--bg-page, #f8fafc);
+        border-color: var(--border-light, #e2e8f0);
+    }
+    [data-theme="dark"] .uam-user-card-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+    .uam-user-card-item.active {
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+    }
+    [data-theme="dark"] .uam-user-card-item.active {
+        background: rgba(37, 99, 235, 0.22) !important;
+        border-color: rgba(59, 130, 246, 0.4) !important;
+    }
+
+    .uam-user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.825rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-right: 10px;
+        letter-spacing: -0.5px;
+    }
+    .uam-user-card-item.active .uam-user-avatar {
+        background: #2563eb;
+        color: #ffffff;
+    }
+    [data-theme="dark"] .uam-user-avatar {
+        background: rgba(255, 255, 255, 0.12);
+        color: #e2e8f0;
+    }
+    [data-theme="dark"] .uam-user-card-item.active .uam-user-avatar {
+        background: #3b82f6;
+        color: #ffffff;
+    }
+
+    .uam-user-name {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-main, #0f172a);
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    [data-theme="dark"] .uam-user-name {
+        color: #ffffff;
+    }
+    .uam-user-role {
+        font-size: 0.725rem;
+        color: var(--text-muted, #64748b);
+        margin-top: 2px;
+    }
+    [data-theme="dark"] .uam-user-role {
+        color: #94a3b8;
+    }
+
+    /* Right Column: User Header Strip */
+    .uam-target-header-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1.15rem;
+        background: var(--bg-page, #f8fafc);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    [data-theme="dark"] .uam-target-header-strip {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+    .uam-target-user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .uam-target-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+    .uam-target-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-main, #0f172a);
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    [data-theme="dark"] .uam-target-title {
+        color: #ffffff;
+    }
+    .uam-target-sub {
+        font-size: 0.78rem;
+        color: var(--text-muted, #64748b);
+        margin: 0;
+    }
+    [data-theme="dark"] .uam-target-sub {
+        color: #94a3b8;
+    }
+
+    .uam-target-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .uam-role-select-box {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .uam-role-select-box label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted, #64748b);
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .uam-role-select {
+        height: 36px;
+        border-radius: 6px;
+        border: 1px solid var(--border-light, #cbd5e1);
+        font-size: 0.825rem;
+        font-weight: 600;
+        background: var(--bg-card, #ffffff);
+        color: var(--text-main, #0f172a);
+        padding: 0 10px;
+        min-width: 140px;
+    }
+    [data-theme="dark"] .uam-role-select {
+        background: #1e293b;
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-save-modern {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 1.4rem !important;
+        border-radius: 8px !important;
+        border: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.4px !important;
+        cursor: pointer !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .btn-save-modern:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45) !important;
+        color: #ffffff !important;
+    }
+
+    /* Modern Matrix Table */
+    .uam-table-scroll-container {
+        max-height: calc(100vh - 390px);
+        min-height: 440px;
+        overflow-y: auto;
+        overflow-x: auto;
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 8px;
+    }
+    [data-theme="dark"] .uam-table-scroll-container {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .table.modern-table {
+        margin-bottom: 0 !important;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+    .table.modern-table thead th {
+        background: #0f172a !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 0.78rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.6px !important;
+        padding: 12px 14px !important;
+        border: none !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    [data-theme="dark"] .table.modern-table thead th {
+        background: #090f1d !important;
+    }
+    .table.modern-table thead th.col-cb {
+        width: 90px;
+        text-align: center;
+    }
+
+    /* Category Banner Rows */
+    .uam-mod-banner-row {
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.85rem;
+        transition: filter 0.15s ease;
+        user-select: none;
+    }
+    .uam-mod-banner-row:hover {
+        filter: brightness(0.96);
+    }
+    [data-theme="dark"] .uam-mod-banner-row:hover {
+        filter: brightness(1.15);
+    }
+    .uam-mod-banner-row td {
+        padding: 10px 14px !important;
+        border-top: 1px solid var(--border-light, #e2e8f0) !important;
+        border-bottom: 1px solid var(--border-light, #e2e8f0) !important;
+        vertical-align: middle !important;
+    }
+
+    .uam-mod-title-flex {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .uam-mod-chevron {
+        transition: transform 0.2s ease;
+        font-size: 0.8rem;
+        width: 14px;
+        display: inline-block;
+    }
+    .uam-mod-chevron.rotated {
+        transform: rotate(-90deg);
+    }
+
+    /* Pastel Category Themes (Light Mode) */
+    .theme-tms        { background-color: #fefce8 !important; color: #854d0e !important; }
+    .theme-wms        { background-color: #f0fdf4 !important; color: #166534 !important; }
+    .theme-petty      { background-color: #ecfeff !important; color: #155e75 !important; }
+    .theme-asset      { background-color: #eff6ff !important; color: #1e40af !important; }
+    .theme-diesel     { background-color: #fff7ed !important; color: #9a3412 !important; }
+    .theme-tyre       { background-color: #fdf4ff !important; color: #86198f !important; }
+    .theme-customer   { background-color: #f5f3ff !important; color: #5b21b6 !important; }
+    .theme-accounts   { background-color: #f0fdfa !important; color: #115e59 !important; }
+    .theme-settings   { background-color: #f8fafc !important; color: #334155 !important; }
+    .theme-ems        { background-color: #fff1f2 !important; color: #9f1239 !important; }
+    .theme-master     { background-color: #fdf2f2 !important; color: #991b1b !important; }
+    .theme-branches   { background-color: #faf5ff !important; color: #6b21a8 !important; }
+
+    /* Dark Mode Module Header Tints */
+    [data-theme="dark"] .theme-tms        { background-color: rgba(234, 179, 8, 0.16) !important; color: #fde047 !important; }
+    [data-theme="dark"] .theme-wms        { background-color: rgba(34, 197, 94, 0.16) !important; color: #86efac !important; }
+    [data-theme="dark"] .theme-petty      { background-color: rgba(6, 182, 212, 0.16) !important; color: #67e8f9 !important; }
+    [data-theme="dark"] .theme-asset      { background-color: rgba(59, 130, 246, 0.16) !important; color: #93c5fd !important; }
+    [data-theme="dark"] .theme-diesel     { background-color: rgba(249, 115, 22, 0.16) !important; color: #fdba74 !important; }
+    [data-theme="dark"] .theme-tyre       { background-color: rgba(217, 70, 239, 0.16) !important; color: #f0abfc !important; }
+    [data-theme="dark"] .theme-customer   { background-color: rgba(139, 92, 246, 0.16) !important; color: #c4b5fd !important; }
+    [data-theme="dark"] .theme-accounts   { background-color: rgba(20, 184, 166, 0.16) !important; color: #5eead4 !important; }
+    [data-theme="dark"] .theme-settings   { background-color: rgba(148, 163, 184, 0.16) !important; color: #cbd5e1 !important; }
+    [data-theme="dark"] .theme-ems        { background-color: rgba(244, 63, 94, 0.16) !important; color: #fda4af !important; }
+    [data-theme="dark"] .theme-master     { background-color: rgba(239, 68, 68, 0.16) !important; color: #fca5a5 !important; }
+    [data-theme="dark"] .theme-branches   { background-color: rgba(168, 85, 247, 0.16) !important; color: #d8b4fe !important; }
+
+    /* Page Data Rows */
+    .uam-page-item-row td {
+        padding: 9px 14px !important;
+        border-top: 1px solid var(--border-light, #f1f5f9) !important;
+        vertical-align: middle !important;
+        font-size: 0.835rem;
+        background: var(--bg-card, #ffffff);
+    }
+    [data-theme="dark"] .uam-page-item-row td {
+        background: #111e33;
+        border-top-color: rgba(255, 255, 255, 0.04) !important;
+    }
+    .uam-page-item-row:hover td {
+        background-color: var(--bg-page, #f8fafc) !important;
+    }
+    [data-theme="dark"] .uam-page-item-row:hover td {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+    }
+    .uam-page-item-title {
+        padding-left: 28px !important;
+        font-weight: 500;
+        color: var(--text-main, #334155);
+    }
+    [data-theme="dark"] .uam-page-item-title {
+        color: #e2e8f0;
+    }
+
+    .uam-cb-col {
+        text-align: center;
+        width: 90px;
+    }
+
+    /* Custom Modern Checkbox */
+    .modern-check {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 1.75px solid #94a3b8;
+        border-radius: 4px;
+        background: var(--bg-card, #ffffff);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+        position: relative;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0;
+    }
+    [data-theme="dark"] .modern-check {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .modern-check:checked {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+    }
+    .modern-check:checked::after {
+        content: '';
+        display: block;
+        width: 5px;
+        height: 9px;
+        border: solid #ffffff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        margin-bottom: 2px;
+    }
+    .modern-check:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Branch row badges */
+    .branch-code-badge {
+        font-size: 0.725rem;
+        font-weight: 700;
+        padding: 0.2em 0.55em;
+        border-radius: 4px;
+        background: rgba(168, 85, 247, 0.15);
+        color: #7e22ce;
+        margin-left: 6px;
+    }
+    [data-theme="dark"] .branch-code-badge {
+        background: rgba(168, 85, 247, 0.25);
+        color: #d8b4fe;
+    }
+
+    /* Floating Toast */
+    .uam-float-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        pointer-events: none;
+    }
+    .uam-float-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .uam-float-toast.success .toast-ico { color: #10b981; }
+    .uam-float-toast.error   .toast-ico { color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+
+<div class="container-fluid py-3">
+    <!-- Header Section (Matching vehicleavailability_list.html) -->
+    <div class="modern-header mb-4 d-flex align-items-center justify-content-between flex-wrap" style="gap: 15px;">
+        <div>
+            <h3 class="mb-1"><i class="fas fa-user-shield mr-2"></i> User Access Management</h3>
+            <p class="mb-0 text-white-50 small">Control which pages and branch movements each user can access</p>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel" style="padding: 0.5rem 1.2rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Home
+            </a>
+            <a href="{% url 'user_insert' %}" class="btn-modern btn-cancel" style="padding: 0.5rem 1.2rem; text-decoration: none;">
+                <i class="fas fa-user-plus mr-1"></i> Add User
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Summary Pills (All Roles / Departments) -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex flex-wrap align-items-center" style="gap: 10px;">
+            <button class="btn btn-sm btn-outline-info active avail-filter-btn uam-role-filter-btn" data-role="">
+                <i class="fas fa-users mr-1"></i> All Users <span class="badge badge-light ml-1" id="filterCountAll">{{ total_users_count }}</span>
+            </button>
+            {% for rf in role_filters %}
+            <button class="btn btn-sm {{ rf.btn_class }} avail-filter-btn uam-role-filter-btn" data-role="{{ rf.name }}">
+                <i class="{{ rf.icon }} mr-1"></i> {{ rf.name }} <span class="badge {{ rf.badge_class }} ml-1">{{ rf.count }}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Card & Data Table Structure -->
+    <div class="modern-card modern-card-container p-3">
+        <div class="uam-layout-split">
+            <!-- Left Sidebar: User Directory -->
+            <div class="uam-sidebar-col">
+                <div class="uam-search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="userSearchInput" class="form-control uam-search-input" placeholder="Search users...">
+                </div>
+
+                <div class="uam-dept-filter-wrap">
+                    <i class="fas fa-building dept-filter-icon"></i>
+                    <select id="userDeptFilter" class="form-control uam-dept-filter-select" title="Filter by Department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.dept_name }}">{{ dept.dept_name }}</option>
+                        {% endfor %}
+                        <option value="N/A">Unassigned / None</option>
+                    </select>
+                </div>
+
+                <div class="uam-users-list-scroll" id="usersListContainer">
+                    {% for u in users %}
+                    <div class="uam-user-card-item {% if selected_user and u.id == selected_user.id %}active{% endif %}"
+                         data-user-id="{{ u.id }}"
+                         data-role="{{ u.role }}"
+                         data-department="{{ u.department }}"
+                         data-is-admin="{% if u.is_superuser or 'super' in u.role|lower or 'admin' in u.role|lower %}1{% else %}0{% endif %}"
+                         data-search="{{ u.full_name|lower }} {{ u.username|lower }} {{ u.role|lower }} {{ u.department|lower }}">
+                        <div class="uam-user-avatar">{{ u.initials }}</div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="uam-user-name">{{ u.full_name }}</div>
+                            <div class="uam-user-role">
+                                {{ u.role }}{% if u.department and u.department != 'N/A' %} • <span class="uam-user-dept-badge">{{ u.department }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div id="noUsersFoundMsg" class="text-center text-muted p-3" style="display: none; font-size: 0.85rem;">
+                        <i class="fas fa-user-slash mr-1"></i> No matching users found
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Permissions Matrix Switchboard -->
+            <div class="uam-content-col">
+                <!-- User Target Header Strip -->
+                <div class="uam-target-header-strip">
+                    <div class="uam-target-user-info">
+                        <div class="uam-target-avatar" id="headerAvatar">
+                            {{ selected_user.initials|default:"U" }}
+                        </div>
+                        <div>
+                            <h4 class="uam-target-title" id="headerTitle">
+                                Page Access for {{ selected_user.full_name|default:"Selected User" }}
+                            </h4>
+                            <p class="uam-target-sub">Select the pages and movement branches that this user can access.</p>
+                        </div>
+                    </div>
+
+                    <div class="uam-target-actions">
+                        <div class="uam-role-select-box">
+                            <label><i class="fas fa-building mr-1"></i> Department</label>
+                            <select id="deptPresetSelect" class="form-control form-control-sm uam-role-select">
+                                <option value="">--Select--</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.dept_name }}" {% if selected_user.department == dept.dept_name %}selected{% endif %}>{{ dept.dept_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="uam-role-select-box">
+                            <label><i class="fas fa-sliders-h mr-1"></i> Access Type</label>
+                            <select id="accessTypeSelect" class="form-control form-control-sm uam-role-select">
+                                <option value="Custom" selected>Custom</option>
+                                <option value="Full Access">Full Access</option>
+                                <option value="View Only">View Only</option>
+                            </select>
+                        </div>
+
+                        <button id="btnSaveAccess" class="btn-save-modern">
+                            <i class="fas fa-save"></i> Save Access
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Matrix Table Container -->
+                <div class="uam-table-scroll-container">
+                    <table class="table modern-table" id="permissionsTable">
+                        <thead>
+                            <tr>
+                                <th>Module / Page</th>
+                                <th class="col-cb">👁 View</th>
+                                <th class="col-cb">✎ Create</th>
+                                <th class="col-cb">📝 Edit</th>
+                                <th class="col-cb">🗑 Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="permissionsTableBody">
+                            {% for mod in catalog %}
+                            <!-- Category Banner Row -->
+                            <tr class="uam-mod-banner-row {{ mod.theme_class }}" data-module-id="{{ mod.module_id }}">
+                                <td>
+                                    <div class="uam-mod-title-flex">
+                                        <i class="fas fa-chevron-down uam-mod-chevron" id="chevron-{{ mod.module_id }}"></i>
+                                        <i class="{{ mod.icon }} mr-1"></i>
+                                        <span>{{ mod.module_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check mod-master-cb cb-view" data-module="{{ mod.module_id }}" data-type="view" title="Toggle all View">
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check mod-master-cb cb-create" data-module="{{ mod.module_id }}" data-type="create" title="Toggle all Create">
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check mod-master-cb cb-edit" data-module="{{ mod.module_id }}" data-type="edit" title="Toggle all Edit">
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check mod-master-cb cb-delete" data-module="{{ mod.module_id }}" data-type="delete" title="Toggle all Delete">
+                                </td>
+                            </tr>
+
+                            <!-- Page Rows for this module -->
+                            {% for page in mod.pages %}
+                            <tr class="uam-page-item-row" data-parent-module="{{ mod.module_id }}" data-page-key="{{ page.key }}">
+                                <td class="uam-page-item-title">
+                                    <span>{{ page.name }}</span>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check page-cb cb-view" data-page-key="{{ page.key }}" data-type="view"
+                                           {% if page.can_view %}checked{% endif %}>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check page-cb cb-create" data-page-key="{{ page.key }}" data-type="create"
+                                           {% if page.can_create %}checked{% endif %}>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check page-cb cb-edit" data-page-key="{{ page.key }}" data-type="edit"
+                                           {% if page.can_edit %}checked{% endif %}>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check page-cb cb-delete" data-page-key="{{ page.key }}" data-type="delete"
+                                           {% if page.can_delete %}checked{% endif %}>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+
+                            <!-- Movement Visibility Scope Category -->
+                            <tr class="uam-mod-banner-row theme-branches" data-module-id="branches">
+                                <td>
+                                    <div class="uam-mod-title-flex">
+                                        <i class="fas fa-chevron-down uam-mod-chevron" id="chevron-branches"></i>
+                                        <i class="fas fa-map-marked-alt mr-1"></i>
+                                        <span>Branch Movement Visibility Scope</span>
+                                    </div>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check mod-master-cb cb-view" data-module="branches" data-type="view" title="Toggle all branches">
+                                </td>
+                                <td class="uam-cb-col"></td>
+                                <td class="uam-cb-col"></td>
+                                <td class="uam-cb-col"></td>
+                            </tr>
+
+                            {% for br in branch_movements %}
+                            <tr class="uam-page-item-row branch-row" data-parent-module="branches" data-branch-code="{{ br.code }}">
+                                <td class="uam-page-item-title">
+                                    <span>{{ br.name }}</span>
+                                    <span class="branch-code-badge">{{ br.code }}</span>
+                                </td>
+                                <td class="uam-cb-col">
+                                    <input type="checkbox" class="modern-check branch-cb cb-view" value="{{ br.code }}"
+                                           {% if br.code in active_branches %}checked{% endif %}>
+                                </td>
+                                <td class="uam-cb-col"></td>
+                                <td class="uam-cb-col"></td>
+                                <td class="uam-cb-col"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Toast -->
+<div class="uam-float-toast" id="uamToast">
+    <i class="fas fa-check-circle toast-ico" id="toastIcon"></i>
+    <span id="toastMsg">Changes saved</span>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentUserId = {{ selected_user.id|default:"null" }};
+    let currentUserOrg = '{{ selected_user.organisation|default:""|escapejs }}';
+    let currentUserRole = '{{ selected_user.role|default:""|escapejs }}';
+    let currentUserIsAdmin = {% if selected_user.is_superuser or 'super' in selected_user.role|lower or 'admin' in selected_user.role|lower %}true{% else %}false{% endif %};
+
+    function getCsrfToken() {
+        const input = document.querySelector('#csrfForm [name=csrfmiddlewaretoken]') ||
+                      document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+        const cookie = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    function showToast(msg, isSuccess = true) {
+        const toast = $('#uamToast');
+        const ico = $('#toastIcon');
+        $('#toastMsg').text(msg);
+
+        if (isSuccess) {
+            toast.removeClass('error').addClass('success');
+            ico.attr('class', 'fas fa-check-circle toast-ico');
+        } else {
+            toast.removeClass('success').addClass('error');
+            ico.attr('class', 'fas fa-exclamation-triangle toast-ico');
+        }
+
+        toast.addClass('show');
+        setTimeout(() => toast.removeClass('show'), 3500);
+    }
+
+    // Role Filter Pills (All / Admins / Operations / Customers)
+    $('.uam-role-filter-btn').on('click', function() {
+        $('.uam-role-filter-btn').removeClass('active');
+        $(this).addClass('active');
+
+        const roleFilter = $(this).data('role');
+        filterUserCards();
+    });
+
+    // Client-side User Search Input
+    $('#userSearchInput').on('input', function() {
+        filterUserCards();
+    });
+
+    // Client-side Department Filter Dropdown
+    $('#userDeptFilter').on('change', function() {
+        filterUserCards();
+    });
+
+    function filterUserCards() {
+        const q = ($('#userSearchInput').val() || '').toLowerCase().trim();
+        const activeRoleBtn = $('.uam-role-filter-btn.active');
+        const roleFilter = (activeRoleBtn.data('role') || '').toLowerCase().trim();
+        const deptFilter = ($('#userDeptFilter').val() || '').toLowerCase().trim();
+
+        let visibleCount = 0;
+        $('.uam-user-card-item').each(function() {
+            const searchData = ($(this).data('search') || '').toLowerCase();
+            const userRole = ($(this).data('role') || '').toLowerCase().trim();
+            const userDept = ($(this).data('department') || '').toLowerCase().trim();
+
+            const matchesRole = !roleFilter || (userRole === roleFilter);
+            const matchesDept = !deptFilter || (userDept === deptFilter);
+            const matchesSearch = !q || searchData.includes(q);
+
+            if (matchesRole && matchesDept && matchesSearch) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+
+        if (visibleCount === 0) {
+            $('#noUsersFoundMsg').show();
+        } else {
+            $('#noUsersFoundMsg').hide();
+        }
+    }
+
+    // Select User
+    $(document).on('click', '.uam-user-card-item', function() {
+        const userId = $(this).data('user-id');
+        if (userId === currentUserId) return;
+
+        $('.uam-user-card-item').removeClass('active');
+        $(this).addClass('active');
+        currentUserId = userId;
+
+        loadUserPermissions(userId);
+    });
+
+    function loadUserPermissions(userId) {
+        $.ajax({
+            url: `/SMS/user_control/api/get_pages/${userId}/`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(resp) {
+                if (resp.status !== 'success') {
+                    showToast(resp.message || 'Failed to load user permissions', false);
+                    return;
+                }
+
+                currentUserOrg = (resp.user && resp.user.organisation) ? resp.user.organisation : '';
+                currentUserRole = (resp.user && resp.user.role) ? resp.user.role : '';
+                currentUserIsAdmin = (resp.user && (resp.user.is_superuser || (resp.user.role && (resp.user.role.toLowerCase().includes('admin') || resp.user.role.toLowerCase().includes('super'))))) ? true : false;
+                $('#headerAvatar').text(resp.user.initials || 'U');
+                $('#headerTitle').text(`Page Access for ${resp.user.full_name}`);
+                const userDept = (resp.user && resp.user.department && resp.user.department !== 'N/A') ? resp.user.department : '';
+                $('#deptPresetSelect').val(userDept);
+
+                // Map page permissions
+                const permMap = {};
+                let pagesList = resp.pages || [];
+                if (!pagesList.length && resp.catalog) {
+                    resp.catalog.forEach(mod => {
+                        (mod.pages || []).forEach(p => pagesList.push(p));
+                    });
+                }
+                pagesList.forEach(p => {
+                    permMap[p.key] = p;
+                });
+
+                // Update page checkboxes
+                $('.uam-page-item-row:not(.branch-row)').each(function() {
+                    const pkey = $(this).data('page-key');
+                    const p = permMap[pkey];
+                    if (p) {
+                        $(this).find('.cb-view').prop('checked', !!p.can_view);
+                        $(this).find('.cb-create').prop('checked', !!p.can_create);
+                        $(this).find('.cb-edit').prop('checked', !!p.can_edit);
+                        $(this).find('.cb-delete').prop('checked', !!p.can_delete);
+                    } else {
+                        $(this).find('input[type="checkbox"]').prop('checked', false);
+                    }
+                });
+
+                // Update branch checkboxes
+                const activeBranches = resp.branches || [];
+                $('.branch-cb').each(function() {
+                    const bcode = $(this).val();
+                    $(this).prop('checked', activeBranches.includes(bcode));
+                });
+
+                refreshAllMasterCheckboxes();
+                detectAndSetAccessType();
+            },
+            error: function() {
+                showToast('Network error loading user data', false);
+            }
+        });
+    }
+
+    // Collapsible Category Banner Rows
+    $(document).on('click', '.uam-mod-banner-row td:first-child', function() {
+        const modId = $(this).closest('.uam-mod-banner-row').data('module-id');
+        const childRows = $(`.uam-page-item-row[data-parent-module="${modId}"]`);
+        const chevron = $(`#chevron-${modId}`);
+
+        childRows.toggle();
+        chevron.toggleClass('rotated');
+    });
+
+    // Master Checkbox Logic (Toggle all within category)
+    $(document).on('change', '.mod-master-cb', function(e) {
+        e.stopPropagation();
+        const modId = $(this).data('module');
+        const type = $(this).data('type');
+        const isChecked = $(this).is(':checked');
+
+        if (modId === 'branches') {
+            $('.branch-cb').prop('checked', isChecked);
+        } else {
+            $(`.uam-page-item-row[data-parent-module="${modId}"] .cb-${type}`).prop('checked', isChecked);
+        }
+
+        if (!e.isTrigger) {
+            detectAndSetAccessType();
+        }
+    });
+
+    // Individual Checkbox changes update master state
+    $(document).on('change', '.page-cb, .branch-cb', function(e) {
+        const parentMod = $(this).closest('.uam-page-item-row').data('parent-module');
+        const type = $(this).data('type') || 'view';
+        refreshMasterCheckbox(parentMod, type);
+
+        if (!e.isTrigger) {
+            detectAndSetAccessType();
+        }
+    });
+
+    function detectAndSetAccessType() {
+        const activeRows = $('.uam-page-item-row:not(.branch-row)').filter(function() {
+            return $(this).find('.cb-view').is(':checked');
+        });
+
+        if (!activeRows.length) {
+            $('#accessTypeSelect').val('Custom');
+            return;
+        }
+
+        let allFull = true;
+        let allViewOnly = true;
+
+        activeRows.each(function() {
+            const c = $(this).find('.cb-create').is(':checked');
+            const e = $(this).find('.cb-edit').is(':checked');
+            const d = $(this).find('.cb-delete').is(':checked');
+
+            if (c || e || d) {
+                allViewOnly = false;
+            }
+            if (!c || !e || !d) {
+                allFull = false;
+            }
+        });
+
+        // Any action checked without view?
+        const strayChecked = $('.uam-page-item-row:not(.branch-row)').filter(function() {
+            return !$(this).find('.cb-view').is(':checked') &&
+                   ($(this).find('.cb-create').is(':checked') || $(this).find('.cb-edit').is(':checked') || $(this).find('.cb-delete').is(':checked'));
+        }).length > 0;
+
+        if (strayChecked) {
+            allFull = false;
+            allViewOnly = false;
+        }
+
+        if (allViewOnly) {
+            $('#accessTypeSelect').val('View Only');
+        } else if (allFull) {
+            $('#accessTypeSelect').val('Full Access');
+        } else {
+            $('#accessTypeSelect').val('Custom');
+        }
+    }
+
+    function refreshMasterCheckbox(modId, type) {
+        if (modId === 'branches') {
+            const allBr = $('.branch-cb');
+            const chkBr = $('.branch-cb:checked');
+            $(`.mod-master-cb[data-module="branches"]`).prop('checked', allBr.length > 0 && allBr.length === chkBr.length);
+        } else {
+            const allBoxes = $(`.uam-page-item-row[data-parent-module="${modId}"] .cb-${type}`);
+            const chkBoxes = $(`.uam-page-item-row[data-parent-module="${modId}"] .cb-${type}:checked`);
+            $(`.mod-master-cb[data-module="${modId}"][data-type="${type}"]`).prop('checked', allBoxes.length > 0 && allBoxes.length === chkBoxes.length);
+        }
+    }
+
+    function refreshAllMasterCheckboxes() {
+        $('.uam-mod-banner-row').each(function() {
+            const modId = $(this).data('module-id');
+            ['view', 'create', 'edit', 'delete'].forEach(type => {
+                refreshMasterCheckbox(modId, type);
+            });
+        });
+    }
+
+    // Helper to set actions for a specific page key
+    function setPagePerms(pageKey, actions) {
+        const row = $(`.uam-page-item-row[data-page-key="${pageKey}"]`);
+        if (!row.length) return;
+        actions.forEach(act => {
+            row.find(`.cb-${act}`).prop('checked', true);
+        });
+    }
+
+    // Helper to clear all actions for a specific page key
+    function clearPagePerms(pageKey) {
+        const row = $(`.uam-page-item-row[data-page-key="${pageKey}"]`);
+        if (!row.length) return;
+        row.find('input[type="checkbox"]').prop('checked', false);
+    }
+
+    // Helper to set actions for an entire module
+    function setModulePerms(modId, actions) {
+        actions.forEach(act => {
+            $(`.uam-page-item-row[data-parent-module="${modId}"] .cb-${act}`).prop('checked', true);
+        });
+    }
+
+    // Department Presets Handler
+    $('#deptPresetSelect').on('change', function() {
+        const dept = $(this).val();
+        if (!dept) return;
+
+        // Reset all checkboxes first
+        $('.page-cb').prop('checked', false);
+        $('.branch-cb').prop('checked', false);
+
+        if (dept === 'Customer Service') {
+            const vcedPages = [
+                'tms_enquirynote',
+                'tms_consignment',
+                'tms_tripclosure',
+                'tms_invoice_docs',
+                'tms_cs_dashboard'
+            ];
+            vcedPages.forEach(p => setPagePerms(p, ['view', 'create', 'edit', 'delete']));
+
+            const viewOnlyPages = [
+                'tms_track_vehicle',
+                'tms_vehicle_availability',
+                'tms_fleet_management'
+            ];
+            viewOnlyPages.forEach(p => setPagePerms(p, ['view']));
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Operations') {
+            const orgLower = (currentUserOrg || '').toLowerCase();
+            const isWarehouse = orgLower.includes('storage') || orgLower.includes('warehouse') || orgLower.includes('wms');
+
+            if (isWarehouse) {
+                // Operations for BVM Warehouse / Storage Solutions
+                // WMS Operations: ONLY Warehouse pages checked (TMS pages UNCHECKED)
+                const wmsVced = [
+                    'wms_pre_gatein',
+                    'wms_gatein',
+                    'wms_high_value',
+                    'wms_highvalue_app1',
+                    'wms_jobs',
+                    'wms_dg_cargo',
+                    'wms_dispatch',
+                    'wms_incident',
+                    'wms_damage_report',
+                    'wms_gate_meeting',
+                    'wms_ops_audit',
+                    'wms_customer_claims',
+                    'wms_wrong_labelling',
+                    'wms_petty_cash',
+                    'wms_bays',
+                    'wms_units',
+                    'wms_c2c_invoice',
+                    'wms_dedicated_invoice',
+                    'wms_exclusive_invoice',
+                    'wms_invoice_list'
+                ];
+                wmsVced.forEach(p => setPagePerms(p, ['view', 'create', 'edit', 'delete']));
+                setPagePerms('wms_reports', ['view']);
+                $('.branch-cb').prop('checked', true);
+
+            } else {
+                // TMS Operations: ONLY Transport & Prime pages checked (Booking Note, Approvals & WMS pages UNCHECKED)
+                const tmsVced = [
+                    'tms_vehicle_allotment',
+                    'tms_consignment',
+                    'tms_tripdetail',
+                    'tms_tripclosure',
+                    'tms_invoice_docs',
+                    'tms_attached_bill',
+                    'tms_market_bill',
+                    'tms_petty_cash',
+                    'prime_allotment',
+                    'prime_trip'
+                ];
+                tmsVced.forEach(p => setPagePerms(p, ['view', 'create', 'edit', 'delete']));
+
+                const tmsViews = [
+                    'tms_track_vehicle',
+                    'tms_vehicle_availability',
+                    'tms_fleet_management',
+                    'tms_reports'
+                ];
+                tmsViews.forEach(p => setPagePerms(p, ['view']));
+                $('.branch-cb').prop('checked', true);
+            }
+
+        } else if (dept === 'Maintenance') {
+            const vcedPages = [
+                'tms_trip_settlement',
+                'tms_maintenance',
+                'tms_maintenance_bill',
+                'tms_fuelfilling',
+                'tms_driver_master',
+                'tms_driver_settlement',
+                'tms_petty_cash'
+            ];
+            vcedPages.forEach(p => setPagePerms(p, ['view', 'create', 'edit', 'delete']));
+
+            const viewOnlyPages = [
+                'tms_track_vehicle',
+                'tms_vehicle_availability',
+                'tms_fleet_management'
+            ];
+            viewOnlyPages.forEach(p => setPagePerms(p, ['view']));
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Finance') {
+            const vedPages = [
+                'tms_trans_invoice',
+                'tms_finance_approval_admin',
+                'tms_finance_approval_trip',
+                'tms_driver_salary'
+            ];
+            vedPages.forEach(p => setPagePerms(p, ['view', 'edit', 'delete']));
+            setModulePerms('fms', ['view', 'create', 'edit', 'delete']);
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Sales') {
+            setPagePerms('tms_enquirynote', ['view', 'create', 'edit', 'delete']);
+            setModulePerms('pms', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('sales_enquiry', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('sales_target', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('sales_search', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('sales_reports', ['view', 'create', 'edit', 'delete']);
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Human Resource') {
+            setPagePerms('ems_employees', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('ems_roles', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('ems_designations', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('supports_tasks', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('supports_timesheets', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('supports_requirements', ['view', 'create', 'edit', 'delete']);
+            const hrViews = ['tms_reports', 'wms_reports', 'sales_reports', 'fms_reports', 'ams_reports'];
+            hrViews.forEach(p => setPagePerms(p, ['view']));
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'IT') {
+            setPagePerms('admin_user_control', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_user_approval', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_customer_registration', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_deletion_logs', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_warehouse_masters', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_transport_masters', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_packing_masters', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_insurance', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_departments', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_customers', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_vendors', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('admin_locations', ['view', 'create', 'edit', 'delete']);
+            setModulePerms('ems', ['view', 'create', 'edit', 'delete']);
+            setPagePerms('supports_requirements', ['view', 'create', 'edit', 'delete']);
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Corporate') {
+            $('.cb-view').prop('checked', true);
+            const execApprovals = [
+                'tms_manager_approval',
+                'tms_checklist_approval',
+                'tms_finance_approval_admin',
+                'tms_finance_approval_trip',
+                'fms_budget',
+                'fms_performance_audit'
+            ];
+            execApprovals.forEach(p => setPagePerms(p, ['create', 'edit', 'delete']));
+            $('.branch-cb').prop('checked', true);
+
+        } else if (dept === 'Monitoring') {
+            const monViews = [
+                'tms_track_vehicle',
+                'tms_vehicle_availability',
+                'tms_cs_dashboard',
+                'tms_fleet_management',
+                'tms_reports',
+                'wms_gatein',
+                'wms_pre_gatein',
+                'wms_dispatch',
+                'wms_incident',
+                'wms_damage_report',
+                'wms_reports'
+            ];
+            monViews.forEach(p => setPagePerms(p, ['view']));
+            $('.branch-cb').prop('checked', true);
+        }
+
+        // STRICT ID-RESTRICTED PAGES ENFORCEMENT:
+        // These pages are strictly restricted to their designated IDs.
+        // For all other user IDs, ensure they are UNCHECKED!
+
+        // 1. Trip Approval: strictly restricted to [1, 2, 57, 68, 86, 93, 142, 143, 158, 164]
+        const tripApprovalIds = [1, 2, 57, 68, 86, 93, 142, 143, 158, 164];
+        if (tripApprovalIds.includes(currentUserId)) {
+            setPagePerms('tms_trip_approval', ['view', 'create', 'edit']);
+        } else {
+            clearPagePerms('tms_trip_approval');
+        }
+
+        // 2. Tasks: strictly restricted to [1, 86, 88, 93, 100, 158, 164]
+        const taskIds = [1, 86, 88, 93, 100, 158, 164];
+        if (taskIds.includes(currentUserId)) {
+            setPagePerms('supports_tasks', ['view', 'create', 'edit']);
+        } else {
+            clearPagePerms('supports_tasks');
+        }
+
+        // 3. Timesheets: strictly restricted to [1]
+        if (currentUserId === 1) {
+            setPagePerms('supports_timesheets', ['view', 'create', 'edit']);
+        } else {
+            clearPagePerms('supports_timesheets');
+        }
+
+        // 4. Approval 2 (High Value): strictly restricted to [1, 2, 36, 93]
+        const highValueApp2Ids = [1, 2, 36, 93];
+        if (highValueApp2Ids.includes(currentUserId)) {
+            setPagePerms('wms_highvalue_app2', ['view', 'create', 'edit']);
+        } else {
+            clearPagePerms('wms_highvalue_app2');
+        }
+
+        // 5. Administration / Customer / Vendor masters:
+        // Checked for designated user IDs [57, 140, 142, 143] as well as all Admins & Super Users
+        const adminMasterIds = [57, 140, 142, 143];
+        const isSuperOrAdmin = currentUserIsAdmin || currentUserRole === 'Admin' || currentUserRole === 'Super User';
+        if (adminMasterIds.includes(currentUserId) || isSuperOrAdmin) {
+            setPagePerms('admin_customers', ['view', 'create', 'edit']);
+            setPagePerms('admin_vendors', ['view', 'create', 'edit']);
+            setPagePerms('admin_departments', ['view', 'create', 'edit']);
+            setPagePerms('admin_locations', ['view', 'create', 'edit']);
+            setPagePerms('admin_insurance', ['view', 'create', 'edit']);
+            setPagePerms('admin_transport_masters', ['view', 'create', 'edit']);
+            if (isSuperOrAdmin) {
+                setPagePerms('admin_warehouse_masters', ['view', 'create', 'edit']);
+                setPagePerms('admin_packing_masters', ['view', 'create', 'edit']);
+                setPagePerms('admin_customer_registration', ['view', 'create', 'edit']);
+            }
+        }
+
+        // Apply access type filter if currently View Only or Full Access
+        const accessType = $('#accessTypeSelect').val();
+        if (accessType === 'View Only') {
+            $('.cb-create, .cb-edit, .cb-delete').prop('checked', false);
+        } else if (accessType === 'Full Access') {
+            $('.uam-page-item-row:not(.branch-row)').each(function() {
+                if ($(this).find('.cb-view').is(':checked')) {
+                    $(this).find('.cb-create, .cb-edit, .cb-delete').prop('checked', true);
+                }
+            });
+        } else {
+            detectAndSetAccessType();
+        }
+
+        refreshAllMasterCheckboxes();
+    });
+
+    // Access Type Selection Handler
+    $('#accessTypeSelect').on('change', function() {
+        const type = $(this).val();
+        if (type === 'View Only') {
+            $('.uam-page-item-row:not(.branch-row)').each(function() {
+                const hasAny = $(this).find('input[type="checkbox"]:checked').length > 0;
+                if (hasAny) {
+                    $(this).find('.cb-view').prop('checked', true);
+                }
+                $(this).find('.cb-create, .cb-edit, .cb-delete').prop('checked', false);
+            });
+            refreshAllMasterCheckboxes();
+        } else if (type === 'Full Access') {
+            let checkedRows = $('.uam-page-item-row:not(.branch-row)').filter(function() {
+                return $(this).find('.cb-view').is(':checked');
+            });
+            if (!checkedRows.length) {
+                $('.page-cb').prop('checked', true);
+                $('.branch-cb').prop('checked', true);
+            } else {
+                checkedRows.each(function() {
+                    $(this).find('.cb-create, .cb-edit, .cb-delete').prop('checked', true);
+                });
+            }
+            refreshAllMasterCheckboxes();
+        }
+    });
+
+    // Save Access Permissions via AJAX
+    $('#btnSaveAccess').on('click', function() {
+        if (!currentUserId) {
+            showToast('No user selected', false);
+            return;
+        }
+
+        const permissions = [];
+        $('.uam-page-item-row:not(.branch-row)').each(function() {
+            const pkey = $(this).data('page-key');
+            const canView = $(this).find('.cb-view').is(':checked');
+            const canCreate = $(this).find('.cb-create').is(':checked');
+            const canEdit = $(this).find('.cb-edit').is(':checked');
+            const canDelete = $(this).find('.cb-delete').is(':checked');
+
+            permissions.push({
+                page_key: pkey,
+                can_view: canView,
+                can_create: canCreate,
+                can_edit: canEdit,
+                can_delete: canDelete
+            });
+        });
+
+        const branches = [];
+        $('.branch-cb:checked').each(function() {
+            branches.push($(this).val());
+        });
+
+        const saveBtn = $(this);
+        const origHtml = saveBtn.html();
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+        $.ajax({
+            url: '/SMS/user_control/api/save_permissions/',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            },
+            data: JSON.stringify({
+                user_id: currentUserId,
+                permissions: permissions,
+                branches: branches
+            }),
+            success: function(resp) {
+                saveBtn.prop('disabled', false).html(origHtml);
+                if (resp.status === 'success') {
+                    showToast(resp.message || 'Permissions saved successfully!', true);
+                } else {
+                    showToast(resp.message || 'Error saving permissions', false);
+                }
+            },
+            error: function(xhr) {
+                saveBtn.prop('disabled', false).html(origHtml);
+                const errMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error while saving permissions.';
+                showToast(errMsg, false);
+            }
+        });
+    });
+
+    // Initial calculation of master checkboxes
+    refreshAllMasterCheckboxes();
+    detectAndSetAccessType();
+});
+</script>
+{% endblock extra_js %}
