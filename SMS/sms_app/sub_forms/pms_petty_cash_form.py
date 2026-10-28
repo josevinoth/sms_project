@@ -50,7 +50,7 @@ class PMSPettyCashForm(forms.ModelForm):
             )
 
         if 'ppc_vehicle_number' in self.fields:
-            self.fields['ppc_vehicle_number'].queryset = PMSVehicleInfo.objects.filter(is_active=True).order_by('vehicle_number')
+            self.fields['ppc_vehicle_number'].queryset = PMSVehicleInfo.objects.filter(pc_is_active=True).order_by('pc_vehicle_no')
             self.fields['ppc_vehicle_number'].empty_label = "--Select Vehicle No--"
 
         # Add select2 class to dropdown fields

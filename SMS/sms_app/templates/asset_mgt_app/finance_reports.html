@@ -1,290 +1,417 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Finance Reports{% endblock %}
 {% block content %}
 
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-chart-line text-white" style="font-size: 1.35rem;"></i>
+            <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                {% if section == 'wms' %}
+                    WMS Finance Reports
+                {% elif section == 'tms' %}
+                    TMS Finance Reports
+                {% else %}
+                    Finance Management Reports
+                {% endif %}
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Modern Tab Pill Toggle ══ -->
+    <div class="d-flex justify-content-center mb-4">
+        <div class="modern-tab-toggle p-1 d-inline-flex shadow-sm">
+            <a href="{% url 'finance_reports' %}?section=all" class="tab-pill {% if section == 'all' %}active-all{% endif %}">
+                <i class="fas fa-layer-group mr-1"></i> All Reports
+            </a>
+            <a href="{% url 'finance_reports' %}?section=wms" class="tab-pill {% if section == 'wms' %}active-wms{% endif %}">
+                <i class="fas fa-warehouse mr-1"></i> WMS Reports
+            </a>
+            <a href="{% url 'finance_reports' %}?section=tms" class="tab-pill {% if section == 'tms' %}active-tms{% endif %}">
+                <i class="fas fa-truck mr-1"></i> TMS Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ WMS SECTION ══ -->
+    {% if section == 'all' or section == 'wms' %}
+    <div class="report-section mb-4">
+        <div class="d-flex align-items-center mb-3" style="gap: 10px;">
+            <div class="section-badge wms-badge">
+                <i class="fas fa-warehouse mr-1"></i> WMS Reports
+            </div>
+            <div class="section-line flex-grow-1"></div>
+        </div>
+
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+            <!-- Branch Wise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'branch_profit_loss' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-arrows-alt"></i>
+                        </div>
+                        <div class="card-title-modern">Branch Wise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Unit Wise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'branch_unit_profit_loss' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="card-title-modern">Unit Wise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Business Model P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'businessmodel_PL' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="card-title-modern">Business Model P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Customer Wise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'customerwise_PL' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="card-title-modern">Customer Wise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Revenue Report -->
+            <div class="col mb-3">
+                <a href="{% url 'revenue_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="card-title-modern">Revenue Report</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Expense Report -->
+            <div class="col mb-3">
+                <a href="{% url 'expenses_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="card-title-modern">Expense Report</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Unbilled Revenue -->
+            <div class="col mb-3">
+                <a href="{% url 'overdue_jobs_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-title-modern">Unbilled Revenue</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Warehouse MIS -->
+            <div class="col mb-3">
+                <a href="{% url 'fin_mis_warehouse' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern wms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="card-title-modern">Warehouse MIS</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ TMS SECTION ══ -->
+    {% if section == 'all' or section == 'tms' %}
+    <div class="report-section mb-4">
+        <div class="d-flex align-items-center mb-3" style="gap: 10px;">
+            <div class="section-badge tms-badge">
+                <i class="fas fa-truck mr-1"></i> TMS Reports
+            </div>
+            <div class="section-line flex-grow-1"></div>
+        </div>
+
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+            <!-- Movementwise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'movementwise_pl_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="card-title-modern">Movementwise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Branch Wise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'location_pl_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-map-pin"></i>
+                        </div>
+                        <div class="card-title-modern">Branch Wise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Customer Wise P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'customerwise_pl_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-title-modern">Customer Wise P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Own P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'own_vehicle_pl_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-truck-moving"></i>
+                        </div>
+                        <div class="card-title-modern">Own P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Attached P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'vendor_p_l_attached_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="card-title-modern">Attached P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Market P/L -->
+            <div class="col mb-3">
+                <a href="{% url 'vendor_p_l_mkt_report' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="card-title-modern">Market P/L</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Transport MIS -->
+            <div class="col mb-3">
+                <a href="{% url 'transport_mis' %}" class="report-card-link text-decoration-none">
+                    <div class="report-card-modern tms-card-modern h-100">
+                        <div class="card-icon-wrapper">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="card-title-modern">Transport MIS</div>
+                        <div class="card-action-hint">View Report <i class="fas fa-chevron-right ml-1"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
 <style>
-    .report-section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        padding: 6px 18px;
-        border-radius: 20px;
-        display: inline-block;
-        margin-bottom: 18px;
+    /* Tab Pill Bar */
+    .modern-tab-toggle {
+        background: var(--bg-hover, #f1f5f9);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 30px;
+        gap: 6px;
     }
-    .wms-title {
-        background: #1565c0;
-        color: #fff;
-    }
-    .tms-title {
-        background: #2e7d32;
-        color: #fff;
-    }
-    .report-card {
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-        transition: transform 0.15s, box-shadow 0.15s;
-        cursor: pointer;
-        height: 100%;
-    }
-    .report-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.16);
-    }
-    .report-card .card-header {
-        font-size: 0.82rem;
-        font-weight: 600;
-        border-radius: 10px 10px 0 0 !important;
-        padding: 8px 6px;
-        text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .report-card .card-body {
-        padding: 10px 6px;
-        text-align: center;
-    }
-    .report-card .card-body h2 {
-        margin: 0;
-    }
-    .wms-card .card-header { background: #e3f0ff; color: #1565c0; }
-    .wms-card .card-body i { color: #1565c0; }
-    .tms-card .card-header { background: #e8f5e9; color: #2e7d32; }
-    .tms-card .card-body i { color: #2e7d32; }
-    hr.section-divider {
-        border: 0;
-        border-top: 2px dashed #ccc;
-        margin: 18px 0 22px 0;
-    }
-    .tab-toggle {
-        display: inline-flex;
-        background: #f0f0f0;
-        border-radius: 25px;
-        padding: 4px;
-        gap: 4px;
-        margin-bottom: 20px;
-    }
-    .tab-toggle a {
-        padding: 6px 20px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+    .tab-pill {
+        padding: 7px 22px;
+        border-radius: 24px;
+        font-size: 0.88rem;
         font-weight: 600;
         text-decoration: none;
-        color: #555;
-        transition: all 0.2s;
+        color: var(--text-secondary, #64748b);
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
     }
-    .tab-toggle a.active-wms {
-        background: #1565c0;
-        color: #fff;
+    .tab-pill:hover {
+        color: var(--text-main, #1e293b);
+        text-decoration: none;
     }
-    .tab-toggle a.active-tms {
-        background: #2e7d32;
-        color: #fff;
+    .tab-pill.active-all {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.25);
     }
-    .tab-toggle a.active-all {
-        background: #444;
-        color: #fff;
+    .tab-pill.active-wms {
+        background: linear-gradient(135deg, #0284c7, #0369a1);
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
+    }
+    .tab-pill.active-tms {
+        background: linear-gradient(135deg, #059669, #047857);
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25);
+    }
+
+    /* Section Badges & Line */
+    .section-badge {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .wms-badge {
+        background: rgba(2, 132, 199, 0.12);
+        color: #0284c7;
+        border: 1px solid rgba(2, 132, 199, 0.25);
+    }
+    .tms-badge {
+        background: rgba(5, 150, 105, 0.12);
+        color: #059669;
+        border: 1px solid rgba(5, 150, 105, 0.25);
+    }
+    .section-line {
+        height: 1px;
+        background: var(--border-light, #e2e8f0);
+    }
+
+    /* Report Card Modern */
+    .report-card-modern {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 14px;
+        padding: 1.25rem 0.85rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .report-card-link:hover .report-card-modern {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    }
+    .wms-card-modern .card-icon-wrapper {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(2, 132, 199, 0.1);
+        color: #0284c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 0.85rem;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .report-card-link:hover .wms-card-modern {
+        border-color: #0284c7;
+    }
+    .report-card-link:hover .wms-card-modern .card-icon-wrapper {
+        background: #0284c7;
+        color: #ffffff;
+    }
+
+    .tms-card-modern .card-icon-wrapper {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(5, 150, 105, 0.1);
+        color: #059669;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 0.85rem;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .report-card-link:hover .tms-card-modern {
+        border-color: #059669;
+    }
+    .report-card-link:hover .tms-card-modern .card-icon-wrapper {
+        background: #059669;
+        color: #ffffff;
+    }
+
+    .card-title-modern {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-main, #1e293b);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+        min-height: 2.3em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-action-hint {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary, #94a3b8);
+        display: flex;
+        align-items: center;
+        transition: color 0.2s ease;
+    }
+    .report-card-link:hover .wms-card-modern .card-action-hint {
+        color: #0284c7;
+    }
+    .report-card-link:hover .tms-card-modern .card-action-hint {
+        color: #059669;
     }
 </style>
-
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        {% if section == 'wms' %}
-            <h3><i class="fas fa-warehouse mr-2"></i>WMS Reports</h3>
-        {% elif section == 'tms' %}
-            <h3><i class="fas fa-truck mr-2"></i>TMS Reports</h3>
-        {% else %}
-            <h3>Finance Reports</h3>
-        {% endif %}
-    </div>
-</div>
-<br>
-
-<div class="container-fluid px-4">
-
-    <!-- Tab Toggle -->
-    <div class="text-center">
-        <div class="tab-toggle">
-            <a href="{% url 'finance_reports' %}?section=all" class="{% if section == 'all' %}active-all{% endif %}">All</a>
-            <a href="{% url 'finance_reports' %}?section=wms" class="{% if section == 'wms' %}active-wms{% endif %}"><i class="fas fa-warehouse mr-1"></i> WMS</a>
-            <a href="{% url 'finance_reports' %}?section=tms" class="{% if section == 'tms' %}active-tms{% endif %}"><i class="fas fa-truck mr-1"></i> TMS</a>
-        </div>
-    </div>
-
-    <!-- ===== WMS SECTION ===== -->
-    {% if section == 'all' or section == 'wms' %}
-    <div id="wms" class="text-center">
-        <span class="report-section-title wms-title"><i class="fas fa-warehouse mr-2"></i>WMS Reports</span>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Branch Wise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'branch_profit_loss' %}">
-                        <i class="fas fa-arrows-alt"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Unit Wise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'branch_unit_profit_loss' %}">
-                        <i class="fas fa-user-secret"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Business Model P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'businessmodel_PL' %}">
-                        <i class="fas fa-tags"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Customer Wise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'customerwise_PL' %}">
-                        <i class="fas fa-map-marker-alt"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Revenue Report</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'revenue_report' %}">
-                        <i class="fas fa-rupee-sign"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Expense Report</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'expenses_report' %}">
-                        <i class="fas fa-wallet"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Unbilled Revenue</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'overdue_jobs_report' %}">
-                        <i class="fas fa-clock"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card wms-card text-center">
-                <div class="card-header">Warehouse MIS</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'fin_mis_warehouse' %}">
-                        <i class="fas fa-chart-bar"></i></a></h2>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if section == 'all' %}
-    <hr class="section-divider">
-    {% endif %}
-
-    <!-- ===== TMS SECTION ===== -->
-    {% if section == 'all' or section == 'tms' %}
-    <div id="tms" class="text-center">
-        <span class="report-section-title tms-title"><i class="fas fa-truck mr-2"></i>TMS Reports</span>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Movementwise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'movementwise_pl_report' %}">
-                        <i class="fas fa-exchange-alt"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Branch Wise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'location_pl_report' %}">
-                        <i class="fas fa-map-pin"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Customer Wise P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'customerwise_pl_report' %}">
-                        <i class="fas fa-users"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Own P/L</div>
-                <div class="card-body">
-                    <h2><a href="{% url 'own_vehicle_pl_report' %}">
-                        <i class="fas fa-truck-moving"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Attached P/L </div>
-                <div class="card-body">
-                    <h2><a href="{% url 'vendor_p_l_attached_report' %}">
-                        <i class="fas fa-handshake"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header"> Market P/L </div>
-                <div class="card-body">
-                    <h2><a href="{% url 'vendor_p_l_mkt_report' %}">
-                        <i class="fas fa-store"></i></a></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-2 mb-3">
-            <div class="card report-card tms-card text-center">
-                <div class="card-header">Transport MIS </div>
-                <div class="card-body">
-                    <h2><a href="{% url 'transport_mis' %}">
-                        <i class="fas fa-file-alt"></i></a></h2>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-</div>
 
 {% endblock content %}

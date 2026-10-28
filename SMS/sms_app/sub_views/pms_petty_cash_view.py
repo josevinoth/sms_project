@@ -478,7 +478,7 @@ def pms_petty_cash_export_tally(request):
         # Lookup vehicle number if available from Gatein or Goods
         veh_no = "N/A(V)"
         if getattr(wpc, "ppc_vehicle_number", None):
-            veh_no = wpc.ppc_vehicle_number.vehicle_number
+            veh_no = wpc.ppc_vehicle_number.pc_vehicle_no
         elif job_no:
             gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
             if gatein and gatein.gatein_truck_number:
@@ -511,22 +511,24 @@ def add_pms_vehicle(request):
         if not vehicle_num:
             return JsonResponse({"success": False, "error": "Vehicle number cannot be empty."})
 
-        existing = PMSVehicleInfo.objects.filter(vehicle_number__iexact=vehicle_num).first()
+        existing = PMSVehicleInfo.objects.filter(pc_vehicle_no__iexact=vehicle_num).first()
         if existing:
-            if not existing.is_active:
+            if not existing.pc_is_active:
                 existing.is_active = True
                 existing.save()
             return JsonResponse({
                 "success": True,
                 "id": existing.id,
-                "vehicle_number": existing.vehicle_number,
+                "vehicle_number": existing.pc_vehicle_no,
+                "pc_vehicle_no": existing.pc_vehicle_no,
                 "message": "Vehicle already exists."
             })
 
-        new_veh = PMSVehicleInfo.objects.create(vehicle_number=vehicle_num)
+        new_veh = PMSVehicleInfo.objects.create(pc_vehicle_no=vehicle_num)
         return JsonResponse({
             "success": True,
             "id": new_veh.id,
-            "vehicle_number": new_veh.vehicle_number
+            "vehicle_number": new_veh.pc_vehicle_no,
+            "pc_vehicle_no": new_veh.pc_vehicle_no
         })
     return JsonResponse({"success": False, "error": "Invalid request method."})

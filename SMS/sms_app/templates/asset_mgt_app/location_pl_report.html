@@ -1,141 +1,159 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% load static %}
+{% block title %}Branch Wise P&L Report{% endblock %}
 {% block content %}
 
-<!-- Select2 Bootstrap 4 Theme -->
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet">
-
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Branch Wise P&L Report</h3>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-map-pin text-white" style="font-size: 1.35rem;"></i>
+            <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                Branch Wise P&L Report (TMS)
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'finance_reports' %}?section=tms" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="d-flex justify-content-start ms-4 mt-2 mb-3 px-5">
-    <a href="{% url 'finance_reports' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
-
-<div class="container-fluid px-5">
-    <div class="card shadow-box-table">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end justify-content-center mb-4">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Branch Filter</label>
-                    <select id="branch" name="branch" class="form-control select2">
-                        <option value="">All Branches</option>
-                        {% for b in all_branches %}
-                            <option value="{{ b.id }}" {% if branch_id == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">From Date</label>
-                    <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">To Date</label>
-                    <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success font-weight-bold px-4">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-        <a href="{{ request.path }}" class="btn btn-secondary px-4">Clear</a>
-                </div>
-            </form>
-            
-            <hr>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped text-center align-middle" style="width: 100%;">
-                    <tbody>
-                        <tr class="bg-dark text-white">
-                            <td colspan="2"><h5 class="mb-0 font-weight-bold">Performance Summary: {{ branch_name|default:"All Branches" }}</h5></td>
-                        </tr>
-                        <tr class="thead-dark text-white">
-                            <td colspan="2"><h6 class="mb-0">Revenue (Vehicle Source wise)</h6></td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Own Vehicle Revenue</td>
-                            <td class="text-primary font-weight-bold">{{ own_rev }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Attached Vehicle Revenue</td>
-                            <td class="text-primary font-weight-bold">{{ att_rev }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Market Vehicle Revenue</td>
-                            <td class="text-primary font-weight-bold">{{ mkt_rev }}</td>
-                        </tr>
-                        <tr style="background-color: #e9ecef;">
-                            <td class="font-weight-bold text-right">Total Revenue:</td>
-                            <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_revenue }}</td>
-                        </tr>
-
-                        <tr class="thead-dark text-white">
-                            <td colspan="2"><h6 class="mb-0">Operational Expenses</h6></td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Own Operational Expenses</td>
-                            <td class="text-danger">{{ own_op_exp }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Attached Operational Expenses</td>
-                            <td class="text-danger">{{ att_op_exp }}</td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Market Operational Expenses</td>
-                            <td class="text-danger">{{ mkt_op_exp }}</td>
-                        </tr>
-                        <tr style="background-color: #e9ecef;">
-                            <td class="font-weight-bold text-right">Total Operational Expenses:</td>
-                            <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_op_exp }}</td>
-                        </tr>
-
-                        <tr class="bg-light">
-                            <td class="font-weight-bold text-uppercase" style="letter-spacing: 1px;">Gross Profit</td>
-                            <td class="font-weight-bold text-success" style="font-size: 1.1rem;">{{ gross_profit }}</td>
-                        </tr>
-                        <tr class="bg-light">
-                            <td class="font-weight-bold text-uppercase" style="letter-spacing: 1px;">Gross Profit %</td>
-                            <td class="font-weight-bold {% if gross_profit_pct > 0 %}text-success{% else %}text-danger{% endif %}">{{ gross_profit_pct|floatformat:2 }} %</td>
-                        </tr>
-
-                        <tr class="thead-dark text-white">
-                            <td colspan="2"><h6 class="mb-0">Non-Operational Expenses (Own Vehicles)</h6></td>
-                        </tr>
-                        <tr>
-                            <td class="font-weight-bold">Total Non-Op Exp (Prorated)</td>
-                            <td class="text-secondary">{{ non_op_exp }}</td>
-                        </tr>
-
-                        <tr class="bg-primary text-white">
-                            <td class="font-weight-bold text-uppercase h5 mb-0">Net Profit</td>
-                            <td class="font-weight-bold h5 mb-0">{{ net_profit }}</td>
-                        </tr>
-                        <tr class="bg-primary text-white">
-                            <td class="font-weight-bold text-uppercase h6 mb-0">Net Profit %</td>
-                            <td class="font-weight-bold h6 mb-0">{{ net_profit_pct|floatformat:2 }} %</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- ══ Filter Form ══ -->
+    <div class="modern-card p-3 mb-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <label class="form-label-modern font-weight-bold">Branch Filter</label>
+                <select id="branch" name="branch" class="form-control form-control-modern select2">
+                    <option value="">All Branches</option>
+                    {% for b in all_branches %}
+                        <option value="{{ b.id }}" {% if branch_id == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            <div class="col-12 col-md-3 mb-2 mb-md-0">
+                <label class="form-label-modern font-weight-bold">From Date</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-modern">
+            </div>
+            <div class="col-12 col-md-3 mb-2 mb-md-0">
+                <label class="form-label-modern font-weight-bold">To Date</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-modern">
+            </div>
+            <div class="col-12 col-md-2 d-flex align-items-center" style="gap: 8px;">
+                <button type="submit" class="btn-modern btn-submit py-1 px-3 flex-grow-1" style="height: 36px;">
+                    <i class="fas fa-filter mr-1"></i> Filter
+                </button>
+                <a href="{{ request.path }}" class="btn-modern btn-cancel py-1 px-3 text-decoration-none" title="Reset Filters" style="height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-undo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Summary Card Table ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="form-section-title mb-3">
+            <i class="fas fa-chart-pie text-primary mr-1"></i> Performance Summary: {{ branch_name|default:"All Branches" }}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped modern-table align-middle w-100" style="max-width: 900px; margin: 0 auto;">
+                <tbody>
+                    <tr class="thead-dark text-white">
+                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-money-bill-wave mr-1"></i> Revenue (Vehicle Source wise)</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold" style="width: 60%;">Own Vehicle Revenue</td>
+                        <td class="text-right text-primary font-weight-bold">{{ own_rev }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Attached Vehicle Revenue</td>
+                        <td class="text-right text-primary font-weight-bold">{{ att_rev }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Market Vehicle Revenue</td>
+                        <td class="text-right text-primary font-weight-bold">{{ mkt_rev }}</td>
+                    </tr>
+                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                        <td class="font-weight-bold text-right">Total Revenue:</td>
+                        <td class="font-weight-bold text-right" style="font-size: 1.15rem; color: #0284c7;">{{ total_revenue }}</td>
+                    </tr>
+
+                    <tr class="thead-dark text-white">
+                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-receipt mr-1"></i> Operational Expenses</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Own Operational Expenses</td>
+                        <td class="text-right text-danger font-weight-bold">{{ own_op_exp }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Attached Operational Expenses</td>
+                        <td class="text-right text-danger font-weight-bold">{{ att_op_exp }}</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Market Operational Expenses</td>
+                        <td class="text-right text-danger font-weight-bold">{{ mkt_op_exp }}</td>
+                    </tr>
+                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                        <td class="font-weight-bold text-right">Total Operational Expenses:</td>
+                        <td class="font-weight-bold text-right text-danger" style="font-size: 1.15rem;">{{ total_op_exp }}</td>
+                    </tr>
+
+                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">Gross Profit</td>
+                        <td class="text-right font-weight-bold text-success" style="font-size: 1.1rem;">{{ gross_profit }}</td>
+                    </tr>
+                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">Gross Profit %</td>
+                        <td class="text-right font-weight-bold {% if gross_profit_pct > 0 %}text-success{% else %}text-danger{% endif %}">{{ gross_profit_pct|floatformat:2 }} %</td>
+                    </tr>
+
+                    <tr class="thead-dark text-white">
+                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-tools mr-1"></i> Non-Operational Expenses (Own Vehicles)</td>
+                    </tr>
+                    <tr>
+                        <td class="font-weight-bold">Total Non-Op Exp (Prorated)</td>
+                        <td class="text-right text-secondary font-weight-bold">{{ non_op_exp }}</td>
+                    </tr>
+
+                    <tr style="background: linear-gradient(135deg, #1e293b, #334155); color: #ffffff;">
+                        <td class="font-weight-bold text-uppercase h6 mb-0 text-white py-2">Net Profit</td>
+                        <td class="text-right font-weight-bold h6 mb-0 text-white py-2">{{ net_profit }}</td>
+                    </tr>
+                    <tr style="background: linear-gradient(135deg, #1e293b, #334155); color: #ffffff;">
+                        <td class="font-weight-bold text-uppercase text-white py-2">Net Profit %</td>
+                        <td class="text-right font-weight-bold text-white py-2">{{ net_profit_pct|floatformat:2 }} %</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
+<style>
+    .form-label-modern {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+    }
+    .form-control-modern {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        font-size: 0.85rem !important;
+    }
+</style>
+
 <script>
     $(document).ready(function () {
-        $('#branch').select2({
-            width: '100%',
-            theme: 'bootstrap4',
-            placeholder: 'Search Branch...',
-            allowClear: true
-        });
+        if ($.fn.select2) {
+            $('#branch').select2({
+                width: '100%',
+                placeholder: 'All Branches',
+                allowClear: true
+            });
+        }
     });
 </script>
 
 {% endblock content %}
-

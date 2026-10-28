@@ -1,115 +1,140 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block title %}Expenses Report{% if company_filter %} - {{ company_filter }}{% endif %}{% endblock %}
 {% load widget_tweaks %}
 {% block content %}
 {% load currency_format %}
 {% load crispy_forms_tags %}
 
-<body>
-<div class="container-fluid d-flex align-items-center justify-content-between py-3">
-    <div>
-        <a href="{% url 'finance_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="flex-grow-1 d-flex justify-content-center">
-        <div class="rounded text-center bg-info shadow-box px-4 py-2">
-            <h3>Expenses Report</h3>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-wallet text-white" style="font-size: 1.35rem;"></i>
+            <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                Expenses Report
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'finance_reports' %}?section=wms" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+            </a>
         </div>
     </div>
-    <div style="width: 80px;"></div>
-</div>
-<br>
-<div class="container-fluid">
-    <div class="row align-items-center">
 
-        <div class="col-md-2">
-            <label for="branch-filter"><b>Branch:</b></label>
-            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for branch in branches %}
-                <option value="{{ branch.loc_name }}" {% if branch.loc_name == branch_filter %} selected {% endif %}>
-                    {{ branch.loc_name }}
-                </option>
-                {% endfor %}
-            </select>
+    <!-- ══ Filter Form ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="row align-items-end g-3">
+            <div class="col-12 col-md-3 mb-2 mb-md-0">
+                <label for="branch-filter" class="form-label-modern font-weight-bold">Branch</label>
+                <select id="branch-filter" name="branch" class="form-control form-control-modern select2">
+                    <option value="">All Branches</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.loc_name }}" {% if branch.loc_name == branch_filter %} selected {% endif %}>
+                        {{ branch.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="unit-filter" class="form-label-modern font-weight-bold">Unit</label>
+                <select id="unit-filter" name="unit" class="form-control form-control-modern select2">
+                    <option value="">All Units</option>
+                    {% for unit in units %}
+                    <option value="{{ unit }}" {% if unit == unit_filter %} selected {% endif %}>
+                        {{ unit }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="company-filter" class="form-label-modern font-weight-bold">Company Name</label>
+                <select id="company-filter" name="company" class="form-control form-control-modern select2">
+                    <option value="">All Companies</option>
+                    {% for company in companies %}
+                    <option value="{{ company }}" {% if company == company_filter %} selected {% endif %}>
+                        {{ company }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="from-date" class="form-label-modern font-weight-bold">From Date</label>
+                <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control form-control-modern">
+            </div>
+
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="to-date" class="form-label-modern font-weight-bold">To Date</label>
+                <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control form-control-modern">
+            </div>
+
+            <div class="col-12 col-md-1 d-flex align-items-center" style="gap: 6px;">
+                <button type="button" onclick="updateFilters()" class="btn-modern btn-submit py-1 px-2 flex-grow-1" style="height: 36px;" title="Apply Filter">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <a href="{% url 'expenses_report' %}" class="btn-modern btn-cancel py-1 px-2 text-decoration-none" title="Reset Filters" style="height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-undo"></i>
+                </a>
+            </div>
         </div>
+    </div>
 
-        <div class="col-md-2">
-            <label for="unit-filter"><b>Unit:</b></label>
-            <select id="unit-filter" name="unit" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for unit in units %}
-                <option value="{{ unit }}" {% if unit == unit_filter %} selected {% endif %}>
-                    {{ unit }}
-                </option>
-                {% endfor %}
-            </select>
+    <!-- ══ Chart Section ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="form-section-title mb-2">
+            <i class="fas fa-chart-bar text-primary mr-1"></i> Total Expenses Overview
         </div>
-
-        <div class="col-md-2">
-            <label for="company-filter"><b>Company Name:</b></label>
-            <select id="company-filter" name="company" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for company in companies %}
-                <option value="{{ company }}" {% if company == company_filter %} selected {% endif %}>
-                    {{ company }}
-                </option>
-                {% endfor %}
-            </select>
+        <div style="height: 400px; width: 100%; overflow-y: auto;">
+            <canvas id="expensesChart" style="width: 100%;"></canvas>
         </div>
+    </div>
 
-        <div class="col-md-2">
-            <label for="from-date"><b>From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+    <!-- ══ Data Table ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="fin_expenses_table" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th style="width: 60px;">Sr No.</th>
+                        <th>Branch</th>
+                        <th>Unit</th>
+                        <th>Month</th>
+                        <th>Expense Type</th>
+                        <th class="text-right">Total Expense Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in expense_summary %}
+                    <tr>
+                        <td class="align-middle text-muted">{{ forloop.counter }}</td>
+                        <td class="align-middle font-weight-bold text-primary">{{ row.exp_ext_branch__loc_name }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ row.exp_ext_unit__unit_name }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ row.month_start|date:"F Y" }}</td>
+                        <td class="align-middle">{{ row.expense_type }}</td>
+                        <td class="align-middle text-right font-weight-bold text-danger">{{ row.total_expense|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <div class="col-md-3">
-            <label for="to-date"><b>To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
-        </div>
-
     </div>
 </div>
-<br>
 
-
-<div class="container-fluid shadow-box-table p-3">
-    <table id="fin_expenses_table" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th>Sr No.</th>
-<!--            <th>Company</th>-->
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Month</th>
-            <th>Expense Type</th>
-            <th>Total Expense Amount</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for row in expense_summary %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-<!--            <td>{{ row.exp_ext_expense_number__exp_business__bvm_business }}</td>-->
-            <td>{{ row.exp_ext_branch__loc_name }}</td>
-            <td>{{ row.exp_ext_unit__unit_name }}</td>
-            <td>{{ row.month_start|date:"F Y" }}</td>
-
-            <td>{{ row.expense_type }}</td>
-            <td>{{ row.total_expense|floatformat:2 }}</td>
-        </tr>
-
-
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-<br>
-
-<div style="height:400px; width=100%; overflow-y:auto;">
-    <canvas id="expensesChart" class="bg-white box-shadow rounded" style="width:100%;"></canvas>
-</div>
+<style>
+    .form-label-modern {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+    }
+    .form-control-modern {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        font-size: 0.85rem !important;
+    }
+</style>
 
 <script>
     const chartLabels = JSON.parse('{{ chart_labels|safe|escapejs }}');
@@ -117,107 +142,112 @@
 
     const barHeight = 40;
     const canvas = document.getElementById('expensesChart');
-    canvas.height = chartLabels.length * barHeight;
+    if (canvas && chartLabels.length > 0) {
+        canvas.height = chartLabels.length * barHeight;
 
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Total Expenses (INR)',
-                data: chartData,
-                backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-                barThickness: 20,
-            }]
-        },
-        options: {
-             responsive: false,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            plugins: {
-                datalabels: {
-                    anchor: 'start',
-                    align: 'end',
-                    offset: -30,
-                    color: '#000',
-                    backgroundColor: 'rgba(235, 233, 234, 0.8)',
-                    borderRadius: 4,
-                    font: { size: 12 },
-                    formatter: value => value.toFixed(2) + ' L'
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Total Expenses (Lakhs INR)',
+                    data: chartData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1,
+                    barThickness: 20,
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        anchor: 'start',
+                        align: 'end',
+                        offset: -30,
+                        color: '#000',
+                        backgroundColor: 'rgba(235, 233, 234, 0.8)',
+                        borderRadius: 4,
+                        font: { size: 12 },
+                        formatter: value => value.toFixed(2) + ' L'
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true }
                 }
             },
-            scales: {
-                x: { beginAtZero: true }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-</script>
+            plugins: [ChartDataLabels]
+        });
+    }
 
-<script>
     // Initialize DataTable
     $(document).ready(function() {
         $('#fin_expenses_table').DataTable({
-            scrollY: "600px",
+            scrollY: "500px",
+            scrollX: true,
             scrollCollapse: true,
-            order: [1, 'desc'],
+            order: [[3, 'desc']],
             dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]]
         });
+
+        if ($.fn.select2) {
+            $('#branch-filter, #unit-filter, #company-filter').select2({
+                width: '100%'
+            });
+        }
     });
 
     document.getElementById('branch-filter').addEventListener('change', updateFilters);
     document.getElementById('unit-filter').addEventListener('change', updateFilters);
-document.getElementById('company-filter').addEventListener('change', updateFilters);
-document.getElementById('from-date').addEventListener('change', updateFilters);
-document.getElementById('to-date').addEventListener('change', updateFilters);
+    document.getElementById('company-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
 
-function updateFilters() {
-    const branch = document.getElementById('branch-filter').value;
-    const unit = document.getElementById('unit-filter').value;
-    const company = document.getElementById('company-filter').value;
-    const fromDate = document.getElementById('from-date').value;
-    const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.href);
+    function updateFilters() {
+        const branch = document.getElementById('branch-filter').value;
+        const unit = document.getElementById('unit-filter').value;
+        const company = document.getElementById('company-filter').value;
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const url = new URL(window.location.href);
 
-    if (branch) {
-        url.searchParams.set('branch', branch);
-    } else {
-        url.searchParams.delete('branch');
+        if (branch) {
+            url.searchParams.set('branch', branch);
+        } else {
+            url.searchParams.delete('branch');
+        }
+
+        if (unit) {
+            url.searchParams.set('unit', unit);
+        } else {
+            url.searchParams.delete('unit');
+        }
+
+        if (company) {
+            url.searchParams.set('company', company);
+        } else {
+            url.searchParams.delete('company');
+        }
+
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+
+        window.location.href = url.toString();
     }
-
-    if (unit) {
-        url.searchParams.set('unit', unit);
-    } else {
-        url.searchParams.delete('unit');
-    }
-
-    if (company) {  // FIXED: Corrected variable name
-        url.searchParams.set('company', company);
-    } else {
-        url.searchParams.delete('company');
-    }
-
-    if (fromDate) {
-        url.searchParams.set('from_date', fromDate);
-    } else {
-        url.searchParams.delete('from_date');
-    }
-
-    if (toDate) {
-        url.searchParams.set('to_date', toDate);
-    } else {
-        url.searchParams.delete('to_date');
-    }
-
-    console.log(url.toString());
-    window.location.href = url.toString();
-}
-
 </script>
-
-
 {% endblock content %}

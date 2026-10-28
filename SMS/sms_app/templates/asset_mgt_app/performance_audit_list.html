@@ -1,92 +1,130 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Performance Audit List{% endblock %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Performance Audit List</h3>
+
+<div class="container-fluid py-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="modern-list-title d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-clipboard-check text-white"></i>
+            <h3 class="mb-0 text-white" style="font-size:1.35rem; font-weight:700; letter-spacing:0.5px;">Performance Audit List</h3>
         </div>
-        <div class="col-5"></div>
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a href="{% url 'performance_audit_add' %}" class="btn-modern btn-submit py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-plus mr-1"></i> Add
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 message text-center">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="performance_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <!-- Filter Row -->
+                    <tr class="filter-row">
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search ID"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Location"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Unit"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Date"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Audit Start Date"></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr style="white-space: nowrap;">
+                        <th>ID</th>
+                        <th>Location</th>
+                        <th>Unit</th>
+                        <th>Date</th>
+                        <th>Period of Audit Start Date</th>
+                        <th class="text-center" style="width: 50px;">Edit</th>
+                        <th class="text-center" style="width: 50px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for performance in performaudit_list %}
+                    <tr>
+                        <td class="align-middle font-weight-bold text-primary">{{ performance.id }}</td>
+                        <td class="align-middle">{{ performance.pa_branch|default:"-" }}</td>
+                        <td class="align-middle">{{ performance.pa_unit|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ performance.pa_date|date:"M. d, Y"|default:performance.pa_date }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ performance.pa_audit_start_date|date:"M. d, Y"|default:performance.pa_audit_start_date }}</td>
+                        <td class="align-middle text-center">
+                            <a class="btn-modern btn-highlight py-1 px-2 text-white" style="text-decoration:none; display:inline-flex;" href="{% url 'performance_audit_update' performance.id %}" title="Edit">
+                                <i class="far fa-edit text-white"></i>
+                            </a>
+                        </td>
+                        <td class="align-middle text-center">
+                            <form action="{% url 'performance_audit_delete' performance.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline-block; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-modern btn-cancel py-1 px-2" style="border:none; background:transparent;" title="Delete">
+                                    <i class="fas fa-trash-alt text-danger"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary opacity-50"></i>
+                            No performance audit records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-md-1">
-        <a href="{% url 'performance_audit_add' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-    <table id="performance_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Location"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Audit Start Date"></th>
-            <th></th>
-            <th></th>
-        </tr>
-        <tr>
-            <th>ID</th>
-            <th>Location</th>
-            <th>Unit</th>
-            <th>Date</th>
-            <th>Period of Audit Start Date</th>
-            <th>Edit</th>
-            <th>Delete</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for performance in performaudit_list %}
-        <tr>
-            <td> {{performance.id}}</td>
-            <td> {{performance.pa_branch}}</td>
-            <td> {{performance.pa_unit}}</td>
-            <td> {{performance.pa_date}}</td>
-            <td> {{performance.pa_audit_start_date}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'performance_audit_update' performance.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'performance_audit_delete' performance.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt" ></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+
+<style>
+    .filter-input {
+        min-width: 90px;
+        height: 30px !important;
+        font-size: 0.8rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+    }
+</style>
+
 <script>
     $(document).ready(function() {
         var table = $('#performance_list').DataTable({
             order: [[0, 'desc']],
-            scrollX: false,
+            scrollX: true,
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
-        });
-
-        // Apply search to each column
-        $('.filter-input').on('keyup change', function () {
-            var columnIndex = $(this).parent().index(); // Get correct column index
-            table.column(columnIndex).search(this.value).draw();
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            initComplete: function () {
+                $('.filter-row input').on('keyup change', function () {
+                    var columnIndex = $(this).parent().index();
+                    table.column(columnIndex).search(this.value).draw();
+                });
+            }
         });
 
         // Prevent sorting when clicking inside the filter input
-        $('#performance_list thead input').on('click', function(e) {
+        $('.filter-row input').on('click', function(e) {
             e.stopPropagation();
         });
     });

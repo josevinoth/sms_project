@@ -1,81 +1,82 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Transport MIS Report{% endblock %}
 {% load widget_tweaks %}
 {% block content %}
 {% load crispy_forms_tags %}
 {% load currency_format %}
 
-<div class="container-fluid d-flex align-items-center justify-content-between py-3">
-    <div>
-        <a href="{% url 'finance_reports' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="flex-grow-1 d-flex justify-content-center">
-        <div class="mis-title-banner">
-            <h3>Transport MIS Report</h3>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-file-alt text-white" style="font-size: 1.35rem;"></i>
+            <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                Transport MIS Report
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'finance_reports' %}?section=tms" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+            </a>
         </div>
     </div>
-    <div style="width: 80px;"></div>
-</div>
-<br>
 
-<div class="container-fluid">
-    <div class="row align-items-center">
-        <div class="col-md-2">
-            <label for="branch-filter"><b>Branch:</b></label>
-            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for branch in branches %}
-                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
-                    {{ branch.loc_name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+    <!-- ══ Filter Form ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="row align-items-end g-3">
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="branch-filter" class="form-label-modern font-weight-bold">Branch</label>
+                <select id="branch-filter" name="branch" class="form-control form-control-modern select2">
+                    <option value="">All Branches</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                        {{ branch.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="col-md-2">
-            <label for="year"><b>Year:</b></label>
-            <select name="year" id="year" class="form-control box-shadow rounded">
-                {% for year in years %}
-                <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="year" class="form-label-modern font-weight-bold">Year</label>
+                <select name="year" id="year" class="form-control form-control-modern select2">
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="col-md-2">
-            <label for="from-date"><b>From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
-        </div>
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="from-date" class="form-label-modern font-weight-bold">From Date</label>
+                <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control form-control-modern">
+            </div>
 
-        <div class="col-md-2">
-            <label for="to-date"><b>To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
-        </div>
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="to-date" class="form-label-modern font-weight-bold">To Date</label>
+                <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control form-control-modern">
+            </div>
 
-        <div class="col-md-2">
-            <label for="vehicle-source"><b>Vehicle Source:</b></label>
-            <select id="vehicle-source" name="vehicle_source" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for source in vehicle_sources %}
-                <option value="{{ source.ow_ownership }}" {% if source.ow_ownership == selected_vehicle_source %} selected {% endif %}>
-                    {{ source.ow_ownership }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="vehicle-source" class="form-label-modern font-weight-bold">Vehicle Source</label>
+                <select id="vehicle-source" name="vehicle_source" class="form-control form-control-modern select2">
+                    <option value="">All Sources</option>
+                    {% for source in vehicle_sources %}
+                    <option value="{{ source.ow_ownership }}" {% if source.ow_ownership == selected_vehicle_source %} selected {% endif %}>
+                        {{ source.ow_ownership }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="col-md-2 mt-4 d-flex">
-            <button onclick="updateFilters()" class="btn btn-primary w-100">
-                <i class="fas fa-search"></i> Search
-            </button>
-            <button onclick="clearFilters()" class="btn btn-secondary w-100 ml-2">
-                <i class="fas fa-redo"></i> Clear
-            </button>
+            <div class="col-12 col-md-2 d-flex align-items-center" style="gap: 8px;">
+                <button type="button" onclick="updateFilters()" class="btn-modern btn-submit py-1 px-3 flex-grow-1" style="height: 36px;">
+                    <i class="fas fa-filter mr-1"></i> Apply
+                </button>
+                <button type="button" onclick="clearFilters()" class="btn-modern btn-cancel py-1 px-3" title="Clear Filters" style="height: 36px;">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
-
-<br>
 <!-- Show Entries + Export Buttons (DataTables style) -->
 <div class="px-3 pb-2 d-flex align-items-center justify-content-between">
     <div class="d-flex align-items-center" style="gap: 6px;">
@@ -112,6 +113,19 @@
         background: #e9ecef;
         border-color: #aaa;
     }
+
+    .form-label-modern {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+    }
+    .form-control-modern {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        font-size: 0.85rem !important;
+    }
+
 </style>
 
 <div class="table-responsive p-3" style="overflow-x: auto;">
@@ -415,7 +429,20 @@
                 .total-expense-row td { background-color: #fce4d6 !important; font-weight: bold !important; color: #c00000 !important; -webkit-print-color-adjust: exact; }
                 .net-profit-row td { background-color: #ffff1a !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
                 .profit-percent-row td { background-color: #ccffcc !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
-            </style>`;
+            
+    .form-label-modern {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+    }
+    .form-control-modern {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        font-size: 0.85rem !important;
+    }
+
+</style>`;
         const html = '<html><head><title>Transport MIS Report</title>' + css + '</head><body>' +
                      '<h3 style="text-align:center;">Transport MIS Report</h3>' +
                      document.getElementById('mis-table').outerHTML + '</body></html>';
@@ -694,7 +721,21 @@
         padding: 5px 15px !important;
         margin-right: 5px !important;
     }
+
+    .form-label-modern {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 4px;
+    }
+    .form-control-modern {
+        height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        font-size: 0.85rem !important;
+    }
+
 </style>
 
 
+</div>
 {% endblock content %}

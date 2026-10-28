@@ -133,7 +133,7 @@
                         </td>
                         <td>{{ wpc.ppc_unit|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_job_no|default_if_none:"-" }}</td>
-                        <td>{{ wpc.ppc_vehicle_number.vehicle_number|default_if_none:"-" }}</td>
+                        <td>{{ wpc.ppc_vehicle_number.pc_vehicle_no|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_customer|default_if_none:"-" }}</td>
                         <td>{{ wpc.ppc_bill_no|default_if_none:"-" }}</td>
                         <td>₹{{ wpc.ppc_bill_amount|floatformat:2 }}</td>
