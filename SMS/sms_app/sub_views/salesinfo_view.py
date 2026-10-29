@@ -266,7 +266,7 @@ def sales_search(request):
         sales_list = sales_data_query.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('-s_created_at')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_list, 50)
+    paginator = Paginator(sales_list, 10000)
     page_obj = paginator.get_page(page_number)
     context = {
         # 'sales_list': sales_list,

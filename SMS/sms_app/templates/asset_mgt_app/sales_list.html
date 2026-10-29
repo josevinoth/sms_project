@@ -143,6 +143,7 @@
         </div>
 
         <!-- ══ Modern Pagination ══ -->
+        {% if page_obj.paginator.num_pages > 1 %}
         <div class="d-flex justify-content-between align-items-center flex-wrap mt-3 pt-3" style="border-top: 1px solid var(--border-light, #e2e8f0); gap: 10px;">
             <div class="text-muted font-weight-bold">
                 Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
@@ -161,6 +162,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -171,6 +173,7 @@
             scrollX: true,
             order: [[0, 'desc']],
             dom: 'lBfrtip',
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ]
