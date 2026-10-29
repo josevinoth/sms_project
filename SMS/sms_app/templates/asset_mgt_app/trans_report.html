@@ -1,11 +1,21 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Transport Reports{% endblock %}
 {% block content %}
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Transport Reports</h3>
+<div class="container-fluid py-3 px-2 px-md-5">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4 flex-wrap" style="background: var(--primary-glow, linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%)) !important; border-radius: 14px; padding: 0.65rem 1.25rem; gap: 12px; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);">
+        <div class="d-flex align-items-center" style="gap: 12px;">
+            <i class="fas fa-truck text-white" style="font-size: 1.35rem;"></i>
+            <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                Transport Reports
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn bg-white text-dark font-weight-bold px-3 py-1 shadow-sm" style="border-radius: 20px; font-size: 0.82rem; letter-spacing: 0.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
     </div>
-</div>
-<br>
 
 <style>
     .custom-card {
@@ -75,10 +85,24 @@
         top: 0; right: 0; bottom: 0; left: 0;
         z-index: 10;
     }
+
+    /* Dark Mode Compatibility */
+    [data-theme="dark"] .custom-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+
+    [data-theme="dark"] .custom-card-header {
+        color: #f1f5f9 !important;
+    }
+
+    [data-theme="dark"] .custom-badge {
+        background: #0f172a !important;
+        color: #38bdf8 !important;
+    }
 </style>
 
-<div class="container-fluid px-2 px-md-5">
-    <div class="row report-row">
+<div class="row report-row">
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card h-100 text-center custom-card">
                 <div class="card-header custom-card-header">DMR Report</div>
