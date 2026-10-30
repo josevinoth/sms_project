@@ -547,7 +547,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				if (data.reported_date && !$('#tr_departeddate_pickup').val()) {
 					$('#tr_departeddate_pickup').val(data.reported_date).trigger('change');
 				}
-				if (data.last_location_id) {
+				if (data.last_location_id && !info.is_mkt) {
 					$('#tr_departedlocation').val(data.last_location_id).trigger('change');
 				}
 			})
@@ -951,9 +951,8 @@ document.addEventListener("DOMContentLoaded", function () {
 						if (data.error) {
 							alert(data.error);
 						} else {
-							// ✅ Fill only if category is normal and From Location is not already set by vehicle
-							var hasFromLoc = Boolean($("#tr_departedlocation").val());
-							if (!g_locationLocked && !hasFromLoc) {
+							// ✅ Fill only if category is normal and From Location is not locked by vehicle continuity
+							if (!g_locationLocked && data.from_location_id) {
 								$("#tr_departedlocation").val(data.from_location_id).trigger('change');
 							}
 							$("#tr_reportedlocation").val(data.to_location_id).trigger('change');

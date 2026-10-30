@@ -6,21 +6,27 @@ from django.contrib.auth.models import User
 
 # List Assign Asset_new
 @login_required(login_url='login_page')
-def assign_asset_list_new(request,user_id=0):
+def assign_asset_list_new(request, user_id=0):
     first_name = request.session.get('first_name')
-    asset_user=User.objects.get(pk=user_id).first_name + " " + User.objects.get(pk=user_id).last_name
-    asset_user_id=User.objects.get(pk=user_id).id
+    target_user = User.objects.filter(pk=user_id).first()
+    if target_user:
+        full_name = f"{target_user.first_name} {target_user.last_name}".strip()
+        asset_user = full_name if full_name else target_user.username
+        asset_user_id = target_user.id
+    else:
+        asset_user = "Unknown User"
+        asset_user_id = user_id
+
     request.session['asset_user'] = asset_user
     request.session['asset_user_id'] = asset_user_id
-    print(asset_user)
-    print(asset_user_id)
+    assigned_assets = AssetInfo.objects.filter(asset_assignedto_id=asset_user_id)
     context = {
-                # 'asset_assign_list': Assign_asset_info.objects.all(),
-                'asset_list': AssetInfo.objects.filter(asset_assignedto_id=asset_user_id),
-                'first_name': first_name
-               }
-            # form = AssignassetaddForm(instance=user)
-        # return render(request, "asset_mgt_app/assign_asset_list.html", {'form': form,'first_name': first_name})
+        'asset_list': assigned_assets,
+        'first_name': first_name,
+        'target_user': target_user,
+        'asset_user': asset_user,
+        'total_assigned': assigned_assets.count(),
+    }
     return render(request, "asset_mgt_app/asset_list_view.html", context)
 
 # Add Assign Asset

@@ -1,107 +1,372 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block title %}User List | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       USER LIST - MODERN BVM STYLING
+       ══════════════════════════════════════════════════════════════════════════ */
+    .user-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .user-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+    }
+    .user-stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .user-stat-info h4 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+    .user-stat-info span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    /* Modern Table Cell Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .status-badge.active {
+        background: rgba(16, 185, 129, 0.12);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.12);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-badge.active .status-dot {
+        background-color: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    }
+    .status-badge.inactive .status-dot {
+        background-color: #ef4444;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Action Buttons in Table */
+    .btn-action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        border: none;
+    }
+    .btn-action-assign {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+    }
+    .btn-action-assign:hover {
+        background: #0284c7;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+    .btn-action-edit {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+    .btn-action-edit:hover {
+        background: #2563eb;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+    .btn-action-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    .btn-action-delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
+    /* Search Filters Row */
+    .filter-input {
+        min-width: 90px;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+    }
+    .filter-select {
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+    }
+
+    /* Table Typography & Alignment */
+    #employee_list tbody td {
+        font-weight: 700 !important;
+        color: #1e293b;
+        vertical-align: middle;
+    }
+    #employee_list tbody td a.email-link {
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    #employee_list tbody td a.email-link:hover {
+        color: #0284c7 !important;
+        text-decoration: underline;
+    }
+    #employee_list thead th {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .emp-id-badge {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-weight: 700;
+        color: #0284c7;
+        background: #f0f9ff;
+        padding: 3px 8px;
+        border-radius: 6px;
+        border: 1px solid #bae6fd;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>User List</h3>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fas fa-users-cog text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.3px;">User List</h3>
+                <span class="text-white-50 small">Manage system user credentials, employee IDs, active access, and asset assignments</span>
+            </div>
         </div>
-        <div class="col-5"></div>
+
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a href="{% url 'user_insert' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-user-plus mr-1"></i> Add User
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
+    <!-- ══ Quick Metrics KPI Cards ══ -->
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+            <div class="user-stat-card">
+                <div class="user-stat-icon" style="background: rgba(2, 132, 199, 0.1); color: #0284c7;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="user-stat-info">
+                    <h4>{{ user_list|length }}</h4>
+                    <span>Total Registered Users</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 mb-2 mb-md-0">
+            <div class="user-stat-card">
+                <div class="user-stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="user-stat-info">
+                    <h4>{{ active_users|default:0 }}</h4>
+                    <span>Active Accounts</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="user-stat-card">
+                <div class="user-stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #dc2626;">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <div class="user-stat-info">
+                    <h4>{{ inactive_users|default:0 }}</h4>
+                    <span>Inactive Accounts</span>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
-<hr>
 
-<div class="container-fluid">
-    <table id="employee_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <!-- Filter Input Row -->
-            <tr>
-                <th><input type="text" class="form-control filter-input" placeholder="Search  ID"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Employee ID"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search First Name"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Last Name"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Email"></th>
-                <th>
-
-                </th>
-                <th></th>
-                <th></th>
-            </tr>
-            <!-- Column Headers -->
-            <tr>
-                <th>ID</th>
-                <th>Employee ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Assets Assigned</th>
-                <th>Edit</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in user_list %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.first_name }}</td>
-                <td>{{ user.last_name }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.is_active }}</td>
-                <td>
-                    <a href="{% url 'assign_asset_list' user.id %}" class="">
-                        <i class="fas fa-drafting-compass"></i>
-                    </a>
-                </td>
-                <td>
-                    <a href="{% url 'user_update' user.id %}" class="btn btn-primary">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="employee_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <!-- Filter Input Row -->
+                    <tr class="filter-row">
+                        <th style="max-width: 60px;"><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="ID"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Emp ID"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search First Name"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Last Name"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Email"></th>
+                        <th>
+                            <select class="form-control form-control-modern filter-select">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </th>
+                        <th style="width: 100px;"></th>
+                        <th style="width: 90px;"></th>
+                    </tr>
+                    <!-- Column Headers -->
+                    <tr style="white-space: nowrap;">
+                        <th style="width: 60px;">ID</th>
+                        <th>Employee ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th class="text-center" style="width: 110px;">Status</th>
+                        <th class="text-center" style="width: 110px;">Assets Assigned</th>
+                        <th class="text-center" style="width: 90px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in user_list %}
+                    <tr>
+                        <td class="align-middle text-muted font-weight-bold">{{ user.id }}</td>
+                        <td class="align-middle">
+                            <span class="emp-id-badge">{{ user.username }}</span>
+                        </td>
+                        <td class="align-middle font-weight-bold text-dark">{{ user.first_name|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ user.last_name|default:"-" }}</td>
+                        <td class="align-middle">
+                            {% if user.email %}
+                            <a href="mailto:{{ user.email }}" class="email-link">
+                                <i class="far fa-envelope mr-1 text-primary"></i> {{ user.email }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted font-weight-bold">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle text-center">
+                            {% if user.is_active %}
+                            <span class="status-badge active">
+                                <span class="status-dot"></span> Active
+                            </span>
+                            {% else %}
+                            <span class="status-badge inactive">
+                                <span class="status-dot"></span> Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle text-center">
+                            <a href="{% url 'assign_asset_list' user.id %}" class="btn-action-icon btn-action-assign" title="View Assigned Assets">
+                                <i class="fas fa-boxes"></i>
+                            </a>
+                        </td>
+                        <td class="align-middle text-center" style="white-space: nowrap;">
+                            <a href="{% url 'user_update' user.id %}" class="btn-action-icon btn-action-edit mr-1" title="Edit User">
+                                <i class="fas fa-user-edit"></i>
+                            </a>
+                            <form action="{% url 'user_delete' user.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete user \'{{ user.username }}\'?');" style="display:inline-block; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-icon btn-action-delete" title="Delete User">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
     $(document).ready(function() {
         var table = $('#employee_list').DataTable({
+            orderCellsTop: true,
             order: [[0, 'asc']],
             scrollX: false,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
             initComplete: function () {
                 var api = this.api();
 
-                // Text Input Filters
-                $('.filter-input').on('keyup change', function () {
-                    var index = $(this).parent().index();
-                    api.column(index).search(this.value).draw();
+                // Live Text Input Column Filters
+                $('.filter-row .column-search').on('keyup change', function () {
+                    var colIdx = $(this).closest('th').index();
+                    api.column(colIdx).search(this.value.trim()).draw();
                 });
 
-                // Dropdown Filter for Status
-                $('.filter-select').on('change', function () {
-                    var index = $(this).parent().index();
-                    api.column(index).search(this.value).draw();
+                // Status Dropdown Filter
+                $('.filter-row .filter-select').on('change', function () {
+                    var colIdx = $(this).closest('th').index();
+                    var val = this.value.trim();
+                    api.column(colIdx).search(val ? val : '', true, false).draw();
                 });
             }
         });
 
-        // Prevent sorting when clicking inside filter inputs
+        // Prevent column header sorting click propagation when interacting with input filters
         $('#employee_list thead input, #employee_list thead select').on('click', function(e) {
             e.stopPropagation();
         });
     });
 </script>
-
 {% endblock content %}

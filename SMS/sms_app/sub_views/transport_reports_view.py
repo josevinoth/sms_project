@@ -9051,15 +9051,18 @@ def trip_status_count_report_ajax_view(request):
             
             date_groups[cdate_str]['Cnotes'].add(c.pk)
             
+    from django.utils.html import escape
+
     def build_tooltip_html(enq_list, title=""):
         if not enq_list:
             return '<span style="color: #6c757d; font-weight: bold; cursor: default;">0</span>'
         count = len(enq_list)
         
-        full_html = "<br>".join(enq_list)
-        full_html_escaped = full_html.replace('"', '&quot;').replace("'", "&#39;")
+        full_text = "\n".join(enq_list)
+        full_text_escaped = escape(full_text).replace("\n", "&#10;")
+        title_escaped = escape(title)
         
-        return f'<span class="status-count" style="cursor: pointer; color: #0d6efd; font-weight: bold;" title="Click to view {count} enquiries" data-full-list="{full_html_escaped}" onclick="showStatusModal(\'{title}\', this)">{count}</span>'
+        return f'<span class="status-count" style="cursor: pointer; color: #0d6efd; font-weight: bold;" title="Click to view {count} enquiries" data-title="{title_escaped}" data-full-list="{full_text_escaped}" onclick="showStatusModal(this)">{count}</span>'
 
     data = []
     for idx, d_obj in enumerate(paginated_dates_objs):
