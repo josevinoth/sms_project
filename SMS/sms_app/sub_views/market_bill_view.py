@@ -876,7 +876,7 @@ def market_bill_export_tally(request):
             fy_str = "00-00"
             month_str = "00"
             
-        voucher_number = bill.mb_voucher_no if bill.mb_voucher_no else f"MAA_MKT_{fy_str}_{month_str}_{bill.id:03d}"
+        voucher_number = f"MAA_MKT_{fy_str}_{month_str}_{bill.id:03d}"
         bill_date = bill.mb_bill_date.strftime("%d-%m-%Y") if bill.mb_bill_date else ""
         ref_no = bill.mb_bill_no or ""
         vendor_name = bill.mb_vendor.vend_name if bill.mb_vendor else ""
