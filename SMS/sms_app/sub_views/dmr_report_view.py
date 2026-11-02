@@ -21,6 +21,14 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn
 from .dmr_field_catalog import extract_dmr_cell_value, is_dmr_column_mergeable
 
+# Q expression to exclude trips cancelled without billing across all DMR report views
+CANCELLATION_WITHOUT_BILLING_Q = (
+    Q(tc_financestatus_id=11) |
+    Q(tc_financestatus__status__icontains='without billing') |
+    Q(tr_enquirynumber__en_status_id=10) |
+    Q(tr_enquirynumber__en_status__status_title__icontains='without billing')
+)
+
 # -------------------------------------------------------------------------
 # CONSTANTS & TEMPLATES (Consolidated)
 # -------------------------------------------------------------------------
@@ -1053,7 +1061,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     continue
 
                 # --- CHARGES ---
-                if "no of days halting" in hh:
+                if "no of days halting" in hh or "no of halting days" in hh or hh in ("halting days", "detention days"):
                     row.append(safe_num(trip.tc_no_of_days_halting));
                     continue
                 if "additional charges" in hh or hh == "handling/additional charges":
@@ -1169,7 +1177,7 @@ def trip_report(request):
     # -------------------------
     # BASE QUERY
     # -------------------------
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+    trips = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1400,7 +1408,7 @@ def export_dmr_excel(request):
     qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername_id=customer_id,
         tr_category_id=1
-    ).select_related(
+    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1533,7 +1541,7 @@ def trip_send_email(request):
     qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername_id=customer_id,
         tr_category_id=1
-    ).select_related(
+    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1653,7 +1661,7 @@ def trip_report_ajax(request):
     search_value = request.GET.get('search[value]', '').strip()
 
     # Base queryset
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+    trips = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1722,7 +1730,7 @@ def trip_report_ajax(request):
             Q(tr_vehiclenumber__icontains=search_value)
         )
 
-    records_total = TripdetailInfo.objects.filter(tr_category_id=1).count()
+    records_total = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).count()
     records_filtered = trips.order_by().values('id').count()
 
     # Pagination

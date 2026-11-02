@@ -1,153 +1,326 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block title %}Asset List | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       ASSET LIST - MODERN BVM STYLING
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    /* Table Typography & Cell Styling */
+    #asset_list tbody td {
+        font-weight: 700 !important;
+        color: #1e293b;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+    #asset_list thead th {
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        font-size: 0.82rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    /* Code & Number Badges */
+    .asset-num-badge {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-weight: 700;
+        color: #0284c7;
+        background: #f0f9ff;
+        padding: 3px 8px;
+        border-radius: 6px;
+        border: 1px solid #bae6fd;
+        font-size: 0.82rem;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .asset-id-badge {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-weight: 700;
+        color: #475569;
+        background: #f8fafc;
+        padding: 3px 8px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.82rem;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Action Buttons in Table */
+    .btn-action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        border: none;
+    }
+    .btn-action-qr {
+        background: rgba(245, 158, 11, 0.12);
+        color: #d97706;
+    }
+    .btn-action-qr:hover {
+        background: #d97706;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+    .btn-action-edit {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+    .btn-action-edit:hover {
+        background: #2563eb;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+    .btn-action-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    .btn-action-delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
+    /* Button variants for top bar */
+    .btn-show-all {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff !important;
+        border: none;
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+    }
+    .btn-show-all:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Pagination */
+    .custom-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .pagination-btn {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+    .pagination-btn-primary {
+        background: #0284c7;
+        color: #ffffff !important;
+    }
+    .pagination-btn-primary:hover {
+        background: #0369a1;
+    }
+    .pagination-btn-subtle {
+        background: #f1f5f9;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1;
+    }
+    .pagination-btn-subtle:hover {
+        background: #e2e8f0;
+        color: #1e293b !important;
+    }
+    .pagination-info {
+        font-weight: 600;
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+</style>
+{% endblock extra_css %}
+
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info shadow-box">
-            <h3>Asset List</h3>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fas fa-boxes text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.3px;">Asset List</h3>
+                <span class="text-white-50 small">Manage organizational assets, hardware allocations, and QR tracking codes</span>
+            </div>
         </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-md-1">
-        <a href="{% url 'asset_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-    <div class="col-md-2">
-        <a href="{% url 'asset_list' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fa fa-eye" aria-hidden="true"></i> Show All
-        </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid shadow-box-table">
-    <table id="asset_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Asset Number"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Asset ID"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Category"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Model"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Make"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Assigned To"></th>
-            <th></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-            <th></th>
-            <th></th>
-        </tr>
-        <tr>
-            <th>ID</th>
-            <th>Created On</th>
-            <th>Asset Number</th>
-            <th>Asset ID</th>
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Category</th>
-            <th>Model</th>
-            <th>Make</th>
-            <th>Assigned To</th>
-            <th>QR Code</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
-        </thead>
-        <tbody>
-        {% for assetinfo in page_obj %}
-        <tr>
-            <td> {{assetinfo.id}}</td>
-            <td> {{assetinfo.asset_created_at}}</td>
-            <td> {{assetinfo.asset_number}}</td>
-            <td> {{assetinfo.asset_Id}}</td>
-            <td> {{assetinfo.asset_location}}</td>
-            <td> {{assetinfo.asset_unit}}</td>
-            <td> {{assetinfo.asset_product}}</td>
-            <td> {{assetinfo.asset_model}}</td>
-            <td> {{assetinfo.asset_make}}</td>
-            <td> {{assetinfo.asset_assignedto}}</td>
-            <td>
-                <form action="{% url 'asset_qr_id' assetinfo.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-qrcode"></i>
-                    </button>
-                </form>
-            </td>
-            <td> {{assetinfo.asset_updated_at}}</td>
-            <td> {{assetinfo.asset_updated_by}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'asset_update' assetinfo.id %}" >
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'asset_delete' assetinfo.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt" onclick="return confirm('Are you sure?');"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-        {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a href="{% url 'asset_insert' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-plus mr-1"></i> Add Asset
+            </a>
+            <a href="{% url 'asset_list' %}" class="btn-modern btn-show-all py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-eye mr-1"></i> Show All
+            </a>
+        </div>
+    </div>
 
-        {% if page_obj.has_next %}
-            <a class="btn btn-primary me-5" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="asset_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th style="width: 50px;">ID</th>
+                        <th>Created On</th>
+                        <th>Asset Number</th>
+                        <th>Asset ID</th>
+                        <th>Branch</th>
+                        <th>Unit</th>
+                        <th>Category</th>
+                        <th>Model</th>
+                        <th>Make</th>
+                        <th>Assigned To</th>
+                        <th class="text-center" style="width: 70px;">QR Code</th>
+                        <th>Updated On</th>
+                        <th>Updated By</th>
+                        <th class="text-center" style="width: 70px;">Edit</th>
+                        <th class="text-center" style="width: 70px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assetinfo in page_obj %}
+                    <tr>
+                        <td class="align-middle text-muted font-weight-bold">{{ assetinfo.id }}</td>
+                        <td class="align-middle font-weight-bold text-dark" style="white-space: nowrap;">{{ assetinfo.asset_created_at }}</td>
+                        <td class="align-middle">
+                            <span class="asset-num-badge">{{ assetinfo.asset_number|default:"-" }}</span>
+                        </td>
+                        <td class="align-middle">
+                            <span class="asset-id-badge">{{ assetinfo.asset_Id|default:"-" }}</span>
+                        </td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_location|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_unit|default:"-" }}</td>
+                        <td class="align-middle">
+                            <span class="pill-badge">{{ assetinfo.asset_product|default:"-" }}</span>
+                        </td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_model|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_make|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_assignedto|default:"-" }}</td>
+                        <td class="align-middle text-center">
+                            <form action="{% url 'asset_qr_id' assetinfo.id %}" method="post" style="display:inline-block; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-icon btn-action-qr" title="Generate QR Code">
+                                    <i class="fas fa-qrcode"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="align-middle font-weight-bold text-dark" style="white-space: nowrap;">{{ assetinfo.asset_updated_at|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-dark">{{ assetinfo.asset_updated_by|default:"-" }}</td>
+                        <td class="align-middle text-center">
+                            <a class="btn-action-icon btn-action-edit" href="{% url 'asset_update' assetinfo.id %}" title="Edit Asset">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="align-middle text-center">
+                            <form action="{% url 'asset_delete' assetinfo.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete asset \'{{ assetinfo.asset_number|default:assetinfo.id }}\'?');" style="display:inline-block; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-icon btn-action-delete" title="Delete Asset">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <!-- Rendered by DataTables -->
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══ Django Server Pagination (if multiple pages exist) ══ -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="custom-pagination">
+            <div class="pagination-info">
+                Showing page <span class="text-dark font-weight-bold">{{ page_obj.number }}</span> of <span class="text-dark font-weight-bold">{{ page_obj.paginator.num_pages }}</span> ({{ page_obj.paginator.count }} total assets)
+            </div>
+            <div class="d-flex align-items-center" style="gap: 6px;">
+                {% if page_obj.has_previous %}
+                    <a class="pagination-btn pagination-btn-subtle" href="?page=1">
+                        <i class="fas fa-angle-double-left"></i> First
+                    </a>
+                    <a class="pagination-btn pagination-btn-primary" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-angle-left"></i> Prev
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a class="pagination-btn pagination-btn-primary" href="?page={{ page_obj.next_page_number }}">
+                        Next <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a class="pagination-btn pagination-btn-subtle" href="?page={{ page_obj.paginator.num_pages }}">
+                        Last <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
-    </span>
     </div>
 </div>
+
 <script>
     $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#asset_list').DataTable({
-        order: [[0, 'desc']],
-        scrollX: true,
-        dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print'],
-        initComplete: function () {
-            var api = this.api();
-
-            // Apply search to each column
-            $('.filter-input').on('keyup change', function () {
-                var index = $(this).parent().index(); // Get column index
-                api.column(index).search(this.value).draw();
-            });
-        }
+        $('#asset_list').DataTable({
+            order: [[0, 'desc']],
+            scrollX: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            language: {
+                search: "Search:",
+                emptyTable: "No assets found"
+            }
+        });
     });
-
-    // Prevent sorting when clicking inside the filter input
-    $('#asset_list thead input').on('click', function(e) {
-        e.stopPropagation();
-    });
-});
 </script>
-
-
 {% endblock content %}
-
