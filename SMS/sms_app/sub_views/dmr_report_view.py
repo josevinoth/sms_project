@@ -1314,12 +1314,12 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
     data_start_row = 2  # Excel row 2 (1-indexed, header is row 1)
     total_rows = len(rows)
 
-    # Apply vertical center alignment and thin borders to ALL data cells
+    # Apply center alignment (horizontal and vertical) and thin borders to ALL data cells
     for r_idx in range(data_start_row, data_start_row + total_rows):
         for c_idx in range(1, len(headers) + 1):
             cell = ws.cell(row=r_idx, column=c_idx)
             cell.border = border
-            cell.alignment = Alignment(vertical="center", wrap_text=True)
+            cell.alignment = center_align
 
     # Check cell merging rule (Studio template toggle or EIPL fallback)
     should_merge = False

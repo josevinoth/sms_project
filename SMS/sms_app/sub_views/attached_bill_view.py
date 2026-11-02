@@ -465,7 +465,7 @@ def attached_bill_export_tally(request):
             fy_str = "00-00"
             month_str_num = "00"
 
-        voucher_number = f"MAA_ATT_{fy_str}_{month_str_num}_{bill.id:03d}"
+        voucher_number = bill.ab_voucher_no if bill.ab_voucher_no else f"MAA_ATT_{fy_str}_{month_str_num}_{bill.id:03d}"
         bill_date = bill.ab_bill_date.strftime("%d-%m-%Y") if bill.ab_bill_date else ""
         ref_no = bill.ab_bill_no or ""
         vendor_name = bill.ab_vendor.vend_name if bill.ab_vendor else ""

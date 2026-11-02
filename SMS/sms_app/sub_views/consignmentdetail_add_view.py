@@ -15,6 +15,7 @@ from ..models import VehiclemasterInfo, User_extInfo, Location_info, Vehicle_all
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
+from django.utils import timezone
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -376,7 +377,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                         )
 
                 # Touch parent enquiry timestamp & sync en_consignmentdetails
-                from django.utils import timezone
+                # timezone already imported above
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 consignmentdetail_list = list(
                     ConsignmentdetailInfo.objects.filter(co_enquirynumber=enq_id)
@@ -498,7 +499,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                         en_consignmentdetails=consignmentdetail_list)
 
                     # Touch parent enquiry timestamp
-                    from django.utils import timezone
+                    # timezone already imported above
                     en_user = request.user if (request.user and request.user.is_authenticated) else None
                     EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
                         en_updatedon=timezone.now(),
@@ -555,6 +556,7 @@ def consignmentdetail_list(request):
 def consignmentdetail_list_ajax(request):
     """Server-side DataTables AJAX endpoint for Consignment Detail List."""
     from django.db.models import Q, Sum
+    from django.utils import timezone
     from ..models import TransInvoiceInfo
 
     draw = int(request.GET.get('draw', 1))
@@ -581,7 +583,7 @@ def consignmentdetail_list_ajax(request):
     # Apply Filters
     if eway_alert == '1':
         from datetime import timedelta
-        from django.utils import timezone
+        # timezone already imported above
         from ..models import TripdetailInfo, ConsignmentgoodsInfo
 
         now = timezone.now()
@@ -741,7 +743,7 @@ def consignmentdetail_list_ajax(request):
 
         data.append([
             obj.id,  # 0: ID
-            obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '',  # 1: Created On
+            timezone.localtime(obj.co_created_at).strftime('%Y-%m-%d') if obj.co_created_at else '',  # 1: Created On
             str(obj.co_customer) if obj.co_customer else '',  # 2: Customer Name
             str(obj.co_enquirynumber) if obj.co_enquirynumber else '',  # 3: Enquiry Number
             obj.co_consignmentnumber or '',  # 4: Consignment Number
@@ -764,7 +766,7 @@ def consignmentdetail_list_ajax(request):
             dimension,  # 20: Dimension
             movement,  # 21: Movement
             str(obj.co_status) if obj.co_status else '',  # 22: Status
-            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '',  # 23: Updated On
+            timezone.localtime(obj.co_updated_at).strftime('%Y-%m-%d') if obj.co_updated_at else '',  # 23: Updated On
             str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '',  # 24: Updated By
             str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '',  # 25: Created By
             inv_no,  # 26: Invoice Number

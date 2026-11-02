@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 import requests
 from django.contrib.auth.decorators import login_required
@@ -482,7 +483,7 @@ def tripclosure_add(request, tripclosure_id=0):
                         except Tripstatusinfo.DoesNotExist:
                             tripclousre_status.append('Unknown')
                 # Update closure status and touch parent enquiry timestamp
-                from django.utils import timezone
+                # timezone already imported above
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
                     en_tripclosure=tripclousre_status,
@@ -664,7 +665,7 @@ def tripclosure_list_ajax(request):
     data = []
     for t in qs:
         data.append([
-            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            timezone.localtime(t.tr_created_at).strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
             str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
             t.tr_tripnumber or '',

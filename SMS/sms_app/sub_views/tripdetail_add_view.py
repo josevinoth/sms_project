@@ -1362,7 +1362,7 @@ def tripdetail_list_ajax(request):
         updated_at = timezone.localtime(t.tr_updated_at).strftime('%Y-%m-%d %H:%M') if t.tr_updated_at else ''
 
         data.append([
-            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            timezone.localtime(t.tr_created_at).strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
             str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
             t.tr_tripnumber or '',

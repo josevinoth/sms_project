@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from datetime import datetime
+from django.utils import timezone
 from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
@@ -12,13 +13,28 @@ from ..models import Business_Sol_info, Location_info
 from ..sub_forms.tms_petty_cash_form import TMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
-def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None):
+def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
     """
-    Generates [BranchCode]_T_26-27_yy_xxx
+    Generates [BranchCode]_T_26-27_yy_xxx strictly based on voucher_date.
+    No fallback date is permitted.
     """
-    fy = get_financial_year() # returns e.g. "24-25"
-    today = datetime.now()
-    month_str = today.strftime("%m")
+    if not voucher_date:
+        raise ValueError("Voucher Date is strictly required to generate TMS voucher number. No fallback date is permitted.")
+
+    if isinstance(voucher_date, str):
+        try:
+            v_date = datetime.strptime(voucher_date[:10], "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError(f"Invalid voucher_date format: {voucher_date}")
+    elif isinstance(voucher_date, datetime):
+        v_date = voucher_date.date()
+    elif hasattr(voucher_date, 'month') and hasattr(voucher_date, 'year'):
+        v_date = voucher_date
+    else:
+        raise ValueError(f"Invalid voucher_date: {voucher_date}")
+
+    fy = get_financial_year(v_date) # returns e.g. "26-27"
+    month_str = f"{v_date.month:02d}"
     
     branch_prefix = "M"
     if branch_obj and branch_obj.loc_name:
@@ -28,21 +44,25 @@ def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None):
             
     prefix = f"{branch_prefix}_T_{fy}_{month_str}_"
     
-    # fetch latest for this prefix
-    latest_obj = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).order_by('-id').first()
-    
-    if latest_obj:
-        latest_num_str = getattr(latest_obj, field_name)
-        # extract xxx
-        try:
-            seq = int(latest_num_str.split('_')[-1])
-            new_seq = seq + 1
-        except ValueError:
-            new_seq = 1
-    else:
-        new_seq = 1
-        
-    return f"{prefix}{str(new_seq).zfill(3)}"
+    # fetch all existing numbers with this prefix to get the maximum sequence
+    existing_nums = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).values_list(field_name, flat=True)
+    max_seq = 0
+    for num_str in existing_nums:
+        if num_str:
+            try:
+                seq = int(num_str.split('_')[-1])
+                if seq > max_seq:
+                    max_seq = seq
+            except (ValueError, IndexError):
+                pass
+    new_seq = max_seq + 1
+    new_num = f"{prefix}{str(new_seq).zfill(3)}"
+
+    while model_class.objects.filter(**{field_name: new_num}).exists():
+        new_seq += 1
+        new_num = f"{prefix}{str(new_seq).zfill(3)}"
+
+    return new_num
 
 def tms_petty_cash_add(request, tpc_id=0):
     initial_data = {}
@@ -132,9 +152,27 @@ def tms_petty_cash_add(request, tpc_id=0):
             
         if form.is_valid():
             saved_tpc = form.save(commit=False)
+            voucher_date = saved_tpc.tpc_transaction_date
+            if not voucher_date:
+                messages.error(request, "Voucher Date is strictly required to generate voucher number.")
+                return render(request, "asset_mgt_app/tms_petty_cash_add.html", context)
+
+            branch_prefix = "M"
+            if saved_tpc.tpc_branch and saved_tpc.tpc_branch.loc_name:
+                loc_lower = saved_tpc.tpc_branch.loc_name.lower()
+                if "blr" in loc_lower or "bengaluru" in loc_lower or "bangalore" in loc_lower:
+                    branch_prefix = "B"
+
+            v_fy = get_financial_year(voucher_date)
+            v_month = f"{voucher_date.month:02d}"
+            expected_prefix = f"{branch_prefix}_T_{v_fy}_{v_month}_"
+
             if tpc_id == 0:
-                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch)
+                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
                 saved_tpc.tpc_created_by = request.user
+            else:
+                if not saved_tpc.tpc_number or not saved_tpc.tpc_number.startswith(expected_prefix):
+                    saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
             saved_tpc.tpc_updated_by = request.user
             saved_tpc.save()
             messages.success(request, "Petty Cash saved successfully.")
@@ -267,10 +305,10 @@ def tms_petty_cash_list(request):
                 str(tpc.tpc_amount) if tpc.tpc_amount else "0.0",
                 from_to_location,
                 veh_no,
-                tpc.tpc_created_on.strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
+                timezone.localtime(tpc.tpc_created_on).strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
                 created_by,
                 updated_by,
-                tpc.tpc_updated_at.strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
+                timezone.localtime(tpc.tpc_updated_at).strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
                 f'''<div class="d-flex justify-content-center" style="gap: 5px;">
                     <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
                         <i class="fas fa-print"></i>

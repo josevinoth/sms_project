@@ -6908,6 +6908,7 @@ def customerwise_pl_report_ajax_view(request):
         trip_category_id = request.GET.get('trip_category')
         customer_id = request.GET.get('customer')
         vehicle_source_id = request.GET.get('vehicle_source')
+        status_id = request.GET.get('status')
         from_date = (request.GET.get('from_date') or request.GET.get('date_from') or '').strip()
         to_date = (request.GET.get('to_date') or request.GET.get('date_to') or '').strip()
         selected_year = request.GET.get('year')
@@ -6917,8 +6918,10 @@ def customerwise_pl_report_ajax_view(request):
         base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date,
                                         selected_year,
                                         customer_id=customer_id)
-        base_trips = base_trips.filter(Q(tr_category_id=1) | Q(tc_financestatus_id=10), tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10])
-        trips = base_trips
+        base_trips = base_trips.filter(Q(tr_category_id=1) | Q(tc_financestatus_id=10), tc_financestatus_id__in=[1, 2, 4, 5, 6, 7, 9, 10])
+        if status_id:
+            base_trips = base_trips.filter(tc_financestatus_id=status_id)
+        trips = base_trips.select_related('tc_financestatus', 'tr_operational_status')
 
         records_total = trips.order_by().values('id').count()
 
@@ -6950,7 +6953,8 @@ def customerwise_pl_report_ajax_view(request):
             trips = trips.filter(
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-                Q(tr_vehiclenumber__icontains=search_value)
+                Q(tr_vehiclenumber__icontains=search_value) |
+                Q(tc_financestatus__status__icontains=search_value)
             )
 
         records_filtered = trips.order_by().values('id').count()
@@ -7100,6 +7104,7 @@ def customerwise_pl_report_view(request):
     trip_category_id = request.POST.get('trip_category')
     customer_id = request.POST.get('customer')
     vehicle_source_id = request.POST.get('vehicle_source')
+    status_id = request.POST.get('status')
     from_date = request.POST.get('from_date')
     to_date = request.POST.get('to_date')
     selected_year = request.POST.get('year')
@@ -7111,6 +7116,7 @@ def customerwise_pl_report_view(request):
     ]
 
     all_customers = CustomerInfo.objects.filter(cu_name__icontains='(T)').order_by('cu_name')
+    all_statuses = Tripstatusinfo.objects.filter(id__in=[1, 2, 4, 5, 6, 7, 9, 10]).order_by('id')
 
     return render(request, "asset_mgt_app/customerwise_pl_report.html", {
         'first_name': first_name,
@@ -7121,6 +7127,7 @@ def customerwise_pl_report_view(request):
         'trip_category_id': int(trip_category_id) if trip_category_id else None,
         'customer_id': int(customer_id) if customer_id else None,
         'vehicle_source_id': int(vehicle_source_id) if vehicle_source_id else None,
+        'status_id': int(status_id) if status_id else None,
         'from_date': from_date,
         'to_date': to_date,
         'selected_year': selected_year,
@@ -7129,9 +7136,9 @@ def customerwise_pl_report_view(request):
             {'id': b.id, 'name': b.loc_name.replace('BVM ', '').strip()}
             for b in Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name')
         ],
-
         'all_customers': all_customers,
         'all_vehicle_sources': OwnershipInfo.objects.all(),
+        'all_statuses': all_statuses,
     })
 
 

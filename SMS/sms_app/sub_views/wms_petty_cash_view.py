@@ -16,15 +16,29 @@ from ..sub_forms.wms_petty_cash_form import WMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
 
-def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None):
+def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
     """
     Generates Voucher Number format in UPPERCASE: [BranchCode]-WH-[MM]-[FY]-[Seq]
-    Example: MAA-WH-09-26/27-01 or BLR-WH-09-26/27-01
+    strictly based on voucher_date. No fallback date is permitted.
     """
-    fy = get_financial_year() # e.g. "26-27"
+    if not voucher_date:
+        raise ValueError("Voucher Date is strictly required to generate WMS voucher number. No fallback date is permitted.")
+
+    if isinstance(voucher_date, str):
+        try:
+            v_date = datetime.strptime(voucher_date[:10], "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError(f"Invalid voucher_date format: {voucher_date}")
+    elif isinstance(voucher_date, datetime):
+        v_date = voucher_date.date()
+    elif hasattr(voucher_date, 'month') and hasattr(voucher_date, 'year'):
+        v_date = voucher_date
+    else:
+        raise ValueError(f"Invalid voucher_date: {voucher_date}")
+
+    fy = get_financial_year(v_date) # e.g. "26-27"
     fy_slash = fy.replace('-', '/') # "26/27"
-    today = datetime.now()
-    month_str = today.strftime("%m") # "09"
+    month_str = f"{v_date.month:02d}"
 
     branch_code = "MAA"
     if branch_obj and branch_obj.loc_name:
@@ -44,22 +58,28 @@ def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None):
 
     prefix = f"{branch_code}-WH-{month_str}-{fy_slash}-"
 
-    # fetch latest for this prefix (case-insensitive check)
-    latest_obj = model_class.objects.filter(
+    # fetch all existing numbers for this prefix to get the maximum sequence
+    existing_nums = model_class.objects.filter(
         Q(**{f"{field_name}__istartswith": prefix}) | Q(**{f"{field_name}__istartswith": f"{branch_code.title()}-Wh-{month_str}-{fy_slash}-"})
-    ).order_by('-id').first()
+    ).values_list(field_name, flat=True)
 
-    if latest_obj:
-        latest_num_str = getattr(latest_obj, field_name)
-        try:
-            seq = int(latest_num_str.split('-')[-1])
-            new_seq = seq + 1
-        except ValueError:
-            new_seq = 1
-    else:
-        new_seq = 1
+    max_seq = 0
+    for num_str in existing_nums:
+        if num_str:
+            try:
+                seq = int(num_str.split('-')[-1])
+                if seq > max_seq:
+                    max_seq = seq
+            except (ValueError, IndexError):
+                pass
+    new_seq = max_seq + 1
+    new_num = f"{prefix}{str(new_seq).zfill(2)}"
 
-    return f"{prefix}{str(new_seq).zfill(2)}"
+    while model_class.objects.filter(Q(**{f"{field_name}__iexact": new_num})).exists():
+        new_seq += 1
+        new_num = f"{prefix}{str(new_seq).zfill(2)}"
+
+    return new_num
 
 
 def wms_petty_cash_add(request, wpc_id=0):
@@ -139,13 +159,37 @@ def wms_petty_cash_add(request, wpc_id=0):
             saved_wpc = form.save(commit=False)
             if post_data.get('wpc_bill_attachment-clear') in ['on', '1', 'true']:
                 saved_wpc.wpc_bill_attachment = None
-            expected_branch_code = "BLR" if (saved_wpc.wpc_branch and ("BLR" in saved_wpc.wpc_branch.loc_name.upper() or "BANGALORE" in saved_wpc.wpc_branch.loc_name.upper())) else "MAA"
+            voucher_date = saved_wpc.wpc_date
+            if not voucher_date:
+                messages.error(request, "Voucher Date is strictly required to generate voucher number.")
+                return render(request, "asset_mgt_app/wms_petty_cash_add.html", context)
+
+            expected_branch_code = "MAA"
+            if saved_wpc.wpc_branch and saved_wpc.wpc_branch.loc_name:
+                loc_upper = saved_wpc.wpc_branch.loc_name.upper()
+                if "BLR" in loc_upper or "BANGALORE" in loc_upper or "BENGALURU" in loc_upper:
+                    expected_branch_code = "BLR"
+                elif "MAA" in loc_upper or "CHENNAI" in loc_upper:
+                    expected_branch_code = "MAA"
+                elif "PNY" in loc_upper or "PONDICHERRY" in loc_upper:
+                    expected_branch_code = "PNY"
+                elif "HYD" in loc_upper or "HYDERABAD" in loc_upper:
+                    expected_branch_code = "HYD"
+                elif "CBE" in loc_upper or "COIMBATORE" in loc_upper:
+                    expected_branch_code = "CBE"
+                else:
+                    expected_branch_code = saved_wpc.wpc_branch.loc_name.split()[-1].upper()
+
+            v_fy = get_financial_year(voucher_date).replace('-', '/')
+            v_month = f"{voucher_date.month:02d}"
+            expected_prefix = f"{expected_branch_code}-WH-{v_month}-{v_fy}-"
+
             if wpc_id == 0:
-                saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch)
+                saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch, voucher_date=voucher_date)
                 saved_wpc.wpc_created_by = request.user
             else:
-                if not saved_wpc.wpc_number or not saved_wpc.wpc_number.startswith(f"{expected_branch_code}-WH-"):
-                    saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch)
+                if not saved_wpc.wpc_number or not saved_wpc.wpc_number.upper().startswith(expected_prefix):
+                    saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch, voucher_date=voucher_date)
             saved_wpc.wpc_updated_by = request.user
             saved_wpc.save()
             messages.success(request, "WMS Petty Cash saved successfully.")
@@ -178,11 +222,11 @@ def wms_petty_cash_list(request):
     if wpc_number:
         filters &= Q(wpc_number__icontains=wpc_number)
     if search_date:
-        filters &= (Q(wpc_date=search_date) | Q(wpc_transaction_date=search_date))
+        filters &= Q(wpc_date=search_date)
     if from_date:
-        filters &= (Q(wpc_date__gte=from_date) | Q(wpc_date__isnull=True, wpc_transaction_date__gte=from_date))
+        filters &= Q(wpc_date__gte=from_date)
     if to_date:
-        filters &= (Q(wpc_date__lte=to_date) | Q(wpc_date__isnull=True, wpc_transaction_date__lte=to_date))
+        filters &= Q(wpc_date__lte=to_date)
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
@@ -434,11 +478,11 @@ def wms_petty_cash_export_tally(request):
     if wpc_number:
         filters &= Q(wpc_number__icontains=wpc_number)
     if search_date:
-        filters &= (Q(wpc_date=search_date) | Q(wpc_transaction_date=search_date))
+        filters &= Q(wpc_date=search_date)
     if from_date:
-        filters &= (Q(wpc_date__gte=from_date) | Q(wpc_date__isnull=True, wpc_transaction_date__gte=from_date))
+        filters &= Q(wpc_date__gte=from_date)
     if to_date:
-        filters &= (Q(wpc_date__lte=to_date) | Q(wpc_date__isnull=True, wpc_transaction_date__lte=to_date))
+        filters &= Q(wpc_date__lte=to_date)
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
@@ -481,7 +525,7 @@ def wms_petty_cash_export_tally(request):
         cell.alignment = Alignment(horizontal="center")
 
     for wpc in wpc_list:
-        tally_date = wpc.wpc_date or wpc.wpc_transaction_date
+        tally_date = wpc.wpc_date
         date_str = tally_date.strftime("%d-%m-%Y") if tally_date else ""
         vou_no = wpc.wpc_number or ""
         debit = wpc.wpc_expense_type.wms_exp_type_name if wpc.wpc_expense_type else ""
