@@ -7,6 +7,7 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from .send_department_email import send_department_email
 from ..forms import DsrForm
 from ..models import CustomerInfo,Warehouse_goods_info
+from ..sub_models.emailmaster_mod import Emailmaster
 from django.shortcuts import redirect
 import openpyxl
 from io import BytesIO
@@ -19,6 +20,25 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import JsonResponse
 from django.db.models import Q
+
+@login_required(login_url='login_page')
+def get_dsr_email_details(request):
+    customer_id = request.GET.get("customer_id")
+    if not customer_id:
+        return JsonResponse({'status': False})
+
+    qs = Emailmaster.objects.filter(em_Customer_name_id=customer_id)
+    email_obj = qs.filter(em_emailtype__email_type__icontains='Report').first() or qs.first()
+
+    if not email_obj or (not email_obj.em_to_names and not email_obj.em_cc_names):
+        return JsonResponse({'status': False})
+
+    return JsonResponse({
+        'status': True,
+        'to_mail': email_obj.em_to_names or '',
+        'cc_mail': email_obj.em_cc_names or ''
+    })
+
 
 @login_required(login_url='login_page')
 def dsr_reports(request):
@@ -251,9 +271,15 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         if recipient_list is None:
             recipient = request.POST.get('recipient')
             if recipient:
-                recipient_list = [email.strip() for email in recipient.split(',')]
+                recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
             else:
                 recipient_list = []
+        if cc_list is None:
+            cc = request.POST.get('cc')
+            if cc:
+                cc_list = [email.strip() for email in cc.split(',') if email.strip()]
+            else:
+                cc_list = []
         
         if message is None:
             message = request.POST.get('message', '')
