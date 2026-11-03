@@ -99,11 +99,17 @@ def assetinfo_add(request, asset_id=0):
                 AssetInfo.objects.filter(id=asset_obj.id).update(asset_number=asset_num_next)
                 print("Asset Form is Valid")
                 messages.success(request, 'Record Updated Successfully')
+                return redirect('/SMS/asset_update/' + str(asset_obj.id))
             else:
                 print("Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-            # return redirect(request.META['HTTP_REFERER'])
-            return redirect('/SMS/asset_update/' + str(asset_obj.id))
+                context = {
+                    'form': form,
+                    'role': role,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                }
+                return render(request, "asset_mgt_app/asset_add.html", context)
         else:
             print("Inside Post Asset Edit")
             assetinfo = AssetInfo.objects.get(pk=asset_id)
@@ -115,7 +121,7 @@ def assetinfo_add(request, asset_id=0):
             else:
                 print("Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-            return redirect(request.META['HTTP_REFERER'])
+            return redirect(request.META.get('HTTP_REFERER', f'/SMS/asset_update/{asset_id}/'))
         # return redirect('/SMS/asset_list')
 
 # Delete Assets

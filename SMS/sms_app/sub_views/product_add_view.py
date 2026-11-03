@@ -21,7 +21,9 @@ def product_add(request,product_id=0):
             form = ProductaddForm(request.POST,instance=product)
         if form.is_valid():
             form.save()
-        return redirect('/SMS/product_list')
+            return redirect('/SMS/product_list')
+        else:
+            return render(request, "asset_mgt_app/product_add.html", {'form': form, 'first_name': first_name})
 
 # List Product
 @login_required(login_url='login_page')

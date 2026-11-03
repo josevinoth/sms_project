@@ -1,44 +1,163 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Update Product Type{% else %}Add / Update Product Type{% endif %} | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       PRODUCT TYPE FORM - COMPACT MODERN CARD & CONTROL STYLES
+       ══════════════════════════════════════════════════════════════════════════ */
+    .producttype-form-card {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        padding: 1.15rem !important;
+    }
+
+    .producttype-form-card .form-section {
+        background: var(--bg-section, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 10px;
+        padding: 1rem 1.15rem;
+    }
+
+    .producttype-form-card .form-section-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.45rem;
+        margin-bottom: 0.85rem;
+    }
+
+    [data-theme="dark"] .producttype-form-card .form-section-title {
+        color: #f1f5f9;
+        border-bottom-color: #334155;
+    }
+
+    .producttype-form-card .form-group-modern {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .producttype-form-card .form-label-modern {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    [data-theme="dark"] .producttype-form-card .form-label-modern {
+        color: #cbd5e1;
+    }
+
+    .producttype-form-card .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        background-color: #ffffff;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 7px !important;
+        padding: 4px 10px !important;
+        transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] .producttype-form-card .form-control-modern {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .producttype-form-card .form-control-modern:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+        outline: none;
+    }
+</style>
+{% endblock extra_css %}
+
 {% block content %}
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center flex-wrap mb-3 px-3 py-2" style="gap: 8px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fas fa-tags text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.2rem; font-weight: 700; letter-spacing: 0.4px;">
+                    {% if form.instance.pk %}Update Product Type{% else %}Add / Update Product Type{% endif %}
+                </h3>
+                <span class="text-white-50" style="font-size: 0.75rem;">Configure product categories and classification types</span>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'producttype_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.82rem; height: 32px; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Product Type List
+            </a>
+        </div>
+    </div>
 
-<form method="POST" action="">
-	{% csrf_token %}
+    <!-- ══ Form Container ══ -->
+    <form method="POST" action="" id="producttype_add_form">
+        {% csrf_token %}
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-7 col-lg-5" style="max-width: 480px;">
+                <div class="modern-card producttype-form-card">
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-tag text-primary"></i> Type Information
+                        </div>
 
-	<!--{{form.as_p}}-->
+                        <!-- Product Type Title -->
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern" for="id_prod_type_title">
+                                Product Type Title <span class="text-danger">*</span>
+                            </label>
+                            {% render_field form.prod_type_title class="form-control form-control-modern" id="id_prod_type_title" placeholder="e.g. Office Equipments, Tools..." required="required" %}
+                        </div>
+                    </div>
 
-<div class="row">
-	<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Product Type</h3></div>
-						<div class="card-body bg-light" >
-							<div class="row">
-							<div class="col">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Product Type</span>
-  								</div>
-								{% render_field form.prod_type_title class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						</div>
-							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'producttype_list' %}" class="btn btn-danger float-right">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
-				</div>
-			</div>
-		</div>
-		</div>
-	<div class="col-3"></div>
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger py-2 px-3 mt-3 mb-0" style="font-size: 0.82rem; border-radius: 8px;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Please correct the following:</strong>
+                        <ul class="mb-0 mt-1 pl-3">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Form Action Buttons: Submit on LEFT, Cancel on RIGHT -->
+                    <div class="form-actions d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                        <button type="submit" class="btn-modern btn-submit px-4" style="height: 34px; font-size: 0.82rem; cursor: pointer;">
+                            <i class="fas fa-check mr-1"></i> Submit
+                        </button>
+                        <a href="{% url 'producttype_list' %}" class="btn-modern btn-cancel px-4" style="height: 34px; font-size: 0.82rem; text-decoration: none;">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
-</form>
-
 {% endblock content %}
