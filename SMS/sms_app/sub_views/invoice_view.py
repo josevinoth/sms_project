@@ -101,6 +101,16 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
         
         voucher_num = invoice.bill_invoice_ref
         invoice_id = invoice.pk
+
+        # Ensure all checked-out goods have their storage time calculated with (+1 day count)
+        for g in goods_qs:
+            if (not g.wh_storage_time or g.wh_storage_time == 0) and g.wh_checkin_time and g.wh_checkout_time:
+                c_in = g.wh_checkin_time.date() if hasattr(g.wh_checkin_time, 'date') else g.wh_checkin_time
+                c_out = g.wh_checkout_time.date() if hasattr(g.wh_checkout_time, 'date') else g.wh_checkout_time
+                calc_days = max((c_out - c_in).days + 1, 1)
+                Warehouse_goods_info.objects.filter(pk=g.pk).update(wh_storage_time=calc_days)
+                g.wh_storage_time = calc_days
+
         # Calculate Warehouse Storage Charges
         dispatch_num = goods_qs.values_list('wh_dispatch_num', flat=True).distinct()
         customer_obj = invoice.bill_customer_name
@@ -549,7 +559,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
             # Convert to datetime if necessary
             if isinstance(max_check_out_time, datetime):
                 max_check_out_time = max_check_out_time.date()
-            max_storage_days = ((max_check_out_time - min_check_in_time).days)
+            max_storage_days = max(((max_check_out_time - min_check_in_time).days) + 1, 1)
         except:
             min_check_in_time = 0
             max_check_out_time = 0

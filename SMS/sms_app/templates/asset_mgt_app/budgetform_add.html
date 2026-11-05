@@ -61,6 +61,12 @@
                                         </div>
                                         {% render_field form.bf_vehicle_source id="bf_vehicle_source" class="form-control" %}
                                     </div>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Unit</span>
+                                        </div>
+                                        {% render_field form.bf_unit id="bf_unit" class="form-control" %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -905,6 +911,34 @@
         }
     }
 
+    function toggleTransFields(changedField) {
+        var vehicleSource = $('#bf_vehicle_source').val();
+        var department = $('#bf_unit').val();
+
+        if (changedField === 'unit' && department !== "") {
+            $('#bf_vehicle_source').val("");
+        }
+
+        if (changedField === 'source' && vehicleSource !== "") {
+            $('#bf_unit').val("");
+        }
+
+        vehicleSource = $('#bf_vehicle_source').val();
+        department = $('#bf_unit').val();
+
+        if (vehicleSource !== "") {
+            $('#bf_unit').prop('disabled', true);
+        } else {
+            $('#bf_unit').prop('disabled', false);
+        }
+
+        if (department !== "") {
+            $('#bf_vehicle_source').prop('disabled', true);
+        } else {
+            $('#bf_vehicle_source').prop('disabled', false);
+        }
+    }
+
     function calculateSubtotals() {
         // Check if a field should be included: skip if it's inside a company-specific
         // container (company-transport / company-warehouse) that is currently hidden.
@@ -959,14 +993,32 @@
     $(document).ready(function() {
         // Initial toggle
         toggleCompanyFields();
+        toggleTransFields();
 
         // Initial calculation
         calculateSubtotals();
 
-        // Toggle on change
+        // Transport mutual exclusivity events
+        $('#bf_vehicle_source').change(function() { toggleTransFields('source'); });
+        $('#bf_unit').change(function() { toggleTransFields('unit'); });
+
+        // Toggle on company change
         $("#bf_company").change(function() {
+            var companyText = $(this).find("option:selected").text().trim().toLowerCase();
+            if (companyText.includes("bvm trans solutions")) {
+                $("#bf_unit_reference").val("");
+            } else {
+                $("#bf_vehicle_source").val("");
+                $("#bf_unit").val("");
+            }
             toggleCompanyFields();
+            toggleTransFields();
             calculateSubtotals(); // Recalculate as fields show/hide
+        });
+
+        // Re-enable disabled fields before form submit so values submit properly
+        $('form').on('submit', function() {
+            $('#bf_unit, #bf_vehicle_source').prop('disabled', false);
         });
 
         // Listen for any input changes
@@ -981,8 +1033,7 @@
         } else {
             document.getElementById("bf_updated_by").value=updated_by;
         }
-    });
-</script>
+    });</script>
 <script>
     $("#bf_location").change(function () {
        var branchId = $(this).val();

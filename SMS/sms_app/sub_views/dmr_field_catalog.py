@@ -320,7 +320,14 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
 
     # 3. Consignment & Goods Page
     if fk == "co_consignmentnumber":
-        return _safe_str(cons_detail.co_consignmentnumber if cons_detail else "")
+        val = cons_detail.co_consignmentnumber if cons_detail else ""
+        if not val and trip:
+            tc_status = getattr(trip, 'tc_financestatus_id', None)
+            op_status = getattr(trip, 'tr_operational_status_id', None)
+            cancel_check = getattr(trip, 'tc_cancellation_check', False)
+            if tc_status == 10 or op_status == 10 or cancel_check:
+                val = getattr(trip, 'tr_tripnumber', '')
+        return _safe_str(val or "")
     if fk in ("cg_consignerinvoice", "consigner_invoice", "invoice_no"):
         return _safe_str(cons_goods.cg_consignerinvoice if cons_goods and getattr(cons_goods, "cg_consignerinvoice", None) else "")
     if fk == "cg_consigner":

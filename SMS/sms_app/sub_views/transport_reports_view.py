@@ -39,6 +39,35 @@ def safe_int(val, default=0):
         return default
 
 
+def get_trip_cnote_or_fallback(trip, cons=None, default=""):
+    """
+    Returns the C-Note number.
+    If the trip is a Cancellation with Billing job and has no C-Note,
+    falls back to the Trip Number (tr_tripnumber).
+    """
+    if cons is None and trip:
+        cons = getattr(trip, 'tr_consignmentnumber', None)
+
+    if cons and getattr(cons, 'co_consignmentnumber', None):
+        val = safe_str(cons.co_consignmentnumber).strip()
+        if val:
+            return val
+
+    is_cancel_billing = False
+    if trip:
+        is_cancel_billing = (
+            getattr(trip, 'tc_financestatus_id', None) == 10
+            or getattr(trip, 'tr_operational_status_id', None) == 10
+            or getattr(trip, 'tc_cancellation_check', False)
+        )
+    if is_cancel_billing and trip:
+        val = safe_str(getattr(trip, 'tr_tripnumber', '') or '').strip()
+        if val:
+            return val
+
+    return default
+
+
 def resolve_trip_allotment(trip, allotment_map=None):
     if not trip or not trip.tr_enquirynumber_id:
         return None
@@ -1206,7 +1235,7 @@ def vehicle_log_report_ajax_view(request):
         cat_q = Q()
         for cid in cat_ids:
             if cid == 1:
-                cat_q |= (Q(tr_category_id=1) | Q(tr_consignmentnumber__isnull=False)) & ~Q(tr_category_id__in=[2, 3])
+                cat_q |= (Q(tr_category_id=1) | Q(tr_consignmentnumber__isnull=False) | Q(tc_financestatus_id=10)) & ~Q(tr_category_id__in=[2, 3])
             elif cid == 2:
                 cat_q |= Q(tr_category_id=2)
             elif cid == 3:
@@ -1322,7 +1351,7 @@ def vehicle_log_report_ajax_view(request):
         elif cat_id == 3 or 'business empty' in cat_name.lower():
             cnote_val = "Business Empty"
         else:
-            cnote_val = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else cat_name
+            cnote_val = get_trip_cnote_or_fallback(trip, default=cat_name)
 
         data_rows.append([
             idx,
@@ -1430,7 +1459,7 @@ def trip_cancellation_report_ajax_view(request):
     from ..sub_models.charge_master_mod import ChargeMasterInfo
     
     for idx, trip in enumerate(page_trips, start=start + 1):
-        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        cons_no = get_trip_cnote_or_fallback(trip)
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "MAA" if cust_name.endswith("MAA") else ("BLR" if cust_name.endswith("BLR") else "")
         
@@ -1563,7 +1592,7 @@ def trip_cancellation_report_view(request):
 
     for idx, trip in enumerate(trips, start=1):
 
-        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        cons_no = get_trip_cnote_or_fallback(trip)
 
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "MAA" if cust_name.endswith("MAA") else (
@@ -1884,8 +1913,10 @@ def ref_no_pending_report_ajax_view(request):
         )
         .filter(
             (Q(ref_clean__isnull=True) | Q(ref_clean__exact='') | Q(ref_clean='0')) &
-            (Q(cons_ref_clean__isnull=True) | Q(cons_ref_clean__exact='') | Q(cons_ref_clean='0')),
-            tr_category_id=1
+            (Q(cons_ref_clean__isnull=True) | Q(cons_ref_clean__exact='') | Q(cons_ref_clean='0'))
+        )
+        .filter(
+            Q(tr_category_id=1) | Q(tc_financestatus_id=10)
         )
         .select_related(
             'tr_enquirynumber',
@@ -1944,7 +1975,7 @@ def ref_no_pending_report_ajax_view(request):
         return dt.strftime("%d-%m-%Y %H:%M")
         
     for idx, trip in enumerate(page_trips, start=start + 1):
-        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        cons_no = get_trip_cnote_or_fallback(trip)
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "MAA" if cust_name.endswith("MAA") else ("BLR" if cust_name.endswith("BLR") else "")
         
@@ -2245,7 +2276,7 @@ def invoice_pending_report_ajax_view(request):
 
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        tr_category_id__in=[1, 3],
+        Q(tr_category_id__in=[1, 3]) | Q(tc_financestatus_id=10),
         tr_departeddate__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
@@ -2325,9 +2356,9 @@ def invoice_pending_report_ajax_view(request):
         try:
             b_id = int(branch_id)
             if b_id == 2:  # MAA
-                trips = trips.filter(tr_consignmentnumber__co_consignmentnumber__icontains='MAA')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
             elif b_id == 1:  # BLR
-                trips = trips.filter(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
         except (ValueError, TypeError):
             pass
 
@@ -2541,7 +2572,7 @@ def invoice_pending_report_ajax_view(request):
             branch_name,
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             display_date,
-            safe_str(cons.co_consignmentnumber) if cons else safe_str(trip.tr_tripnumber),
+            get_trip_cnote_or_fallback(trip, cons=cons, default=safe_str(trip.tr_tripnumber)),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",
@@ -3015,7 +3046,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
         row = [
             start + len(data) + 1,
             date_str,
-            safe_str(trip.tr_consignmentnumber),
+            get_trip_cnote_or_fallback(trip),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customername),
@@ -3820,7 +3851,7 @@ def vendor_p_l_attached_report_ajax_view(request):
         row = [
             start + len(data) + 1,
             date_str,
-            safe_str(trip.tr_consignmentnumber),
+            get_trip_cnote_or_fallback(trip),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customername),
@@ -4090,7 +4121,7 @@ def whatsapp_delivery_status_report_ajax_view(request):
     for idx, trip in enumerate(page_trips, start=start + 1):
         customer_name = safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else ""
         department = safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else ""
-        cnote_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        cnote_no = get_trip_cnote_or_fallback(trip)
 
         cust_name = customer_name.strip().upper()
         branch_name = (
@@ -4670,7 +4701,7 @@ def own_vehicle_pl_report_view(request):
                 current_idx,
                 date_val,
                 safe_str(trip.tr_vehiclenumber),
-                safe_str(trip.tr_consignmentnumber),
+                get_trip_cnote_or_fallback(trip),
                 safe_str(trip.tr_category),
                 safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
                 safe_str(trip.tr_departedlocation),
@@ -4986,6 +5017,8 @@ def claim_pending_report_view(request):
             if claim.tcc_cnote.co_enquirynumber:
                 department = safe_str(claim.tcc_cnote.co_enquirynumber.en_customerdepartment)
             cust_name_str = safe_str(claim.tcc_cnote.co_customer)
+        if not cnote and trip:
+            cnote = get_trip_cnote_or_fallback(trip)
 
         cust_name_upper = cust_name_str.strip().upper()
         branch = "Chennai" if cust_name_upper.endswith("MAA") else (
@@ -5077,7 +5110,7 @@ def halting_report_ajax_view(request):
     vehicle_source_id = request.GET.get('vehicle_source')
 
     trips = get_filtered_trips(branch_id, None, vehicle_source_id, from_date, to_date, None, customer_id=customer_id)
-    trips = trips.filter(tr_category_id=1)  # Business trips only
+    trips = trips.filter(Q(tr_category_id=1) | Q(tc_financestatus_id=10))  # Business trips & Cancellation with Billing
     records_total = trips.count()
 
     search_value = request.GET.get('search[value]', '').strip()
@@ -5085,6 +5118,7 @@ def halting_report_ajax_view(request):
         trips = trips.filter(
             Q(tr_vehiclenumber__icontains=search_value) |
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value)
         )
 
@@ -5184,7 +5218,7 @@ def halting_report_ajax_view(request):
             safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
             safe_str(trip.tr_enquirynumber.en_customername), safe_str(trip.tr_enquirynumber.en_customerdepartment),
             consignor, consignee,
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+            get_trip_cnote_or_fallback(trip),
             _fmt_dt(veh_reported_loading),
             _fmt_dt(veh_started_unloading),
             time_taken, halting_days, selling_halting, safe_str(trip.tr_remarks)
@@ -5545,10 +5579,11 @@ def diesel_vs_revenue_report_ajax_view(request):
     to_date = request.GET.get('to_date', '')
     branch_id = request.GET.get('branch', '')
     
-    # Base Query for Trips (Own vehicles only & strictly Business trips)
+    # Base Query for Trips (Own vehicles only & strictly Business trips / Cancellation with Billing)
     trips = TripdetailInfo.objects.filter(
-        tr_vehiclesource_id=1,
-        tr_category__category='Business'
+        tr_vehiclesource_id=1
+    ).filter(
+        Q(tr_category__category='Business') | Q(tc_financestatus_id=10)
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -5563,10 +5598,10 @@ def diesel_vs_revenue_report_ajax_view(request):
             branch_name = branch_obj.loc_name.upper()
             if "MAA" in branch_name:
                 trips = trips.filter(Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') | Q(
-                    tr_consignmentnumber__co_consignmentnumber__icontains='MAA'))
+                    tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
             elif "BLR" in branch_name:
                 trips = trips.filter(Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR') | Q(
-                    tr_consignmentnumber__co_consignmentnumber__icontains='BLR'))
+                    tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
         except Location_info.DoesNotExist:
             pass
 
@@ -5586,6 +5621,7 @@ def diesel_vs_revenue_report_ajax_view(request):
         trips = trips.filter(
             Q(tr_vehiclenumber__icontains=search_value) |
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value)
         )
 
@@ -5783,7 +5819,7 @@ def diesel_vs_revenue_report_ajax_view(request):
 
         mileage_fixed = safe_str(vm.vm_millage) if vm else ""
         leased_to = safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else ""
-        cnote_str = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        cnote_str = get_trip_cnote_or_fallback(trip)
         if not cnote_str and trip.tr_enquirynumber:
             v_key = (trip.tr_enquirynumber_id, safe_str(trip.tr_vehiclenumber).strip().upper())
             cnote_str = safe_str(cons_fallback_map.get(v_key, ""))
@@ -6267,9 +6303,10 @@ def pod_pending_report_ajax_view(request):
         'tr_vehiclesource', 'tr_enquirynumber__en_trip_type',
         'tr_departedlocation', 'tr_reportedlocation'
     ).filter(
-        Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False) | Q(tr_reporteddate_pickup__isnull=False),
-        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
-        tr_category_id=1  # Business trips only
+        Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False) | Q(tr_reporteddate_pickup__isnull=False) | Q(tc_financestatus_id=10),
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]
+    ).filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10)  # Business trips & Cancellation with Billing
     )
 
     from ..models import TripAttachmentInfo, Trip_closure_files_Info
@@ -6433,7 +6470,7 @@ def pod_pending_report_ajax_view(request):
             idx,
             _fmt_dt(start_date, date_only=True),
             _fmt_dt(end_date, date_only=True),
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+            get_trip_cnote_or_fallback(trip),
             safe_str(trip.tr_enquirynumber.en_customername),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
@@ -6755,18 +6792,24 @@ def movementwise_pl_report_ajax_view(request):
             8: 'tr_vehicletype_placed__vt_typename',
         }
 
-        sort_field = order_map.get(order_column_idx)
-        if sort_field:
-            if order_dir == 'desc':
-                sort_field = '-' + sort_field
+        if order_column_idx == 2:
+            trips = trips.annotate(cnote_sort=Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber'))
+            sort_field = '-cnote_sort' if order_dir == 'desc' else 'cnote_sort'
             trips = trips.order_by(sort_field)
         else:
-            trips = trips.order_by('-tr_created_at')
+            sort_field = order_map.get(order_column_idx)
+            if sort_field:
+                if order_dir == 'desc':
+                    sort_field = '-' + sort_field
+                trips = trips.order_by(sort_field)
+            else:
+                trips = trips.order_by('-tr_created_at')
 
         # Search filter in DB
         if search_value:
             trips = trips.filter(
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_tripnumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
                 Q(tr_vehiclenumber__icontains=search_value)
             )
@@ -6870,7 +6913,7 @@ def movementwise_pl_report_ajax_view(request):
             final_data_rows.append([
                 idx,
                 disp_date,
-                safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+                get_trip_cnote_or_fallback(trip),
                 safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
                 safe_str(trip.tr_departedlocation),
                 safe_str(trip.tr_reportedlocation),
@@ -6946,18 +6989,24 @@ def customerwise_pl_report_ajax_view(request):
             8: 'tr_vehicletype_placed__vt_typename',
         }
 
-        sort_field = order_map.get(order_column_idx)
-        if sort_field:
-            if order_dir == 'desc':
-                sort_field = '-' + sort_field
+        if order_column_idx == 2:
+            trips = trips.annotate(cnote_sort=Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber'))
+            sort_field = '-cnote_sort' if order_dir == 'desc' else 'cnote_sort'
             trips = trips.order_by(sort_field)
         else:
-            trips = trips.order_by('-tr_created_at')
+            sort_field = order_map.get(order_column_idx)
+            if sort_field:
+                if order_dir == 'desc':
+                    sort_field = '-' + sort_field
+                trips = trips.order_by(sort_field)
+            else:
+                trips = trips.order_by('-tr_created_at')
 
         # Search filter in DB
         if search_value:
             trips = trips.filter(
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_tripnumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
                 Q(tr_vehiclenumber__icontains=search_value) |
                 Q(tc_financestatus__status__icontains=search_value)
@@ -7065,7 +7114,7 @@ def customerwise_pl_report_ajax_view(request):
             final_data_rows.append([
                 idx,
                 disp_date,
-                safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+                get_trip_cnote_or_fallback(trip),
                 safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
                 safe_str(trip.tr_departedlocation),
                 safe_str(trip.tr_reportedlocation),
@@ -7631,7 +7680,9 @@ def time_analysis_report_ajax_view(request):
     branch_id = request.GET.get('branch', '')
     vehicle_search = request.GET.get('vehicle_search', '').strip()
 
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+    trips = TripdetailInfo.objects.filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10)
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
@@ -7680,6 +7731,7 @@ def time_analysis_report_ajax_view(request):
         trips = trips.filter(
             Q(tr_vehiclenumber__icontains=search_value) |
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
             Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value)
         )
@@ -7717,7 +7769,7 @@ def time_analysis_report_ajax_view(request):
         enquiry_created = enquiry.en_created_at if enquiry else None
         pickup_dt = enquiry.en_pickupdatetime if enquiry else None
 
-        cnote_no = safe_str(cons.co_consignmentnumber) if cons else ""
+        cnote_no = get_trip_cnote_or_fallback(trip, cons=cons)
         cnote_created = cons.co_created_at if cons else None
 
         veh_allotted_dt = None
@@ -8059,18 +8111,20 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
             Q(id__in=invoiced_trip_ids)
         )
 
-    # Exclude non-billable Empty trips (allow Business Empty and billable business trips with CNote)
-    trip_filters &= Q(tr_consignmentnumber__isnull=False)
+    # Exclude non-billable Empty trips (allow Business Empty and billable business trips with CNote or Cancellation with Billing)
+    trip_filters &= (Q(tr_consignmentnumber__isnull=False) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10))
     trip_filters &= ~Q(tr_category__category__iexact='Empty') & ~Q(tr_category__category__iexact=' Empty')
 
-    # Branch filter based on Cnote number
+    # Branch filter based on Cnote number or Trip number
     if branch_param:
         branch_obj = Location_info.objects.filter(id=branch_param).first()
         if branch_obj:
             branch_code = branch_obj.loc_name.replace('BVM ', '').replace('MC ', '').strip()
             trip_filters &= (
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=f"_{branch_code}_") |
-                Q(tr_consignmentnumber__co_consignmentnumber__startswith=f"{branch_code}_")
+                Q(tr_consignmentnumber__co_consignmentnumber__startswith=f"{branch_code}_") |
+                Q(tr_tripnumber__icontains=f"_{branch_code}_") |
+                Q(tr_tripnumber__startswith=f"{branch_code}_")
             )
 
     # Date filter on Trip Date (Departed Date)
@@ -8241,7 +8295,7 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
                 vendor_name = v_vendor.vend_name
 
         trip_date = timezone.localtime(trip.tr_departeddate).strftime('%Y-%m-%d') if trip.tr_departeddate else "-"
-        cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "-"
+        cnote = get_trip_cnote_or_fallback(trip, default="-")
         from_loc = str(trip.tr_departedlocation) if trip.tr_departedlocation else (
             str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_fromlocaion else "-")
         to_loc = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else (
@@ -8336,8 +8390,12 @@ def transport_mis(request):
         income_filter["ti_trip__tr_updated_by__user_extinfo__emp_branch__loc_name"] = selected_branch
 
     if selected_unit:
-        expenses_filter["exp_ext_unit__unit_name"] = selected_unit
-        budget_filter["bf_unit_reference__unit_name"] = selected_unit
+        if selected_unit in ['M-Dept', 'B-Dept']:
+            expenses_filter["exp_ext_department"] = selected_unit
+            budget_filter["bf_unit"] = selected_unit
+        else:
+            expenses_filter["exp_ext_unit__unit_name"] = selected_unit
+            budget_filter["bf_unit_reference__unit_name"] = selected_unit
 
     if selected_vehicle_source:
         budget_filter["bf_vehicle_source__ow_ownership"] = selected_vehicle_source

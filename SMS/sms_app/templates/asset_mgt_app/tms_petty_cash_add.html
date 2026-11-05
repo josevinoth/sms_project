@@ -194,13 +194,13 @@
 
 <script>
     $(document).ready(function() {
-        $('.select2').not('#tpc_to').select2({
+        $('.select2').not('#tpc_to, #tpc_vehicle_number, #tpc_driver_name').select2({
             width: '100%',
             placeholder: '--Select--',
             allowClear: true
         });
 
-        $('#tpc_to').select2({
+        $('#tpc_to, #tpc_vehicle_number, #tpc_driver_name').select2({
             width: '100%',
             placeholder: '--Select--',
             allowClear: true,
@@ -225,6 +225,26 @@
                 $('#tpc_to').append(newOption).trigger('change');
             } else {
                 $('#tpc_to').val(manualVal).trigger('change');
+            }
+        {% endif %}
+
+        {% if form.instance.tpc_vehicle_number_manual %}
+            var manualVeh = "{{ form.instance.tpc_vehicle_number_manual|escapejs }}";
+            if ($('#tpc_vehicle_number option[value="' + manualVeh + '"]').length === 0) {
+                var newOption = new Option(manualVeh, manualVeh, true, true);
+                $('#tpc_vehicle_number').append(newOption).trigger('change');
+            } else {
+                $('#tpc_vehicle_number').val(manualVeh).trigger('change');
+            }
+        {% endif %}
+
+        {% if form.instance.tpc_driver_name_manual %}
+            var manualDrv = "{{ form.instance.tpc_driver_name_manual|escapejs }}";
+            if ($('#tpc_driver_name option[value="' + manualDrv + '"]').length === 0) {
+                var newOption = new Option(manualDrv, manualDrv, true, true);
+                $('#tpc_driver_name').append(newOption).trigger('change');
+            } else {
+                $('#tpc_driver_name').val(manualDrv).trigger('change');
             }
         {% endif %}
         
@@ -280,11 +300,9 @@
         toggleTransFields(); // run on load
         
         // AJAX to fetch trips by date
-        $('#tpc_trip_date').change(function() {
-            var selectedDate = $(this).val();
+        function loadTripsForDate() {
+            var selectedDate = $('#tpc_trip_date').val();
             $('#trip_search_input').val('');
-            
-
             
             if (selectedDate) {
                 $.ajax({
@@ -295,9 +313,16 @@
                             var tbody = $('#trip_table tbody');
                             tbody.empty();
                             if (response.data.length > 0) {
+                                var currentJob = ($('#tpc_job_no').val() || '').trim().toUpperCase();
                                 response.data.forEach(function(trip) {
-                                    var row = `<tr>
-                                        <td><button type="button" class="btn btn-sm btn-success select-trip-btn font-weight-bold" 
+                                    var tripCnote = (trip.cnote_no || '').trim().toUpperCase();
+                                    var isSelected = currentJob && (tripCnote === currentJob || String(trip.trip_id) === currentJob);
+                                    var rowClass = isSelected ? 'table-warning font-weight-bold' : '';
+                                    var btnClass = isSelected ? 'btn-warning' : 'btn-success';
+                                    var btnText = isSelected ? '<i class="fas fa-check"></i> Selected' : '<i class="fas fa-hand-pointer"></i> Select';
+
+                                    var row = `<tr class="${rowClass}">
+                                        <td><button type="button" class="btn btn-sm ${btnClass} select-trip-btn font-weight-bold" 
                                             data-cnote="${trip.cnote_no}" 
                                             data-customer="${trip.customer_id}" 
                                             data-source="${trip.vehicle_source_id}" 
@@ -305,9 +330,9 @@
                                             data-driver="${trip.driver_name}"
                                             data-from="${trip.from_location}"
                                             data-to="${trip.to_location}">
-                                            <i class="fas fa-hand-pointer"></i> Select
+                                            ${btnText}
                                         </button></td>
-                                        <td>${trip.cnote_no}</td>
+                                        <td><strong>${trip.cnote_no}</strong></td>
                                         <td>${trip.from_location} - ${trip.to_location}</td>
                                         <td>${trip.customer_name}</td>
                                         <td>${trip.vehicle_source_name}</td>
@@ -324,13 +349,18 @@
                         }
                     },
                     error: function() {
-                        alert("Error fetching trips.");
+                        console.error("Error fetching trips.");
                     }
                 });
             } else {
                 $('#trip_table_container').hide();
             }
-        });
+        }
+
+        $('#tpc_trip_date').change(loadTripsForDate);
+        if ($('#tpc_trip_date').val()) {
+            loadTripsForDate();
+        }
         
         // Handle trip selection
         $(document).on('click', '.select-trip-btn', function() {
@@ -345,6 +375,13 @@
             $('#tpc_job_no').val(cnote);
             $('#tpc_from_location').val(from_loc);
             $('#tpc_to_location').val(to_loc);
+
+            // Update row highlights
+            $('#trip_table tbody tr').removeClass('table-warning font-weight-bold');
+            $('#trip_table .select-trip-btn').removeClass('btn-warning').addClass('btn-success').html('<i class="fas fa-hand-pointer"></i> Select');
+
+            $(this).closest('tr').addClass('table-warning font-weight-bold');
+            $(this).removeClass('btn-success').addClass('btn-warning').html('<i class="fas fa-check"></i> Selected');
             
             if (customer) {
                 $('#tpc_customer').val(customer).trigger('change');
