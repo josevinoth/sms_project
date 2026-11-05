@@ -17,6 +17,10 @@ class TMSPettyCashForm(forms.ModelForm):
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control form-control-sm'})
             
+        if 'tpc_transaction_date' in self.fields:
+            self.fields['tpc_transaction_date'].required = True
+            self.fields['tpc_transaction_date'].label = "Voucher Date" 
+            
         if 'tpc_business' in self.fields:
             self.fields['tpc_business'].queryset = self.fields['tpc_business'].queryset.filter(bvm_business__icontains='Trans')
             

@@ -245,18 +245,17 @@ def tripdetail_add(request, tripdetail_id=0):
                         trip_det_form.fields['tr_departedlocation'].initial = rep_place
                     elif rep_place and initial_data.get('tr_category') in [2, 3]:
                         trip_det_form.fields['tr_reportedlocation'].initial = rep_place
-                    else:
-                        previous_trip = TripdetailInfo.objects.filter(
-                            tr_enquirynumber_id=enquiry_num_id
-                        ).order_by('-tr_created_at').first()
-                        if previous_trip and previous_trip.tr_reportedlocation:
-                            trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+                    elif enquiry and enquiry.en_fromlocaion:
+                        trip_det_form.fields['tr_departedlocation'].initial = enquiry.en_fromlocaion
+
+                    if enquiry and enquiry.en_tolocation:
+                        trip_det_form.fields['tr_reportedlocation'].initial = enquiry.en_tolocation
             else:
-                previous_trip = TripdetailInfo.objects.filter(
-                    tr_enquirynumber_id=enquiry_num_id
-                ).order_by('-tr_created_at').first()
-                if previous_trip and previous_trip.tr_reportedlocation:
-                    trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+                # Market vehicle or vehicle without allotment: Default directly to Enquiry locations
+                if enquiry and enquiry.en_fromlocaion:
+                    trip_det_form.fields['tr_departedlocation'].initial = enquiry.en_fromlocaion
+                if enquiry and enquiry.en_tolocation:
+                    trip_det_form.fields['tr_reportedlocation'].initial = enquiry.en_tolocation
 
             tripclosurefiles_form = TripclosurefilesForm()
             trip_list = TripdetailInfo.objects.select_related(
@@ -1391,7 +1390,7 @@ def tripdetail_list_ajax(request):
         updated_at = timezone.localtime(t.tr_updated_at).strftime('%Y-%m-%d %H:%M') if t.tr_updated_at else ''
 
         data.append([
-            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            timezone.localtime(t.tr_created_at).strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
             str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
             t.tr_tripnumber or '',

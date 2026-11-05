@@ -49,8 +49,18 @@ def user_add(request,user_id=0):
 @login_required(login_url='login_page')
 def user_list(request):
     first_name = request.session.get('first_name')
-    context = {'user_list' : User.objects.all(),'first_name': first_name,}
-    return render(request,"asset_mgt_app/employee_list.html",context)
+    users = User.objects.all().select_related('user_extinfo').order_by('id')
+    total_users = users.count()
+    active_users = sum(1 for u in users if u.is_active)
+    inactive_users = total_users - active_users
+    context = {
+        'user_list': users,
+        'first_name': first_name,
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
+    }
+    return render(request, "asset_mgt_app/employee_list.html", context)
 
 #Delete User
 @login_required(login_url='login_page')

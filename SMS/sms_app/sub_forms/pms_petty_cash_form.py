@@ -18,6 +18,10 @@ class PMSPettyCashForm(forms.ModelForm):
         super(PMSPettyCashForm, self).__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control form-control-sm'})
+            
+        if 'ppc_date' in self.fields:
+            self.fields['ppc_date'].required = True
+            self.fields['ppc_date'].label = "Voucher Date" 
 
         if 'ppc_business' in self.fields:
             self.fields['ppc_business'].queryset = self.fields['ppc_business'].queryset.filter(

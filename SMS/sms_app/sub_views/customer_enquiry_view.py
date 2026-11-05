@@ -891,25 +891,25 @@ def download_pod(request, trip_id):
 @login_required
 def download_dmr(request, trip_id):
     """Generate and download a single-trip DMR report as Excel."""
-    from .dmr_report_view import get_dmr_headers, get_dmr_rows
+    from .dmr_report_view import build_dmr_excel_workbook
     from django.http import HttpResponse
     from io import BytesIO
-    from openpyxl import Workbook
+
 
     customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
     
     # Use existing DMR logic
+    dept_id = trip.tr_enquirynumber.en_customerdepartment_id if trip.tr_enquirynumber.en_customerdepartment else None
     dept_name = trip.tr_enquirynumber.en_customerdepartment.dept_name if trip.tr_enquirynumber.en_customerdepartment else "Transport"
-    headers, template_key = get_dmr_headers(customer.cu_name, dept_name, trip.tr_departedlocation_id, trip.tr_reportedlocation_id)
-    rows = get_dmr_rows([trip], headers, template_key, customer.cu_name)
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "DMR Report"
-    ws.append(headers)
-    for row in rows:
-        ws.append(row)
+    wb, _ = build_dmr_excel_workbook(
+        customer_obj=customer,
+        dept_id=dept_id,
+        dept_name=dept_name,
+        from_loc=trip.tr_departedlocation_id,
+        to_loc=trip.tr_reportedlocation_id,
+        trips=[trip]
+    )
 
     output = BytesIO()
     wb.save(output)

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Q, Count
 
 from ..sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn
 from ..sub_models.customer_mod import CustomerInfo
@@ -206,7 +206,13 @@ def dmr_template_preview_ajax(request):
             return JsonResponse({'status': False, 'message': 'No columns defined to preview.'})
 
         # Fetch representative trips for sample data (prefer trips with completed delivery for full timestamps)
-        base_qs = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+        cancellation_without_billing = (
+            Q(tc_financestatus_id=11) |
+            Q(tc_financestatus__status__icontains='without billing') |
+            Q(tr_enquirynumber__en_status_id=10) |
+            Q(tr_enquirynumber__en_status__status_title__icontains='without billing')
+        )
+        base_qs = TripdetailInfo.objects.filter(tr_category_id=1).exclude(cancellation_without_billing).select_related(
             'tr_enquirynumber', 'tr_enquirynumber__en_customername',
             'tr_enquirynumber__en_customerdepartment', 'tr_consignmentnumber'
         )
@@ -226,7 +232,7 @@ def dmr_template_preview_ajax(request):
             sample_trips = combined[:3]
 
         if not sample_trips:
-            sample_trips = list(TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+            sample_trips = list(TripdetailInfo.objects.filter(tr_category_id=1).exclude(cancellation_without_billing).select_related(
                 'tr_enquirynumber', 'tr_enquirynumber__en_customername',
                 'tr_enquirynumber__en_customerdepartment', 'tr_consignmentnumber'
             ).order_by('-id')[:3])

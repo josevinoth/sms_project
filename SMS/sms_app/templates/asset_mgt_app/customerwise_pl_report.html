@@ -91,6 +91,16 @@
                 </select>
             </div>
 
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label class="form-label-modern font-weight-bold">Trip Status</label>
+                <select name="status" class="form-control form-control-modern select2" id="statusSelect">
+                    <option value="">All Statuses</option>
+                    {% for s in all_statuses %}
+                    <option value="{{ s.id }}" {% if status_id == s.id %}selected{% endif %}>{{ s.status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="col-12 d-flex justify-content-end align-items-center mt-3 pt-2" style="gap: 8px; border-top: 1px solid var(--border-light, #e2e8f0);">
                 <button type="submit" class="btn-modern btn-submit py-1 px-4" style="height: 36px;">
                     <i class="fas fa-filter mr-1"></i> Filter
@@ -164,6 +174,7 @@
                     d.trip_category = $('#tripCategorySelect').val();
                     d.customer = $('#customerSelect').val();
                     d.vehicle_source = $('#vehicleSourceSelect').val();
+                    d.status = $('#statusSelect').val();
                     d.from_date = $('#fromDate').val();
                     d.to_date = $('#toDate').val();
                     d.year = '{{ selected_year|default:"" }}';
@@ -224,7 +235,7 @@
         }, 800);
 
         if ($.fn.select2) {
-            $('#branchSelect, #tripCategorySelect, #customerSelect, #vehicleSourceSelect').select2({
+            $('#branchSelect, #tripCategorySelect, #customerSelect, #vehicleSourceSelect, #statusSelect').select2({
                 width: '100%'
             });
         }

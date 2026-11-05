@@ -284,10 +284,7 @@
             var selectedDate = $(this).val();
             $('#trip_search_input').val('');
             
-            // Auto-populate transaction date if it's empty
-            if (!$('#tpc_transaction_date').val()) {
-                $('#tpc_transaction_date').val(selectedDate);
-            }
+
             
             if (selectedDate) {
                 $.ajax({

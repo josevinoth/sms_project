@@ -2,18 +2,37 @@ from datetime import datetime
 from django.db.models import Max
 from ..models import Location_info
 
-def get_financial_year():
+def get_financial_year(date_obj=None):
     """
-    Returns the current financial year in YY-YY format.
+    Returns the financial year in YY-YY format.
     Financial year in India starts on April 1st.
+    If date_obj is None, uses datetime.now().
+    Supports datetime, date, or str (YYYY-MM-DD).
     """
-    today = datetime.now()
-    if today.month < 4:
+    if date_obj is None:
+        target_date = datetime.now()
+    elif isinstance(date_obj, str):
+        try:
+            target_date = datetime.strptime(date_obj[:10], "%Y-%m-%d")
+        except Exception:
+            target_date = datetime.now()
+    elif hasattr(date_obj, 'month') and hasattr(date_obj, 'year'):
+        target_date = date_obj
+    else:
+        target_date = datetime.now()
+
+    year = target_date.year
+    if year < 100:
+        year += 2000
+    elif year < 1900:
+        year = datetime.now().year
+
+    if target_date.month < 4:
         # Before April, the financial year started in the previous year
-        start_year = today.year - 1
+        start_year = year - 1
     else:
         # From April onwards, the financial year started in the current year
-        start_year = today.year
+        start_year = year
     
     end_year = start_year + 1
     return f"{str(start_year)[2:]}-{str(end_year)[2:]}"

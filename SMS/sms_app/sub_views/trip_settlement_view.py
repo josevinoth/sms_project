@@ -62,7 +62,7 @@ def trip_settlement_list_ajax_view(request):
         if veh_no:
             trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
         import datetime
-        from django.utils import timezone
+        # timezone already imported above
 
         if date_from:
             try:
@@ -168,7 +168,7 @@ def trip_settlement_list_ajax_view(request):
                 str(trip.tr_vehiclenumber) if trip.tr_vehiclenumber else '',
                 from_loc,
                 to_loc,
-                trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
+                timezone.localtime(trip.tr_departeddate_pickup).strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
                 '' if trip.tc_tripcost is None else str(trip.tc_tripcost),
                 '' if trip.tc_parkingcost is None else str(trip.tc_parkingcost),
                 '' if trip.tc_tollcost is None else str(trip.tc_tollcost),

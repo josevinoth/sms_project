@@ -18,6 +18,10 @@ class WMSPettyCashForm(forms.ModelForm):
         super(WMSPettyCashForm, self).__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control form-control-sm'})
+            
+        if 'wpc_date' in self.fields:
+            self.fields['wpc_date'].required = True
+            self.fields['wpc_date'].label = "Voucher Date" 
 
         if 'wpc_business' in self.fields:
             self.fields['wpc_business'].queryset = self.fields['wpc_business'].queryset.filter(

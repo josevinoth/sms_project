@@ -112,7 +112,7 @@ DMR_PAGE_CATALOG = [
             {"key": "unloading_started_datetime", "label": "Started Date & Time @ Unloading", "type": "datetime", "desc": "Closing timestamp at unloading"},
             {"key": "closing_km", "label": "Closing KM", "type": "number", "desc": "Odometer KM at end of trip"},
             {"key": "used_km", "label": "Used KM", "type": "number", "desc": "Calculated total KM used"},
-            {"key": "halting_days", "label": "No of Days Halting / Detention", "type": "number", "desc": "Halting days count"},
+            {"key": "halting_days", "label": "No of Halting Days", "type": "number", "desc": "Total number of halting days"},
             {"key": "halting_status", "label": "Halting Status (YES / NO)", "type": "string", "desc": "Whether halting occurred"},
             {"key": "delivery_status", "label": "Delivery Status / POD Status", "type": "string", "desc": "Finance/Operations status of trip"},
             {"key": "tr_remarks", "label": "Trip Remarks", "type": "string", "desc": "Trip closure comments or notes"},
@@ -128,6 +128,7 @@ DMR_PAGE_CATALOG = [
             {"key": "loading_charges", "label": "Loading Charges", "type": "number", "desc": "Loading cost"},
             {"key": "unloading_charges", "label": "Unloading Charges", "type": "number", "desc": "Unloading cost"},
             {"key": "halting_charges", "label": "Halting Charges", "type": "number", "desc": "Halting / detention charges"},
+            {"key": "halting_days", "label": "No of Halting Days", "type": "number", "desc": "Total number of halting days"},
             {"key": "toll_charges", "label": "Toll Charges / Toll Pass", "type": "number", "desc": "Toll pass cost"},
             {"key": "parking_charges", "label": "Parking Charges", "type": "number", "desc": "Parking fee"},
             {"key": "weighment_charges", "label": "Weighment Charges", "type": "number", "desc": "Weighment slip charges"},
@@ -448,8 +449,9 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
             (trip.tr_reportedkm_delivery or 0) - (trip.tr_reportedkm_pickup or 0)
         )
         return _safe_num(diff)
-    if fk == "halting_days":
-        return _safe_num(trip.tc_no_of_days_halting)
+    if fk in ("halting_days", "no_of_halting_days", "no_of_days_halting", "detention_days"):
+        val = _safe_num(trip.tc_no_of_days_halting)
+        return int(val) if isinstance(val, (int, float)) and val.is_integer() else val
     if fk == "halting_status":
         days = _safe_num(trip.tc_no_of_days_halting)
         return "YES" if days > 0 else "NO"
