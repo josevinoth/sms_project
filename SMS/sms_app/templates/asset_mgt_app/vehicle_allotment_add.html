@@ -44,6 +44,48 @@
 		margin-bottom: 0.65rem !important;
 	}
 
+		/* Nearest Vehicle Quick-Pills */
+	.nearest-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 10px;
+		font-size: 0.74rem;
+		font-weight: 700;
+		border-radius: 8px;
+		background: #f0fdf4;
+		color: #166534;
+		border: 1.5px solid #86efac;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+		text-decoration: none;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	}
+	.nearest-pill:hover {
+		background: #dcfce7;
+		border-color: #22c55e;
+		transform: translateY(-1px);
+		box-shadow: 0 3px 6px rgba(22, 101, 52, 0.15);
+		color: #15803d;
+	}
+	.nearest-pill.active-pill {
+		background: #16a34a;
+		color: #ffffff;
+		border-color: #15803d;
+		box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);
+	}
+	.nearest-pill .pill-dist {
+		background: rgba(0, 0, 0, 0.08);
+		padding: 1px 6px;
+		border-radius: 6px;
+		font-size: 0.7rem;
+		font-weight: 600;
+	}
+	.nearest-pill.active-pill .pill-dist {
+		background: rgba(255, 255, 255, 0.25);
+		color: #fff;
+	}
+
 	.vehicle-allotment-modern .form-label-modern {
 		margin-bottom: 0.25rem !important;
 		font-size: 0.72rem;
@@ -170,7 +212,14 @@
 										{% endif %}
 									</div>
 									<div class="form-group-modern">
-										<label class="form-label-modern">Vehicle Number</label>
+										<div class="d-flex justify-content-between align-items-center mb-1">
+											<label class="form-label-modern mb-0">Vehicle Number</label>
+											{% if not va %}
+											<span id="nearest_badge" class="badge" style="display:none; font-size:0.72rem; padding: 2px 7px; border-radius: 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600;">
+												<i class="fas fa-location-crosshairs mr-1"></i> Nearest to <span id="nearest_from_name">{{ from_location|default:"Origin" }}</span>
+											</span>
+											{% endif %}
+										</div>
 										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" disabled="disabled" %}
 										{% if va.va_vehiclenumber_id %}
@@ -178,6 +227,19 @@
 										{% endif %}
 										{% else %}
 										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" %}
+										{% endif %}
+
+										<!-- Top Nearest Vehicles Quick-Pills (Option 3 - only on Add page) -->
+										{% if not va %}
+										<div id="nearest_pills_container" class="mt-2" style="display: none;">
+											<div style="font-size: 0.72rem; font-weight: 700; color: #475569; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between;">
+												<span><i class="fas fa-bolt" style="color: #f59e0b;"></i> NEAREST AVAILABLE:</span>
+												<span id="nearest_type_badge" class="badge badge-light" style="font-size: 0.68rem; font-weight: 700; color: #2563eb; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2);"></span>
+											</div>
+											<div id="nearest_pills_list" class="d-flex flex-wrap" style="gap: 6px;">
+												<!-- Rendered dynamically -->
+											</div>
+										</div>
 										{% endif %}
 									</div>
 									<div class="form-group-modern">
@@ -362,6 +424,359 @@
 	</div>
 </div>
 {% include "asset_mgt_app/vehicle_allotment_list_woh.html" %}
+
+<!-- Replace Vehicle Modal -->
+<style>
+    #replaceVehicleModal {
+        z-index: 9999;
+    }
+    #replaceVehicleModal .modal-dialog, #replaceDriverModal .modal-dialog {
+        margin-top: 100px;
+    }
+    #replaceVehicleModal input:disabled, #replaceVehicleModal select:disabled, .disable_a_href {
+        background-color: #CCFFCC !important;
+        color: #495057 !important;
+        cursor: not-allowed;
+    }
+    .select2-container--open {
+        z-index: 100050 !important;
+    }
+    .select2-dropdown {
+        z-index: 100050 !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+        border: 1.5px solid #2563eb !important;
+        border-radius: 8px !important;
+    }
+    .select2-results__options {
+        max-height: 240px !important;
+        overflow-y: auto !important;
+    }
+    .select2-results__option {
+        padding: 6px 10px !important;
+        font-size: 0.82rem !important;
+        cursor: pointer !important;
+    }
+    .select2-results__option--highlighted {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+    /* Fix Select2 alignment in input-groups */
+    .input-group > .select2-container--default {
+        flex: 1 1 auto;
+        width: auto !important;
+    }
+    .input-group > .select2-container--default .select2-selection--single {
+        height: 31px !important; /* Match input-group-sm height */
+        border-radius: 0 4px 4px 0 !important;
+    }
+</style>
+{% if va %}
+<div class="modal fade" id="replaceVehicleModal" role="dialog" aria-labelledby="replaceVehicleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form id="replaceVehicleForm" method="post" action="{% url 'vehicle_allotment_replace' va.id %}">
+                {% csrf_token %}
+                <div class="modal-header modern-header text-white">
+                    <h5 class="modal-title">Replace Vehicle (Breakdown / Accident)</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Current Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reason for Replacement <span style="color:red">*</span></label>
+                        <select name="reason" class="form-control" required>
+                            <option value="">--Select Reason--</option>
+                            <option value="Breakdown">Breakdown</option>
+                            <option value="Accident">Accident</option>
+                            <option value="Driver Issue">Driver Issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    {% if active_trip %}
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-truck-moving mr-1"></i>
+                        <strong>Active Trip in Progress (Trip #{{ active_trip.tr_tripnumber }}):</strong><br>
+                        <span>Journey started at <strong>{{ active_trip.tr_departedlocation|default:'Origin' }}</strong>{% if active_trip.tr_departedkm is not None %} with Odometer <strong>{{ active_trip.tr_departedkm }} KM</strong>{% endif %}.</span>
+                        <div class="small mt-1 text-muted">
+                            Please provide the handover/breakdown location and current odometer. This active trip will be closed at this location.
+                        </div>
+                    </div>
+                    <input type="hidden" id="modal_has_active_trip" value="1">
+                    <input type="hidden" id="modal_min_trip_km" value="{{ active_trip.tr_departedkm|default:0 }}">
+                    {% else %}
+                    <input type="hidden" id="modal_has_active_trip" value="0">
+                    <input type="hidden" id="modal_min_trip_km" value="0">
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Replacement / Handover Place {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
+                                <select name="va_replacement_place" id="modal_va_replacement_place" class="form-control" {% if active_trip %}required{% endif %}>
+                                    <option value="">--Select Location--</option>
+                                    {% for place in all_places %}
+                                        <option value="{{ place.id }}">{{ place.place_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Odometer KM at Replacement {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
+                                <input type="number" 
+                                       name="va_replacement_km" 
+                                       id="modal_va_replacement_km" 
+                                       class="form-control" 
+                                       placeholder="e.g. {% if active_trip and active_trip.tr_departedkm %}{{ active_trip.tr_departedkm }}{% else %}85140{% endif %}"
+                                       {% if active_trip and active_trip.tr_departedkm %}min="{{ active_trip.tr_departedkm }}"{% else %}min="0"{% endif %}
+                                       {% if active_trip %}required{% endif %}>
+                                <small class="form-text text-muted">
+                                    {% if active_trip and active_trip.tr_departedkm %}
+                                        Must be &ge; {{ active_trip.tr_departedkm }} KM (Trip Departure KM).
+                                    {% else %}
+                                        Current odometer reading of the vehicle being replaced.
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-5">
+                            <div class="form-group mb-0">
+                                <label class="mb-1">New Vehicle Type Requested</label>
+                                <select name="va_vehicletype" id="modal_va_vehicletype" class="form-control">
+                                    <option value="">--Select Type--</option>
+                                    {% for t in all_vehicletypes %}
+                                        <option value="{{ t.id }}" {% if va and t.id == va.va_vehicletype_id %}selected{% endif %}>{{ t.vt_vehicletype }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-1 pt-4 text-center">
+                            <input type="checkbox" id="modal_chk_requested" name="va_vehicletype_selection_requested" class="modal-vehicle-check" style="width:20px; height:20px; cursor:pointer;" {% if va.va_vehicletype_selection_requested %}checked{% endif %}>
+                            <i class="fas fa-info-circle text-info" data-toggle="tooltip" title="Verify Requested"></i>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group mb-0">
+                                <label class="mb-1">New Vehicle Type Placed <span style="color:red">*</span></label>
+                                <select name="va_vehicletype_placed" id="modal_va_vehicletype_placed" class="form-control" required>
+                                    <option value="">--Select Type--</option>
+                                    {% for t in all_vehicletypes %}
+                                        <option value="{{ t.id }}" {% if va and t.id == va.va_vehicletype_placed_id %}selected{% endif %}>{{ t.vt_vehicletype }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-1 pt-4 text-center">
+                            <input type="checkbox" id="modal_chk_placed" name="va_vehicletype_selection_placed" class="modal-vehicle-check" style="width:20px; height:20px; cursor:pointer;" {% if va.va_vehicletype_selection_placed %}checked{% endif %}>
+                            <i class="fas fa-info-circle text-info" data-toggle="tooltip" title="Verify Placed"></i>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Vehicle Source <span style="color:red">*</span></label>
+                                <select name="va_vehiclesource" id="modal_va_vehiclesource" class="form-control" required>
+                                    <option value="">--Select Source--</option>
+                                    <option value="1">Own</option>
+                                    <option value="2">Attached</option>
+                                    <option value="3">Market</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Vendor Name <span id="modal_vendor_star" style="color:red; display:none">*</span></label>
+                                <select name="va_vendor" id="modal_va_vendor" class="form-control">
+                                    <option value="">--Select Vendor--</option>
+                                    {% for v in all_vendors %}
+                                        <option value="{{ v.id }}">{{ v.vend_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group" id="modal_own_attached_div">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="mb-0">New Vehicle Number <span style="color:red">*</span></label>
+                                    <span id="modal_nearest_badge" class="badge" style="display:none; font-size:0.72rem; padding: 2px 7px; border-radius: 6px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600;">
+                                        <i class="fas fa-location-crosshairs mr-1"></i> Nearest to <span id="modal_nearest_from_name">{{ from_location|default:"Origin" }}</span>
+                                    </span>
+                                </div>
+                                <select name="va_vehiclenumber" id="modal_va_vehiclenumber" class="form-control" style="cursor: pointer; font-weight: 600;">
+                                    <option value="">--Select--</option>
+                                </select>
+                                <!-- Replacement Modal Quick-Pills -->
+                                <div id="modal_nearest_pills_container" class="mt-2" style="display: none;">
+                                    <div style="font-size: 0.72rem; font-weight: 700; color: #475569; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between;">
+                                        <span><i class="fas fa-bolt" style="color: #f59e0b;"></i> NEAREST AVAILABLE:</span>
+                                        <span id="modal_nearest_type_badge" class="badge badge-light" style="font-size: 0.68rem; font-weight: 700; color: #2563eb; background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2);"></span>
+                                    </div>
+                                    <div id="modal_nearest_pills_list" class="d-flex flex-wrap" style="gap: 6px;"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="modal_market_div" style="display:none;">
+                                <label>New Market Vehicle Number <span style="color:red">*</span></label>
+                                <!-- Format validation pattern temporarily commented out:
+                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916">
+                                -->
+                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control" placeholder="e.g. TN22AB4916">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Driver Name</label>
+                                <input type="text" name="va_drivername" id="modal_va_drivername" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
+                                <input type="hidden" id="modal_va_driver_master_id" name="va_driver_master_id">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>New Driver Number</label>
+                                <input type="text" name="va_drivernumber" id="modal_va_drivernumber" class="form-control" maxlength="10">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>New Driver License</label>
+                                <input type="text" name="va_driver_lic" id="modal_va_driver_lic" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label> License Expiry</label>
+                                <input type="date" name="va_driver_lic_expiry" id="modal_va_driver_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Standard Buy</label>
+                                <input type="number" name="va_standardbuy" id="modal_va_standardbuy" class="form-control" readonly value="{{ va.va_standardbuy }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Special Buy</label>
+                                <input type="number" name="va_specialbuy" id="modal_va_specialbuy" class="form-control" value="{{ va.va_specialbuy }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Standard Sell</label>
+                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control disable_a_href" readonly value="{{ va.va_sale }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Special Sell</label>
+                                <input type="number" name="va_special_sale" id="modal_va_special_sale" class="form-control disable_a_href" readonly value="{{ va.va_special_sale }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Profit %</label>
+                                <input type="text" name="va_profit_percentage" id="modal_va_profit_percentage" class="form-control" readonly value="{{ va.va_profit_percentage }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-modern btn-submit">Confirm Replacement</button>
+                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if va %}
+<!-- Replace Driver Modal -->
+<div class="modal fade" id="replaceDriverModal" role="dialog" aria-labelledby="replaceDriverModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form id="replaceDriverForm" method="post" action="{% url 'vehicle_allotment_driver_replace' va.id %}">
+                {% csrf_token %}
+                <div class="modal-header modern-header text-white">
+                    <h5 class="modal-title">Replace Driver (Only)</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}<br>
+                        <strong>Current Driver:</strong> {{ va.va_drivername }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Reason for Replacement <span style="color:red">*</span></label>
+                        <select name="reason" class="form-control" required>
+                            <option value="">--Select Reason--</option>
+                            <option value="Driver Unavailability">Driver Unavailability</option>
+                            <option value="Driver Issue">Driver Issue</option>
+                            <option value="Shift Change">Shift Change</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <h6 class="text-primary border-bottom pb-2 mt-4">New Driver Details</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Driver Name <span style="color:red">*</span></label>
+                                <input type="text" name="va_drivername" id="modal_driver_only_name" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
+                                <input type="hidden" id="modal_driver_only_id" name="va_driver_master_id">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Driver Number</label>
+                                <input type="text" name="va_drivernumber" id="modal_driver_only_number" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>New Driver License</label>
+                                <input type="text" name="va_driver_lic" id="modal_driver_only_lic" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>License Expiry</label>
+                                <input type="date" name="va_driver_lic_expiry" id="modal_driver_only_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-modern btn-submit">Confirm Driver Replacement</button>
+                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock content %}
+
+{% block extra_js %}
 <script>
 function normalizeDateForInput(value) {
 	if (Array.isArray(value)) {
@@ -653,45 +1068,157 @@ function setDateFieldValue(selector, value) {
 	}
 </script>
 <script>
-	function loadAvailableVehicleNumbers() {
-		const placed = $("#va_vehicletype_placed").val();
-		const source = $("#va_vehiclesource").val();
-		const currentVehicleId = "{{ vehicle_allotment_form.instance.va_vehiclenumber_id|default:'' }}";
+	function getActiveVehicleTypeId(explicitCheckedId) {
+		const vehicleRequested = $('#va_vehicletype').val();
+		const vehiclePlaced = $('#va_vehicletype_placed').val();
 
-		if (placed && source) {
+		let isReqChecked = $('#chk_requested').is(':checked');
+		let isPlacedChecked = $('#chk_placed').is(':checked');
+
+		if (explicitCheckedId === 'chk_requested') {
+			isReqChecked = true;
+			isPlacedChecked = false;
+		} else if (explicitCheckedId === 'chk_placed') {
+			isPlacedChecked = true;
+			isReqChecked = false;
+		}
+
+		if (isPlacedChecked) {
+			return vehiclePlaced || vehicleRequested;
+		} else if (isReqChecked) {
+			return vehicleRequested || vehiclePlaced;
+		}
+
+		// Fallback if neither checked: prioritize placed, then requested
+		return vehiclePlaced || vehicleRequested;
+	}
+
+	function getActiveVehicleTypeName(explicitCheckedId) {
+		let isReqChecked = $('#chk_requested').is(':checked');
+		let isPlacedChecked = $('#chk_placed').is(':checked');
+
+		if (explicitCheckedId === 'chk_requested') {
+			isReqChecked = true;
+			isPlacedChecked = false;
+		} else if (explicitCheckedId === 'chk_placed') {
+			isPlacedChecked = true;
+			isReqChecked = false;
+		}
+
+		if (isPlacedChecked) {
+			return $('#va_vehicletype_placed option:selected').text().trim() || 'Placed';
+		} else if (isReqChecked) {
+			return $('#va_vehicletype option:selected').text().trim() || 'Requested';
+		}
+
+		return $('#va_vehicletype_placed option:selected').text().trim() || $('#va_vehicletype option:selected').text().trim() || '';
+	}
+
+	function renderNearestPills(nearestList, fromName, explicitCheckedId) {
+		const container = $("#nearest_pills_container");
+		const list = $("#nearest_pills_list");
+		const badge = $("#nearest_badge");
+		const fromSpan = $("#nearest_from_name");
+		const typeBadge = $("#nearest_type_badge");
+
+		list.empty();
+		if (nearestList && nearestList.length > 0) {
+			if (fromName) fromSpan.text(fromName);
+			badge.show();
+
+			const typeName = getActiveVehicleTypeName(explicitCheckedId);
+			if (typeName && typeName !== '--Select--') {
+				typeBadge.text(typeName).show();
+			} else {
+				typeBadge.hide();
+			}
+
+			const currentSelectedId = $("#va_vehiclenumber").val();
+
+			nearestList.forEach((item, index) => {
+				const isActive = (currentSelectedId && currentSelectedId == item.id) ? 'active-pill' : '';
+				const rankIcon = index === 0 ? '🥇 ' : (index === 1 ? '🥈 ' : '🥉 ');
+				const pillHtml = `
+					<button type="button" class="nearest-pill ${isActive}" data-vehicle-id="${item.id}" title="${item.location || 'Current Location'}">
+						<span>${rankIcon}<strong>${item.reg}</strong></span>
+						<span class="pill-dist"><i class="fas fa-route mr-1"></i>${item.distance} km</span>
+					</button>
+				`;
+				list.append(pillHtml);
+			});
+			container.show();
+		} else {
+			badge.hide();
+			container.hide();
+		}
+	}
+
+	function loadAvailableVehicleNumbers(explicitCheckedId) {
+		const selectedType = getActiveVehicleTypeId(explicitCheckedId);
+		const source = $("#va_vehiclesource").val();
+		const currentVehicleId = "{{ vehicle_allotment_form.instance.va_vehiclenumber_id|default:'' }}" || "{{ vehicle_allotment_form.data.va_vehiclenumber|default:'' }}" || $("#va_vehiclenumber").val();
+
+		if (selectedType || source) {
+			if (source == 3) {
+				$('#nearest_pills_container').hide();
+				$('#nearest_badge').hide();
+				$('#va_vehiclenumber').addClass('disable_a_href');
+				return;
+			}
+
 			$.ajax({
 				url: "{% url 'load_vehicle_number' %}",
 				data: {
-					vehicletype_placed: placed,
+					vehicletype_placed: selectedType,
 					vehicletype_source: source,
 					enquiry_id: "{{ enquiry_num_id }}",
 					current_vehicle_id: currentVehicleId
 				},
 				success: function(data) {
 					const dropdown = $("#va_vehiclenumber");
+					const currentVal = dropdown.val() || currentVehicleId;
 					dropdown.empty();
 					dropdown.append(`<option value="">--Select--</option>`);
 					
-					const numbers = data.vehicle_number_list;
-					const ids = data.vehicle_number_list_id;
+					const numbers = data.vehicle_number_list || [];
+					const ids = data.vehicle_number_list_id || [];
 					
 					for (let i = 0; i < numbers.length; i++) {
-						const isSelected = (currentVehicleId && currentVehicleId == ids[i]) ? 'selected' : '';
+						const isSelected = (currentVal && currentVal == ids[i]) ? 'selected' : '';
 						dropdown.append(`<option value="${ids[i]}" ${isSelected}>${numbers[i]}</option>`);
 					}
 
-					// Update UI state
-					if (source == 3) {
-						$('#va_vehiclenumber').addClass('disable_a_href');
-					} else {
-						$('#va_vehiclenumber').removeClass('disable_a_href');
-					}
+					$('#va_vehiclenumber').removeClass('disable_a_href');
 					dropdown.trigger('change.select2');
+
+					renderNearestPills(data.nearest_vehicles, data.from_location_name, explicitCheckedId);
 				}
 			});
 		}
 	}
-	$("#va_vehicletype_placed, #va_vehiclesource").on('change', loadAvailableVehicleNumbers);
+
+	$(document).on('click', '.nearest-pill', function(e) {
+		e.preventDefault();
+		const vid = $(this).data('vehicle-id');
+		$('#va_vehiclenumber').val(vid).trigger('change');
+		$('.nearest-pill').removeClass('active-pill');
+		$(this).addClass('active-pill');
+	});
+
+	$('#va_vehiclenumber').on('change', function() {
+		const val = $(this).val();
+		$('.nearest-pill').each(function() {
+			if ($(this).data('vehicle-id') == val) {
+				$(this).addClass('active-pill');
+			} else {
+				$(this).removeClass('active-pill');
+			}
+		});
+	});
+
+	$("#va_vehicletype_placed, #va_vehicletype, #va_vehiclesource").on('change select2:select select2:unselect', function() {
+		loadAvailableVehicleNumbers();
+	});
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
@@ -754,14 +1281,17 @@ function loadVendorBuyRate(isAutoLoad=false, forceOverwrite=false) {
 $(document).ready(function() {
     // Checkboxes only control BUY rate — sell rate is always from parent Enquiry, no checkbox needed
     $('.vehicle-check').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        const checkedId = isChecked ? this.id : null;
         $('.vehicle-check').not(this).prop('checked', false);
-        if ($(this).is(':checked')) {
+        if (isChecked) {
             loadVendorBuyRate(false, true); // Buy Rate uses checkbox
         } else {
             $('#va_standardbuy').val('');
             // Do not clear special buy if unchecked to prevent data loss
             calculateProfit();
         }
+        loadAvailableVehicleNumbers(checkedId);
     });
 
     // Re-fetch sell when vehicle requested changes
@@ -937,9 +1467,60 @@ document.addEventListener("DOMContentLoaded", function() {
     form.addEventListener("submit", function(event) {
         const chkRequested = document.getElementById("chk_requested");
         const chkPlaced = document.getElementById("chk_placed");
-        const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
+        const vehicleSourceElem = document.getElementById("va_vehiclesource");
+        const vehicleSource = vehicleSourceElem ? parseInt(vehicleSourceElem.value) : NaN;
         const buyRate = document.getElementById("va_standardbuy").value.trim();
         const sellRate = document.getElementById("va_sale").value.trim();
+
+        // -----------------------------------------
+        // 0️⃣ Validate Vehicle Source
+        // -----------------------------------------
+        if (!vehicleSource || isNaN(vehicleSource)) {
+            event.preventDefault();
+            alert("Please select Vehicle Source before submitting.");
+            if (vehicleSourceElem) vehicleSourceElem.focus();
+            return false;
+        }
+
+        // -----------------------------------------
+        // 0.1️⃣ OWN (1) or ATTACHED (2) → VEHICLE NUMBER & DRIVER REQUIRED
+        // -----------------------------------------
+        if (vehicleSource === 1 || vehicleSource === 2) {
+            const vehNum = $("#va_vehiclenumber").val();
+            if (!vehNum) {
+                event.preventDefault();
+                alert("Please select a Vehicle Number from the dropdown before submitting.");
+                $("#va_vehiclenumber").focus();
+                return false;
+            }
+            const driverName = $("#va_drivername").val() ? $("#va_drivername").val().trim() : "";
+            if (!driverName) {
+                event.preventDefault();
+                alert("Driver Name is required for OWN and ATTACHED vehicles.");
+                $("#va_drivername").focus();
+                return false;
+            }
+            const driverLicExpiry = $("#va_driver_lic_expiry").val() ? $("#va_driver_lic_expiry").val().trim() : "";
+            if (!driverLicExpiry) {
+                event.preventDefault();
+                alert("Driver License Expiry Date is required for OWN and ATTACHED vehicles.");
+                $("#va_driver_lic_expiry").focus();
+                return false;
+            }
+        }
+
+        // -----------------------------------------
+        // 0.2️⃣ MARKET (3) → MARKET VEHICLE NUMBER REQUIRED
+        // -----------------------------------------
+        if (vehicleSource === 3) {
+            const mktVehNo = $("#va_vehiclenumber_mkt").val() ? $("#va_vehiclenumber_mkt").val().trim() : "";
+            if (!mktVehNo) {
+                event.preventDefault();
+                alert("Vehicle Number (Market) is required for MARKET vehicles.");
+                $("#va_vehiclenumber_mkt").focus();
+                return false;
+            }
+        }
         // -----------------------------------------
         // 1️⃣ Validate Requested / Placed Checkbox
         // -----------------------------------------
@@ -1009,10 +1590,16 @@ document.addEventListener("DOMContentLoaded", function() {
     market_vehicle_enable_disable();
 });
 </script>
-{% block extra_js %}
+
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
 $(document).ready(function () {
+   // Disable Bootstrap focus trap so Select2 inside modal stays open reliably
+   if ($.fn.modal && $.fn.modal.Constructor && $.fn.modal.Constructor.prototype) {
+       $.fn.modal.Constructor.prototype._enforceFocus = function() {};
+       $.fn.modal.Constructor.prototype.enforceFocus = function() {};
+   }
+
    $("#va_vehiclenumber").select2({
        width: '100%'
    });
@@ -1022,19 +1609,12 @@ $(document).ready(function () {
    $("#va_vehicletype_placed").select2({
        width: '100%'
    });
-   $("#modal_va_vendor").select2({
-       width: '100%',
-       dropdownParent: $('#replaceVehicleModal')
-   });
-   $("#modal_va_vehiclenumber").select2({
-       width: '100%',
-       dropdownParent: $('#replaceVehicleModal')
-   });
 
    // On select2 select event, update hidden field and trigger both rate loaders
    $("#va_vehicletype_placed").on('select2:select select2:unselect change', function() {
        loadVendorBuyRate();
        if (typeof loadRouteBuyRates === 'function') loadRouteBuyRates();
+       loadAvailableVehicleNumbers();
    });
 });
 </script>
@@ -1186,322 +1766,67 @@ $("#va_vehiclesource").on("change", function () {
 });
 </script>
 
-<!-- Replace Vehicle Modal -->
-<style>
-    #replaceVehicleModal {
-        z-index: 9999;
-    }
-    #replaceVehicleModal .modal-dialog, #replaceDriverModal .modal-dialog {
-        margin-top: 100px;
-    }
-    #replaceVehicleModal input:disabled, #replaceVehicleModal select:disabled, .disable_a_href {
-        background-color: #CCFFCC !important;
-        color: #495057 !important;
-        cursor: not-allowed;
-    }
-    /* Fix Select2 alignment in input-groups */
-    .input-group > .select2-container--default {
-        flex: 1 1 auto;
-        width: auto !important;
-    }
-    .input-group > .select2-container--default .select2-selection--single {
-        height: 31px !important; /* Match input-group-sm height */
-        border-radius: 0 4px 4px 0 !important;
-    }
-</style>
-{% if va %}
-<div class="modal fade" id="replaceVehicleModal" tabindex="-1" role="dialog" aria-labelledby="replaceVehicleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form id="replaceVehicleForm" method="post" action="{% url 'vehicle_allotment_replace' va.id %}">
-                {% csrf_token %}
-                <div class="modal-header modern-header text-white">
-                    <h5 class="modal-title">Replace Vehicle (Breakdown / Accident)</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <strong>Current Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Reason for Replacement <span style="color:red">*</span></label>
-                        <select name="reason" class="form-control" required>
-                            <option value="">--Select Reason--</option>
-                            <option value="Breakdown">Breakdown</option>
-                            <option value="Accident">Accident</option>
-                            <option value="Driver Issue">Driver Issue</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    {% if active_trip %}
-                    <div class="alert alert-warning mb-3">
-                        <i class="fas fa-truck-moving mr-1"></i>
-                        <strong>Active Trip in Progress (Trip #{{ active_trip.tr_tripnumber }}):</strong><br>
-                        <span>Journey started at <strong>{{ active_trip.tr_departedlocation|default:'Origin' }}</strong>{% if active_trip.tr_departedkm is not None %} with Odometer <strong>{{ active_trip.tr_departedkm }} KM</strong>{% endif %}.</span>
-                        <div class="small mt-1 text-muted">
-                            Please provide the handover/breakdown location and current odometer. This active trip will be closed at this location.
-                        </div>
-                    </div>
-                    <input type="hidden" id="modal_has_active_trip" value="1">
-                    <input type="hidden" id="modal_min_trip_km" value="{{ active_trip.tr_departedkm|default:0 }}">
-                    {% else %}
-                    <input type="hidden" id="modal_has_active_trip" value="0">
-                    <input type="hidden" id="modal_min_trip_km" value="0">
-                    {% endif %}
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Replacement / Handover Place {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
-                                <select name="va_replacement_place" id="modal_va_replacement_place" class="form-control" {% if active_trip %}required{% endif %}>
-                                    <option value="">--Select Location--</option>
-                                    {% for place in all_places %}
-                                        <option value="{{ place.id }}">{{ place.place_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Odometer KM at Replacement {% if active_trip %}<span style="color:red">*</span>{% endif %}</label>
-                                <input type="number" 
-                                       name="va_replacement_km" 
-                                       id="modal_va_replacement_km" 
-                                       class="form-control" 
-                                       placeholder="e.g. {% if active_trip and active_trip.tr_departedkm %}{{ active_trip.tr_departedkm }}{% else %}85140{% endif %}"
-                                       {% if active_trip and active_trip.tr_departedkm %}min="{{ active_trip.tr_departedkm }}"{% else %}min="0"{% endif %}
-                                       {% if active_trip %}required{% endif %}>
-                                <small class="form-text text-muted">
-                                    {% if active_trip and active_trip.tr_departedkm %}
-                                        Must be &ge; {{ active_trip.tr_departedkm }} KM (Trip Departure KM).
-                                    {% else %}
-                                        Current odometer reading of the vehicle being replaced.
-                                    {% endif %}
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row align-items-center mb-3">
-                        <div class="col-md-5">
-                            <div class="form-group mb-0">
-                                <label class="mb-1">New Vehicle Type Requested</label>
-                                <select name="va_vehicletype" id="modal_va_vehicletype" class="form-control">
-                                    <option value="">--Select Type--</option>
-                                    {% for t in all_vehicletypes %}
-                                        <option value="{{ t.id }}" {% if va and t.id == va.va_vehicletype_id %}selected{% endif %}>{{ t.vt_vehicletype }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-1 pt-4 text-center">
-                            <input type="checkbox" id="modal_chk_requested" name="va_vehicletype_selection_requested" class="modal-vehicle-check" style="width:20px; height:20px; cursor:pointer;" {% if va.va_vehicletype_selection_requested %}checked{% endif %}>
-                            <i class="fas fa-info-circle text-info" data-toggle="tooltip" title="Verify Requested"></i>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="form-group mb-0">
-                                <label class="mb-1">New Vehicle Type Placed <span style="color:red">*</span></label>
-                                <select name="va_vehicletype_placed" id="modal_va_vehicletype_placed" class="form-control" required>
-                                    <option value="">--Select Type--</option>
-                                    {% for t in all_vehicletypes %}
-                                        <option value="{{ t.id }}" {% if va and t.id == va.va_vehicletype_placed_id %}selected{% endif %}>{{ t.vt_vehicletype }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-1 pt-4 text-center">
-                            <input type="checkbox" id="modal_chk_placed" name="va_vehicletype_selection_placed" class="modal-vehicle-check" style="width:20px; height:20px; cursor:pointer;" {% if va.va_vehicletype_selection_placed %}checked{% endif %}>
-                            <i class="fas fa-info-circle text-info" data-toggle="tooltip" title="Verify Placed"></i>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Vehicle Source <span style="color:red">*</span></label>
-                                <select name="va_vehiclesource" id="modal_va_vehiclesource" class="form-control" required>
-                                    <option value="">--Select Source--</option>
-                                    <option value="1">Own</option>
-                                    <option value="2">Attached</option>
-                                    <option value="3">Market</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Vendor Name <span id="modal_vendor_star" style="color:red; display:none">*</span></label>
-                                <select name="va_vendor" id="modal_va_vendor" class="form-control">
-                                    <option value="">--Select Vendor--</option>
-                                    {% for v in all_vendors %}
-                                        <option value="{{ v.id }}">{{ v.vend_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group" id="modal_own_attached_div">
-                                <label>New Vehicle Number</label>
-                                <select name="va_vehiclenumber" id="modal_va_vehiclenumber" class="form-control">
-                                    <option value="">--Select--</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="modal_market_div" style="display:none;">
-                                <label>New Market Vehicle Number</label>
-                                <!-- Format validation pattern temporarily commented out:
-                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916">
-                                -->
-                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control" placeholder="e.g. TN22AB4916">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Driver Name</label>
-                                <input type="text" name="va_drivername" id="modal_va_drivername" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
-                                <input type="hidden" id="modal_va_driver_master_id" name="va_driver_master_id">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>New Driver Number</label>
-                                <input type="text" name="va_drivernumber" id="modal_va_drivernumber" class="form-control" maxlength="10">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>New Driver License</label>
-                                <input type="text" name="va_driver_lic" id="modal_va_driver_lic" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label> License Expiry</label>
-                                <input type="date" name="va_driver_lic_expiry" id="modal_va_driver_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Standard Buy</label>
-                                <input type="number" name="va_standardbuy" id="modal_va_standardbuy" class="form-control" readonly value="{{ va.va_standardbuy }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Special Buy</label>
-                                <input type="number" name="va_specialbuy" id="modal_va_specialbuy" class="form-control" value="{{ va.va_specialbuy }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Standard Sell</label>
-                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control disable_a_href" readonly value="{{ va.va_sale }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Special Sell</label>
-                                <input type="number" name="va_special_sale" id="modal_va_special_sale" class="form-control disable_a_href" readonly value="{{ va.va_special_sale }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>Profit %</label>
-                                <input type="text" name="va_profit_percentage" id="modal_va_profit_percentage" class="form-control" readonly value="{{ va.va_profit_percentage }}">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn-modern btn-submit">Confirm Replacement</button>
-                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{% if va %}
-<!-- Replace Driver Modal -->
-<div class="modal fade" id="replaceDriverModal" tabindex="-1" role="dialog" aria-labelledby="replaceDriverModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form id="replaceDriverForm" method="post" action="{% url 'vehicle_allotment_driver_replace' va.id %}">
-                {% csrf_token %}
-                <div class="modal-header modern-header text-white">
-                    <h5 class="modal-title">Replace Driver (Only)</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <strong>Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}<br>
-                        <strong>Current Driver:</strong> {{ va.va_drivername }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Reason for Replacement <span style="color:red">*</span></label>
-                        <select name="reason" class="form-control" required>
-                            <option value="">--Select Reason--</option>
-                            <option value="Driver Unavailability">Driver Unavailability</option>
-                            <option value="Driver Issue">Driver Issue</option>
-                            <option value="Shift Change">Shift Change</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <h6 class="text-primary border-bottom pb-2 mt-4">New Driver Details</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Driver Name <span style="color:red">*</span></label>
-                                <input type="text" name="va_drivername" id="modal_driver_only_name" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
-                                <input type="hidden" id="modal_driver_only_id" name="va_driver_master_id">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Driver Number</label>
-                                <input type="text" name="va_drivernumber" id="modal_driver_only_number" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>New Driver License</label>
-                                <input type="text" name="va_driver_lic" id="modal_driver_only_lic" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>License Expiry</label>
-                                <input type="date" name="va_driver_lic_expiry" id="modal_driver_only_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn-modern btn-submit">Confirm Driver Replacement</button>
-                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <script>
     // Logic for loading vehicles in the replacement modal
+    
+    function renderModalNearestPills(nearestList, fromName) {
+        const container = $("#modal_nearest_pills_container");
+        const list = $("#modal_nearest_pills_list");
+        const badge = $("#modal_nearest_badge");
+        const fromSpan = $("#modal_nearest_from_name");
+        const typeBadge = $("#modal_nearest_type_badge");
+
+        list.empty();
+        if (nearestList && nearestList.length > 0) {
+            if (fromName) fromSpan.text(fromName);
+            badge.show();
+
+            const typeName = $("#modal_va_vehicletype_placed option:selected").text().trim();
+            if (typeName && typeName !== '--Select--') {
+                typeBadge.text(typeName).show();
+            } else {
+                typeBadge.hide();
+            }
+
+            const currentSelectedId = $("#modal_va_vehiclenumber").val();
+
+            nearestList.forEach((item, index) => {
+                const isActive = (currentSelectedId && currentSelectedId == item.id) ? 'active-pill' : '';
+                const rankIcon = index === 0 ? '🥇 ' : (index === 1 ? '🥈 ' : '🥉 ');
+                const pillHtml = `
+                    <button type="button" class="nearest-pill modal-nearest-pill ${isActive}" data-vehicle-id="${item.id}" title="${item.location || 'Current Location'}">
+                        <span>${rankIcon}<strong>${item.reg}</strong></span>
+                        <span class="pill-dist"><i class="fas fa-route mr-1"></i>${item.distance} km</span>
+                    </button>
+                `;
+                list.append(pillHtml);
+            });
+            container.show();
+        } else {
+            badge.hide();
+            container.hide();
+        }
+    }
+
+    $(document).on('click', '.modal-nearest-pill', function(e) {
+        e.preventDefault();
+        const vid = $(this).data('vehicle-id');
+        $('#modal_va_vehiclenumber').val(vid).trigger('change');
+        $('.modal-nearest-pill').removeClass('active-pill');
+        $(this).addClass('active-pill');
+    });
+
+    $('#modal_va_vehiclenumber').on('change', function() {
+        const val = $(this).val();
+        $('.modal-nearest-pill').each(function() {
+            if ($(this).data('vehicle-id') == val) {
+                $(this).addClass('active-pill');
+            } else {
+                $(this).removeClass('active-pill');
+            }
+        });
+    });
+
     function loadModalVehicleNumbers() {
         var source = $("#modal_va_vehiclesource").val();
         var type_placed = $("#modal_va_vehicletype_placed").val();
@@ -1511,6 +1836,8 @@ $("#va_vehiclesource").on("change", function () {
         if (source == "3") {
             $("#modal_own_attached_div").hide();
             $("#modal_market_div").show();
+            $("#modal_nearest_pills_container").hide();
+            $("#modal_nearest_badge").hide();
             $("#modal_va_drivername").val("");
             $("#modal_va_drivernumber").val("");
             $("#modal_va_driver_lic").val("");
@@ -1519,11 +1846,14 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_own_attached_div").show();
             $("#modal_market_div").hide();
             
+            var rep_place_id = $("#modal_va_replacement_place").val();
             $.ajax({
                 url: '{% url "load_vehicle_number" %}',
                 data: {
                     'vehicletype_placed': type_placed,
                     'vehicletype_source': source,
+                    'enquiry_id': '{{ enquiry_num_id }}',
+                    'replacement_place_id': rep_place_id
                 },
                 success: function (data) {
                     var vehicle_number = data.vehicle_number_list || [];
@@ -1535,21 +1865,33 @@ $("#va_vehiclesource").on("change", function () {
                         vehicle_number_id = parsed.vehicle_number_list_id;
                     }
 
-                    $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>");
+                    var sel = $("#modal_va_vehiclenumber");
+                    sel.empty().append("<option value=''>--Select Vehicle--</option>");
                     if (vehicle_number.length === 0) {
-                        $("#modal_va_vehiclenumber").append("<option value=''>No available vehicles found</option>");
+                        sel.append("<option value=''>No available vehicles found</option>");
                     } else {
                         for (var k = 0; k < vehicle_number.length; k++) {
-                            $("#modal_va_vehiclenumber").append("<option value='" + vehicle_number_id[k] + "'>" + vehicle_number[k] + "</option>");
+                            sel.append("<option value='" + vehicle_number_id[k] + "'>" + vehicle_number[k] + "</option>");
                         }
                     }
-                    $("#modal_va_vehiclenumber").trigger('change.select2');
+
+                    if (sel.hasClass("select2-hidden-accessible")) {
+                        sel.select2('destroy');
+                    }
+                    sel.select2({
+                        dropdownParent: $('#replaceVehicleModal .modal-content'),
+                        width: '100%',
+                        placeholder: '--Select Vehicle--'
+                    });
+
+                    // Render modal nearest pills
+                    renderModalNearestPills(data.nearest_vehicles, data.from_location_name);
                 }
             });
         }
     }
 
-    $("#modal_va_vehiclesource, #modal_va_vehicletype_placed").on("change", loadModalVehicleNumbers);
+    $("#modal_va_vehiclesource, #modal_va_vehicletype_placed, #modal_va_replacement_place").on("change", loadModalVehicleNumbers);
 
     // ---- Replacement Modal Cost Calculation ----
     function calculateModalProfit() {
@@ -1580,18 +1922,29 @@ $("#va_vehiclesource").on("change", function () {
                         dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
                     });
                 }
-                dropdown.trigger('change.select2');
             }
         });
     }
+
+    
+
 
     $('#replaceVehicleModal').on('show.bs.modal', function () {
         $("#modal_va_vehiclesource").val("");
         $("#modal_chk_requested").prop("checked", false);
         $("#modal_chk_placed").prop("checked", false);
         loadModalVendorOptions();
-        $("#modal_va_vendor").val("").prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>").trigger('change.select2');
+        $("#modal_va_vendor").val("").prop('disabled', false).removeClass('disable_a_href');
+        var sel = $("#modal_va_vehiclenumber");
+        if (sel.hasClass("select2-hidden-accessible")) {
+            sel.select2('destroy');
+        }
+        sel.empty().append("<option value=''>--Select Vehicle--</option>");
+        sel.select2({
+            dropdownParent: $('#replaceVehicleModal .modal-content'),
+            width: '100%',
+            placeholder: '--Select Vehicle--'
+        });
         $("#modal_va_vehiclenumber_mkt").val("");
         $("#modal_own_attached_div").show();
         $("#modal_market_div").hide();
@@ -1668,17 +2021,17 @@ $("#va_vehiclesource").on("change", function () {
         var source = $(this).val();
         if (source == "3") { // Market
             $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
         } else if (source == "2") { // Attached
             $("#modal_vendor_star").hide();
-            $("#modal_va_vendor").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_vendor").prop('required', false).prop('disabled', true).addClass('disable_a_href');
             $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
             $("#modal_va_standardbuy").val("");
             calculateModalProfit();
         } else { // Own
             $("#modal_vendor_star").hide();
-            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href');
             $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
             $("#modal_va_standardbuy").val("");
             calculateModalProfit();
@@ -1691,7 +2044,7 @@ $("#va_vehiclesource").on("change", function () {
         const vehicleId = $(this).val();
 
         if (!vehicleId) {
-            $("#modal_va_vendor").val("").trigger('change.select2');
+            $("#modal_va_vendor").val("");
             $("#modal_va_drivername").val("");
             $("#modal_va_drivernumber").val("");
             $("#modal_va_driver_lic").val("");
@@ -1712,9 +2065,9 @@ $("#va_vehiclesource").on("change", function () {
                                 `<option value="${data.vendor_id}">${data.vendor_name}</option>`
                             );
                         }
-                        vendorDropdown.val(data.vendor_id).trigger('change.select2');
+                        vendorDropdown.val(data.vendor_id);
                     } else {
-                        vendorDropdown.val("").trigger('change.select2');
+                        vendorDropdown.val("");
                     }
                 }
             });
@@ -1810,7 +2163,13 @@ $("#va_vehiclesource").on("change", function () {
             }
         }
 
-        if (source == "3" || mktVehNo) {
+        if (source == "1" || source == "2") {
+            var ownVehNo = $("#modal_va_vehiclenumber").val();
+            if (!ownVehNo) {
+                alert("Please select New Vehicle Number.");
+                return;
+            }
+        } else if (source == "3" || mktVehNo) {
             if (!mktVehNo) {
                 alert("Please enter Market Vehicle Number.");
                 return;
@@ -1966,4 +2325,3 @@ $("#va_vehiclesource").on("change", function () {
 {% endif %}
 
 {% endblock extra_js %}
-{% endblock content %}

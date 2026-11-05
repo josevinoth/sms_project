@@ -159,10 +159,11 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form.save_m2m()
             
             # ✅ Auto-advance linked trip status to Awaiting Trip Approval (8) when goods are created/updated
+            # NEVER touch trips in Trip Closed (ID 2), Cancelled (ID 3, 10, 11), or closed for replacement
             if goods_obj and goods_obj.cg_consignmentnumber_id:
                 linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber_id=goods_obj.cg_consignmentnumber_id)
                 for trip in linked_trips:
-                    if trip.tc_financestatus_id in [1, 2]: # Open / Work In Progress
+                    if trip.tc_financestatus_id in [1, 12]:  # Open (1=Trip Started, 12=Work In Progress)
                         trip.tc_financestatus_id = 8  # Awaiting Trip Approval
                         trip.tr_operational_status_id = 8
                         trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
