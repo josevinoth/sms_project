@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, time, timedelta
 from django.utils import timezone
 from django.http import JsonResponse
 import calendar
@@ -254,9 +254,11 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
         if min_date and max_date:
             min_created = min_date - datetime.timedelta(days=31)
             max_created = max_date + datetime.timedelta(days=31)
+            dt_start = timezone.make_aware(datetime.datetime.combine(min_created, datetime.time.min))
+            dt_end = timezone.make_aware(datetime.datetime.combine(max_created, datetime.time.max))
             all_trips_in_months = all_trips_in_months.filter(
-                tr_created_at__gte=min_created,
-                tr_created_at__lte=max_created
+                tr_created_at__gte=dt_start,
+                tr_created_at__lte=dt_end
             )
 
         all_trips_in_months = all_trips_in_months.annotate(
@@ -871,7 +873,7 @@ TRANSPORT_BUDGET_FIELD_MAPPING = {
 def _fmt_dt(dt, date_only=False):
     """Format a datetime object to IST 'DD-MM-YYYY HH:MM' or 'DD-MM-YYYY'."""
     if dt:
-        from datetime import datetime, date
+        from datetime import datetime, date, time, timedelta
         # If it's a naive date object, localize only if it has time info
         # timezone.localtime() works on aware datetimes.
         try:
@@ -3442,17 +3444,21 @@ def vendor_p_l_attached_report_ajax_view(request):
 
     # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
     # This prevents the database from performing a full table scan to evaluate the complex resolved_date annotation
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, time
     try:
         if date_from and date_to:
-            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
-            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
+            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
+            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
+            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
             base_trips = base_trips.filter(tr_created_at__range=[dt_start, dt_end])
         elif date_from:
-            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
+            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
             base_trips = base_trips.filter(tr_created_at__gte=dt_start)
         elif date_to:
-            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
+            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
             base_trips = base_trips.filter(tr_created_at__lte=dt_end)
     except Exception:
         pass
@@ -7092,7 +7098,7 @@ def customerwise_pl_report_ajax_view(request):
         }, status=200)
 
 
-@login_required(login_url='/')
+@login_required(login_url='login_page')
 def customerwise_pl_report_view(request):
     first_name = request.session.get('first_name')
     if request.method == "POST":
@@ -7198,17 +7204,21 @@ def location_pl_report_view(request):
 
     # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
     # This prevents the database from performing a full table scan to evaluate the complex resolved_date annotation
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, time
     try:
         if date_from and date_to:
-            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
-            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
+            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
+            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
+            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
             trips = trips.filter(tr_created_at__range=[dt_start, dt_end])
         elif date_from:
-            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
+            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
             trips = trips.filter(tr_created_at__gte=dt_start)
         elif date_to:
-            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
+            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
             trips = trips.filter(tr_created_at__lte=dt_end)
     except Exception:
         pass
@@ -7791,8 +7801,7 @@ def time_analysis_report_ajax_view(request):
     })
 
 
-@login_required(login_url='/')
-@login_required(login_url='/')
+@login_required(login_url='login_page')
 def mileage_report_view(request):
     first_name = request.session.get('first_name')
     if request.method == "POST":
@@ -8893,7 +8902,7 @@ def transport_mis(request):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='login_page')
 def trip_status_count_report_view(request):
     first_name = request.user.first_name
     from ..forms import DmrForm
@@ -8914,7 +8923,7 @@ def trip_status_count_report_view(request):
     return render(request, 'asset_mgt_app/trip_status_count_report.html', context)
 
 
-@login_required(login_url='login')
+@login_required(login_url='login_page')
 def trip_status_count_report_ajax_view(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))

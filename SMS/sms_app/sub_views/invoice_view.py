@@ -759,6 +759,7 @@ def invoice_add(request, invoice_id=0):
                             wh_total_invoice_cost=total_invoice_cost)
                     else:
                         Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
+                return redirect('/SMS/invoice_list')
             else:
                 messages.error(request, 'Check all mandatory fields!')
                 voucher_num = invoice.bill_invoice_ref
@@ -782,7 +783,7 @@ def invoice_add(request, invoice_id=0):
                     'customer_type_id': invoice.bill_customer_type.id if invoice.bill_customer_type else 0,
                 }
                 return render(request, "asset_mgt_app/invoice_add.html", context)
-            # return redirect('/SMS/invoice_list')
+            return redirect('/SMS/invoice_list')
 
 
 @login_required(login_url='login_page')

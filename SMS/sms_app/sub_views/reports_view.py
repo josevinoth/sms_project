@@ -15,7 +15,8 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
-from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo,Location_info
+from ..models import CustomerInfo,ExpenseInfo,Gatein_info,LocationmasterInfo,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,ExpenseExtinfo,GoodsPartialDispatchInfo,Location_info,AssetInfo,Vendor_info,VhmanufacturerInfo,Department_info,Product_info,Prod_Type
+from django.contrib.auth.models import User
 from datetime import datetime, timedelta, time
 from django.utils.dateparse import parse_date
 from django.db.models import Count, Sum
@@ -31,10 +32,260 @@ from itertools import zip_longest
 @login_required(login_url='login_page')
 def reports(request):
     first_name = request.session.get('first_name')
+    counts = {
+        'assets': AssetInfo.objects.count(),
+        'vendors': Vendor_info.objects.count(),
+        'assigned_assets': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
+        'locations': Location_info.objects.count(),
+        'manufacturers': VhmanufacturerInfo.objects.count(),
+        'employees': User.objects.count(),
+        'departments': Department_info.objects.count(),
+        'products': Product_info.objects.count(),
+        'product_types': Prod_Type.objects.count(),
+    }
     context = {
-               'first_name': first_name
-               }
-    return render(request,"asset_mgt_app/reports.html",context)
+        'first_name': first_name,
+        'counts': counts,
+    }
+    return render(request, "asset_mgt_app/reports.html", context)
+
+
+@login_required(login_url='login_page')
+def export_master_report(request, report_type):
+    from datetime import datetime
+    import io
+    import csv
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
+    date_str = datetime.now().strftime('%Y%m%d_%H%M')
+    export_format = request.GET.get('format', 'excel').lower()
+    
+    if report_type == 'assets':
+        sheet_title = "Assets"
+        filename_base = f"Assets_Report_{date_str}"
+        headers = ['Asset ID', 'Asset Number', 'Product Type', 'Product Name', 'Make', 'Model', 'Serial Number', 'Location', 'Unit', 'Assigned To', 'Assigned On', 'Purchase Date', 'Cost (INR)', 'Vendor', 'Remarks']
+        rows = []
+        for a in AssetInfo.objects.select_related('asset_product', 'asset_product__prod_type', 'asset_location', 'asset_unit', 'asset_assignedto', 'asset_vendor').all().order_by('-id'):
+            assigned_name = f"{a.asset_assignedto.first_name} {a.asset_assignedto.last_name}".strip() if a.asset_assignedto else "Unassigned"
+            if not assigned_name and a.asset_assignedto:
+                assigned_name = a.asset_assignedto.username
+            rows.append([
+                a.asset_Id or '',
+                a.asset_number or '',
+                a.asset_product.prod_type.prod_type_title if a.asset_product and a.asset_product.prod_type else '',
+                a.asset_product.prod_name if a.asset_product else '',
+                a.asset_make or '',
+                a.asset_model or '',
+                a.asset_serial_num1 or '',
+                a.asset_location.loc_name if a.asset_location else '',
+                a.asset_unit.unit_name if a.asset_unit else '',
+                assigned_name,
+                a.asset_assignedon or '',
+                a.asset_purchase_date.strftime('%d-%m-%Y') if a.asset_purchase_date else '',
+                float(a.asset_cost) if a.asset_cost else 0.0,
+                a.asset_vendor.vend_name if a.asset_vendor else '',
+                a.asset_remarks or ''
+            ])
+            
+    elif report_type == 'vendors':
+        sheet_title = "Vendors"
+        filename_base = f"Vendors_Report_{date_str}"
+        headers = ['Vendor Name', 'Vendor Code', 'Contact Person', 'Contact Number', 'Email', 'GSTIN', 'PAN', 'Branch', 'Service Type', 'Status', 'Address']
+        rows = []
+        for v in Vendor_info.objects.select_related('vend_branch', 'vend_service_type', 'vend_status').all().order_by('vend_name'):
+            rows.append([
+                v.vend_name or '',
+                v.vend_code or '',
+                v.vend_contact_per or '',
+                v.vend_contact or '',
+                v.vend_email or '',
+                v.vend_gstin or '',
+                v.vend_pan or '',
+                str(v.vend_branch) if v.vend_branch else '',
+                str(v.vend_service_type) if v.vend_service_type else '',
+                str(v.vend_status) if v.vend_status else '',
+                v.vend_address or ''
+            ])
+            
+    elif report_type == 'assigned_assets':
+        sheet_title = "Assigned Assets"
+        filename_base = f"Assigned_Assets_Report_{date_str}"
+        headers = ['Asset ID', 'Asset Number', 'Product Type', 'Product Name', 'Make', 'Model', 'Serial Number', 'Assigned To', 'Assigned On', 'Location', 'Unit', 'Cost (INR)']
+        rows = []
+        for a in AssetInfo.objects.filter(asset_assignedto__isnull=False).select_related('asset_product', 'asset_product__prod_type', 'asset_location', 'asset_unit', 'asset_assignedto').order_by('-id'):
+            assigned_name = f"{a.asset_assignedto.first_name} {a.asset_assignedto.last_name}".strip()
+            if not assigned_name:
+                assigned_name = a.asset_assignedto.username
+            rows.append([
+                a.asset_Id or '',
+                a.asset_number or '',
+                a.asset_product.prod_type.prod_type_title if a.asset_product and a.asset_product.prod_type else '',
+                a.asset_product.prod_name if a.asset_product else '',
+                a.asset_make or '',
+                a.asset_model or '',
+                a.asset_serial_num1 or '',
+                assigned_name,
+                a.asset_assignedon or '',
+                a.asset_location.loc_name if a.asset_location else '',
+                a.asset_unit.unit_name if a.asset_unit else '',
+                float(a.asset_cost) if a.asset_cost else 0.0,
+            ])
+            
+    elif report_type == 'locations':
+        sheet_title = "Office Locations"
+        filename_base = f"Office_Locations_Report_{date_str}"
+        headers = ['Location Name', 'Address', 'City', 'State', 'Country', 'Zip Code', 'Status']
+        rows = []
+        for loc in Location_info.objects.select_related('loc_city', 'loc_state', 'loc_country', 'loc_status').all().order_by('loc_name'):
+            rows.append([
+                loc.loc_name or '',
+                loc.loc_address or '',
+                str(loc.loc_city) if loc.loc_city else '',
+                str(loc.loc_state) if loc.loc_state else '',
+                str(loc.loc_country) if loc.loc_country else '',
+                loc.loc_zipcode or '',
+                str(loc.loc_status) if loc.loc_status else ''
+            ])
+            
+    elif report_type == 'manufacturers':
+        sheet_title = "Manufacturers"
+        filename_base = f"Manufacturers_Report_{date_str}"
+        headers = ['ID', 'Manufacturer Name']
+        rows = []
+        for m in VhmanufacturerInfo.objects.all().order_by('id'):
+            rows.append([
+                m.id,
+                m.vr_vhmanufacturer or ''
+            ])
+            
+    elif report_type == 'employees':
+        sheet_title = "Employees"
+        filename_base = f"Employees_Report_{date_str}"
+        headers = ['Employee ID / Username', 'First Name', 'Last Name', 'Email', 'Role', 'Designation', 'Department', 'Branch', 'Contact', 'Status']
+        rows = []
+        for u in User.objects.all().select_related('user_extinfo', 'user_extinfo__emp_role', 'user_extinfo__emp_designation', 'user_extinfo__department', 'user_extinfo__emp_branch').order_by('id'):
+            ext = getattr(u, 'user_extinfo', None)
+            rows.append([
+                u.username,
+                u.first_name,
+                u.last_name,
+                u.email,
+                str(ext.emp_role) if ext and ext.emp_role else '',
+                str(ext.emp_designation) if ext and ext.emp_designation else '',
+                str(ext.department) if ext and ext.department else '',
+                str(ext.emp_branch) if ext and ext.emp_branch else '',
+                ext.emp_contact if ext and ext.emp_contact else '',
+                'Active' if u.is_active else 'Inactive'
+            ])
+            
+    elif report_type == 'departments':
+        sheet_title = "Departments"
+        filename_base = f"Departments_Report_{date_str}"
+        headers = ['ID', 'Department Name', 'Status']
+        rows = []
+        for d in Department_info.objects.select_related('dept_status').all().order_by('dept_name'):
+            rows.append([
+                d.id,
+                d.dept_name,
+                str(d.dept_status) if d.dept_status else ''
+            ])
+            
+    elif report_type == 'products':
+        sheet_title = "Products"
+        filename_base = f"Products_Report_{date_str}"
+        headers = ['ID', 'Product Type', 'Product Name', 'Description']
+        rows = []
+        for p in Product_info.objects.select_related('prod_type').all().order_by('id'):
+            rows.append([
+                p.id,
+                p.prod_type.prod_type_title if p.prod_type else '',
+                p.prod_name,
+                p.prod_description or ''
+            ])
+            
+    elif report_type == 'product_types':
+        sheet_title = "Product Types"
+        filename_base = f"Product_Types_Report_{date_str}"
+        headers = ['ID', 'Product Type Title']
+        rows = []
+        for pt in Prod_Type.objects.all().order_by('id'):
+            rows.append([
+                pt.id,
+                pt.prod_type_title
+            ])
+    else:
+        return HttpResponse("Invalid report type specified", status=400)
+        
+    if export_format == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"'
+        writer = csv.writer(response)
+        writer.writerow(headers)
+        for r in rows:
+            writer.writerow(r)
+        return response
+        
+    # Excel Generation with openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = sheet_title[:31]
+    
+    header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    
+    thin_border = Border(
+        left=Side(style='thin', color='E2E8F0'),
+        right=Side(style='thin', color='E2E8F0'),
+        top=Side(style='thin', color='E2E8F0'),
+        bottom=Side(style='thin', color='E2E8F0')
+    )
+    
+    ws.append(headers)
+    ws.row_dimensions[1].height = 26
+    
+    for col_num in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+        
+    data_font = Font(name="Calibri", size=10)
+    data_alignment = Alignment(vertical="center")
+    
+    for row_idx, r in enumerate(rows, start=2):
+        ws.append(r)
+        ws.row_dimensions[row_idx].height = 20
+        row_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid") if row_idx % 2 == 0 else None
+        for col_num in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_idx, column=col_num)
+            cell.font = data_font
+            cell.alignment = data_alignment
+            cell.border = thin_border
+            if row_fill:
+                cell.fill = row_fill
+                
+    for col in ws.columns:
+        max_len = 0
+        col_letter = openpyxl.utils.get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or '')
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = min(max(max_len + 4, 12), 40)
+        
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.xlsx"'
+    return response
 
 @login_required(login_url='login_page')
 def warehouse_reports(request):

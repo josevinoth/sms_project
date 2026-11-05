@@ -1,65 +1,259 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Update Product{% else %}Add / Update Product{% endif %} | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       PRODUCT FORM - COMPACT MODERN CARD & CONTROL STYLES
+       ══════════════════════════════════════════════════════════════════════════ */
+    .product-form-card {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        padding: 1.15rem !important;
+    }
+
+    .product-form-card .form-section {
+        background: var(--bg-section, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 10px;
+        padding: 1rem 1.15rem;
+    }
+
+    .product-form-card .form-section-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.45rem;
+        margin-bottom: 0.85rem;
+    }
+
+    [data-theme="dark"] .product-form-card .form-section-title {
+        color: #f1f5f9;
+        border-bottom-color: #334155;
+    }
+
+    .product-form-card .form-group-modern {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .product-form-card .form-label-modern {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    [data-theme="dark"] .product-form-card .form-label-modern {
+        color: #cbd5e1;
+    }
+
+    .product-form-card .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        background-color: #ffffff;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 7px !important;
+        padding: 4px 10px !important;
+        transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] .product-form-card .form-control-modern {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .product-form-card .form-control-modern:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+        outline: none;
+    }
+
+    /* Select2 compact overrides */
+    .select2-container--default .select2-selection--single {
+        height: 34px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 7px !important;
+        background-color: #ffffff !important;
+        display: flex;
+        align-items: center;
+    }
+
+    [data-theme="dark"] .select2-container--default .select2-selection--single {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 32px !important;
+        padding-left: 10px !important;
+        color: #1e293b !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+    }
+
+    [data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #f1f5f9 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+        right: 6px !important;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+    }
+
+    .select2-dropdown {
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+        font-size: 0.82rem !important;
+    }
+</style>
+{% endblock extra_css %}
+
 {% block content %}
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center flex-wrap mb-3 px-3 py-2" style="gap: 8px;">
+        <div class="d-flex align-items-center" style="gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fas fa-boxes text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.2rem; font-weight: 700; letter-spacing: 0.4px;">
+                    {% if form.instance.pk %}Update Product{% else %}Add / Update Product{% endif %}
+                </h3>
+                <span class="text-white-50" style="font-size: 0.75rem;">Configure organizational products and specifications</span>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'product_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.82rem; height: 32px; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Product List
+            </a>
+        </div>
+    </div>
 
-<form method="POST" action="">
-	{% csrf_token %}
+    <!-- ══ Form Container ══ -->
+    <form method="POST" action="" id="product_add_form" novalidate>
+        {% csrf_token %}
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-7 col-lg-5" style="max-width: 480px;">
+                <div class="modern-card product-form-card">
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="fas fa-info-circle text-primary"></i> Product Details
+                        </div>
 
-	<!--{{form.as_p}}-->
+                        <!-- Product Type -->
+                        <div class="form-group-modern">
+                            <label class="form-label-modern" for="id_prod_type">
+                                Product Type <span class="text-danger">*</span>
+                            </label>
+                            {% render_field form.prod_type class="form-control form-control-modern" id="id_prod_type" %}
+                        </div>
 
-<div class="row">
-	<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Products</h3></div>
-						<div class="card-body bg-light" >
-							<div class="row">
-							<div class="col">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Product Type</span>
-  								</div>
-								{% render_field form.prod_type class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
+                        <!-- Product Name -->
+                        <div class="form-group-modern">
+                            <label class="form-label-modern" for="id_prod_name">
+                                Product Name <span class="text-danger">*</span>
+                            </label>
+                            {% render_field form.prod_name class="form-control form-control-modern" id="id_prod_name" placeholder="Enter product name..." required="required" %}
+                        </div>
 
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Product Name</span>
-  								</div>
-								{% render_field form.prod_name class="form-control" %}
-							</div>
-							<!--<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Manufacturer</span>
-  								</div>
-								{% render_field form.prod_manufacturer class="form-control" %}
-  								&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;
-							</div>-->
-								<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text" >Description</span>
-  								</div>
-								{% render_field form.prod_description class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'product_list' %}" class="btn btn-danger float-right">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
-						</div>
-				</div>
-			</div>
-		</div>
-	<div class="col-3"></div>
+                        <!-- Description -->
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern" for="id_prod_description">
+                                Description
+                            </label>
+                            {% render_field form.prod_description class="form-control form-control-modern" id="id_prod_description" placeholder="Enter description or specifications..." %}
+                        </div>
+                    </div>
+
+                    <!-- Error Messages -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger py-2 px-3 mt-3 mb-0" style="font-size: 0.82rem; border-radius: 8px;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Please correct the following:</strong>
+                        <ul class="mb-0 mt-1 pl-3">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Form Action Buttons: Submit on LEFT, Cancel on RIGHT -->
+                    <div class="form-actions d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                        <button type="submit" class="btn-modern btn-submit px-4" style="height: 34px; font-size: 0.82rem; cursor: pointer;">
+                            <i class="fas fa-check mr-1"></i> Submit
+                        </button>
+                        <a href="{% url 'product_list' %}" class="btn-modern btn-cancel px-4" style="height: 34px; font-size: 0.82rem; text-decoration: none;">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
-</form>
-
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#id_prod_type').removeAttr('required').select2({
+        width: '100%',
+        dropdownAutoWidth: true,
+        placeholder: "--Select--"
+    });
+
+    // Form submission validation for Select2
+    $('#product_add_form').on('submit', function(e) {
+        var prodType = $('#id_prod_type').val();
+        if (!prodType || prodType === '' || prodType === '0') {
+            e.preventDefault();
+            $('#id_prod_type').next('.select2-container').find('.select2-selection').css('border-color', '#ef4444');
+            if ($('#prod_type_error').length === 0) {
+                $('#id_prod_type').closest('.form-group-modern').append('<span id="prod_type_error" class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i> Please select a Product Type</span>');
+            }
+            return false;
+        } else {
+            $('#id_prod_type').next('.select2-container').find('.select2-selection').css('border-color', '');
+            $('#prod_type_error').remove();
+        }
+    });
+
+    $('#id_prod_type').on('change', function() {
+        if ($(this).val()) {
+            $(this).next('.select2-container').find('.select2-selection').css('border-color', '');
+            $('#prod_type_error').remove();
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

@@ -21,7 +21,9 @@ def producttype_add(request,producttype_id=0):
             form = ProducttypeaddForm(request.POST,instance=producttype)
         if form.is_valid():
             form.save()
-        return redirect('/SMS/producttype_list')
+            return redirect('/SMS/producttype_list')
+        else:
+            return render(request, "asset_mgt_app/producttype_add.html", {'form': form, 'first_name': first_name})
 
 # List Product
 @login_required(login_url='login_page')
