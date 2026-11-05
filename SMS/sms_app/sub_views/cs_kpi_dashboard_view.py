@@ -653,7 +653,7 @@ def get_cs_kpi_dashboard_data(request):
         )
 
         total_billed = 0.0
-        for trip in trips_qs.filter(id__in=all_invoiced_ids):
+        for trip in trips_qs.filter(id__in=all_invoiced_ids).exclude(tc_financestatus_id=11):
             inv_amt = invoices_by_trip.get(trip.id)
             if inv_amt is None and trip.tr_consignmentnumber_id:
                 inv_amt = invoices_by_cons.get(trip.tr_consignmentnumber_id)
@@ -671,7 +671,8 @@ def get_cs_kpi_dashboard_data(request):
 
         # Value Unbilled: Calculated inline using the SAME logic as Invoice Pending Report
         # (no import from transport_reports_view needed - logic is self-contained here)
-        unbilled_trips_qs = trips_qs.exclude(id__in=all_invoiced_ids)
+        # Exclude Cancellation without Billing (tc_financestatus_id = 11) as requested
+        unbilled_trips_qs = trips_qs.exclude(id__in=all_invoiced_ids).exclude(tc_financestatus_id=11)
 
         # Bulk-fetch allotments for unbilled trips
         unbilled_enquiry_ids = set(unbilled_trips_qs.values_list('tr_enquirynumber_id', flat=True))

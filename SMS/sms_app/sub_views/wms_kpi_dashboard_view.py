@@ -247,8 +247,8 @@ def get_wms_kpi_dashboard_data(request):
         total_vol=Sum('lm_total_volume'),
         occupied_vol=Sum('lm_volume_occupied'),
     )
-    total_area_sqft = float(space_aggregates['total_size'] or 30582.5)
-    occupied_area_sqft = float(space_aggregates['occupied_size'] or 11646.95)
+    total_area_sqft = float(space_aggregates['total_size'] or 0.0)
+    occupied_area_sqft = float(space_aggregates['occupied_size'] or 0.0)
     available_area_sqft = max(total_area_sqft - occupied_area_sqft, 0.0)
     space_utilization_pct = round((occupied_area_sqft / total_area_sqft * 100), 1) if total_area_sqft > 0 else 0.0
 
@@ -260,21 +260,41 @@ def get_wms_kpi_dashboard_data(request):
     total_pieces = int(cargo_aggregates['total_pieces'] or 0)
     total_cbm = round(float(cargo_aggregates['total_cbm'] or 0.0), 2)
 
-    # Revenue
-    billed_revenue = float(billing_date_qs.aggregate(s=Sum('bill_total_post_gst'))['s'] or 0.0)
-    if billed_revenue == 0.0:
-        billed_revenue = float(billing_qs.filter(bill_invoice_date__year=2026).aggregate(s=Sum('bill_total_post_gst'))['s'] or 7316.0)
+    # Real Financial Revenue Breakdown from Billing & Warehouse Goods
+    bill_agg = billing_date_qs.aggregate(
+        tot_post_gst=Sum('bill_total_post_gst'),
+        wh_storage=Sum('bill_wh_storage_charges'),
+        handling=Sum('bill_handling_charges'),
+        loading=Sum('bill_loading_charge'),
+        unloading=Sum('bill_unloading_charge'),
+        cgst=Sum('bill_cgst'),
+        sgst=Sum('bill_sgst'),
+    )
+    billed_revenue = float(bill_agg['tot_post_gst'] or 0.0)
+    billed_storage_charges = float(bill_agg['wh_storage'] or 0.0)
+    handling_charges = float((bill_agg['handling'] or 0.0) + (bill_agg['loading'] or 0.0) + (bill_agg['unloading'] or 0.0))
 
     unbilled_storage_charges = float(wh_date_qs.aggregate(s=Sum('wh_storage_cost_total'))['s'] or 0.0)
-    if unbilled_storage_charges < 1000.0:
-        unbilled_storage_charges = round(billed_revenue * 0.852, 2)
 
+    # If date-filtered billing is empty but all-time billing exists for this customer/branch, fetch available
+    if billed_revenue == 0.0 and billing_qs.exists() and not customer_id:
+        all_bill_agg = billing_qs.aggregate(
+            tot_post_gst=Sum('bill_total_post_gst'),
+            wh_storage=Sum('bill_wh_storage_charges'),
+            handling=Sum('bill_handling_charges'),
+            loading=Sum('bill_loading_charge'),
+            unloading=Sum('bill_unloading_charge'),
+        )
+        billed_revenue = float(all_bill_agg['tot_post_gst'] or 0.0)
+        billed_storage_charges = float(all_bill_agg['wh_storage'] or 0.0)
+        handling_charges = float((all_bill_agg['handling'] or 0.0) + (all_bill_agg['loading'] or 0.0) + (all_bill_agg['unloading'] or 0.0))
+
+    storage_charges = billed_storage_charges + unbilled_storage_charges
     total_revenue = billed_revenue + unbilled_storage_charges
-    billed_share_pct = round((billed_revenue / total_revenue * 100), 1) if total_revenue > 0 else 54.0
-    unbilled_share_pct = round((unbilled_storage_charges / total_revenue * 100), 1) if total_revenue > 0 else 46.0
-
-    storage_charges = round(total_revenue * 0.65, 2)
-    handling_charges = round(total_revenue * 0.35, 2)
+    billed_share_pct = round((billed_revenue / total_revenue * 100), 1) if total_revenue > 0 else 0.0
+    unbilled_share_pct = round((unbilled_storage_charges / total_revenue * 100), 1) if total_revenue > 0 else 0.0
+    storage_share_pct = round((storage_charges / total_revenue * 100), 1) if total_revenue > 0 else 0.0
+    handling_share_pct = round((handling_charges / total_revenue * 100), 1) if total_revenue > 0 else 0.0
 
     # Rates
     inward_conv_rate = round((inward_jobs_created / inbound_gatein_trucks * 100), 1) if inbound_gatein_trucks > 0 else 100.0
@@ -290,8 +310,8 @@ def get_wms_kpi_dashboard_data(request):
     hv_count = hv_qs.count()
     dg_count = dg_qs.count()
     total_audits = hv_count + dg_count
-    active_bays_count = bay_qs.count() or 149
-    petty_count = petty_qs.count() or 10
+    active_bays_count = bay_qs.count()
+    petty_count = petty_qs.count()
 
     # 1. Top Executive KPI Cards (6 High Impact Cards)
     top_kpis = {
@@ -405,8 +425,11 @@ def get_wms_kpi_dashboard_data(request):
         avail = max(tot - occ, 0)
         pct = round((occ / tot * 100), 1) if tot > 0 else 0.0
 
-        if pct > 85:
+        if pct > 100:
             color = '#ef4444'
+            badge = 'Over-Cap'
+        elif pct > 85:
+            color = '#f43f5e'
             badge = 'Near Full'
         elif pct >= 60:
             color = '#f59e0b'
@@ -643,7 +666,7 @@ def get_wms_kpi_dashboard_data(request):
     ]
 
     compliance_summary = {
-        'audit_score': '99.8%',
+        'audit_score': f"{damage_free_rate}%",
         'claims_text': '0 Open' if cargo_damage_logged == 0 else f"{cargo_damage_logged} Open",
         'claims_color': '#86efac' if cargo_damage_logged == 0 else '#fca5a5',
     }
@@ -659,8 +682,8 @@ def get_wms_kpi_dashboard_data(request):
         'unbilled_charges': f"₹ {unbilled_storage_charges:,.2f}",
         'billed_share_pct': f"{billed_share_pct}%",
         'unbilled_share_pct': f"{unbilled_share_pct}%",
-        'storage_share_pct': '65.0%',
-        'handling_share_pct': '35.0%',
+        'storage_share_pct': f"{storage_share_pct}%",
+        'handling_share_pct': f"{handling_share_pct}%",
         'billed_pct_num': billed_share_pct,
         'unbilled_pct_num': unbilled_share_pct,
         'space_yield': f"₹ {space_yield:,.2f} / Sq.Ft",
