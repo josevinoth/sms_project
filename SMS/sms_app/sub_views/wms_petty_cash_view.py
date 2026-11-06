@@ -13,7 +13,7 @@ from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo, Warehouse_goods_info, UnitInfo
 from ..sub_forms.wms_petty_cash_form import WMSPettyCashForm
-from .general_utils import get_financial_year, get_session_branch_id
+from .general_utils import get_financial_year, get_session_branch_id, is_admin_or_supervisor_user
 
 
 def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
@@ -184,13 +184,23 @@ def wms_petty_cash_add(request, wpc_id=0):
             v_month = f"{voucher_date.month:02d}"
             expected_prefix = f"{expected_branch_code}-WH-{v_month}-{v_fy}-"
 
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if wpc_id == 0:
                 saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch, voucher_date=voucher_date)
-                saved_wpc.wpc_created_by = request.user
+                saved_wpc.wpc_created_by = created_user
             else:
                 if not saved_wpc.wpc_number or not saved_wpc.wpc_number.upper().startswith(expected_prefix):
                     saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch, voucher_date=voucher_date)
-            saved_wpc.wpc_updated_by = request.user
+                if not saved_wpc.wpc_created_by and created_user:
+                    saved_wpc.wpc_created_by = created_user
+            saved_wpc.wpc_updated_by = created_user
             saved_wpc.save()
             messages.success(request, "WMS Petty Cash saved successfully.")
             return redirect('wms_petty_cash_list')
@@ -230,18 +240,16 @@ def wms_petty_cash_list(request):
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    search_user = request.GET.get('search_user', "").strip()
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    current_user_id = request.user.id if (request.user and request.user.is_authenticated) else request.session.get('ses_userID')
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+        filters &= Q(wpc_created_by_id=current_user_id)
+    else:
+        if search_user:
+            filters &= Q(wpc_created_by_id=search_user)
 
     if search_branch:
         filters &= Q(wpc_branch__loc_name__icontains=search_branch)
@@ -259,6 +267,12 @@ def wms_petty_cash_list(request):
     from ..sub_models.wms_petty_cash_mod import UNIT_CHOICES
     unit_list = [choice[0] for choice in UNIT_CHOICES]
 
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = WMSPettyCashInfo.objects.filter(wpc_created_by__isnull=False).values_list('wpc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'wpc_list': page_obj,
         'search_wpc_number': wpc_number,
@@ -267,6 +281,8 @@ def wms_petty_cash_list(request):
         'to_date': to_date,
         'search_unit': search_unit,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'unit_list': unit_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
@@ -486,25 +502,24 @@ def wms_petty_cash_export_tally(request):
     if search_unit:
         filters &= Q(wpc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    search_user = request.GET.get('search_user', "").strip()
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    current_user_id = request.user.id if (request.user and request.user.is_authenticated) else request.session.get('ses_userID')
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+        filters &= Q(wpc_created_by_id=current_user_id)
+    else:
+        if search_user:
+            filters &= Q(wpc_created_by_id=search_user)
 
     if search_branch:
         filters &= Q(wpc_branch__loc_name__icontains=search_branch)
 
     wpc_list = WMSPettyCashInfo.objects.filter(filters).select_related(
         'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',
-        'wpc_credit_ledger', 'wpc_to', 'wpc_customer', 'wpc_business_model'
+        'wpc_credit_ledger', 'wpc_to', 'wpc_customer', 'wpc_business_model',
+        'wpc_created_by'
     ).order_by('-id')
 
     wb = Workbook()

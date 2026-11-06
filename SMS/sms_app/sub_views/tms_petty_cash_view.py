@@ -11,7 +11,7 @@ from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
 from ..models import Business_Sol_info, Location_info
 from ..sub_forms.tms_petty_cash_form import TMSPettyCashForm
-from .general_utils import get_financial_year, get_session_branch_id
+from .general_utils import get_financial_year, get_session_branch_id, is_admin_or_supervisor_user
 
 def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
     """
@@ -199,13 +199,23 @@ def tms_petty_cash_add(request, tpc_id=0):
             v_month = f"{voucher_date.month:02d}"
             expected_prefix = f"{branch_prefix}_T_{v_fy}_{v_month}_"
 
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if tpc_id == 0:
                 saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
-                saved_tpc.tpc_created_by = request.user
+                saved_tpc.tpc_created_by = created_user
             else:
                 if not saved_tpc.tpc_number or not saved_tpc.tpc_number.startswith(expected_prefix):
                     saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
-            saved_tpc.tpc_updated_by = request.user
+                if not saved_tpc.tpc_created_by and created_user:
+                    saved_tpc.tpc_created_by = created_user
+            saved_tpc.tpc_updated_by = created_user
             saved_tpc.save()
             messages.success(request, "Petty Cash saved successfully.")
             return redirect('tms_petty_cash_list')
@@ -240,6 +250,7 @@ def tms_petty_cash_list(request):
     to_date = request.GET.get('to_date', "").strip()
     search_vehicle = request.GET.get('search_vehicle', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
     
     filters = Q()
     if tpc_number:
@@ -253,22 +264,17 @@ def tms_petty_cash_list(request):
     if search_vehicle:
         filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
         
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    current_user_id = request.user.id if (request.user and request.user.is_authenticated) else request.session.get('ses_userID')
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+        filters &= Q(tpc_created_by_id=current_user_id)
+    else:
+        if search_user:
+            filters &= Q(tpc_created_by_id=search_user)
 
     if search_branch:
         filters &= Q(tpc_branch__loc_name__icontains=search_branch)
-            
             
     tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
         'tpc_business', 'tpc_branch', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
@@ -288,7 +294,9 @@ def tms_petty_cash_list(request):
                 Q(tpc_business__bvm_business__icontains=search_value) |
                 Q(tpc_branch__loc_name__icontains=search_value) |
                 Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_value) |
-                Q(tpc_vehicle_number_manual__icontains=search_value)
+                Q(tpc_vehicle_number_manual__icontains=search_value) |
+                Q(tpc_created_by__first_name__icontains=search_value) |
+                Q(tpc_created_by__username__icontains=search_value)
             )
             tpc_list = tpc_list.filter(search_filters)
             
@@ -377,6 +385,12 @@ def tms_petty_cash_list(request):
             'data': data
         })
         
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = TMSPettyCashInfo.objects.filter(tpc_created_by__isnull=False).values_list('tpc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'search_tpc_number': tpc_number,
         'search_date': search_date,
@@ -384,6 +398,8 @@ def tms_petty_cash_list(request):
         'to_date': to_date,
         'search_vehicle': search_vehicle,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
@@ -494,6 +510,7 @@ def tms_petty_cash_export_tally(request):
     to_date = request.GET.get('to_date', "").strip()
     search_vehicle = request.GET.get('search_vehicle', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
     
     filters = Q()
     if tpc_number:
@@ -507,25 +524,21 @@ def tms_petty_cash_export_tally(request):
     if search_vehicle:
         filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    current_user_id = request.user.id if (request.user and request.user.is_authenticated) else request.session.get('ses_userID')
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+        filters &= Q(tpc_created_by_id=current_user_id)
+    else:
+        if search_user:
+            filters &= Q(tpc_created_by_id=search_user)
 
     if search_branch:
         filters &= Q(tpc_branch__loc_name__icontains=search_branch)
         
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 
-        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_driver_name'
+        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_driver_name', 'tpc_created_by'
     )
     
     wb = Workbook()

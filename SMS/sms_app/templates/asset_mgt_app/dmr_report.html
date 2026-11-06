@@ -148,7 +148,7 @@
                     </button>
                 </div>
                 <div class="modal-body p-4">
-                    <form method="POST" action="{% url 'trip_send_email' %}">
+                    <form method="POST" action="{% url 'trip_send_email' %}" autocomplete="off">
                         {% csrf_token %}
                         <input type="hidden" name="customer_id" value="{{ customer_id }}">
                         <input type="hidden" name="customer_department" value="{{ dept_id }}">
@@ -165,7 +165,12 @@
 
                         <div class="form-group-modern mb-3">
                             <label class="form-label-modern">Recipient Emails (comma separated)</label>
-                            <input type="text" name="recipient" id="recipient" class="form-control form-control-modern" placeholder="user@example.com, manager@example.com">
+                            <input type="text" name="recipient" id="recipient" class="form-control form-control-modern" placeholder="user@example.com, manager@example.com" autocomplete="section-to email" data-lpignore="true">
+                        </div>
+
+                        <div class="form-group-modern mb-3">
+                            <label class="form-label-modern">CC (comma separated)</label>
+                            <input type="text" name="cc" id="cc_recipient" class="form-control form-control-modern" placeholder="cc1@example.com, cc2@example.com" autocomplete="section-cc off" data-lpignore="true">
                         </div>
 
                         <div class="form-group-modern mb-3">
@@ -405,6 +410,23 @@ $(document).ready(function () {
     $('#id_dmr_template').on('change', function () {
         $('#dmr_filter_form').trigger('submit');
     });
+
+    // Prevent browser autofill from cross-filling CC when Recipient is selected/autofilled
+    $('#recipient').on('input change', function () {
+        if (document.activeElement && document.activeElement.id === 'recipient') {
+            if ($('#cc_recipient').val() === $(this).val() && $(this).val().trim() !== '') {
+                $('#cc_recipient').val('');
+            }
+        }
+    });
+
+    $('#cc_recipient').on('input change', function () {
+        if (document.activeElement && document.activeElement.id === 'recipient') {
+            if ($(this).val() === $('#recipient').val() && $(this).val().trim() !== '') {
+                $(this).val('');
+            }
+        }
+    });
 });
 
 </script>
@@ -460,6 +482,9 @@ $(document).ready(function () {
             $("#subject").val("DMR Report");
         }
 
+        $("#recipient").val("");
+        $("#cc_recipient").val("");
+
         $.ajax({
             url: "{% url 'get_dmr_email_details' %}",
             type: "GET",
@@ -470,10 +495,12 @@ $(document).ready(function () {
             success: function (res) {
                 console.log("AJAX response =", res);
 
-                if (res.status === true && res.to_mail) {
-                    $("#recipient").val(res.to_mail);
+                if (res.status === true && (res.to_mail || res.cc_mail)) {
+                    $("#recipient").val(res.to_mail || "");
+                    $("#cc_recipient").val(res.cc_mail || "");
                 } else {
                     $("#recipient").val("");
+                    $("#cc_recipient").val("");
                     alert("No email found for this customer");
                 }
             },

@@ -1560,6 +1560,7 @@ def trip_send_email(request):
     from_loc = request.POST.get('from_location')
     to_loc = request.POST.get('to_location')
     recipient = request.POST.get('recipient', "")
+    cc = request.POST.get('cc', "") or request.POST.get('cc_emails', "") or request.POST.get('cc_recipient', "")
     subject = request.POST.get('subject', "")
     message_body = request.POST.get('message', "")
 
@@ -1626,6 +1627,7 @@ def trip_send_email(request):
     excel_file.seek(0)
 
     recipient_list = [x.strip() for x in recipient.split(",") if x.strip()]
+    cc_list = [x.strip() for x in cc.split(",") if x.strip()]
     subject = subject.strip() if subject else ""
     if not subject or "STUDIO" in subject.upper():
         subject = f"{customer_obj.cu_name} - DMR Report"
@@ -1639,7 +1641,8 @@ def trip_send_email(request):
             recipient_list=recipient_list,
             attachment=excel_file,
             attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx"
+            file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx",
+            cc_list=cc_list
         )
         messages.success(request, "DMR Report sent successfully.")
     except Exception as e:
@@ -1659,10 +1662,14 @@ def get_dmr_email_details(request):
         qs = qs.filter(em_customerdepartment_id=department_id)
 
     email_obj = qs.first()
-    if not email_obj or not email_obj.em_to_names:
+    if not email_obj or (not email_obj.em_to_names and not email_obj.em_cc_names):
         return JsonResponse({'status': False})
 
-    return JsonResponse({'status': True, 'to_mail': email_obj.em_to_names})
+    return JsonResponse({
+        'status': True,
+        'to_mail': email_obj.em_to_names or '',
+        'cc_mail': email_obj.em_cc_names or ''
+    })
 
 
 def get_dmr_template(customer_name, dept_name):

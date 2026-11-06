@@ -15,7 +15,7 @@ from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo, Warehouse_goods_info, UnitInfo
 from ..sub_forms.pms_petty_cash_form import PMSPettyCashForm
-from .general_utils import get_financial_year, get_session_branch_id
+from .general_utils import get_financial_year, get_session_branch_id, is_admin_or_supervisor_user
 
 
 def generate_pms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
@@ -187,13 +187,23 @@ def pms_petty_cash_add(request, ppc_id=0):
             v_month = f"{voucher_date.month:02d}"
             expected_prefix = f"{expected_branch_code}-PKG-{v_month}-{v_fy}-"
 
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if ppc_id == 0:
                 saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
-                saved_wpc.ppc_created_by = request.user
+                saved_wpc.ppc_created_by = created_user
             else:
                 if not saved_wpc.ppc_number or not saved_wpc.ppc_number.upper().startswith(expected_prefix):
                     saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
-            saved_wpc.ppc_updated_by = request.user
+                if not saved_wpc.ppc_created_by and created_user:
+                    saved_wpc.ppc_created_by = created_user
+            saved_wpc.ppc_updated_by = created_user
             saved_wpc.save()
             messages.success(request, "PMS Petty Cash saved successfully.")
             return redirect('pms_petty_cash_list')
@@ -233,18 +243,16 @@ def pms_petty_cash_list(request):
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    search_user = request.GET.get('search_user', "").strip()
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    current_user_id = request.user.id if (request.user and request.user.is_authenticated) else request.session.get('ses_userID')
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+        filters &= Q(ppc_created_by_id=current_user_id)
+    else:
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     if search_branch:
         filters &= Q(ppc_branch__loc_name__icontains=search_branch)
@@ -262,6 +270,12 @@ def pms_petty_cash_list(request):
     from ..sub_models.pms_petty_cash_mod import UNIT_CHOICES
     unit_list = [choice[0] for choice in UNIT_CHOICES]
 
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = PMSPettyCashInfo.objects.filter(ppc_created_by__isnull=False).values_list('ppc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'ppc_list': page_obj,
         'search_ppc_number': ppc_number,
@@ -270,6 +284,8 @@ def pms_petty_cash_list(request):
         'to_date': to_date,
         'search_unit': search_unit,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'unit_list': unit_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }

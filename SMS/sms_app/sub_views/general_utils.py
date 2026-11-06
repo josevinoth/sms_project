@@ -149,6 +149,40 @@ def is_tms_manager(user_id):
         return False
 
 
+def is_admin_or_supervisor_user(request):
+    """
+    Returns True if current user is admin, superuser, staff, or has supervisor/manager/admin role or designation.
+    """
+    user = getattr(request, 'user', None)
+    if not user or not user.is_authenticated:
+        ses_user_id = request.session.get('ses_userID')
+        if not ses_user_id:
+            return False
+        from django.contrib.auth.models import User
+        try:
+            user = User.objects.get(id=ses_user_id)
+        except User.DoesNotExist:
+            return False
+
+    if user.is_superuser or user.is_staff:
+        return True
+
+    user_role = (request.session.get('ses_role') or '').lower()
+    if user_role in ['admin', 'super user', 'superuser']:
+        return True
+
+    try:
+        from ..sub_models.user_ext_mod import User_extInfo
+        user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+        desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+        role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+        if 'supervisor' in desig or 'admin' in role or 'super' in role:
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def is_admin_user(request):
     """
     Returns True if current logged in user is a Django superuser/staff or has an Admin/Superuser role.
