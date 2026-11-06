@@ -447,7 +447,22 @@ $(document).ready(function () {
 
         // Get values directly from main filter form
         const customerId = $("#id_dmr_customer").val();
-        const departmentId = $("#id_customer_department").val();
+        let departmentId = $("#id_customer_department").val();
+        let departmentName = "";
+        if (departmentId) {
+            departmentName = $("#id_customer_department option:selected").text().trim();
+        } else if (typeof tripTable !== 'undefined' && tripTable) {
+            try {
+                const headers = currentTableHeaders();
+                const deptColIdx = headers.findIndex(h => h.toLowerCase().includes('department'));
+                if (deptColIdx !== -1) {
+                    const rowData = tripTable.row(0).data();
+                    if (rowData && rowData[deptColIdx]) {
+                        departmentName = $('<div>').html(rowData[deptColIdx]).text().trim();
+                    }
+                }
+            } catch(e) {}
+        }
         const templateId = $("#id_dmr_template").val();
         const month = $("#id_month").val();
         const year = $("#id_year").val();
@@ -490,7 +505,8 @@ $(document).ready(function () {
             type: "GET",
             data: {
                 customer_id: customerId,
-                department_id: departmentId
+                department_id: departmentId,
+                department_name: departmentName
             },
             success: function (res) {
                 console.log("AJAX response =", res);

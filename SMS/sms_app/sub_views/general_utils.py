@@ -2,6 +2,7 @@ from datetime import datetime
 from django.db.models import Max
 from ..models import Location_info
 
+
 def get_financial_year(date_obj=None):
     """
     Returns the financial year in YY-YY format.
@@ -33,9 +34,10 @@ def get_financial_year(date_obj=None):
     else:
         # From April onwards, the financial year started in the current year
         start_year = year
-    
+
     end_year = start_year + 1
     return f"{str(start_year)[2:]}-{str(end_year)[2:]}"
+
 
 def get_branch_code(branch_id):
     """
@@ -44,6 +46,7 @@ def get_branch_code(branch_id):
     """
     branch_code_map = {1: "BLR", 2: "MAA", 3: "PNY", 4: "HYD", 5: "CBE", 6: "MC"}
     return branch_code_map.get(branch_id, "UNK")
+
 
 def get_session_branch_id(request):
     """
@@ -61,19 +64,20 @@ def get_session_branch_id(request):
             pass
     return branch_id or 1
 
+
 def generate_next_number(model_class, field_name, prefix, padding, filter_prefix=None):
     """
     Generates the next sequence number for a given prefix by scanning existing records.
     Robust against string-sorting issues (e.g. Unit-3 vs Unit-4).
     """
     search_prefix = filter_prefix if filter_prefix is not None else prefix
-    
+
     # Fetch the most recent 100 records to find the numeric maximum
     # We use -id because it is the primary chronological key
     recent_vals = model_class.objects.filter(
         **{f"{field_name}__startswith": search_prefix}
     ).order_by("-id")[:100].values_list(field_name, flat=True)
-    
+
     max_num = 0
     for val in recent_vals:
         if val:
@@ -85,19 +89,21 @@ def generate_next_number(model_class, field_name, prefix, padding, filter_prefix
                     max_num = num
             except (ValueError, IndexError):
                 continue
-    
+
     next_num = max_num + 1
     new_num = f"{prefix}{str(next_num).zfill(padding)}"
-    
+
     # Final 'Safety-First' check: If this number ALREADY exists for any reason
     # (very rare race condition), increment until we find a truly empty slot.
     while model_class.objects.filter(**{field_name: new_num}).exists():
         next_num += 1
         new_num = f"{prefix}{str(next_num).zfill(padding)}"
-        
+
     return new_num
 
+
 import base64
+
 
 def get_base64_image(image_field):
     if not image_field:
@@ -136,51 +142,17 @@ def is_tms_manager(user_id):
             'emp_organisation', 'emp_designation', 'emp_role'
         ).get(user_id=user_id)
 
-        role_name        = str(user_ext.emp_role).strip().lower()        if user_ext.emp_role        else ''
-        org_name         = str(user_ext.emp_organisation).strip().lower() if user_ext.emp_organisation else ''
+        role_name = str(user_ext.emp_role).strip().lower() if user_ext.emp_role else ''
+        org_name = str(user_ext.emp_organisation).strip().lower() if user_ext.emp_organisation else ''
         designation_name = str(user_ext.emp_designation).strip().lower() if user_ext.emp_designation else ''
 
         return (
-            role_name == 'user' and
-            'trans' in org_name and
-            'manager' in designation_name
+                role_name == 'user' and
+                'trans' in org_name and
+                'manager' in designation_name
         )
     except Exception:
         return False
-
-
-def is_admin_or_supervisor_user(request):
-    """
-    Returns True if current user is admin, superuser, staff, or has supervisor/manager/admin role or designation.
-    """
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        ses_user_id = request.session.get('ses_userID')
-        if not ses_user_id:
-            return False
-        from django.contrib.auth.models import User
-        try:
-            user = User.objects.get(id=ses_user_id)
-        except User.DoesNotExist:
-            return False
-
-    if user.is_superuser or user.is_staff:
-        return True
-
-    user_role = (request.session.get('ses_role') or '').lower()
-    if user_role in ['admin', 'super user', 'superuser']:
-        return True
-
-    try:
-        from ..sub_models.user_ext_mod import User_extInfo
-        user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-        desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-        role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-        if 'supervisor' in desig or 'admin' in role or 'super' in role:
-            return True
-    except Exception:
-        pass
-    return False
 
 
 def is_admin_user(request):
@@ -216,6 +188,7 @@ FORWARD_TRIP_STATUS_MAP = {
     12: [12, 8, 1, 3, 10, 11],
 }
 
+
 def get_allowed_next_statuses(current_status_id, is_admin=False):
     """
     Returns a list of allowed status IDs that a trip can transition to.
@@ -226,12 +199,12 @@ def get_allowed_next_statuses(current_status_id, is_admin=False):
     if not current_status_id:
         # Default starting statuses if new
         return [8, 1, 3, 10, 11]
-    
+
     try:
         current_status_id = int(current_status_id)
     except (ValueError, TypeError):
         return None
-        
+
     return FORWARD_TRIP_STATUS_MAP.get(current_status_id, [current_status_id])
 
 

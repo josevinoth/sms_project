@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from io import BytesIO
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
@@ -1655,13 +1655,36 @@ def trip_send_email(request):
 def get_dmr_email_details(request):
     customer_id = request.GET.get("customer_id")
     department_id = request.GET.get("department_id")
+    department_name = request.GET.get("department_name")
     if not customer_id: return JsonResponse({'status': False})
 
     qs = Emailmaster.objects.filter(em_Customer_name_id=customer_id)
     if department_id:
-        qs = qs.filter(em_customerdepartment_id=department_id)
+        dept_qs = qs.filter(em_customerdepartment_id=department_id)
+        if dept_qs.exists():
+            qs = dept_qs
+    elif department_name:
+        dept_qs = qs.filter(em_customerdepartment__ct_customerdepartment__iexact=str(department_name).strip())
+        if dept_qs.exists():
+            qs = dept_qs
+    else:
+        top_dept = TripdetailInfo.objects.filter(
+            tr_enquirynumber__en_customername_id=customer_id
+        ).exclude(tr_enquirynumber__en_customerdepartment=None).values(
+            'tr_enquirynumber__en_customerdepartment_id'
+        ).annotate(c=Count('id')).order_by('-c').first()
+        if top_dept and top_dept['tr_enquirynumber__en_customerdepartment_id']:
+            cand = top_dept['tr_enquirynumber__en_customerdepartment_id']
+            dept_qs = qs.filter(em_customerdepartment_id=cand)
+            if dept_qs.exists():
+                qs = dept_qs
 
-    email_obj = qs.first()
+    # Filter for Report email type if available (Email Type = 'For Report')
+    report_qs = qs.filter(em_emailtype__email_type__icontains='Report')
+    if report_qs.exists():
+        qs = report_qs
+
+    email_obj = qs.order_by('-em_updated_at', '-id').first()
     if not email_obj or (not email_obj.em_to_names and not email_obj.em_cc_names):
         return JsonResponse({'status': False})
 
