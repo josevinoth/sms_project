@@ -18,6 +18,84 @@ from ..sub_forms.pms_petty_cash_form import PMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
 
+def is_admin_or_supervisor_user(request):
+    """
+    Returns True if current user is admin, superuser, staff, or has supervisor/manager/admin role or designation.
+    """
+    user = getattr(request, 'user', None)
+    if not user or not user.is_authenticated:
+        ses_user_id = request.session.get('ses_userID')
+        if not ses_user_id:
+            return False
+        from django.contrib.auth.models import User
+        try:
+            user = User.objects.get(id=ses_user_id)
+        except User.DoesNotExist:
+            return False
+
+    if user.is_superuser or user.is_staff:
+        return True
+
+    user_role = (request.session.get('ses_role') or '').lower()
+    if user_role in ['admin', 'super user', 'superuser']:
+        return True
+
+    try:
+        from ..sub_models.user_ext_mod import User_extInfo
+        user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+        desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+        role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+        if 'supervisor' in desig or 'admin' in role or 'super' in role:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def get_user_branch_code(request):
+    """
+    Determines the user's branch code: 'MAA', 'BLR', etc.
+    Checks User_extInfo.emp_branch, falling back to session ses_branch_id.
+    """
+    user = getattr(request, 'user', None)
+    user_id = user.id if (user and user.is_authenticated) else request.session.get('ses_userID')
+    branch_name = ''
+
+    if user_id:
+        try:
+            from ..sub_models.user_ext_mod import User_extInfo
+            user_ext = User_extInfo.objects.select_related('emp_branch').get(user_id=user_id)
+            if user_ext.emp_branch and user_ext.emp_branch.loc_name:
+                branch_name = user_ext.emp_branch.loc_name
+        except Exception:
+            pass
+
+    if not branch_name:
+        branch_id = request.session.get('ses_branch_id')
+        if branch_id:
+            try:
+                from ..models import Location_info
+                loc = Location_info.objects.get(id=branch_id)
+                branch_name = loc.loc_name or ''
+            except Exception:
+                pass
+
+    name_upper = branch_name.upper()
+    if 'BLR' in name_upper or 'BANGALORE' in name_upper or 'BENGALURU' in name_upper:
+        return 'BLR'
+    elif 'MAA' in name_upper or 'CHENNAI' in name_upper:
+        return 'MAA'
+    elif 'PNY' in name_upper or 'PONDICHERRY' in name_upper:
+        return 'PNY'
+    elif 'HYD' in name_upper or 'HYDERABAD' in name_upper:
+        return 'HYD'
+    elif 'CJB' in name_upper or 'COIMBATORE' in name_upper:
+        return 'CJB'
+    elif branch_name:
+        return branch_name.split()[-1].upper()
+    return ''
+
+
 def generate_pms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
     """
     Generates Voucher Number format in UPPERCASE: [BranchCode]-PKG-[MM]-[FY]-[Seq]
@@ -187,13 +265,23 @@ def pms_petty_cash_add(request, ppc_id=0):
             v_month = f"{voucher_date.month:02d}"
             expected_prefix = f"{expected_branch_code}-PKG-{v_month}-{v_fy}-"
 
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if ppc_id == 0:
                 saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
-                saved_wpc.ppc_created_by = request.user
+                saved_wpc.ppc_created_by = created_user
             else:
                 if not saved_wpc.ppc_number or not saved_wpc.ppc_number.upper().startswith(expected_prefix):
                     saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
-            saved_wpc.ppc_updated_by = request.user
+                if not saved_wpc.ppc_created_by and created_user:
+                    saved_wpc.ppc_created_by = created_user
+            saved_wpc.ppc_updated_by = created_user
             saved_wpc.save()
             messages.success(request, "PMS Petty Cash saved successfully.")
             return redirect('pms_petty_cash_list')
@@ -233,21 +321,28 @@ def pms_petty_cash_list(request):
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
-    if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+    search_user = request.GET.get('search_user', "").strip()
 
-    if search_branch:
-        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+
+    if not is_admin_or_supervisor:
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(ppc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
@@ -262,6 +357,12 @@ def pms_petty_cash_list(request):
     from ..sub_models.pms_petty_cash_mod import UNIT_CHOICES
     unit_list = [choice[0] for choice in UNIT_CHOICES]
 
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = PMSPettyCashInfo.objects.filter(ppc_created_by__isnull=False).values_list('ppc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'ppc_list': page_obj,
         'search_ppc_number': ppc_number,
@@ -270,6 +371,8 @@ def pms_petty_cash_list(request):
         'to_date': to_date,
         'search_unit': search_unit,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'unit_list': unit_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
@@ -399,9 +502,9 @@ def get_pms_job_details(request):
     """
     AJAX endpoint to fetch full package job details from Packingjobs and PkcostingsummaryInfo
     """
-    from sms_app.sub_models.packing_jobs_mod import Packingjobs
-    from sms_app.sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
-    from sms_app.sub_models.na_dimension_mod import Nadimension
+    from ..sub_models.packing_jobs_mod import Packingjobs
+    from ..sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
+    from ..sub_models.na_dimension_mod import Nadimension
     from django.db.models import Sum
 
     job_no = request.GET.get('job_no', '').strip()
@@ -471,21 +574,26 @@ def pms_petty_cash_export_tally(request):
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
-    if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
 
-    if search_branch:
-        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    if not is_admin_or_supervisor:
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(ppc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',

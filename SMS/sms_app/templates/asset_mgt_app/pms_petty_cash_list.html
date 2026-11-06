@@ -107,6 +107,7 @@
                         <th>Bill Amt</th>
                         <th>GST Amt</th>
                         <th>Total Amt</th>
+                        <th>Created By</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -139,6 +140,7 @@
                         <td>₹{{ wpc.ppc_bill_amount|floatformat:2 }}</td>
                         <td>₹{{ wpc.ppc_gst_amount|floatformat:2 }}</td>
                         <td><strong class="text-success">₹{{ wpc.ppc_total_amount|floatformat:2 }}</strong></td>
+                        <td>{{ wpc.ppc_created_by.first_name|default:wpc.ppc_created_by.username|default:"-" }}</td>
                         <td style="white-space: nowrap;">
                             <div class="d-flex justify-content-center" style="gap: 5px;">
                                 <a href="{% url 'pms_petty_cash_voucher_print' wpc.id %}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
@@ -158,7 +160,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="18" class="text-center text-muted py-4">No PMS Petty Cash records found.</td>
+                        <td colspan="19" class="text-center text-muted py-4">No PMS Petty Cash records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
