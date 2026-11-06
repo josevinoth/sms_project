@@ -112,9 +112,10 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
         
         if selected_trip_id:
             is_invoiced = TInvoiceInfo.objects.filter(ti_trip_id=selected_trip_id).exists() or TDetailInfo.objects.filter(id=selected_trip_id, tc_financestatus_id=10).exists()
-        elif enquiry_num_id:
-            trips = TDetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id)
-            is_invoiced = TInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+        elif consignment_detail_id != 0:
+            linked_trip = TDetailInfo.objects.filter(tr_consignmentnumber_id=consignment_detail_id).first()
+            if linked_trip:
+                is_invoiced = TInvoiceInfo.objects.filter(ti_trip=linked_trip).exists() or (linked_trip.tc_financestatus_id == 10)
             
         from ..models import User_extInfo as UExtInfo
         user_ext = UExtInfo.objects.filter(user_id=user_id).first()

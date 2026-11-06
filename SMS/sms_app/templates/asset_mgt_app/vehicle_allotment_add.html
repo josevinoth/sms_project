@@ -1068,53 +1068,16 @@ function setDateFieldValue(selector, value) {
 	}
 </script>
 <script>
-	function getActiveVehicleTypeId(explicitCheckedId) {
-		const vehicleRequested = $('#va_vehicletype').val();
-		const vehiclePlaced = $('#va_vehicletype_placed').val();
-
-		let isReqChecked = $('#chk_requested').is(':checked');
-		let isPlacedChecked = $('#chk_placed').is(':checked');
-
-		if (explicitCheckedId === 'chk_requested') {
-			isReqChecked = true;
-			isPlacedChecked = false;
-		} else if (explicitCheckedId === 'chk_placed') {
-			isPlacedChecked = true;
-			isReqChecked = false;
-		}
-
-		if (isPlacedChecked) {
-			return vehiclePlaced || vehicleRequested;
-		} else if (isReqChecked) {
-			return vehicleRequested || vehiclePlaced;
-		}
-
-		// Fallback if neither checked: prioritize placed, then requested
-		return vehiclePlaced || vehicleRequested;
+	function getActiveVehicleTypeId() {
+		return $('#va_vehicletype_placed').val();
 	}
 
-	function getActiveVehicleTypeName(explicitCheckedId) {
-		let isReqChecked = $('#chk_requested').is(':checked');
-		let isPlacedChecked = $('#chk_placed').is(':checked');
-
-		if (explicitCheckedId === 'chk_requested') {
-			isReqChecked = true;
-			isPlacedChecked = false;
-		} else if (explicitCheckedId === 'chk_placed') {
-			isPlacedChecked = true;
-			isReqChecked = false;
-		}
-
-		if (isPlacedChecked) {
-			return $('#va_vehicletype_placed option:selected').text().trim() || 'Placed';
-		} else if (isReqChecked) {
-			return $('#va_vehicletype option:selected').text().trim() || 'Requested';
-		}
-
-		return $('#va_vehicletype_placed option:selected').text().trim() || $('#va_vehicletype option:selected').text().trim() || '';
+	function getActiveVehicleTypeName() {
+		const typeName = $('#va_vehicletype_placed option:selected').text().trim();
+		return (typeName && typeName !== '--Select--') ? typeName : '';
 	}
 
-	function renderNearestPills(nearestList, fromName, explicitCheckedId) {
+	function renderNearestPills(nearestList, fromName) {
 		const container = $("#nearest_pills_container");
 		const list = $("#nearest_pills_list");
 		const badge = $("#nearest_badge");
@@ -1126,7 +1089,7 @@ function setDateFieldValue(selector, value) {
 			if (fromName) fromSpan.text(fromName);
 			badge.show();
 
-			const typeName = getActiveVehicleTypeName(explicitCheckedId);
+			const typeName = getActiveVehicleTypeName();
 			if (typeName && typeName !== '--Select--') {
 				typeBadge.text(typeName).show();
 			} else {
@@ -1153,8 +1116,8 @@ function setDateFieldValue(selector, value) {
 		}
 	}
 
-	function loadAvailableVehicleNumbers(explicitCheckedId) {
-		const selectedType = getActiveVehicleTypeId(explicitCheckedId);
+	function loadAvailableVehicleNumbers() {
+		const selectedType = $('#va_vehicletype_placed').val();
 		const source = $("#va_vehiclesource").val();
 		const currentVehicleId = "{{ vehicle_allotment_form.instance.va_vehiclenumber_id|default:'' }}" || "{{ vehicle_allotment_form.data.va_vehiclenumber|default:'' }}" || $("#va_vehiclenumber").val();
 
@@ -1191,7 +1154,7 @@ function setDateFieldValue(selector, value) {
 					$('#va_vehiclenumber').removeClass('disable_a_href');
 					dropdown.trigger('change.select2');
 
-					renderNearestPills(data.nearest_vehicles, data.from_location_name, explicitCheckedId);
+					renderNearestPills(data.nearest_vehicles, data.from_location_name);
 				}
 			});
 		}
@@ -1216,7 +1179,7 @@ function setDateFieldValue(selector, value) {
 		});
 	});
 
-	$("#va_vehicletype_placed, #va_vehicletype, #va_vehiclesource").on('change select2:select select2:unselect', function() {
+	$("#va_vehicletype_placed, #va_vehiclesource").on('change select2:select select2:unselect', function() {
 		loadAvailableVehicleNumbers();
 	});
 </script>
@@ -1291,7 +1254,6 @@ $(document).ready(function() {
             // Do not clear special buy if unchecked to prevent data loss
             calculateProfit();
         }
-        loadAvailableVehicleNumbers(checkedId);
     });
 
     // Re-fetch sell when vehicle requested changes

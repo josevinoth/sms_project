@@ -219,6 +219,18 @@
                                     {% render_field form.mb_halting_cost class="form-control form-control-modern" %}
                                 </div>
                             </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Cancellation Cost</label>
+                                    {% render_field form.mb_cancellation_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Handling Cost</label>
+                                    {% render_field form.mb_handling_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Total Cost</label>
@@ -337,6 +349,8 @@
                                 <th style="width: 90px;">Weighment Cost</th>
                                 <th style="width: 80px;">Halting Days</th>
                                 <th style="width: 110px;">Halting Cost</th>
+                                <th style="width: 110px;">Cancellation Cost</th>
+                                <th style="width: 110px;">Handling Cost</th>
                                 <th style="width: 110px;">Total Cost</th>
                                 <th style="width: 100px; text-align: center;">Mail Attach</th>
                             </tr>
@@ -355,6 +369,8 @@
                                         data-halting-days="{{ trip.halting_days }}"
                                         data-halting-cost="{{ trip.halting_cost }}"
                                         data-halting-rate="{{ trip.halting_rate }}"
+                                        data-cancellation="{{ trip.cancellation_cost }}"
+                                        data-handling="{{ trip.handling_cost }}"
                                         {% if record.id %}checked="checked" disabled="disabled" style="display: none;"{% endif %}>
                                     {% if record.id %}
                                     <i class="fas fa-check text-success"></i>
@@ -428,6 +444,24 @@
                                         {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_haltingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
                                         style="width: 100px;">
+                                </td>
+                                <td>
+                                    <input type="number" name="cancellation_cost_{{ trip.id }}"
+                                        class="form-control cancellation-cost-input {% if trip.tc_cancellation_vendor_check %}vendor-highlighted{% endif %}"
+                                        value="{{ trip.cancellation_cost }}" placeholder="{{ trip.closure_cancellation_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_cancellation_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
+                                        {% if trip.tc_cancellation_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
+                                        style="width: 95px;">
+                                </td>
+                                <td>
+                                    <input type="number" name="handling_cost_{{ trip.id }}"
+                                        class="form-control handling-cost-input {% if trip.tc_handlingcost_vendor_check %}vendor-highlighted{% endif %}"
+                                        value="{{ trip.handling_cost }}" placeholder="{{ trip.closure_handling_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_handling_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
+                                        {% if trip.tc_handlingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
+                                        style="width: 95px;">
                                 </td>
                                 <td class="row-total-cost-cell">0.00</td>
                                 <td class="text-center">
@@ -514,6 +548,8 @@
         let totalWeighment = 0;
         let totalHalting = 0;
         let totalHaltingDays = 0;
+        let totalCancellation = 0;
+        let totalHandling = 0;
 
         let rows;
         if (tripsDataTable) {
@@ -548,6 +584,14 @@
             const weighmentVal = weighmentInput ? weighmentInput.value.trim() : "";
             const weighmentCost = weighmentVal !== "" ? (parseFloat(weighmentVal) || 0) : 0;
 
+            const cancellationInput = row.querySelector(".cancellation-cost-input");
+            const cancellationVal = cancellationInput ? cancellationInput.value.trim() : "";
+            const cancellationCost = cancellationVal !== "" ? (parseFloat(cancellationVal) || 0) : 0;
+
+            const handlingInput = row.querySelector(".handling-cost-input");
+            const handlingVal = handlingInput ? handlingInput.value.trim() : "";
+            const handlingCost = handlingVal !== "" ? (parseFloat(handlingVal) || 0) : 0;
+
             const tripInput = row.querySelector(".trip-cost-input");
             const special = parseFloat(tripInput?.value) || 0;
             totalTrip += special;
@@ -557,9 +601,11 @@
             totalWeighment += weighmentCost;
             totalHalting += haltingCost;
             totalHaltingDays += days;
+            totalCancellation += cancellationCost;
+            totalHandling += handlingCost;
 
-            // Calculate and display row total cost (including halting cost)
-            const rowTotal = special + loadingCost + unloadingCost + parkingCost + weighmentCost + haltingCost;
+            // Calculate and display row total cost (including halting, cancellation, and handling costs)
+            const rowTotal = special + loadingCost + unloadingCost + parkingCost + weighmentCost + haltingCost + cancellationCost + handlingCost;
             const rowTotalCell = row.querySelector(".row-total-cost-cell");
             if (rowTotalCell) {
                 rowTotalCell.textContent = rowTotal.toFixed(2);
@@ -582,7 +628,11 @@
         if (weighmentEl) weighmentEl.value = totalWeighment.toFixed(2);
         document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
         document.getElementById("mb_halting_days").value = totalHaltingDays;
-        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalWeighment + totalHalting;
+        const cancellationEl = document.getElementById("mb_cancellation_cost");
+        if (cancellationEl) cancellationEl.value = totalCancellation.toFixed(2);
+        const handlingEl = document.getElementById("mb_handling_cost");
+        if (handlingEl) handlingEl.value = totalHandling.toFixed(2);
+        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalWeighment + totalHalting + totalCancellation + totalHandling;
         document.getElementById("mb_total_cost").value = grandTotal.toFixed(2);
 
         // Recalculate TDS and Payable Amount
@@ -598,7 +648,9 @@
             e.target.classList.contains("parking-cost-input") ||
             e.target.classList.contains("weighment-cost-input") ||
             e.target.classList.contains("halting-days-input") ||
-            e.target.classList.contains("halting-cost-input")) {
+            e.target.classList.contains("halting-cost-input") ||
+            e.target.classList.contains("cancellation-cost-input") ||
+            e.target.classList.contains("handling-cost-input")) {
             const closureVal = parseFloat(e.target.getAttribute('data-closure') || 0);
             if (e.target.value.trim() !== "" || closureVal === 0) {
                 e.target.classList.remove("is-invalid");
@@ -669,7 +721,7 @@
 
     // Export options configuration for Trips DataTable
     const tripsExportOptions = {
-        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
         format: {
             body: function (data, row, column, node) {
                 const input = $(node).find('input');
@@ -715,7 +767,7 @@
         tripsDataTable = $('#tripsTable').DataTable({
             order: hasData ? [[1, 'desc']] : [], // Sort by Cnote column by default when data exists
             columnDefs: [
-                { orderable: false, targets: [0, 16] } // Checkbox and Mail Attach columns
+                { orderable: false, targets: [0, 18] } // Checkbox and Mail Attach columns
             ],
             destroy: true,
             paging: true,
@@ -842,7 +894,9 @@
                         data-weighment="${trip.weighment_cost}"
                         data-halting-days="${trip.halting_days}"
                         data-halting-cost="${trip.halting_cost}"
-                        data-halting-rate="${trip.halting_rate}"></td>
+                        data-halting-rate="${trip.halting_rate}"
+                        data-cancellation="${trip.cancellation_cost}"
+                        data-handling="${trip.handling_cost}"></td>
                     <td>${trip.trip_number_display}</td>
                     <td>${trip.vehicle_number}</td>
                     <td>${trip.vehicle_type}</td>
@@ -884,6 +938,16 @@
                         <input type="number" name="halting_cost_${trip.id}" class="form-control halting-cost-input ${trip.tc_haltingcost_vendor_check ? 'vendor-highlighted' : ''}" 
                             value="" placeholder="${trip.halting_cost.toFixed(2)}" data-closure="${trip.halting_cost}" min="0" step="0.01"
                             ${trip.tc_haltingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 100px;">
+                    </td>
+                    <td>
+                        <input type="number" name="cancellation_cost_${trip.id}" class="form-control cancellation-cost-input ${trip.tc_cancellation_vendor_check ? 'vendor-highlighted' : ''}" 
+                            value="" placeholder="${trip.cancellation_cost.toFixed(2)}" data-closure="${trip.cancellation_cost}" min="0" step="0.01"
+                            ${trip.tc_cancellation_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 95px;">
+                    </td>
+                    <td>
+                        <input type="number" name="handling_cost_${trip.id}" class="form-control handling-cost-input ${trip.tc_handlingcost_vendor_check ? 'vendor-highlighted' : ''}" 
+                            value="" placeholder="${trip.handling_cost.toFixed(2)}" data-closure="${trip.handling_cost}" min="0" step="0.01"
+                            ${trip.tc_handlingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 95px;">
                     </td>
                     <td class="row-total-cost-cell">${trip.special_cost.toFixed(2)}</td>
                     <td class="text-center">
@@ -1052,7 +1116,7 @@
         let firstInvalidInput = null;
 
         selectedTripIds.forEach(tripId => {
-            let lInput, uInput, pInput, wInput, hInput, hcInput;
+            let lInput, uInput, pInput, wInput, hInput, hcInput, cInput, handInput;
             if (tripsDataTable) {
                 const lMatches = tripsDataTable.$('input[name="loading_cost_' + tripId + '"]');
                 const uMatches = tripsDataTable.$('input[name="unloading_cost_' + tripId + '"]');
@@ -1060,12 +1124,16 @@
                 const wMatches = tripsDataTable.$('input[name="weighment_cost_' + tripId + '"]');
                 const hMatches = tripsDataTable.$('input[name="halting_days_' + tripId + '"]');
                 const hcMatches = tripsDataTable.$('input[name="halting_cost_' + tripId + '"]');
+                const cMatches = tripsDataTable.$('input[name="cancellation_cost_' + tripId + '"]');
+                const handMatches = tripsDataTable.$('input[name="handling_cost_' + tripId + '"]');
                 lInput = lMatches.length ? lMatches[0] : null;
                 uInput = uMatches.length ? uMatches[0] : null;
                 pInput = pMatches.length ? pMatches[0] : null;
                 wInput = wMatches.length ? wMatches[0] : null;
                 hInput = hMatches.length ? hMatches[0] : null;
                 hcInput = hcMatches.length ? hcMatches[0] : null;
+                cInput = cMatches.length ? cMatches[0] : null;
+                handInput = handMatches.length ? handMatches[0] : null;
             } else {
                 lInput = document.querySelector('input[name="loading_cost_' + tripId + '"]');
                 uInput = document.querySelector('input[name="unloading_cost_' + tripId + '"]');
@@ -1073,9 +1141,11 @@
                 wInput = document.querySelector('input[name="weighment_cost_' + tripId + '"]');
                 hInput = document.querySelector('input[name="halting_days_' + tripId + '"]');
                 hcInput = document.querySelector('input[name="halting_cost_' + tripId + '"]');
+                cInput = document.querySelector('input[name="cancellation_cost_' + tripId + '"]');
+                handInput = document.querySelector('input[name="handling_cost_' + tripId + '"]');
             }
 
-            [lInput, uInput, pInput, wInput, hInput, hcInput].forEach(inp => {
+            [lInput, uInput, pInput, wInput, hInput, hcInput, cInput, handInput].forEach(inp => {
                 if (inp) {
                     const closureVal = parseFloat(inp.getAttribute('data-closure') || 0);
                     const val = inp.value.trim();

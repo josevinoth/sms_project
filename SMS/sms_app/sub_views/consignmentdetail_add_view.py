@@ -202,9 +202,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         is_invoiced = False
         if selected_trip_id:
             is_invoiced = TransInvoiceInfo.objects.filter(ti_trip_id=selected_trip_id).exists() or TripdetailInfo.objects.filter(id=selected_trip_id, tc_financestatus_id=10).exists()
-        elif enquiry_num_id:
-            trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id)
-            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+        elif consignmentdetail_id != 0:
+            linked_trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignmentdetail_id).first()
+            if linked_trip:
+                is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=linked_trip).exists() or (linked_trip.tc_financestatus_id == 10)
             
         user_ext = User_extInfo.objects.filter(user_id=user_id).first()
         user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"

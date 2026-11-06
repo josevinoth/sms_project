@@ -17,6 +17,25 @@ from django.core.files.storage import default_storage
 import os
 
 # ==================================================
+# HELPER: CHECK CANCELLATION WITH BILLING STATUS
+# ==================================================
+def is_cancellation_with_billing(trip):
+    if not trip:
+        return False
+    if getattr(trip, 'tc_financestatus_id', None) == 10:
+        return True
+    if getattr(trip, 'tr_operational_status_id', None) == 10:
+        return True
+    fin_status = getattr(trip, 'tc_financestatus', None)
+    if fin_status and 'cancellation with billing' in str(getattr(fin_status, 'status', '')).lower():
+        return True
+    op_status = getattr(trip, 'tr_operational_status', None)
+    if op_status and 'cancellation with billing' in str(getattr(op_status, 'status', '')).lower():
+        return True
+    return False
+
+
+# ==================================================
 # HELPER: BUILD SELECTED TRIPS DATA FOR FORM/EDIT
 # ==================================================
 def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attachments=None, post_data=None):
@@ -68,6 +87,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
         closure_weighment = float(trip.tc_weighmentcost or 0)
         closure_halting_days = int(trip.tc_no_of_days_halting or 0)
         closure_halting_cost = float(trip.tc_total_halting_cost or 0) or float(trip.tc_haltingcost or 0)
+        closure_cancellation = float(getattr(trip, 'tc_cancellation', 0) or 0)
+        closure_handling = float(getattr(trip, 'tc_handlingcost', 0) or 0)
 
         saved_detail = (trip_details_dict or {}).get(str(trip.id))
 
@@ -79,6 +100,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             halting_days = post_data.get(f'halting_days_{trip.id}', '')
             halting_cost = post_data.get(f'halting_cost_{trip.id}', '')
             special_cost = float(post_data.get(f'trip_cost_{trip.id}') or 0)
+            cancellation_cost = post_data.get(f'cancellation_cost_{trip.id}', '')
+            handling_cost = post_data.get(f'handling_cost_{trip.id}', '')
         elif saved_detail:
             special_cost = float(saved_detail.get('trip_cost', 0))
             loading_cost = saved_detail.get('loading_cost')
@@ -87,6 +110,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             weighment_cost = saved_detail.get('weighment_cost')
             halting_days = saved_detail.get('halting_days')
             halting_cost = saved_detail.get('halting_cost')
+            cancellation_cost = saved_detail.get('cancellation_cost', '')
+            handling_cost = saved_detail.get('handling_cost', '')
         else:
             loading_cost = ''
             unloading_cost = ''
@@ -95,6 +120,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             halting_days = ''
             halting_cost = ''
             special_cost = 0
+            cancellation_cost = ''
+            handling_cost = ''
 
         standard_cost = special_cost
         allotment = Vehicle_allotmentInfo.objects.filter(
@@ -123,6 +150,11 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
                             special_cost = float(rate_obj.vr1_rate)
                             if standard_cost == 0:
                                 standard_cost = special_cost
+
+        # If trip is cancelled with billing, vendor tripcost must be 0 in market bill
+        if is_cancellation_with_billing(trip):
+            standard_cost = 0.0
+            special_cost = 0.0
 
         halting_rate = 0.0
         if trip.tr_enquirynumber:
@@ -174,6 +206,10 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             'closure_halting_cost': closure_halting_cost,
             'halting_rate': float(halting_rate),
             'mail_attachment_url': mail_attachment_url,
+            'cancellation_cost': cancellation_cost if cancellation_cost is not None else '',
+            'handling_cost': handling_cost if handling_cost is not None else '',
+            'closure_cancellation_cost': closure_cancellation,
+            'closure_handling_cost': closure_handling,
             'tc_tripcost_vendor_check': getattr(trip, 'tc_tripcost_vendor_check', True),
             'tc_parkingcost_vendor_check': getattr(trip, 'tc_parkingcost_vendor_check', False),
             'tc_tollcost_vendor_check': getattr(trip, 'tc_tollcost_vendor_check', False),
@@ -183,6 +219,8 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
             'tc_supervisorcost_vendor_check': getattr(trip, 'tc_supervisorcost_vendor_check', False),
             'tc_handlingcost_vendor_check': getattr(trip, 'tc_handlingcost_vendor_check', False),
             'tc_haltingcost_vendor_check': getattr(trip, 'tc_haltingcost_vendor_check', False),
+            'tc_cancellation_vendor_check': getattr(trip, 'tc_cancellation_vendor_check', False),
+            'is_cancellation_with_billing': is_cancellation_with_billing(trip),
         })
 
     return selected_trips_data
@@ -220,6 +258,8 @@ def market_bill_add(request):
                     closure_w = float(getattr(t_obj, 'tc_weighmentcost', 0) or 0) if t_obj else 0.0
                     closure_h_days = int(getattr(t_obj, 'tc_no_of_days_halting', 0) or 0) if t_obj else 0
                     closure_h_cost = (float(getattr(t_obj, 'tc_total_halting_cost', 0) or 0) or float(getattr(t_obj, 'tc_haltingcost', 0) or 0)) if t_obj else 0.0
+                    closure_c = float(getattr(t_obj, 'tc_cancellation', 0) or 0) if t_obj else 0.0
+                    closure_hand = float(getattr(t_obj, 'tc_handlingcost', 0) or 0) if t_obj else 0.0
 
                     l_raw = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_raw = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
@@ -227,6 +267,8 @@ def market_bill_add(request):
                     w_raw = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                     h_days_raw = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost_raw = (request.POST.get(f'halting_cost_{tid}') or '').strip()
+                    c_raw = (request.POST.get(f'cancellation_cost_{tid}') or '').strip()
+                    hand_raw = (request.POST.get(f'handling_cost_{tid}') or '').strip()
 
                     trip_no = getattr(t_obj, 'tr_tripnumber', '') or (t_obj.tr_consignmentnumber.co_consignmentnumber if t_obj and getattr(t_obj, 'tr_consignmentnumber', None) else f"ID {tid}")
 
@@ -248,6 +290,12 @@ def market_bill_add(request):
                     if closure_h_cost > 0 and h_cost_raw == '':
                         missing_msg = f"Please enter Halting Cost for Trip {trip_no} (recorded as ₹{closure_h_cost:.2f} in Trip Closure; enter 0 if none/waived)."
                         break
+                    if closure_c > 0 and c_raw == '':
+                        missing_msg = f"Please enter Cancellation Cost for Trip {trip_no} (recorded as ₹{closure_c:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
+                    if closure_hand > 0 and hand_raw == '':
+                        missing_msg = f"Please enter Handling Cost for Trip {trip_no} (recorded as ₹{closure_hand:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
 
                 if missing_msg:
                     messages.error(request, missing_msg)
@@ -261,6 +309,7 @@ def market_bill_add(request):
                     )
 
                 for tid in trip_ids:
+                    t_obj = trips_dict.get(str(tid))
                     l_cost = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_cost = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                     p_cost = (request.POST.get(f'parking_cost_{tid}') or '').strip()
@@ -268,6 +317,8 @@ def market_bill_add(request):
                     h_days = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost = (request.POST.get(f'halting_cost_{tid}') or '').strip()
                     t_cost = (request.POST.get(f'trip_cost_{tid}') or '').strip()
+                    c_cost = (request.POST.get(f'cancellation_cost_{tid}') or '').strip()
+                    hand_cost = (request.POST.get(f'handling_cost_{tid}') or '').strip()
 
                     l_cost_val = float(l_cost) if l_cost else 0.0
                     u_cost_val = float(u_cost) if u_cost else 0.0
@@ -276,6 +327,11 @@ def market_bill_add(request):
                     h_days_val = int(h_days) if h_days else 0
                     h_cost_val = float(h_cost) if h_cost else 0.0
                     t_cost_val = float(t_cost) if t_cost else 0.0
+                    c_cost_val = float(c_cost) if c_cost else 0.0
+                    hand_cost_val = float(hand_cost) if hand_cost else 0.0
+
+                    if t_obj and is_cancellation_with_billing(t_obj):
+                        t_cost_val = 0.0
 
                     trip_details_dict[str(tid)] = {
                         'trip_cost': t_cost_val,
@@ -285,11 +341,31 @@ def market_bill_add(request):
                         'weighment_cost': w_cost_val,
                         'halting_days': h_days_val,
                         'halting_cost': h_cost_val,
+                        'cancellation_cost': c_cost_val,
+                        'handling_cost': hand_cost_val,
                     }
 
             obj = form.save(commit=False)
             obj.mb_created_by = request.user
             obj.mb_trip_details = trip_details_dict
+            if trips_dict:
+                obj.mb_cancellation_cost = sum(d['cancellation_cost'] for d in trip_details_dict.values())
+                obj.mb_handling_cost = sum(d['handling_cost'] for d in trip_details_dict.values())
+            # Ensure mb_total_cost, mb_tds_amount, and mb_payable_amount include cancellation and handling costs
+            total_calc = (
+                (obj.mb_trip_cost or 0.0) +
+                (obj.mb_loading_cost or 0.0) +
+                (obj.mb_unloading_cost or 0.0) +
+                (obj.mb_parking_cost or 0.0) +
+                (obj.mb_weighment_cost or 0.0) +
+                (obj.mb_halting_cost or 0.0) +
+                (obj.mb_cancellation_cost or 0.0) +
+                (obj.mb_handling_cost or 0.0)
+            )
+            obj.mb_total_cost = total_calc
+            tds_p = obj.mb_tds_percent or 0.0
+            obj.mb_tds_amount = round((total_calc * tds_p) / 100, 2)
+            obj.mb_payable_amount = round(total_calc - obj.mb_tds_amount, 2)
             obj.save()
 
             messages.success(request, "Market Bill saved successfully.")
@@ -363,6 +439,51 @@ def market_bill_list(request):
             if any(tid in trip_ids for tid in bill_trip_ids):
                 bills.append(bill)
 
+    # Ensure any trips marked as 'Cancellation with Billing' in Trip Detail have vendor tripcost as 0 in Market Bill
+    cancelled_trips = set(TripdetailInfo.objects.filter(
+        Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
+    ).values_list('id', flat=True))
+    if cancelled_trips:
+        for bill in bills:
+            if not bill.mb_selected_trips:
+                continue
+            try:
+                tids = [int(tid.strip()) for tid in bill.mb_selected_trips.split(',') if tid.strip()]
+            except ValueError:
+                continue
+            matching = [tid for tid in tids if tid in cancelled_trips]
+            if matching:
+                updated = False
+                details = bill.mb_trip_details or {}
+                for tid in matching:
+                    t_str = str(tid)
+                    if t_str in details and float(details[t_str].get('trip_cost', 0) or 0) != 0.0:
+                        details[t_str]['trip_cost'] = 0.0
+                        updated = True
+                new_trip_cost = sum(float(v.get('trip_cost', 0) or 0) for v in details.values())
+                if bill.mb_trip_cost != new_trip_cost:
+                    bill.mb_trip_cost = new_trip_cost
+                    updated = True
+                grand_total = (
+                    (bill.mb_trip_cost or 0) +
+                    (bill.mb_loading_cost or 0) +
+                    (bill.mb_unloading_cost or 0) +
+                    (bill.mb_parking_cost or 0) +
+                    (bill.mb_weighment_cost or 0) +
+                    (bill.mb_halting_cost or 0) +
+                    (bill.mb_cancellation_cost or 0) +
+                    (bill.mb_handling_cost or 0)
+                )
+                if bill.mb_total_cost != grand_total:
+                    bill.mb_total_cost = grand_total
+                    updated = True
+                if updated:
+                    tds_pct = bill.mb_tds_percent or 0.0
+                    bill.mb_tds_amount = round((bill.mb_total_cost * tds_pct) / 100, 2)
+                    bill.mb_payable_amount = round(bill.mb_total_cost - bill.mb_tds_amount, 2)
+                    bill.mb_trip_details = details
+                    bill.save()
+
     return render(
         request,
         "asset_mgt_app/market_bill_list.html",
@@ -402,6 +523,8 @@ def market_bill_edit(request, id):
                     closure_w = float(getattr(t_obj, 'tc_weighmentcost', 0) or 0) if t_obj else 0.0
                     closure_h_days = int(getattr(t_obj, 'tc_no_of_days_halting', 0) or 0) if t_obj else 0
                     closure_h_cost = (float(getattr(t_obj, 'tc_total_halting_cost', 0) or 0) or float(getattr(t_obj, 'tc_haltingcost', 0) or 0)) if t_obj else 0.0
+                    closure_c = float(getattr(t_obj, 'tc_cancellation', 0) or 0) if t_obj else 0.0
+                    closure_hand = float(getattr(t_obj, 'tc_handlingcost', 0) or 0) if t_obj else 0.0
 
                     l_raw = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                     u_raw = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
@@ -409,6 +532,8 @@ def market_bill_edit(request, id):
                     w_raw = (request.POST.get(f'weighment_cost_{tid}') or '').strip()
                     h_days_raw = (request.POST.get(f'halting_days_{tid}') or '').strip()
                     h_cost_raw = (request.POST.get(f'halting_cost_{tid}') or '').strip()
+                    c_raw = (request.POST.get(f'cancellation_cost_{tid}') or '').strip()
+                    hand_raw = (request.POST.get(f'handling_cost_{tid}') or '').strip()
 
                     trip_no = getattr(t_obj, 'tr_tripnumber', '') or (t_obj.tr_consignmentnumber.co_consignmentnumber if t_obj and getattr(t_obj, 'tr_consignmentnumber', None) else f"ID {tid}")
 
@@ -430,11 +555,18 @@ def market_bill_edit(request, id):
                     if closure_h_cost > 0 and h_cost_raw == '':
                         missing_msg = f"Please enter Halting Cost for Trip {trip_no} (recorded as ₹{closure_h_cost:.2f} in Trip Closure; enter 0 if none/waived)."
                         break
+                    if closure_c > 0 and c_raw == '':
+                        missing_msg = f"Please enter Cancellation Cost for Trip {trip_no} (recorded as ₹{closure_c:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
+                    if closure_hand > 0 and hand_raw == '':
+                        missing_msg = f"Please enter Handling Cost for Trip {trip_no} (recorded as ₹{closure_hand:.2f} in Trip Closure; enter 0 if none/waived)."
+                        break
 
                 if missing_msg:
                     messages.error(request, missing_msg)
                 else:
                     for tid in trip_ids:
+                        t_obj = trips_dict.get(str(tid))
                         l_cost = (request.POST.get(f'loading_cost_{tid}') or '').strip()
                         u_cost = (request.POST.get(f'unloading_cost_{tid}') or '').strip()
                         p_cost = (request.POST.get(f'parking_cost_{tid}') or '').strip()
@@ -442,6 +574,8 @@ def market_bill_edit(request, id):
                         h_days = (request.POST.get(f'halting_days_{tid}') or '').strip()
                         h_cost = (request.POST.get(f'halting_cost_{tid}') or '').strip()
                         t_cost = (request.POST.get(f'trip_cost_{tid}') or '').strip()
+                        c_cost = (request.POST.get(f'cancellation_cost_{tid}') or '').strip()
+                        hand_cost = (request.POST.get(f'handling_cost_{tid}') or '').strip()
 
                         l_cost_val = float(l_cost) if l_cost else 0.0
                         u_cost_val = float(u_cost) if u_cost else 0.0
@@ -450,6 +584,11 @@ def market_bill_edit(request, id):
                         h_days_val = int(h_days) if h_days else 0
                         h_cost_val = float(h_cost) if h_cost else 0.0
                         t_cost_val = float(t_cost) if t_cost else 0.0
+                        c_cost_val = float(c_cost) if c_cost else 0.0
+                        hand_cost_val = float(hand_cost) if hand_cost else 0.0
+
+                        if t_obj and is_cancellation_with_billing(t_obj):
+                            t_cost_val = 0.0
 
                         trip_details_dict[str(tid)] = {
                             'trip_cost': t_cost_val,
@@ -459,11 +598,31 @@ def market_bill_edit(request, id):
                             'weighment_cost': w_cost_val,
                             'halting_days': h_days_val,
                             'halting_cost': h_cost_val,
+                            'cancellation_cost': c_cost_val,
+                            'handling_cost': hand_cost_val,
                         }
 
                     obj = form.save(commit=False)
                     obj.mb_updated_by = request.user
                     obj.mb_trip_details = trip_details_dict
+                    if trips_dict:
+                        obj.mb_cancellation_cost = sum(d['cancellation_cost'] for d in trip_details_dict.values())
+                        obj.mb_handling_cost = sum(d['handling_cost'] for d in trip_details_dict.values())
+                    # Ensure mb_total_cost, mb_tds_amount, and mb_payable_amount include cancellation and handling costs
+                    total_calc = (
+                        (obj.mb_trip_cost or 0.0) +
+                        (obj.mb_loading_cost or 0.0) +
+                        (obj.mb_unloading_cost or 0.0) +
+                        (obj.mb_parking_cost or 0.0) +
+                        (obj.mb_weighment_cost or 0.0) +
+                        (obj.mb_halting_cost or 0.0) +
+                        (obj.mb_cancellation_cost or 0.0) +
+                        (obj.mb_handling_cost or 0.0)
+                    )
+                    obj.mb_total_cost = total_calc
+                    tds_p = obj.mb_tds_percent or 0.0
+                    obj.mb_tds_amount = round((total_calc * tds_p) / 100, 2)
+                    obj.mb_payable_amount = round(total_calc - obj.mb_tds_amount, 2)
                     obj.save()
 
                     messages.success(request, "Market Bill updated successfully.")
@@ -639,49 +798,51 @@ def get_trips_by_vendor(request):
             trip_date = timezone.localtime(trip.tr_created_at).strftime('%d-%m-%Y')
 
         # --- Cost Logic ---
-        # Fetch standard and special costs from allotment.
-        # In a replacement case the trip's vehicle number is updated to the NEW vehicle,
-        # so we MUST prefer the active (plain) allotment and NEVER pick the replaced one
-        # (va_status_id=2).  We order by -id so the most-recent (replacement) record wins.
-        standard_cost = 0
-        special_cost = 0
-        allotment = Vehicle_allotmentInfo.objects.filter(
-            Q(va_enquirynumber=trip.tr_enquirynumber),
-            Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
-        ).exclude(va_status_id=2).order_by('-id').first()
-        if not allotment:
-            # Fallback: try including any status but still exclude replaced
+        # If the trip is cancelled with billing, the vendor tripcost is changed to 0
+        standard_cost = 0.0
+        special_cost = 0.0
+        if not is_cancellation_with_billing(trip):
+            # Fetch standard and special costs from allotment.
+            # In a replacement case the trip's vehicle number is updated to the NEW vehicle,
+            # so we MUST prefer the active (plain) allotment and NEVER pick the replaced one
+            # (va_status_id=2).  We order by -id so the most-recent (replacement) record wins.
             allotment = Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=trip.tr_enquirynumber
+                Q(va_enquirynumber=trip.tr_enquirynumber),
+                Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
             ).exclude(va_status_id=2).order_by('-id').first()
-        if not allotment:
-            # Last resort: take the latest allotment regardless of status
-            allotment = Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=trip.tr_enquirynumber
-            ).order_by('-id').first()
-        if allotment:
-            standard_cost = float(allotment.va_standardbuy or 0)
-            special_cost = float(allotment.va_specialbuy or 0)
+            if not allotment:
+                # Fallback: try including any status but still exclude replaced
+                allotment = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=trip.tr_enquirynumber
+                ).exclude(va_status_id=2).order_by('-id').first()
+            if not allotment:
+                # Last resort: take the latest allotment regardless of status
+                allotment = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=trip.tr_enquirynumber
+                ).order_by('-id').first()
+            if allotment:
+                standard_cost = float(allotment.va_standardbuy or 0)
+                special_cost = float(allotment.va_specialbuy or 0)
 
-            # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
-            if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
-                cnote = trip.tr_consignmentnumber
-                v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
-                if v_type_id:
-                    # Use Cnote locations if available, otherwise fallback to Enquiry locations
-                    from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
-                    to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
+                # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
+                if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
+                    cnote = trip.tr_consignmentnumber
+                    v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
+                    if v_type_id:
+                        # Use Cnote locations if available, otherwise fallback to Enquiry locations
+                        from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
+                        to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
 
-                    rate_obj = VendorratemasterInfo1.objects.filter(
-                        vr1_vendor=allotment.va_vendor,
-                        vr1_fromlocation=from_loc,
-                        vr1_tolocation=to_loc,
-                        vr1_vehicletype_id=v_type_id
-                    ).first()
-                    if rate_obj:
-                        special_cost = float(rate_obj.vr1_rate)
-                        if standard_cost == 0:
-                            standard_cost = special_cost
+                        rate_obj = VendorratemasterInfo1.objects.filter(
+                            vr1_vendor=allotment.va_vendor,
+                            vr1_fromlocation=from_loc,
+                            vr1_tolocation=to_loc,
+                            vr1_vehicletype_id=v_type_id
+                        ).first()
+                        if rate_obj:
+                            special_cost = float(rate_obj.vr1_rate)
+                            if standard_cost == 0:
+                                standard_cost = special_cost
 
         # --- Halting Cost Logic (Fetched from Trip Closure / Settlement only) ---
         halting_days = int(trip.tc_no_of_days_halting or 0)
@@ -730,6 +891,8 @@ def get_trips_by_vendor(request):
             'halting_days': halting_days,
             'halting_cost': float(halting_cost),
             'halting_rate': float(halting_rate),
+            'cancellation_cost': float(getattr(trip, 'tc_cancellation', 0) or 0),
+            'handling_cost': float(getattr(trip, 'tc_handlingcost', 0) or 0),
             'tc_tripcost_vendor_check': getattr(trip, 'tc_tripcost_vendor_check', True),
             'tc_parkingcost_vendor_check': getattr(trip, 'tc_parkingcost_vendor_check', False),
             'tc_tollcost_vendor_check': getattr(trip, 'tc_tollcost_vendor_check', False),
@@ -739,6 +902,8 @@ def get_trips_by_vendor(request):
             'tc_supervisorcost_vendor_check': getattr(trip, 'tc_supervisorcost_vendor_check', False),
             'tc_handlingcost_vendor_check': getattr(trip, 'tc_handlingcost_vendor_check', False),
             'tc_haltingcost_vendor_check': getattr(trip, 'tc_haltingcost_vendor_check', False),
+            'tc_cancellation_vendor_check': getattr(trip, 'tc_cancellation_vendor_check', False),
+            'is_cancellation_with_billing': is_cancellation_with_billing(trip),
             'mail_attachment_url': '', # New trips won't have attachments yet
         })
 
@@ -911,7 +1076,8 @@ def market_bill_export_tally(request):
             ]
             ws.append(row)
             continue
-            
+
+        bill_expenses = []
         for trip in trips:
             # Use ONLY the Consignment number (Cnote) as Job No for Tally export — no fallbacks
             job_no = ""
@@ -951,6 +1117,11 @@ def market_bill_export_tally(request):
                 parking_cost = float(trip.tc_parkingcost or 0)
                 weighment_cost = float(trip.tc_weighmentcost or 0)
                 halting_cost = float(trip.tc_haltingcost or 0)
+
+            # In tally export format need this cancellation charges value in trip cost
+            cancellation_charge = float(getattr(trip, 'tc_cancellation', 0) or 0)
+            if is_cancellation_with_billing(trip) or (cancellation_charge > 0 and transport_cost == 0):
+                transport_cost = cancellation_charge
                 
             expenses = []
             if transport_cost > 0: expenses.append(("Transportation", transport_cost))
@@ -959,7 +1130,23 @@ def market_bill_export_tally(request):
             if parking_cost > 0: expenses.append(("Parking", parking_cost))
             if weighment_cost > 0: expenses.append(("Weighment", weighment_cost))
             if halting_cost > 0: expenses.append(("Halting", halting_cost))
-            
+
+            bill_expenses.append({
+                'job_no': job_no,
+                'customer_name': customer_name,
+                'expenses': expenses
+            })
+
+        total_expenses_sum = sum(amt for item in bill_expenses for _, amt in item['expenses'])
+        if total_expenses_sum > 0 and (not bill.mb_total_cost or abs(bill.mb_total_cost - total_expenses_sum) > 0.01):
+            tds_pct = bill.mb_tds_percent or 0.0
+            tds_amount = round((total_expenses_sum * tds_pct) / 100, 2)
+            total_amt = round(total_expenses_sum - tds_amount, 2)
+
+        for item in bill_expenses:
+            job_no = item['job_no']
+            customer_name = item['customer_name']
+            expenses = item['expenses']
             for exp_name, amt in expenses:
                 row = [
                     voucher_number, bill_date, ref_no,
