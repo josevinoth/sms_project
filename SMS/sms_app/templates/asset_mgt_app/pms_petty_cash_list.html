@@ -9,7 +9,7 @@
             <i class="fas fa-list-alt mr-2"></i> PMS Petty Cash List
         </h3>
         <div class="d-flex" style="gap:10px;">
-            <a href="{% url 'pms_petty_cash_export_tally' %}?ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}&search_user={{ search_user }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #10b981, #059669); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+            <a href="{% url 'pms_petty_cash_export_tally' %}?ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #10b981, #059669); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
                 <i class="fas fa-file-excel"></i> Export Tally
             </a>
             <a href="{% url 'pms_petty_cash_insert' %}" class="btn-modern btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
@@ -56,18 +56,6 @@
                     <option value="">All Branches</option>
                     <option value="BLR" {% if search_branch == 'BLR' %}selected{% endif %}>BLR</option>
                     <option value="MAA" {% if search_branch == 'MAA' %}selected{% endif %}>MAA</option>
-                </select>
-            </div>
-            {% endif %}
-
-            {% if is_admin_or_supervisor %}
-            <div class="form-group-modern mb-0" style="flex: 0 0 160px;">
-                <label for="search_user" class="form-label-modern">User</label>
-                <select name="search_user" id="search_user" class="form-control form-control-modern">
-                    <option value="">All Users</option>
-                    {% for u in user_list %}
-                    <option value="{{ u.id }}" {% if search_user == u.id|stringformat:"s" %}selected{% endif %}>{{ u.first_name|default:u.username }} ({{ u.username }})</option>
-                    {% endfor %}
                 </select>
             </div>
             {% endif %}
@@ -184,19 +172,19 @@
         <nav class="mt-3">
             <ul class="pagination pagination-sm justify-content-center">
                 {% if ppc_list.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.previous_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}&search_user={{ search_user }}">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.previous_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">&laquo;</a></li>
                 {% endif %}
                 
                 {% for i in ppc_list.paginator.page_range %}
                     {% if ppc_list.number == i %}
                     <li class="page-item active"><span class="page-link">{{ i }}</span></li>
                     {% elif i > ppc_list.number|add:'-3' and i < ppc_list.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?page={{ i }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}&search_user={{ search_user }}">{{ i }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">{{ i }}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 {% if ppc_list.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.next_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}&search_user={{ search_user }}">&raquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.next_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">&raquo;</a></li>
                 {% endif %}
             </ul>
         </nav>
