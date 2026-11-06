@@ -104,7 +104,19 @@
                     </td>
                     <td class="align-middle font-weight-bold">{{ budget.bf_company|default:"-" }}</td>
                     <td class="align-middle">{{ budget.bf_location|default:"-" }}</td>
-                    <td class="align-middle">{{ budget.bf_unit_reference|default:"-" }}</td>
+                    <td class="align-middle">
+                        {% if budget.bf_unit_reference %}
+                            {{ budget.bf_unit_reference }}
+                        {% elif budget.bf_unit and budget.bf_vehicle_source %}
+                            {{ budget.bf_unit }} ({{ budget.bf_vehicle_source }})
+                        {% elif budget.bf_unit %}
+                            {{ budget.bf_unit }}
+                        {% elif budget.bf_vehicle_source %}
+                            {{ budget.bf_vehicle_source }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td class="align-middle text-right">{{ budget.bf_Airport_Handling_Charges|default:"0.0" }}</td>
                     <td class="align-middle text-right">{{ budget.bf_Crane_Handling_Charges|default:"0.0" }}</td>
                     <td class="align-middle text-right">{{ budget.bf_Forklift_Handling_Charges|default:"0.0" }}</td>

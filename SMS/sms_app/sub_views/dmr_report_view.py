@@ -29,6 +29,32 @@ CANCELLATION_WITHOUT_BILLING_Q = (
     Q(tr_enquirynumber__en_status__status_title__icontains='without billing')
 )
 
+
+def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
+    """
+    Returns consignment number if available; if not available and the trip
+    is 'Cancellation with Billing' (tc_financestatus_id=10 or tr_operational_status_id=10
+    or tc_cancellation_check=True), falls back to trip number (tr_tripnumber).
+    """
+    if cons_detail and getattr(cons_detail, 'co_consignmentnumber', None):
+        val = str(cons_detail.co_consignmentnumber).strip()
+        if val:
+            return val
+    if trip:
+        cons = getattr(trip, 'tr_consignmentnumber', None)
+        if cons and getattr(cons, 'co_consignmentnumber', None):
+            val = str(cons.co_consignmentnumber).strip()
+            if val:
+                return val
+        tc_status = getattr(trip, 'tc_financestatus_id', None)
+        op_status = getattr(trip, 'tr_operational_status_id', None)
+        cancel_check = getattr(trip, 'tc_cancellation_check', False)
+        if tc_status == 10 or op_status == 10 or cancel_check:
+            val = getattr(trip, 'tr_tripnumber', None)
+            if val:
+                return str(val).strip()
+    return default
+
 # -------------------------------------------------------------------------
 # CONSTANTS & TEMPLATES (Consolidated)
 # -------------------------------------------------------------------------
@@ -839,7 +865,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     continue
 
                 if "consignment note" in hh or "cnote" in hh:
-                    row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                    row.append(get_trip_cnote_or_fallback(trip, cons_detail));
                     continue
                 if hh == "trip sheet no":
                     row.append(safe_str(trip.tr_tripnumber));
@@ -860,7 +886,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     row.append(effective_tripcost);
                     continue
                 if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
-                    row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                    row.append(get_trip_cnote_or_fallback(trip, cons_detail));
                     continue
                 if "department name" in hh or hh in ("dept", "department",
                                                      "air air import &air air export & ocean air export & dom", "division"):
@@ -922,7 +948,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     row.append(safe_str(cons_goods.cg_consigner) if cons_goods else "");
                     continue
                 if "llr no" in hh or "lr no" in hh or hh == "bvm lr no":
-                    row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                    row.append(get_trip_cnote_or_fallback(trip, cons_detail));
                     continue
                 if "consignee" in hh:
                     row.append(safe_str(cons_goods.cg_consignee) if cons_goods else "");
@@ -1117,7 +1143,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     row.append(status_val);
                     continue
                 if hh == "c note":
-                    row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                    row.append(get_trip_cnote_or_fallback(trip, cons_detail));
                     continue
                 if hh == "aai s.no.":
                     row.append("");
@@ -1177,7 +1203,9 @@ def trip_report(request):
     # -------------------------
     # BASE QUERY
     # -------------------------
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+    trips = TripdetailInfo.objects.filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
+    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1406,8 +1434,8 @@ def export_dmr_excel(request):
         return redirect('trip_report')
 
     qs = TripdetailInfo.objects.filter(
-        tr_enquirynumber__en_customername_id=customer_id,
-        tr_category_id=1
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10),
+        tr_enquirynumber__en_customername_id=customer_id
     ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1446,6 +1474,7 @@ def export_dmr_excel(request):
     if search_value:
         qs = qs.filter(
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
             Q(tr_vehiclenumber__icontains=search_value)
         )
@@ -1477,7 +1506,14 @@ def export_dmr_excel(request):
         7: 'tr_vehiclenumber',
     }
     sort_field = order_map.get(order_col_idx)
-    if sort_field:
+    if order_col_idx == 2:
+        from django.db.models.functions import Coalesce
+        order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
+        if order_dir == 'desc':
+            qs = qs.order_by(order_expr.desc())
+        else:
+            qs = qs.order_by(order_expr.asc())
+    elif sort_field:
         if order_dir == 'desc':
             qs = qs.order_by('-' + sort_field)
         else:
@@ -1539,8 +1575,8 @@ def trip_send_email(request):
 
     # Query Trips
     qs = TripdetailInfo.objects.filter(
-        tr_enquirynumber__en_customername_id=customer_id,
-        tr_category_id=1
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10),
+        tr_enquirynumber__en_customername_id=customer_id
     ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1661,7 +1697,9 @@ def trip_report_ajax(request):
     search_value = request.GET.get('search[value]', '').strip()
 
     # Base queryset
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+    trips = TripdetailInfo.objects.filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
+    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1714,7 +1752,14 @@ def trip_report_ajax(request):
         7: 'tr_vehiclenumber',
     }
     sort_field = order_map.get(order_col_idx)
-    if sort_field:
+    if order_col_idx == 2:
+        from django.db.models.functions import Coalesce
+        order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
+        if order_dir == 'desc':
+            trips = trips.order_by(order_expr.desc())
+        else:
+            trips = trips.order_by(order_expr.asc())
+    elif sort_field:
         if order_dir == 'desc':
             trips = trips.order_by('-' + sort_field)
         else:
@@ -1726,11 +1771,14 @@ def trip_report_ajax(request):
     if search_value:
         trips = trips.filter(
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
             Q(tr_vehiclenumber__icontains=search_value)
         )
 
-    records_total = TripdetailInfo.objects.filter(tr_category_id=1).exclude(CANCELLATION_WITHOUT_BILLING_Q).count()
+    records_total = TripdetailInfo.objects.filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
+    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).count()
     records_filtered = trips.order_by().values('id').count()
 
     # Pagination

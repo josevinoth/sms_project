@@ -407,7 +407,7 @@
             </span>
 
             <span class="value">
-                {{ tpc.tpc_vehicle_number.vm_registrationnumber|default:"N/A" }}
+                {{ tpc.tpc_vehicle_number.vm_registrationnumber|default:tpc.tpc_vehicle_number_manual|default:"N/A" }}
             </span>
 
         </div>
