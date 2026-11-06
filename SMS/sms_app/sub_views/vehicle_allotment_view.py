@@ -753,6 +753,10 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         rate_approval_status = Replacementstatus.objects.filter(id=6).first()
                         if rate_approval_status:
                             obj.va_status = rate_approval_status
+                    elif obj.va_status_id == 6:
+                        assigned_status = Replacementstatus.objects.filter(id=1).first()
+                        if assigned_status:
+                            obj.va_status = assigned_status
 
             # ✅ SAVE
             obj.save()
@@ -956,6 +960,10 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         rate_approval_status = Replacementstatus.objects.filter(id=6).first()
                         if rate_approval_status:
                             obj.va_status = rate_approval_status
+                    elif obj.va_status_id == 6:
+                        assigned_status = Replacementstatus.objects.filter(id=1).first()
+                        if assigned_status:
+                            obj.va_status = assigned_status
 
             obj.save()
             sync_allotment_rate_to_trips(obj)
@@ -2464,13 +2472,63 @@ def vehicle_allotment_driver_replace(request, allotment_id):
 
 @login_required(login_url='login_page')
 def sell_rate_approval_list(request):
-    allotments = Vehicle_allotmentInfo.objects.filter(va_status_id=6).select_related(
+    allotments = list(Vehicle_allotmentInfo.objects.filter(va_status_id=6).select_related(
         'va_enquirynumber',
         'va_enquirynumber__en_customername',
         'va_enquirynumber__en_fromlocaion',
         'va_enquirynumber__en_tolocation',
-        'va_vehiclenumber'
-    ).order_by('-id')
+        'va_vehiclenumber',
+        'va_vehicletype',
+        'va_vehicletype_placed'
+    ).order_by('-id'))
+
+    enquiry_ids = [va.va_enquirynumber_id for va in allotments if va.va_enquirynumber_id]
+    if enquiry_ids:
+        env_qs = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enquiry_ids)
+        env_by_enq_vt = {}
+        env_by_enq = {}
+        for env in env_qs:
+            if env.env_enquirynumber_id not in env_by_enq:
+                env_by_enq[env.env_enquirynumber_id] = env
+            env_by_enq_vt[(env.env_enquirynumber_id, env.env_vehicletype_id)] = env
+
+        auto_approved_vas = []
+        pending_allotments = []
+
+        for va in allotments:
+            env_obj = None
+            for vt_id in filter(None, [va.va_vehicletype_id, va.va_vehicletype_placed_id]):
+                env_obj = env_by_enq_vt.get((va.va_enquirynumber_id, vt_id))
+                if env_obj:
+                    break
+            if not env_obj:
+                env_obj = env_by_enq.get(va.va_enquirynumber_id)
+
+            if env_obj:
+                if env_obj.env_sale is not None:
+                    va.va_sale = env_obj.env_sale
+                if env_obj.env_special_sale is not None:
+                    va.va_special_sale = env_obj.env_special_sale
+
+            # If Special Sell is no longer less than Standard Sell (e.g. equal or higher), auto-approve
+            sale_val = float(va.va_sale or 0)
+            spec_val = float(va.va_special_sale or 0)
+            if not (0 < spec_val < sale_val):
+                auto_approved_vas.append(va)
+            else:
+                pending_allotments.append(va)
+
+        if auto_approved_vas:
+            assigned_status = Replacementstatus.objects.filter(id=1).first()
+            if assigned_status:
+                auto_ids = [v.id for v in auto_approved_vas]
+                Vehicle_allotmentInfo.objects.filter(id__in=auto_ids).update(va_status=assigned_status)
+                for v in auto_approved_vas:
+                    v.va_status = assigned_status
+                    sync_allotment_rate_to_trips(v)
+
+        allotments = pending_allotments
+
     return render(request, 'asset_mgt_app/sell_rate_approval_list.html', {'vehicle_allotment_list': allotments})
 
 
@@ -2481,6 +2539,7 @@ def approve_sell_rate(request, va_id):
     if approved_status:
         va.va_status = approved_status
         va.save(update_fields=['va_status'])
+        sync_allotment_rate_to_trips(va)
         messages.success(request, 'Rate approved successfully and vehicle assigned.')
     else:
         messages.error(request, 'Status "Vehicle Assigned" not found.')
