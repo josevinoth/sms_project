@@ -117,8 +117,11 @@
                     <th>Loading Cost</th>
                     <th>Unloading Cost</th>
                     <th>Parking Cost</th>
+                    <th>Weighment Cost</th>
                     <th>Halting Days</th>
                     <th>Halting Cost</th>
+                    <th>Cancellation Cost</th>
+                    <th>Handling Cost</th>
                     <th>Buy Cost</th>
                     <th>TDS %</th>
                     <th>TDS Amount</th>
@@ -148,8 +151,11 @@
                     <td data-order="{{ bill.mb_loading_cost|default:0 }}">{{ bill.mb_loading_cost|floatformat:2 }}</td>
                     <td data-order="{{ bill.mb_unloading_cost|default:0 }}">{{ bill.mb_unloading_cost|floatformat:2 }}</td>
                     <td data-order="{{ bill.mb_parking_cost|default:0 }}">{{ bill.mb_parking_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_weighment_cost|default:0 }}">{{ bill.mb_weighment_cost|floatformat:2 }}</td>
                     <td data-order="{{ bill.mb_halting_days|default:0 }}">{{ bill.mb_halting_days|default:0 }}</td>
                     <td data-order="{{ bill.mb_halting_cost|default:0 }}">{{ bill.mb_halting_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_cancellation_cost|default:0 }}">{{ bill.mb_cancellation_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_handling_cost|default:0 }}">{{ bill.mb_handling_cost|floatformat:2 }}</td>
                     <td data-order="{{ bill.mb_total_cost|default:0 }}">{{ bill.mb_total_cost|floatformat:2 }}</td>
                     <td data-order="{{ bill.mb_tds_percent|default:0 }}">{{ bill.mb_tds_percent|floatformat:2|default:"0.00" }}</td>
                     <td data-order="{{ bill.mb_tds_amount|default:0 }}">{{ bill.mb_tds_amount|floatformat:2|default:"0.00" }}</td>
@@ -268,7 +274,7 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50],
-            order: [[16, 'desc']] // Sort by Created On (index 16) by default
+            order: [[19, 'desc']] // Sort by Created On (index 19) by default
         });
 
         // Handle Upload Button Click with Event Delegation

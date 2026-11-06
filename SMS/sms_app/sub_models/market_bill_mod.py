@@ -18,6 +18,8 @@ class MarketBillInfo(models.Model):
     mb_weighment_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Weighment Cost")
     mb_halting_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Halting Cost")
     mb_halting_days = models.IntegerField(default=0,null=True,blank=True,verbose_name="Halting Days")
+    mb_cancellation_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Cancellation Cost")
+    mb_handling_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Handling Cost")
     mb_total_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Total Cost")
     # TDS type: Company -> default 2%, Non company -> default 1%
     mb_tds_type = models.CharField(max_length=20, null=True, blank=True, verbose_name="TDS Type",

@@ -329,9 +329,8 @@ def _render_vehicle_allotment_add(request, enquiry_id, form):
             env_first and env_first.env_vehiclecategory) else ""
     vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
 
-    trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
-    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(
-        tc_financestatus_id=10).exists()
+    # Adding a new vehicle allotment to an enquiry should not be blocked by other trips
+    is_invoiced = False
     user_ext = User_extInfo.objects.filter(user_id=user_id).first()
     user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
 
@@ -376,9 +375,15 @@ def _render_vehicle_allotment_update(request, va, form):
     vehicle_category_name = env.env_vehiclecategory.vc_vehiclecategory if (env and env.env_vehiclecategory) else ""
     vehicle_category_id = env.env_vehiclecategory.id if (env and env.env_vehiclecategory) else ""
 
-    trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
-    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(
-        tc_financestatus_id=10).exists()
+    curr_v_num = str(va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else (va.va_vehiclenumber_mkt or '')).strip()
+    is_invoiced = False
+    if curr_v_num:
+        allotment_trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber=enquiry_id,
+            tr_vehiclenumber__iexact=curr_v_num
+        )
+        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=allotment_trips).exists() or allotment_trips.filter(
+            tc_financestatus_id=10).exists()
     user_ext = User_extInfo.objects.filter(user_id=user_id).first()
     user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
 
@@ -468,13 +473,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             va.va_sale = env.env_sale
             va.va_special_sale = env.env_special_sale
 
-        # Check if any trip under this enquiry is invoiced
-
-        trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
-        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(
-            tc_financestatus_id=10).exists()
-        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
-        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+        # (Invoicing check is handled inside _render_vehicle_allotment_update)
 
         active_trip = None
         if va:
