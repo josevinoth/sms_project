@@ -3,41 +3,6 @@
 
 {% block content %}
 
-<style>
-    /* Compact styling for this page only */
-    #attachedBillForm .form-group-modern {
-        margin-bottom: 0.8rem; 
-    }
-    #attachedBillForm .form-control-modern {
-        border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        height: 38px;
-    }
-    #attachedBillForm .form-label-modern {
-        margin-bottom: 0.15rem;
-    }
-    /* Select2 overrides for modern theme */
-    .select2-container .select2-selection--single {
-        height: 38px !important;
-        border-radius: 8px !important;
-        border: 1px solid #ced4da !important;
-        display: flex;
-        align-items: center;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 24px !important;
-        font-weight: 600;
-        font-size: 0.9rem;
-        padding-left: 0.8rem;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px !important;
-        right: 5px;
-    }
-</style>
-
 <form id="attachedBillForm" method="POST">
     {% csrf_token %}
 
@@ -199,10 +164,9 @@
                             <input type="hidden" name="ab_tds_type" id="ab_tds_type_hidden"
                                    value="{{ form.ab_tds_type.value|default:'' }}">
                             <!-- Read-only display — filled automatically from vendor PAN -->
-                            <input type="text" id="ab_tds_type_display" class="form-control form-control-modern"
+                            <input type="text" id="ab_tds_type_display" class="form-control form-control-modern disable_a_href"
                                    readonly
-                                   value="{{ form.ab_tds_type.value|default:'' }}"
-                                   style="background-color:#e9ecef; cursor:default;">
+                                   value="{{ form.ab_tds_type.value|default:'' }}">
                             </div>
 
                         <div class="form-group-modern">
