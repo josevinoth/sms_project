@@ -1,0 +1,3425 @@
+{% extends 'asset_mgt_app/base.html' %}
+{% load static %}
+
+{% block title %}Excel-Style Box Costing Matrix - {{ assessment_num }}{% endblock %}
+
+{% block content %}
+<style>
+    .matrix-container {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+    .matrix-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .spec-card {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .spec-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+    .spec-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        font-weight: 700;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    .matrix-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.83rem;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1;
+    }
+    .matrix-table th {
+        background: #0f172a;
+        color: #f8fafc;
+        font-weight: 600;
+        text-align: center;
+        padding: 0.5rem 0.3rem;
+        font-size: 0.76rem;
+        border: none;
+    }
+    .matrix-table td {
+        padding: 0.3rem 0.3rem;
+        border-bottom: 1px solid #f1f5f9;
+        border-right: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+    .matrix-section-row td {
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        padding: 0.45rem 0.75rem;
+        letter-spacing: 0.5px;
+    }
+    .sec-base { background: #fef9c3; color: #854d0e; border-left: 5px solid #eab308; }
+    .sec-length { background: #f1f5f9; color: #334155; border-left: 5px solid #64748b; }
+    .sec-width { background: #ecfdf5; color: #065f46; border-left: 5px solid #10b981; }
+    .sec-top { background: #eff6ff; color: #1e40af; border-left: 5px solid #3b82f6; }
+    .sec-supports { background: #fff7ed; color: #9a3412; border-left: 5px solid #f97316; }
+    
+    .matrix-input {
+        width: 100%;
+        height: 28px;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.82rem;
+        text-align: center;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        background: #fff;
+        transition: border-color 0.15s;
+    }
+    .matrix-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .matrix-input-readonly {
+        background: #f8fafc;
+        color: #334155;
+        font-weight: 600;
+        border: 1px solid transparent;
+        cursor: default;
+    }
+    .partcode-wrapper {
+        min-width: 135px;
+    }
+    .partcode-wrapper .input-group {
+        flex-wrap: nowrap !important;
+        display: flex !important;
+    }
+    .partcode-input {
+        background: #f0fdf4 !important;
+        color: #166534 !important;
+        font-weight: 700 !important;
+        border-color: #86efac !important;
+        letter-spacing: 0.5px;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        height: 28px !important;
+        font-size: 0.78rem !important;
+    }
+    .btn-search-pc {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        height: 28px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.15s;
+    }
+    .btn-search-pc:hover {
+        background: #059669 !important;
+        color: white !important;
+    }
+    .grn-badge {
+        font-size: 0.72rem;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        border-radius: 4px;
+        padding: 2px 4px;
+        display: block;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .grn-badge:hover {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .summary-card {
+        background: #ffffff;
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        padding: 1.15rem;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+    }
+    .summary-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.35rem 0;
+        font-size: 0.85rem;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    .summary-grand-total {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        border-radius: 10px;
+        padding: 0.9rem;
+        text-align: center;
+        margin-top: 0.8rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-save-matrix {
+        background: #059669;
+        color: white;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1.05rem;
+        width: 100%;
+        border: none;
+        transition: all 0.2s;
+        box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+    }
+    .btn-save-matrix:hover {
+        background: #047857;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35);
+        color: white;
+    }
+    .pc-suggestions {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        background: #fff;
+    }
+    .pc-suggest-item {
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    .pc-suggest-item:hover, .pc-suggest-item.active {
+        background: #ecfdf5 !important;
+    }
+    .modal-pc-row {
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    .modal-pc-row:hover {
+        background: #f0fdf4 !important;
+    }
+    .f-calc-wood {
+        background: #fef3c7 !important;
+        color: #1e293b !important;
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        border: 1px solid #d97706 !important;
+        display: block !important;
+        width: 100% !important;
+        padding: 3px 5px !important;
+        border-radius: 4px !important;
+        text-align: center !important;
+        letter-spacing: 0.3px !important;
+    }
+    .f-calc-ply {
+        background: #0284c7 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        border: 1px solid #0369a1 !important;
+        display: block !important;
+        width: 100% !important;
+        padding: 3px 5px !important;
+        border-radius: 4px !important;
+        text-align: center !important;
+        letter-spacing: 0.3px !important;
+    }
+</style>
+
+<div class="matrix-container" id="excel_matrix_app">
+    <!-- Top Action & Spec Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="matrix-title">
+            <span style="background: #10b981; color: white; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fas fa-table"></i>
+            </span>
+            <span>Excel Box Costing Matrix</span>
+            <span class="badge badge-success ml-2 font-weight-normal" style="font-size: 0.75rem;">Fast 1-Click Entry</span>
+            <span class="badge badge-primary font-weight-bold ml-1" style="font-size: 0.8rem;">{{ assessment_num }}</span>
+            {% if summary %}
+            <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.8rem;">
+                <i class="fas fa-file-invoice mr-1"></i> {{ summary.qs_quotation_number }} (Rev {{ summary.qs_revision_number|default:0 }})
+            </span>
+            {% endif %}
+            {% if customer_name %}
+            <span class="badge badge-light border text-muted ml-1" style="font-size: 0.8rem;">{{ customer_name }}</span>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn_reload_template">
+                <i class="fas fa-sync-alt mr-1"></i> Reset to Box Defaults
+            </button>
+            <button type="button" class="btn btn-sm text-white font-weight-bold shadow-sm btn-trigger-cut-optimizer" style="background: linear-gradient(135deg, #0d9488, #0f766e); border: 1px solid #14b8a6; border-radius: 6px;">
+                <i class="fas fa-cut mr-1"></i> Cut Sheet Optimizer
+            </button>
+            <a href="{% url 'pk_quotation_insert' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-list mr-1"></i> Classic Single-Item Entry
+            </a>
+            <a href="{% if summary_id and summary_id != 0 %}{% url 'pk_quotationsummary_update' summary_id %}{% elif summary %}{% url 'pk_quotationsummary_update' summary.id %}{% else %}{% url 'pk_quotationsummary_list' %}{% endif %}" class="btn btn-sm btn-dark font-weight-bold shadow-sm" style="border-radius: 6px;" title="Back to Quotation Summary">
+                <i class="fas fa-arrow-left mr-1 text-warning"></i> Back to Quotation Summary
+            </a>
+            <a href="{% url 'bvm_quotation_pdf' %}" target="_blank" class="btn btn-sm btn-warning text-dark font-weight-bold">
+                <i class="fas fa-file-pdf mr-1"></i> Quotation PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Box Specs Bar -->
+    <div class="spec-card">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="spec-label mb-0">Select Box / Job Item</div>
+                    <div class="custom-control custom-checkbox small">
+                        <input type="checkbox" class="custom-control-input" id="chk_quoted_only">
+                        <label class="custom-control-label font-weight-bold text-primary" for="chk_quoted_only" style="font-size: 0.75rem; cursor: pointer;">
+                            Show Quoted Boxes Only
+                        </label>
+                    </div>
+                </div>
+                <div class="d-flex" style="gap: 6px;">
+                    <select id="matrix_requirement_select" class="form-control form-control-sm font-weight-bold flex-grow-1">
+                        <option value="" {% if not selected_requirement_id %}selected{% endif %}>-- Select Box / Job Item to Cost --</option>
+                        {% for req in requirements_list %}
+                        <option value="{{ req.id }}" data-l="{{ req.nad_length }}" data-w="{{ req.nad_width }}" data-h="{{ req.nad_height }}" data-uom="{{ req.nad_uom }}" data-qty="{{ req.nad_quantity }}" data-clearance="{{ req.nad_clearance }}" data-ply-thick="{{ req.nad_plywood_thickness }}" data-dim-type="{{ req.nad_dimension_type }}" data-quoted="{{ req.is_quoted|yesno:'true,false' }}" {% if selected_requirement_id and selected_requirement_id == req.id %}selected{% endif %}>
+                            {{ req.nad_item }} - {{ req.nad_type_of_req }} ({{ req.nad_length|floatformat:0 }}x{{ req.nad_width|floatformat:0 }}x{{ req.nad_height|floatformat:0 }} cm) {% if req.is_quoted %}✓ [Quoted]{% else %}(Not Quoted){% endif %}
+                        </option>
+                        {% empty %}
+                        <option value="">No items found</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm d-flex align-items-center text-nowrap" id="btn_open_add_box_modal" title="View & select box items for Assessment {{ assessment_num }}" style="padding: 2px 10px; font-size: 0.75rem; border-radius: 4px; white-space: nowrap;">
+                        <i class="fas fa-boxes mr-1"></i> Box Items
+                    </button>
+                </div>
+            </div>
+            <!-- Col 2: Job Size (cm) & Ply Clearance (cm) -->
+            <div class="col-6 col-lg-3 mb-2 mb-lg-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="spec-label mb-0">1. Job Size (cm) & Ply Clr</div>
+                </div>
+                <div class="d-flex gap-1">
+                    <input type="number" id="job_size_l" class="matrix-input text-center font-weight-bold" placeholder="Job L" title="Job Length (cm)">
+                    <input type="number" id="job_size_w" class="matrix-input text-center font-weight-bold" placeholder="Job W" title="Job Width (cm)">
+                    <input type="number" id="job_size_h" class="matrix-input text-center font-weight-bold" placeholder="Job H" title="Job Height (cm)">
+                    <input type="number" id="box_clearance" class="matrix-input text-center font-weight-bold" style="max-width: 55px; background: #fef3c7; border: 1.5px solid #f59e0b;" placeholder="Clr" value="5" title="Plywood Clearance per side (cm) - Added 2x to L, W, H">
+                </div>
+            </div>
+
+            <!-- Col 3: Box ID (Inner cm) -->
+            <div class="col-6 col-lg-2 mb-2 mb-lg-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="spec-label mb-0">2. Box ID (Inner cm)</div>
+                </div>
+                <div class="d-flex gap-1">
+                    <input type="number" id="box_id_l" class="matrix-input text-center font-weight-bold" placeholder="ID L" title="Inner Length (Job Size + 2x Clearance)">
+                    <input type="number" id="box_id_w" class="matrix-input text-center font-weight-bold" placeholder="ID W" title="Inner Width (Job Size + 2x Clearance)">
+                    <input type="number" id="box_id_h" class="matrix-input text-center font-weight-bold" placeholder="ID H" title="Inner Height (Job Size + 2x Clearance)">
+                </div>
+            </div>
+
+            <!-- Col 4: Box OD & Dimensions Live -->
+            <div class="col-12 col-lg-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="spec-label mb-0">3. Box OD & Dimensions (Live)</div>
+                    <small class="text-muted" style="font-size: 0.68rem;">+7cm Walls / +20cm Base</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="spec-badge" id="badge_od_cm">OD: 0.0 × 0.0 × 0.0 cm</span>
+                    <span class="spec-badge" style="background: #fef3c7; color: #b45309;" id="badge_od_in">0.0 × 0.0 × 0.0 in</span>
+                    <span class="spec-badge" style="background: #dcfce7; color: #15803d;" id="badge_od_ft">0.00 × 0.00 × 0.00 ft</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="row">
+        <!-- Left: Structural Framing & Plywood Breakdown -->
+        <div class="col-12 col-xl-8">
+            <div class="table-responsive mb-3" style="max-height: 580px; overflow-y: auto;">
+                <table class="matrix-table" id="structure_table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%; text-align: left; padding-left: 0.6rem;">Component Description</th>
+                            <th style="width: 16%; background: #047857; color: #ffffff;"><i class="fas fa-barcode mr-1"></i> Part Code</th>
+                            <th style="width: 8%;">Mat. Type</th>
+                            <th style="width: 7%;">L (ft)</th>
+                            <th style="width: 7%;">W (in/ft)</th>
+                            <th style="width: 7%;">H/T (in/mm)</th>
+                            <th style="width: 6%;">Nos</th>
+                            <th style="width: 10%;">CFT / SQFT</th>
+                            <th style="width: 7%;">Rate (₹)</th>
+                            <th style="width: 9%;">Total (₹)</th>
+                            <th style="width: 3%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="structure_tbody">
+                        <!-- Dynamically populated via JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f1f5f9; font-weight: 700;">
+                            <td colspan="8" class="text-right pr-2">WOOD SUB-TOTAL:</td>
+                            <td class="text-center text-primary" id="wood_total_cft_cell">0.000 CFT</td>
+                            <td></td>
+                            <td class="text-right text-success font-weight-bold" id="wood_total_cost_cell">₹0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button type="button" class="btn btn-xs btn-outline-secondary" id="btn_add_structure_row">
+                    <i class="fas fa-plus mr-1"></i> Add Custom Wood / Ply Component
+                </button>
+            </div>
+
+            <!-- Plywood Breakup & Wastage Card (Hidden as requested: Total Ply Cost is directly calculated from plywood line items) -->
+            <div class="p-3 mb-3 d-none" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px;">
+                <div class="font-weight-bold text-dark mb-2 d-flex justify-content-between align-items-center" style="font-size: 0.88rem;">
+                    <span><i class="fas fa-layer-group text-primary mr-1"></i> Plywood Area & Wastage Calculation (From Side & Top Panels)</span>
+                    <button type="button" class="btn btn-xs btn-outline-info font-weight-bold btn-trigger-cut-optimizer" style="border-radius: 6px; padding: 2px 10px;">
+                        <i class="fas fa-cut mr-1"></i> Cut Sheet Optimizer
+                    </button>
+                </div>
+                <div class="row align-items-center text-center">
+                    <div class="col-3">
+                        <div class="spec-label">Net Panels SQFT</div>
+                        <input type="text" id="ply_net_sqft" class="matrix-input matrix-input-readonly text-center font-weight-bold" readonly value="0.00">
+                    </div>
+                    <div class="col-2">
+                        <div class="spec-label">Wastage %</div>
+                        <input type="number" id="ply_wastage_pct" class="matrix-input text-center font-weight-bold" value="5.0" step="0.5">
+                    </div>
+                    <div class="col-3">
+                        <div class="spec-label">Total Ply SQFT (+5%)</div>
+                        <input type="text" id="ply_total_sqft" class="matrix-input matrix-input-readonly text-center font-weight-bold text-primary" readonly value="0.00">
+                    </div>
+                    <div class="col-2">
+                        <div class="spec-label">Ply Rate (₹/sqft)</div>
+                        <input type="number" id="ply_rate" class="matrix-input text-center font-weight-bold" value="28.0">
+                    </div>
+                    <div class="col-2">
+                        <div class="spec-label">Total Ply Cost</div>
+                        <div class="font-weight-bold text-success mt-1" id="ply_total_cost_display" style="font-size: 1rem;">₹0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Right: Nails + Consumables + Master Cost Card -->
+        <div class="col-12 col-xl-4">
+            <!-- Nails Fast Entry Card -->
+            <div class="p-2 mb-3" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="font-weight-bold d-flex align-items-center" style="font-size: 0.85rem; color: #1e293b;">
+                        <i class="fas fa-thumbtack text-danger mr-1"></i> Nail Costing
+                        <button type="button" class="btn btn-xs btn-outline-dark font-weight-bold ml-2 py-0 px-2 btn_add_nail_row" style="font-size: 0.72rem; padding: 1px 8px; border-radius: 4px; background: rgba(255,255,255,0.85); border-color: #64748b;" title="Add new line item for nails">
+                            <i class="fas fa-plus mr-1 text-success font-weight-bold"></i> + ADD LINE ITEM
+                        </button>
+                    </div>
+                    <span class="badge badge-danger font-weight-bold" id="badge_nail_total">₹0.00</span>
+                </div>
+                <div style="max-height: 240px; overflow-y: auto;">
+                    <table class="matrix-table mb-1" id="nails_table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">Part Code</th>
+                                <th style="width: 34%; text-align: left; padding-left: 0.5rem;">Nail Description</th>
+                                <th style="width: 16%;">Qty (Kg)</th>
+                                <th style="width: 15%;">Rate (₹)</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="nails_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end mt-1">
+                    <button type="button" class="btn btn-xs btn-outline-success font-weight-bold py-1 px-2 btn_add_nail_row" style="font-size: 0.75rem; border-radius: 4px;">
+                        <i class="fas fa-plus mr-1"></i> + ADD NAIL LINE ITEM
+                    </button>
+                </div>
+            </div>
+
+            <!-- Packing Materials & Consumables Fast Checklist -->
+            <div class="p-2 mb-3" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="font-weight-bold d-flex align-items-center" style="font-size: 0.85rem; color: #1e293b;">
+                        <i class="fas fa-boxes text-info mr-1"></i> Packing Materials / Consumables
+                        <button type="button" class="btn btn-xs btn-outline-dark font-weight-bold ml-2 py-0 px-2 btn_add_material_row" style="font-size: 0.72rem; padding: 1px 8px; border-radius: 4px; background: rgba(255,255,255,0.85); border-color: #64748b;" title="Add new line item for consumables">
+                            <i class="fas fa-plus mr-1 text-success font-weight-bold"></i> + ADD LINE ITEM
+                        </button>
+                    </div>
+                    <span class="badge badge-info font-weight-bold" id="badge_materials_total">₹0.00</span>
+                </div>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="matrix-table mb-1" id="materials_table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">Part Code</th>
+                                <th style="width: 34%; text-align: left; padding-left: 0.5rem;">Material Description</th>
+                                <th style="width: 16%;">Qty</th>
+                                <th style="width: 15%;">Rate (₹)</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="materials_tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end mt-1">
+                    <button type="button" class="btn btn-xs btn-outline-success font-weight-bold py-1 px-2" id="btn_add_material_row" style="font-size: 0.75rem; border-radius: 4px;">
+                        <i class="fas fa-plus mr-1"></i> + ADD LINE ITEM
+                    </button>
+                </div>
+            </div>
+
+            <!-- Master Cost & Margin Summary -->
+            <div class="summary-card">
+                <div class="font-weight-bold text-primary mb-2 d-flex justify-content-between align-items-center" style="font-size: 0.95rem;">
+                    <div class="d-flex align-items-center">
+                        <span><i class="fas fa-calculator mr-1"></i> Cost Breakdown & Margin</span>
+                        <button type="button" class="btn btn-xs btn-outline-dark font-weight-bold ml-2 py-0 px-2 btn_add_breakdown_item" style="font-size: 0.72rem; padding: 1px 8px; border-radius: 4px; background: rgba(255,255,255,0.85); border-color: #64748b;" title="Add extra line item to cost breakdown">
+                            <i class="fas fa-plus mr-1 text-success font-weight-bold"></i> + ADD LINE ITEM
+                        </button>
+                    </div>
+                    <span class="badge badge-primary font-weight-bold" id="badge_job_qty">Box Qty: 1</span>
+                </div>
+                
+                <div class="summary-line">
+                    <span class="text-muted">Total Wood Cost</span>
+                    <span class="font-weight-bold" id="sum_wood_cost">₹0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Total Plywood Cost</span>
+                    <span class="font-weight-bold" id="sum_ply_cost">₹0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Nail Cost</span>
+                    <span class="font-weight-bold" id="sum_nail_cost">₹0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Packing Materials</span>
+                    <span class="font-weight-bold" id="sum_material_cost">₹0.00</span>
+                </div>
+                
+                <div class="summary-line">
+                    <span class="text-muted">In-House Labour</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_labour_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">On-Site Labour</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_onsite_labour_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Transport Cost</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_transport_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Heat Treatment (HT)</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_ht_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Crane Cost</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_crane_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+                <div class="summary-line">
+                    <span class="text-muted">Fumigation Cost</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_fumigation_input" class="matrix-input text-right font-weight-bold" value="0">
+                    </div>
+                </div>
+
+                <!-- Dynamic Extra Breakdown Line Items -->
+                <div id="custom_breakdown_items_container">
+                    <!-- Populated dynamically via + ADD LINE ITEM -->
+                </div>
+
+                <div class="summary-line" style="border-top: 2px solid #cbd5e1; margin-top: 0.4rem; font-weight: 700;">
+                    <span>Total Cost (No Margin)</span>
+                    <span id="sum_cost_wom">₹0.00</span>
+                </div>
+
+                <div class="summary-line">
+                    <span class="text-muted">Profit Margin %</span>
+                    <div style="width: 95px;">
+                        <input type="number" id="sum_margin_pct" class="matrix-input text-right font-weight-bold" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="summary-line">
+                    <span class="text-muted">Margin Value</span>
+                    <span class="font-weight-bold text-success" id="sum_margin_val">₹0.00</span>
+                </div>
+
+                <!-- Grand Total Display -->
+                <div class="summary-grand-total">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">Unit Cost (1 Box)</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; line-height: 1.2;" id="grand_total_display">₹0.00 / box</div>
+                    <div style="font-size: 0.85rem; opacity: 0.95; margin-top: 0.25rem;" id="per_box_cost_display">Total Order Price (1 Box): ₹0.00</div>
+                </div>
+
+                <!-- 1-Click Save Button -->
+                <button type="button" class="btn btn-save-matrix mt-3" id="btn_save_matrix">
+                    <i class="fas fa-check-circle mr-2"></i> SAVE QUOTATION NOW
+                </button>
+                <a href="{% if summary_id and summary_id != 0 %}{% url 'pk_quotationsummary_update' summary_id %}{% elif summary %}{% url 'pk_quotationsummary_update' summary.id %}{% else %}{% url 'pk_quotationsummary_list' %}{% endif %}" class="btn btn-sm btn-outline-secondary btn-block mt-2 font-weight-bold" style="border-radius: 6px;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Quotation Summary
+                </a>
+                <div id="matrix_save_status" class="mt-2 text-center small font-weight-bold"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Select Box Items for Assessment -->
+<div class="modal fade" id="modal_add_new_box" tabindex="-1" role="dialog" aria-labelledby="modalAddNewBoxLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 px-3 text-white align-items-center" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <h6 class="modal-title font-weight-bold m-0" id="modalAddNewBoxLabel" style="font-size: 0.95rem;">
+                    <i class="fas fa-boxes mr-2 text-warning"></i> Box Items &bull; Assessment: {{ assessment_num }}
+                </h6>
+                <button type="button" class="close text-white opacity-90" data-dismiss="modal" aria-label="Close" style="outline: none;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3" style="background: #f8fafc;">
+                <!-- Header Info Filter -->
+                <div class="alert alert-info py-2 px-3 mb-3 small d-flex justify-content-between align-items-center" style="background: #e0f2fe; border: 1px solid #7dd3fc; color: #0369a1; border-radius: 8px;">
+                    <div>
+                        <i class="fas fa-filter mr-1"></i> Showing all <strong>{{ requirements_list|length }}</strong> box items filtered strictly for Assessment <strong>{{ assessment_num }}</strong>.
+                    </div>
+                    {% if customer_name %}
+                    <span class="badge badge-primary px-2 py-1 font-weight-bold">{{ customer_name }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Table of Assessment Box Items -->
+                <div class="table-responsive bg-white rounded border mb-2 shadow-sm" style="max-height: 320px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0" style="font-size: 0.83rem;">
+                        <thead class="thead-light sticky-top" style="position: sticky; top: 0; z-index: 2;">
+                            <tr>
+                                <th style="width: 25%;">Item Number</th>
+                                <th style="width: 22%;">Requirement Type</th>
+                                <th style="width: 26%; text-align: center;">Inner Dimensions (cm)</th>
+                                <th style="width: 8%; text-align: center;">Qty</th>
+                                <th style="width: 10%; text-align: center;">Status</th>
+                                <th style="width: 9%; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requirements_list %}
+                            <tr class="align-middle {% if req.is_quoted %}table-light{% endif %} modal-item-row" data-id="{{ req.id }}" style="cursor: pointer;">
+                                <td class="font-weight-bold text-primary align-middle">
+                                    <i class="fas fa-box mr-1 text-secondary"></i> {{ req.nad_item }}
+                                </td>
+                                <td class="align-middle font-weight-bold text-dark">{{ req.nad_type_of_req }}</td>
+                                <td class="text-center align-middle font-weight-bold">
+                                    <span class="badge badge-light border" style="font-size: 0.78rem;">
+                                        {{ req.nad_length|floatformat:0 }} × {{ req.nad_width|floatformat:0 }} × {{ req.nad_height|floatformat:0 }} cm
+                                    </span>
+                                </td>
+                                <td class="text-center align-middle font-weight-bold">{{ req.nad_quantity }}</td>
+                                <td class="text-center align-middle">
+                                    {% if req.is_quoted %}
+                                    <span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.72rem;"><i class="fas fa-check mr-1"></i> Quoted</span>
+                                    {% else %}
+                                    <span class="badge badge-warning text-dark px-2 py-1 font-weight-bold" style="font-size: 0.72rem;">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <button type="button" class="btn btn-xs btn-primary font-weight-bold px-2 py-1 btn-modal-pick-item" data-id="{{ req.id }}" style="font-size: 0.75rem;">
+                                        <i class="fas fa-edit mr-1"></i> Cost
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No items found for Assessment {{ assessment_num }}.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Optional Collapsible Section: Create Brand New Box Dimension -->
+                <div class="mt-2 text-right">
+                    <button type="button" class="btn btn-link btn-xs text-secondary p-0" data-toggle="collapse" data-target="#collapse_create_new_box" aria-expanded="false" style="font-size: 0.75rem; text-decoration: underline;">
+                        <i class="fas fa-plus-circle mr-1"></i> + Need to add a new box dimension to Assessment {{ assessment_num }}?
+                    </button>
+                </div>
+
+                <div class="collapse mt-2 pt-2 border-top" id="collapse_create_new_box">
+                    <div id="modal_box_error" class="alert alert-danger py-1 px-2 small d-none mb-2"></div>
+                    <form id="form_add_new_box" onsubmit="return false;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label class="spec-label font-weight-bold text-dark mb-1" style="font-size: 0.78rem;">New Item Number</label>
+                                    <input type="text" id="new_box_item_number" class="form-control form-control-sm font-weight-bold text-primary" value="{{ next_item_number }}" placeholder="{{ next_item_number }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-2">
+                                    <label class="spec-label font-weight-bold text-dark mb-1" style="font-size: 0.78rem;">Requirement Type</label>
+                                    <select id="new_box_type" class="form-control form-control-sm font-weight-bold">
+                                        {% for tr in typeofreq_list %}
+                                        <option value="{{ tr.id }}" {% if "Plywood Box" in tr.type_of_req %}selected{% endif %}>{{ tr.type_of_req }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label class="spec-label font-weight-bold text-dark mb-1" style="font-size: 0.78rem;">Inner Dimensions (cm) *</label>
+                            <div class="row no-gutters">
+                                <div class="col-4 pr-1">
+                                    <input type="number" step="any" min="1" id="new_box_l" class="form-control form-control-sm font-weight-bold text-center" placeholder="L (cm)">
+                                </div>
+                                <div class="col-4 px-1">
+                                    <input type="number" step="any" min="1" id="new_box_w" class="form-control form-control-sm font-weight-bold text-center" placeholder="W (cm)">
+                                </div>
+                                <div class="col-4 pl-1">
+                                    <input type="number" step="any" min="1" id="new_box_h" class="form-control form-control-sm font-weight-bold text-center" placeholder="H (cm)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group mb-1">
+                                    <label class="spec-label font-weight-bold text-dark mb-1" style="font-size: 0.78rem;">Clearance (cm)</label>
+                                    <input type="number" step="any" min="0" id="new_box_clearance" class="form-control form-control-sm font-weight-bold text-center" value="2">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group mb-1">
+                                    <label class="spec-label font-weight-bold text-dark mb-1" style="font-size: 0.78rem;">Quantity</label>
+                                    <input type="number" step="1" min="1" id="new_box_qty" class="form-control form-control-sm font-weight-bold text-center" value="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right mt-2">
+                            <button type="button" class="btn btn-sm btn-success font-weight-bold px-3 shadow-sm" id="btn_submit_create_box">
+                                <i class="fas fa-check-circle mr-1"></i> Create & Cost New Box
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-end">
+                <button type="button" class="btn btn-sm btn-secondary font-weight-bold" data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Part Code & GRN Search Modal -->
+<div class="modal fade" id="matrixPartCodeModal" tabindex="-1" role="dialog" aria-labelledby="matrixPartCodeModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 px-3 text-white" style="background: linear-gradient(135deg, #065f46, #047857);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-warehouse fa-lg mr-2"></i>
+                    <div>
+                        <h6 class="modal-title font-weight-bold mb-0" id="matrixPartCodeModalLabel" style="font-size: 1.05rem;">
+                            Warehouse Part Code & GRN Stock Picker
+                        </h6>
+                        <small style="opacity: 0.85;">Search warehouse materials, active GRN batches, rates & dimensions</small>
+                    </div>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3" style="background: #f8fafc;">
+                <!-- Search & Filters Bar -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <div class="input-group flex-grow-1" style="min-width: 260px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                        </div>
+                        <input type="text" id="modal_pc_search_input" class="form-control border-left-0" placeholder="Search Part Code (e.g. K40, PY, RW) or GRN Number..." autocomplete="off">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="modal_pc_clear_btn" title="Clear search"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons" id="modal_pc_type_filter">
+                        <label class="btn btn-sm btn-outline-dark active" data-type="">
+                            <input type="radio" name="pc_filter_type" value="" checked> All
+                        </label>
+                        <label class="btn btn-sm btn-outline-success" data-type="wood">
+                            <input type="radio" name="pc_filter_type" value="wood"> Wood (K/RW)
+                        </label>
+                        <label class="btn btn-sm btn-outline-primary" data-type="plywood">
+                            <input type="radio" name="pc_filter_type" value="plywood"> Plywood (PY)
+                        </label>
+                        <label class="btn btn-sm btn-outline-danger" data-type="nails">
+                            <input type="radio" name="pc_filter_type" value="nails"> Nails
+                        </label>
+                        <label class="btn btn-sm btn-outline-info" data-type="consumables">
+                            <input type="radio" name="pc_filter_type" value="consumables"> Consumables
+                        </label>
+                        <label class="btn btn-sm btn-outline-warning text-dark font-weight-bold" data-type="grn">
+                            <input type="radio" name="pc_filter_type" value="grn"> 📦 In-Stock GRNs
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Results Count & Target Indicator -->
+                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                    <span class="text-muted small" id="modal_pc_status">Searching database...</span>
+                    <span class="badge badge-secondary px-2 py-1 font-weight-bold" id="modal_target_component_badge">Target: Component</span>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-responsive bg-white rounded border shadow-sm" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0" id="modal_pc_results_table" style="font-size: 0.83rem;">
+                        <thead class="thead-light sticky-top" style="position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th style="width: 14%;">Part Code</th>
+                                <th style="width: 25%;">Description</th>
+                                <th style="width: 15%;">Category</th>
+                                <th style="width: 14%; text-align: center;">Dimensions (L×W×H)</th>
+                                <th style="width: 11%; text-align: center;">GRN Batch</th>
+                                <th style="width: 12%; text-align: right; background: #e0f2fe; color: #0369a1;"><i class="fas fa-tag mr-1"></i> Rate (₹)</th>
+                                <th style="width: 9%; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal_pc_results_tbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+                <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Selecting a GRN batch sets Part Code, Stock Purchase Number, and live Rate automatically.</small>
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cut Sheet & Nesting Optimizer -->
+<div class="modal fade" id="modal_cut_sheet_optimizer" tabindex="-1" role="dialog" aria-labelledby="modalCutSheetOptimizerLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document" style="max-width: 1140px;">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 px-3 text-white align-items-center" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-cut text-warning fa-lg mr-2"></i>
+                    <div>
+                        <h6 class="modal-title font-weight-bold mb-0" id="modalCutSheetOptimizerLabel" style="font-size: 1rem;">
+                            Cut Sheet & Nesting Optimizer
+                        </h6>
+                        <small style="opacity: 0.9;">2D Plywood Sheet Nesting & 1D Timber Cutting Plan &bull; Box: <span id="cut_opt_item_name" class="font-weight-bold text-warning">-</span></small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <button type="button" class="btn btn-xs btn-outline-light font-weight-bold px-2 py-1" id="btn_print_cut_plan">
+                        <i class="fas fa-print mr-1"></i> Print Cut Plan
+                    </button>
+                    <button type="button" class="close text-white opacity-90 m-0 p-0" data-dismiss="modal" aria-label="Close" style="outline: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body p-3" style="background: #f8fafc;">
+                <!-- Nav Tabs for Plywood 2D vs Timber 1D vs Cut List -->
+                <ul class="nav nav-pills mb-3" id="cutOptimizerTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active font-weight-bold py-1 px-3" id="tab-opt-plywood-link" data-toggle="pill" href="#tab-opt-plywood" role="tab" style="font-size: 0.85rem; border-radius: 6px;">
+                            <i class="fas fa-layer-group mr-1"></i> 2D Plywood Sheets (8 × 4 ft)
+                        </a>
+                    </li>
+                    <li class="nav-item ml-2">
+                        <a class="nav-link font-weight-bold py-1 px-3 text-secondary" id="tab-opt-timber-link" data-toggle="pill" href="#tab-opt-timber" role="tab" style="font-size: 0.85rem; border-radius: 6px;">
+                            <i class="fas fa-ruler-combined mr-1"></i> 1D Timber Battens & Runners
+                        </a>
+                    </li>
+                    <li class="nav-item ml-2">
+                        <a class="nav-link font-weight-bold py-1 px-3 text-secondary" id="tab-opt-cutlist-link" data-toggle="pill" href="#tab-opt-cutlist" role="tab" style="font-size: 0.85rem; border-radius: 6px;">
+                            <i class="fas fa-clipboard-list mr-1"></i> Workshop Cut List
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Tab 1: Plywood 2D -->
+                    <div class="tab-pane fade show active" id="tab-opt-plywood" role="tabpanel">
+                        <!-- Controls Row -->
+                        <div class="card border mb-3 shadow-sm" style="background: #ffffff; border-radius: 8px;">
+                            <div class="card-body p-2">
+                                <div class="row align-items-center text-center">
+                                    <div class="col-md-3 text-left">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Stock Sheet Size</label>
+                                        <select id="opt_sheet_preset" class="form-control form-control-sm font-weight-bold">
+                                            <option value="96x48" selected>8 × 4 ft (96 × 48 in / 32 sqft)</option>
+                                            <option value="84x48">7 × 4 ft (84 × 48 in / 28 sqft)</option>
+                                            <option value="72x48">6 × 4 ft (72 × 48 in / 24 sqft)</option>
+                                            <option value="custom">Custom Dimensions...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2" id="custom_sheet_dims" style="display: none;">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Custom W × L (in)</label>
+                                        <div class="d-flex" style="gap: 4px;">
+                                            <input type="number" id="opt_custom_w" class="form-control form-control-sm text-center" value="48" placeholder="W">
+                                            <input type="number" id="opt_custom_l" class="form-control form-control-sm text-center" value="96" placeholder="L">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Saw Kerf (Cut Loss)</label>
+                                        <select id="opt_kerf" class="form-control form-control-sm font-weight-bold">
+                                            <option value="0.125" selected>3 mm (0.125 in)</option>
+                                            <option value="0.157">4 mm (0.157 in)</option>
+                                            <option value="0">0 mm (Theoretical)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Grain / Rotation</label>
+                                        <select id="opt_rotation" class="form-control form-control-sm font-weight-bold">
+                                            <option value="allow" selected>Allow 90° Rotation (Max Yield)</option>
+                                            <option value="lock">Lock Grain (No Rotation)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="spec-label mb-1 text-white" style="font-size: 0.72rem;">Action</label>
+                                        <button type="button" class="btn btn-sm btn-primary font-weight-bold btn-block" id="btn_rerun_optimizer">
+                                            <i class="fas fa-play mr-1"></i> Re-Optimize
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPI Summary Cards -->
+                        <div class="row mb-3">
+                            <div class="col-md-2 col-6 mb-2 mb-md-0">
+                                <div class="card border-0 shadow-sm text-center py-2 px-1" style="background: #e0f2fe; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold" style="font-size: 0.68rem;">Sheets Needed</div>
+                                    <div class="font-weight-bold text-primary" id="kpi_sheets_needed" style="font-size: 1.35rem;">0</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-6 mb-2 mb-md-0">
+                                <div class="card border-0 shadow-sm text-center py-2 px-1" style="background: #f0fdf4; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold" style="font-size: 0.68rem;">Total Sheet Area</div>
+                                    <div class="font-weight-bold text-success" id="kpi_sheet_area" style="font-size: 1.35rem;">0.00 SQFT</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="card border-0 shadow-sm text-center py-2 px-1" style="background: #f8fafc; border: 1px solid #e2e8f0 !important; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold" style="font-size: 0.68rem;">Net Box Panels Area</div>
+                                    <div class="font-weight-bold text-dark" id="kpi_net_area" style="font-size: 1.35rem;">0.00 SQFT</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <div class="card border-0 shadow-sm text-center py-2 px-1" style="background: #fffbeb; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold" style="font-size: 0.68rem;">Cut Wastage</div>
+                                    <div class="font-weight-bold text-warning" id="kpi_waste_pct" style="font-size: 1.35rem;">0.0%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-12 mt-2 mt-md-0">
+                                <div class="card border-0 shadow-sm text-center py-2 px-1" style="background: #f5f3ff; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold" style="font-size: 0.68rem;">Material Efficiency (Yield)</div>
+                                    <div class="font-weight-bold text-purple" id="kpi_yield_pct" style="font-size: 1.35rem; color: #7c3aed;">0.0%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Visual Sheet Viewer -->
+                        <div class="card border shadow-sm" style="background: #ffffff; border-radius: 8px; overflow: hidden;">
+                            <div class="card-header py-2 px-3 bg-light d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center" style="gap: 6px;">
+                                    <span class="font-weight-bold text-dark" style="font-size: 0.85rem;"><i class="fas fa-th mr-1 text-primary"></i> Sheet Layout:</span>
+                                    <div class="btn-group btn-group-sm" id="sheet_pagination_tabs" role="group">
+                                        <!-- Dynamically populated buttons: Sheet 1, Sheet 2, etc. -->
+                                    </div>
+                                </div>
+                                <div id="sheet_stat_badge" class="badge badge-light border text-muted font-weight-bold px-2 py-1" style="font-size: 0.78rem;">
+                                    Sheet 1 &bull; 0 Parts
+                                </div>
+                            </div>
+                            <div class="card-body p-3 text-center" style="background: #f1f5f9; min-height: 380px;">
+                                <div id="canvas_container" style="position: relative; max-width: 900px; margin: 0 auto; background: #ffffff; border: 2px solid #94a3b8; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                    <canvas id="cut_sheet_canvas" width="880" height="440" style="display: block; width: 100%; height: auto;"></canvas>
+                                </div>
+
+                                <!-- Legend for Colors -->
+                                <div class="d-flex justify-content-center align-items-center mt-2 flex-wrap" style="gap: 15px; font-size: 0.78rem;" id="cut_sheet_legend">
+                                    <!-- Populated dynamically: Deck Board, Length Panel, etc. -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: 1D Timber Battens -->
+                    <div class="tab-pane fade" id="tab-opt-timber" role="tabpanel">
+                        <div class="card border mb-3 shadow-sm" style="background: #ffffff; border-radius: 8px;">
+                            <div class="card-body p-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Standard Stock Plank Length</label>
+                                        <select id="timber_stock_len" class="form-control form-control-sm font-weight-bold">
+                                            <option value="10">10 ft (120 in)</option>
+                                            <option value="12">12 ft (144 in)</option>
+                                            <option value="14" selected>14 ft (168 in)</option>
+                                            <option value="16">16 ft (192 in)</option>
+                                            <option value="18">18 ft (216 in)</option>
+                                            <option value="0">20 ft (240 in)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="spec-label mb-1 font-weight-bold text-dark" style="font-size: 0.72rem;">Timber Saw Blade Loss (Kerf)</label>
+                                        <input type="text" class="form-control form-control-sm font-weight-bold text-center" value="0.25 in (6 mm)" readonly>
+                                    </div>
+                                    <div class="col-md-4 text-right mt-3">
+                                        <button type="button" class="btn btn-sm btn-primary font-weight-bold" id="btn_rerun_timber_opt">
+                                            <i class="fas fa-calculator mr-1"></i> Calculate Batten Cuts
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timber KPI Summary -->
+                        <div class="row mb-3 text-center">
+                            <div class="col-3">
+                                <div class="card border-0 shadow-sm py-2 px-1" style="background: #e0f2fe; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold small" style="font-size: 0.68rem;">Stock Planks Needed</div>
+                                    <div class="font-weight-bold text-primary" id="kpi_timber_planks" style="font-size: 1.35rem;">0 Planks</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-0 shadow-sm py-2 px-1" style="background: #f0fdf4; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold small" style="font-size: 0.68rem;">Total Purchased Length</div>
+                                    <div class="font-weight-bold text-success" id="kpi_timber_purchased" style="font-size: 1.35rem;">0.0 ft</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-0 shadow-sm py-2 px-1" style="background: #f8fafc; border: 1px solid #e2e8f0 !important; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold small" style="font-size: 0.68rem;">Net Frame Length</div>
+                                    <div class="font-weight-bold text-dark" id="kpi_timber_net" style="font-size: 1.35rem;">0.0 ft</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-0 shadow-sm py-2 px-1" style="background: #fffbeb; border-radius: 8px;">
+                                    <div class="text-uppercase text-muted font-weight-bold small" style="font-size: 0.68rem;">End Scrap Loss</div>
+                                    <div class="font-weight-bold text-warning" id="kpi_timber_waste" style="font-size: 1.35rem;">0.0%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1D Linear Planks List Container -->
+                        <div class="card border shadow-sm" style="border-radius: 8px;">
+                            <div class="card-header py-2 px-3 bg-light font-weight-bold text-dark" style="font-size: 0.85rem;">
+                                <i class="fas fa-bars mr-1 text-primary"></i> 1D Linear Cutting Sequence (Stock Plank Allocation)
+                            </div>
+                            <div class="card-body p-2" id="timber_cut_list_container" style="max-height: 340px; overflow-y: auto;">
+                                <!-- Dynamically generated visual plank bars -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Workshop Cut List -->
+                    <div class="tab-pane fade" id="tab-opt-cutlist" role="tabpanel">
+                        <div class="table-responsive bg-white rounded border shadow-sm" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0" style="font-size: 0.82rem;">
+                                <thead class="thead-dark sticky-top" style="position: sticky; top: 0; z-index: 2;">
+                                    <tr>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 25%;">Part / Panel Description</th>
+                                        <th style="width: 15%;">Material Type</th>
+                                        <th style="width: 20%; text-align: center;">Cut Dimensions</th>
+                                        <th style="width: 8%; text-align: center;">Qty</th>
+                                        <th style="width: 15%; text-align: center;">Assigned Stock Sheet/Plank</th>
+                                        <th style="width: 12%; text-align: center;">Cut Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="workshop_cut_list_tbody">
+                                    <!-- Populated dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer with 1-Click Sync to Matrix -->
+            <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between align-items-center">
+                <div class="small text-muted" id="cut_opt_summary_footer">
+                    <i class="fas fa-check-circle text-success mr-1"></i> Optimal nesting calculated based on standard 8×4 ft commercial sheets.
+                </div>
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <button type="button" class="btn btn-sm btn-outline-warning font-weight-bold" id="btn_apply_optimized_wastage">
+                        <i class="fas fa-percentage mr-1"></i> Apply Real Wastage (<span id="opt_btn_waste_pct">0.0%</span>)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success font-weight-bold shadow-sm" id="btn_apply_optimized_sheets">
+                        <i class="fas fa-layer-group mr-1"></i> Apply Full Purchased Sheets (<span id="opt_btn_sheets_sqft">0 SQFT</span>)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary font-weight-bold" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Excel Matrix Logic Script -->
+<script>
+(function($) {
+    // Shared scope across entire Matrix & Modal Picker
+    let activeRowTarget = null;
+    let activeTargetType = 'struct'; // 'struct', 'nail', 'mat'
+    let modalSearchTimer = null;
+    let typeaheadTimer = null;
+    // Standard Nails Definitions with official Part Codes
+    const standardNails = [
+        { code: 'N130S', name: '130 MM Smooth', rate: 0.0, default_qty: 0 },
+        { code: 'N76S', name: '75 MM Smooth', rate: 0.0, default_qty: 0 },
+        { code: 'N50S', name: '50 MM Smooth', rate: 0.0, default_qty: 0 },
+        { code: 'N38S', name: '38 MM Smooth', rate: 0.0, default_qty: 0 },
+        { code: 'N25S', name: '25 MM Smooth', rate: 0.0, default_qty: 0 },
+        { code: 'N160S', name: '160 MM Strip', rate: 0.0, default_qty: 0 }
+    ];
+
+    // Standard Consumables Definitions with official Part Codes
+    const standardMaterials = [
+        { code: 'CT', name: 'Clear Tape 3 Inch', rate: 0.0, default_qty: 0.0 },
+        { code: 'VCA', name: 'VCI Film / Bag', rate: 0.0, default_qty: 0.0 },
+        { code: 'AF', name: 'Aluminium Barrier Foil', rate: 0.0, default_qty: 0.0 },
+        { code: 'AB', name: 'Air Bubble Roll', rate: 0.0, default_qty: 0.0 },
+        { code: 'DC2', name: 'Desiccant 200g', rate: 0.0, default_qty: 0.0 },
+        { code: 'SF20', name: 'Stretch Film 20 mic', rate: 0.0, default_qty: 0.0 },
+        { code: 'EF2', name: 'EPE Foam 2mm', rate: 0.0, default_qty: 0.0 },
+        { code: 'TP', name: 'Tarpaulin', rate: 0.0, default_qty: 0.0 },
+        { code: 'TW', name: 'Tilt Watch', rate: 0.0, default_qty: 0.0 },
+        { code: 'SW', name: 'Shock Watch', rate: 0.0, default_qty: 0.0 },
+        { code: 'HI', name: 'Humidity Indicator', rate: 0.0, default_qty: 0.0 },
+        { code: 'LS', name: 'Lag Screw', rate: 0.0, default_qty: 0.0 },
+        { code: 'LC3', name: 'L Clamp / Corner Bracket', rate: 0.0, default_qty: 0.0 },
+        { code: 'LB32', name: 'Lashing Belt 32MM', rate: 0.0, default_qty: 0.0 },
+        { code: 'B19', name: 'Buckle 32MM', rate: 0.0, default_qty: 0.0 },
+        { code: 'F10', name: 'EPE Foam 10mm', rate: 0.0, default_qty: 0.0 },
+        { code: 'LPL', name: 'Lifting Plate (Pair)', rate: 0.0, default_qty: 0.0 },
+        { code: 'SB', name: 'Spray Paint / Stencil', rate: 0.0, default_qty: 0.0 },
+        { code: 'S2', name: 'Coach Screws', rate: 0.0, default_qty: 0.0 }
+    ];
+
+    let currentWoodRate = parseFloat('{{ wood_rate|default:"0.0" }}') || 0.0;
+    let currentPlyRate = parseFloat('{{ ply_rate|default:"0.0" }}') || 0.0;
+    let currentHTRate = 0.0;
+    const initialSavedStruct = JSON.parse('{{ saved_structural_json|default:"[]"|escapejs }}');
+    const initialSavedNails = JSON.parse('{{ saved_nails_json|default:"[]"|escapejs }}');
+    const initialSavedMaterials = JSON.parse('{{ saved_materials_json|default:"[]"|escapejs }}');
+    const initialSavedCustomBreakdown = JSON.parse('{{ saved_custom_breakdown_json|default:"[]"|escapejs }}');
+
+    // Helper to auto-derive standard timber Part Code (e.g. K4030110 for H=4, W=3, L=11)
+    function derivePartCode(mat, h, w, l) {
+        if (mat === 'wood') {
+            const h_val = parseFloat(h) || 1.0;
+            const w_val = parseFloat(w) || 4.0;
+            const l_val = parseFloat(l) || 10.0;
+            const h_code = Math.round(h_val * 10);
+            const w_code = Math.round(w_val * 10);
+            const l_code = Math.round(l_val * 10);
+            return `K${h_code}${w_code}${l_code}`;
+        } else {
+            return 'PY1410';
+        }
+    }
+
+    // Build default structural components based on box outer dimensions in feet
+    function generateStructureTemplate(type, l_ft, w_ft, h_ft) {
+        l_ft = parseFloat(l_ft) || 10.0;
+        w_ft = parseFloat(w_ft) || 4.0;
+        h_ft = parseFloat(h_ft) || 4.0;
+
+        const isPlywoodBox = (type === 'plywood_box' || type === 'pine_ply_box');
+        const isSkidOnly = (type === 'skid_base');
+
+        const rows = [
+            // BASE
+            { section: 'BASE', secClass: 'sec-base', name: 'BASE RUNNER', part_code: derivePartCode('wood', 4.0, 3.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 3.0, h: 4.0, nos: Math.max(3, Math.round(l_ft / 2)), rate: currentWoodRate },
+            { section: 'BASE', secClass: 'sec-base', name: 'LIFTING RUNNER', part_code: derivePartCode('wood', 1.5, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.5, nos: 2, rate: currentWoodRate },
+            { section: 'BASE', secClass: 'sec-base', name: 'DECK BOARD', part_code: (type === 'pine_ply_box' ? derivePartCode('wood', 1.0, w_ft, l_ft) : 'PY1410'), grn: '', stock_purchase_id: '', mat: (type === 'pine_ply_box' ? 'wood' : 'plywood'), l: l_ft.toFixed(2), w: w_ft.toFixed(2), h: (type === 'pine_ply_box' ? 1.0 : 10.0), nos: 1, rate: (type === 'pine_ply_box' ? currentWoodRate : currentPlyRate) },
+        ];
+
+        if (!isSkidOnly) {
+            // LENGTH (2 SIDES)
+            rows.push(
+                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 6, rate: currentWoodRate }
+            );
+
+            // WIDTH (2 SIDES)
+            rows.push(
+                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: w_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate }
+            );
+
+            // TOP
+            rows.push(
+                { section: 'TOP', secClass: 'sec-top', name: 'TOP PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: w_ft.toFixed(2), h: 10.0, nos: 1, rate: currentPlyRate },
+                { section: 'TOP', secClass: 'sec-top', name: 'TOP LENGTH FRAME', part_code: derivePartCode('wood', 1.0, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.0, nos: 2, rate: currentWoodRate },
+                { section: 'TOP', secClass: 'sec-top', name: 'TOP WIDTH FRAME', part_code: derivePartCode('wood', 1.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate }
+            );
+
+            // SUPPORTS
+            rows.push(
+                { section: 'SUPPORTS & ARREST', secClass: 'sec-supports', name: 'FRAME SUPPORT (LENGTH)', part_code: derivePartCode('wood', 1.0, 3.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 3.0, h: 1.0, nos: 2, rate: currentWoodRate },
+                { section: 'SUPPORTS & ARREST', secClass: 'sec-supports', name: 'FRAME SUPPORT (WIDTH)', part_code: derivePartCode('wood', 1.0, 3.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 3.0, h: 1.0, nos: 2, rate: currentWoodRate },
+                { section: 'SUPPORTS & ARREST', secClass: 'sec-supports', name: 'JOB & TOP ARREST', part_code: derivePartCode('wood', 2.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 2.0, nos: 2, rate: currentWoodRate }
+            );
+        }
+
+        return rows;
+    }
+
+    // Populate Structural Table with Part Code & GRN Columns
+    function renderSectionHeadersOnly() {
+        const tbody = $('#structure_tbody');
+        tbody.empty();
+
+        const sections = [
+            { name: 'BASE', secClass: 'sec-base', icon: 'fa-shield-alt' },
+            { name: 'LENGTH (2 SIDES)', secClass: 'sec-length', icon: 'fa-arrows-alt-h' },
+            { name: 'WIDTH (2 SIDES)', secClass: 'sec-width', icon: 'fa-arrows-alt-v' },
+            { name: 'TOP', secClass: 'sec-top', icon: 'fa-arrow-up' },
+            { name: 'SUPPORTS & ARREST', secClass: 'sec-supports', icon: 'fa-shield-alt' },
+        ];
+
+        sections.forEach(sec => {
+            tbody.append(`
+                <tr class="matrix-section-row" data-section="${sec.name}">
+                    <td colspan="11" class="${sec.secClass}" style="padding: 0.35rem 0.75rem;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas ${sec.icon} mr-1"></i> <strong>${sec.name}</strong></span>
+                            <button type="button" class="btn btn-xs btn-outline-dark font-weight-bold btn-add-section-row" data-section="${sec.name}" style="font-size: 0.72rem; padding: 1px 8px; border-radius: 4px; background: rgba(255,255,255,0.85); border-color: #64748b;" title="Add new row under ${sec.name}">
+                                <i class="fas fa-plus mr-1 text-success font-weight-bold"></i> + ADD LINE ITEM
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+
+        recalculateMatrix();
+    }
+
+    // Populate Structural Table with Part Code & GRN Columns
+    function renderStructureRows(items) {
+        const tbody = $('#structure_tbody');
+        tbody.empty();
+        if (!items || items.length === 0) {
+            renderSectionHeadersOnly();
+            return;
+        }
+
+        // Ensure canonical grouping so sections like LENGTH and WIDTH appear once without repeating
+        const secRank = { 'BASE': 1, 'LENGTH (2 SIDES)': 2, 'WIDTH (2 SIDES)': 3, 'TOP': 4, 'SUPPORTS & ARREST': 5 };
+        items.sort((a, b) => {
+            const rA = secRank[a.section] || 99;
+            const rB = secRank[b.section] || 99;
+            return rA - rB;
+        });
+
+        let currentSec = '';
+        items.forEach((item, idx) => {
+            if (item.section && item.section !== currentSec) {
+                currentSec = item.section;
+                let iconClass = 'fa-shield-alt';
+                if (currentSec.includes('LENGTH')) iconClass = 'fa-arrows-alt-h';
+                else if (currentSec.includes('WIDTH')) iconClass = 'fa-arrows-alt-v';
+                else if (currentSec.includes('TOP')) iconClass = 'fa-arrow-up';
+                else if (currentSec.includes('SUPPORT')) iconClass = 'fa-shield-alt';
+
+                tbody.append(`
+                    <tr class="matrix-section-row">
+                        <td colspan="11" class="${item.secClass || 'sec-base'}" style="padding: 0.35rem 0.75rem;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas ${iconClass} mr-1"></i> <strong>${currentSec}</strong></span>
+                                <button type="button" class="btn btn-xs btn-outline-dark font-weight-bold btn-add-section-row" data-section="${currentSec}" style="font-size: 0.72rem; padding: 1px 8px; border-radius: 4px; background: rgba(255,255,255,0.85); border-color: #64748b;" title="Add new row under ${currentSec}">
+                                    <i class="fas fa-plus mr-1 text-success font-weight-bold"></i> + ADD LINE ITEM
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            }
+
+            const defaultPC = item.part_code || derivePartCode(item.mat, item.h, item.w, item.l);
+
+            const tr = $(`
+                <tr data-idx="${idx}" data-section="${currentSec}" class="struct-row">
+                    <td>
+                        <input type="text" class="matrix-input text-left font-weight-bold f-name" value="${item.name || ''}" style="text-align: left !important; padding-left: 0.5rem;">
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="${defaultPC}" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                            <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Warehouse Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
+                            </button>
+                            <input type="hidden" class="f-stock-purchase-id" value="${item.stock_purchase_id || ''}">
+                            <input type="hidden" class="f-grn" value="${item.grn || ''}">
+                        </div>
+                    </td>
+                    <td>
+                        <select class="matrix-input f-mat">
+                            <option value="wood" ${item.mat === 'wood' ? 'selected' : ''}>Wood</option>
+                            <option value="plywood" ${item.mat === 'plywood' ? 'selected' : ''}>Plywood</option>
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="matrix-input f-l" value="${item.l || 0}"></td>
+                    <td><input type="number" step="0.01" class="matrix-input f-w" value="${item.w || 0}"></td>
+                    <td><input type="number" step="0.1" class="matrix-input f-h" value="${item.h || 0}"></td>
+                    <td><input type="number" step="1" class="matrix-input f-nos font-weight-bold" value="${item.nos || 0}"></td>
+                    <td>
+                        <span class="badge ${item.mat === 'plywood' ? 'badge-primary f-calc-ply' : 'badge-warning f-calc-wood'} w-100 py-1 font-weight-bold f-calc-badge" style="font-size: 0.8rem;">
+                            ${item.mat === 'plywood' ? '0.00 SQFT' : '0.000 CFT'}
+                        </span>
+                    </td>
+                    <td><input type="number" step="any" class="matrix-input f-rate" value="${item.rate !== undefined && item.rate !== null && item.rate !== 0 ? item.rate : ''}" placeholder="0"></td>
+                    <td class="text-right font-weight-bold f-line-total text-dark">₹0.00</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-xs text-danger btn-del-row" style="background: none; border: none; padding: 0 4px;" title="Delete row">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+            tbody.append(tr);
+        });
+
+        recalculateMatrix();
+    }
+
+    // Auto-calculate formula quantity for consumables based on live Box OD
+    function calculateConsumableFormulaQty(code, name) {
+        const codeUpper = (code || '').toUpperCase().trim();
+        const nameUpper = (name || '').toUpperCase().trim();
+
+        let id_l = parseFloat($('#box_id_l').val()) || 0;
+        let id_w = parseFloat($('#box_id_w').val()) || 0;
+        let id_h = parseFloat($('#box_id_h').val()) || 0;
+        const job_l = parseFloat($('#job_size_l').val()) || 0;
+        const job_w = parseFloat($('#job_size_w').val()) || 0;
+        const job_h = parseFloat($('#job_size_h').val()) || 0;
+        const plyClr = parseFloat($('#box_clearance').val()) || 5.0;
+
+        if (id_l <= 0 && job_l > 0) id_l = job_l + (2 * plyClr);
+        if (id_w <= 0 && job_w > 0) id_w = job_w + (2 * plyClr);
+        if (id_h <= 0 && job_h > 0) id_h = job_h + (2 * plyClr);
+
+        const od_l_cm = id_l > 0 ? (id_l + 7.0) : 0;
+        const od_w_cm = id_w > 0 ? (id_w + 7.0) : 0;
+        const od_h_cm = id_h > 0 ? (id_h + 20.0) : 0;
+
+        // Feet using 30.5 cm per ft (matches customer Excel sheet formula: 197/30.5, 82/30.5, 69/30.5)
+        const l_ft = od_l_cm > 0 ? (od_l_cm / 30.5) : 0;
+        const w_ft = od_w_cm > 0 ? (od_w_cm / 30.5) : 0;
+        const h_ft = od_h_cm > 0 ? (od_h_cm / 30.5) : 0;
+
+        // Surface Area in SQFT: 2 * (L*W + L*H + W*H)
+        const surfaceAreaSqft = (l_ft > 0 && w_ft > 0 && h_ft > 0) ? 
+            (2.0 * (l_ft * w_ft + l_ft * h_ft + w_ft * h_ft)) : 0;
+
+        // Top Area in SQFT: L * W
+        const topAreaSqft = (l_ft > 0 && w_ft > 0) ? (l_ft * w_ft) : 0;
+
+        // 1. Full 6-Side Surface Area (Aluminium Foil / AF, VCI / VCA, Air Bubble / AB, EPE Foam / F10)
+        if (codeUpper.startsWith('AF') || codeUpper.startsWith('AL') || nameUpper.includes('ALU') || nameUpper.includes('BARRIER FOIL') ||
+            codeUpper.startsWith('VCA') || codeUpper.startsWith('VCI') || nameUpper.includes('VCI') ||
+            codeUpper.startsWith('AB') || nameUpper.includes('AIR BUBBLE') ||
+            codeUpper.startsWith('F10') || nameUpper.includes('FOAM 10') || nameUpper.includes('EPE FOAM 10')) {
+            return parseFloat(surfaceAreaSqft.toFixed(5));
+        }
+
+        // 2. Top Area (Tarpaulin / TP)
+        if (codeUpper.startsWith('TP') || nameUpper.includes('TARPAULIN') || nameUpper.includes('TARP')) {
+            return parseFloat(topAreaSqft.toFixed(5));
+        }
+
+        // 3. Clear Tape (CT)
+        if (codeUpper.startsWith('CT') || nameUpper.includes('CLEAR TAPE')) {
+            return 1.0;
+        }
+
+        // 4. Stretch Film (SF20)
+        if (codeUpper.startsWith('SF') || nameUpper.includes('STRETCH FILM')) {
+            return 1.5;
+        }
+
+        // 5. Desiccant (DC2)
+        if (codeUpper.startsWith('DC') || nameUpper.includes('DESICCANT')) {
+            return 1.5;
+        }
+
+        // 6. Spray Paint (SB)
+        if (codeUpper.startsWith('SB') || nameUpper.includes('SPRAY PAINT') || nameUpper.includes('STENCIL')) {
+            return 0.5;
+        }
+
+        return 1.0;
+    }
+
+    function updateAllFormulaQuantities() {
+        $('#materials_tbody tr.mat-row').each(function() {
+            const code = $(this).find('.m-partcode').val();
+            const name = $(this).find('.m-name').val();
+            if (code || name) {
+                const autoQty = calculateConsumableFormulaQty(code, name);
+                if (autoQty > 0 && $(this).data('has-formula')) {
+                    $(this).find('.m-qty').val(autoQty);
+                }
+            }
+        });
+    }
+
+    function renderNails(nails) {
+        const tbody = $('#nails_tbody');
+        tbody.empty();
+        if (!nails || nails.length === 0) return;
+
+        nails.forEach((n, idx) => {
+            const codeDisplay = n.code || '';
+            const nameDisplay = n.name || '';
+
+            tbody.append(`
+                <tr class="nail-row" data-code="${codeDisplay}">
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 3px;">
+                            <input type="text" class="matrix-input partcode-input n-partcode text-center font-weight-bold" value="${codeDisplay}" placeholder="Part Code" style="border-color: #fca5a5; background: #fef2f2; color: #991b1b; font-size: 0.8rem; height: 26px; border-radius: 4px;">
+                            <button type="button" class="btn btn-sm btn-light border btn-nail-search" title="Search Warehouse Nail Code" style="height: 26px; padding: 0 6px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-danger" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <input type="hidden" class="n-stock-purchase-id" value="${n.stock_purchase_id || ''}">
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="matrix-input text-left font-weight-bold n-name" value="${nameDisplay}" placeholder="Nail description" style="text-align: left !important; padding-left: 0.4rem;">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input n-qty font-weight-bold text-center" value="${n.qty !== undefined && n.qty !== null && n.qty !== '' ? n.qty : 1}" placeholder="0">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input n-rate text-right font-weight-bold" value="${n.rate !== undefined && n.rate !== null && n.rate !== 0 ? n.rate : ''}" placeholder="0">
+                    </td>
+                    <td class="text-center p-0">
+                        <button type="button" class="btn btn-xs text-danger btn-del-nail-row" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    function renderCustomBreakdown(items) {
+        const container = $('#custom_breakdown_items_container');
+        container.empty();
+        if (!items || items.length === 0) return;
+        items.forEach(it => {
+            const lbl = it.label || 'Other Charges';
+            const amt = it.amount || 0;
+            const rowHtml = `
+                <div class="summary-line custom-breakdown-row" style="margin-bottom: 4px;">
+                    <div style="flex: 1; padding-right: 6px;">
+                        <input type="text" class="matrix-input text-left font-weight-bold custom-breakdown-label" value="${lbl}" placeholder="Charge description" style="padding-left: 0.35rem; font-size: 0.8rem; height: 26px;">
+                    </div>
+                    <div style="width: 95px; display: flex; align-items: center; gap: 4px;">
+                        <input type="number" step="any" class="matrix-input text-right font-weight-bold custom-breakdown-val" value="${amt > 0 ? amt : ''}" placeholder="0" style="font-size: 0.85rem; height: 26px;">
+                        <button type="button" class="btn btn-xs text-danger btn-del-breakdown-item p-0" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.append(rowHtml);
+        });
+    }
+
+    function renderMaterials(materials) {
+        const tbody = $('#materials_tbody');
+        tbody.empty();
+        if (!materials || materials.length === 0) return;
+
+        materials.forEach((m, idx) => {
+            const codeDisplay = m.code || '';
+            const nameDisplay = m.name || '';
+
+            tbody.append(`
+                <tr class="mat-row" data-code="${codeDisplay}">
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 3px;">
+                            <input type="text" class="matrix-input partcode-input m-partcode text-center font-weight-bold" value="${codeDisplay}" placeholder="Part Code" style="border-color: #93c5fd; background: #eff6ff; color: #1e40af; font-size: 0.8rem; height: 26px; border-radius: 4px;">
+                            <button type="button" class="btn btn-sm btn-light border btn-mat-search" title="Search Warehouse Consumable Code" style="height: 26px; padding: 0 6px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-primary" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <input type="hidden" class="m-stock-purchase-id" value="${m.stock_purchase_id || ''}">
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="matrix-input text-left font-weight-bold m-name" value="${nameDisplay}" placeholder="Material description" style="text-align: left !important; padding-left: 0.4rem;">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input m-qty font-weight-bold text-center" value="${m.qty !== undefined && m.qty !== null && m.qty !== '' ? m.qty : 1}" placeholder="0">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input m-rate text-right font-weight-bold" value="${m.rate !== undefined && m.rate !== null && m.rate !== 0 ? m.rate : ''}" placeholder="0">
+                    </td>
+                    <td class="text-center p-0">
+                        <button type="button" class="btn btn-xs text-danger btn-del-mat-row" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+
+    // Core Live Calculation Formula
+    function recalculateMatrix() {
+        let totalWoodCFT = 0;
+        let totalWoodCost = 0;
+        let totalPlySQFT = 0;
+        let totalPlyCost = 0;
+
+        // 1. Structure rows
+        $('#structure_tbody tr.struct-row').each(function() {
+            const mat = $(this).find('.f-mat').val();
+            const l = parseFloat($(this).find('.f-l').val()) || 0;
+            const w = parseFloat($(this).find('.f-w').val()) || 0;
+            const h = parseFloat($(this).find('.f-h').val()) || 0;
+            const nos = parseFloat($(this).find('.f-nos').val()) || 0;
+            const rate = parseFloat($(this).find('.f-rate').val()) || 0;
+
+            let calcVal = 0;
+            let lineTotal = 0;
+
+            if (mat === 'wood') {
+                calcVal = (l * w * h * nos) / 144.0;
+                lineTotal = calcVal * rate;
+                totalWoodCFT += calcVal;
+                totalWoodCost += lineTotal;
+                $(this).find('.f-calc-badge')
+                    .removeClass('badge badge-light badge-info badge-warning f-calc-ply')
+                    .addClass('f-calc-wood')
+                    .text(calcVal.toFixed(3) + ' CFT');
+            } else {
+                calcVal = l * w * nos;
+                lineTotal = calcVal * rate;
+                totalPlySQFT += calcVal;
+                totalPlyCost += lineTotal;
+                $(this).find('.f-calc-badge')
+                    .removeClass('badge badge-light badge-info badge-warning f-calc-wood')
+                    .addClass('f-calc-ply')
+                    .text(calcVal.toFixed(2) + ' SQFT');
+            }
+
+            $(this).find('.f-line-total').text('₹' + lineTotal.toFixed(2));
+        });
+
+        $('#wood_total_cft_cell').html(`<span style="color: #0f172a; font-weight: 800;">${totalWoodCFT.toFixed(3)} CFT</span>`);
+        $('#wood_total_cost_cell').text('₹' + totalWoodCost.toFixed(2));
+
+        // 2. Direct Plywood values from line items (no extra wastage markup applied)
+        $('#ply_net_sqft').val(totalPlySQFT.toFixed(2));
+        $('#ply_total_sqft').val(totalPlySQFT.toFixed(2));
+        $('#ply_total_cost_display').text('₹' + totalPlyCost.toFixed(2));
+
+        // 3. Nails Total
+        let totalNailCost = 0;
+        $('#nails_tbody tr.nail-row').each(function() {
+            const qty = parseFloat($(this).find('.n-qty').val()) || 0;
+            const rate = parseFloat($(this).find('.n-rate').val()) || 0;
+            totalNailCost += (qty * rate);
+        });
+        $('#badge_nail_total').text('₹' + totalNailCost.toFixed(2));
+
+        // 4. Materials Total
+        let totalMaterialCost = 0;
+        $('#materials_tbody tr.mat-row').each(function() {
+            const qty = parseFloat($(this).find('.m-qty').val()) || 0;
+            const rate = parseFloat($(this).find('.m-rate').val()) || 0;
+            totalMaterialCost += (qty * rate);
+        });
+        $('#badge_materials_total').text('₹' + totalMaterialCost.toFixed(2));
+
+        // 5. HT Cost auto-update (if not manually overridden)
+        const htCost = totalWoodCFT * currentHTRate;
+        if (!$('#sum_ht_input').data('manual')) {
+            $('#sum_ht_input').val(Math.round(htCost));
+        }
+        const currentHT = parseFloat($('#sum_ht_input').val()) || 0;
+
+        // 6. Summary Totals (including In-House Labour, On-Site Labour, Crane, Fumigation)
+        const inhouseLabour = parseFloat($('#sum_labour_input').val()) || 0;
+        const onsiteLabour = parseFloat($('#sum_onsite_labour_input').val()) || 0;
+        const transportCost = parseFloat($('#sum_transport_input').val()) || 0;
+        const craneCost = parseFloat($('#sum_crane_input').val()) || 0;
+        const fumigationCost = parseFloat($('#sum_fumigation_input').val()) || 0;
+        const marginPct = parseFloat($('#sum_margin_pct').val()) || 20.0;
+
+        let customBreakdownTotal = 0;
+        $('#custom_breakdown_items_container .custom-breakdown-row').each(function() {
+            const amt = parseFloat($(this).find('.custom-breakdown-val').val()) || 0;
+            customBreakdownTotal += amt;
+        });
+
+        $('#sum_wood_cost').text('₹' + totalWoodCost.toFixed(2));
+        $('#sum_ply_cost').text('₹' + totalPlyCost.toFixed(2));
+        $('#sum_nail_cost').text('₹' + totalNailCost.toFixed(2));
+        $('#sum_material_cost').text('₹' + totalMaterialCost.toFixed(2));
+
+        const totalCostWOM = totalWoodCost + totalPlyCost + totalNailCost + totalMaterialCost + 
+                             inhouseLabour + onsiteLabour + transportCost + currentHT + craneCost + fumigationCost + customBreakdownTotal;
+        const marginVal = totalCostWOM * (marginPct / 100.0);
+        const totalCostWM = totalCostWOM + marginVal;
+
+        const unitCostWM = totalCostWM;
+        const jobQty = parseInt($('#matrix_requirement_select option:selected').data('qty')) || 1;
+        const totalOrderPrice = unitCostWM * jobQty;
+
+        $('#sum_cost_wom').text('₹' + totalCostWOM.toFixed(2));
+        $('#sum_margin_val').text('₹' + marginVal.toFixed(2));
+        $('#badge_job_qty').text('Box Qty: ' + jobQty);
+        $('#grand_total_display').text('₹' + Math.round(unitCostWM).toLocaleString('en-IN') + ' / box');
+        $('#per_box_cost_display').html('Total Order Price (' + jobQty + ' Boxes): <strong>₹' + Math.round(totalOrderPrice).toLocaleString('en-IN') + '</strong>');
+    }
+
+    // Synchronize Job Size -> Box ID -> OD with Clearance
+    function syncDimensions() {
+        const job_l = parseFloat($('#job_size_l').val()) || 0;
+        const job_w = parseFloat($('#job_size_w').val()) || 0;
+        const job_h = parseFloat($('#job_size_h').val()) || 0;
+        const plyClr = parseFloat($('#box_clearance').val()) || 5.0;
+
+        let id_l = parseFloat($('#box_id_l').val()) || 0;
+        let id_w = parseFloat($('#box_id_w').val()) || 0;
+        let id_h = parseFloat($('#box_id_h').val()) || 0;
+
+        // If user hasn't manually edited Box ID, compute Box ID = Job Size + 2 * Ply Clearance
+        if (!$('#box_id_l').data('user-edited') && job_l > 0) {
+            id_l = job_l + (2 * plyClr);
+            id_w = job_w + (2 * plyClr);
+            id_h = job_h + (2 * plyClr);
+            $('#box_id_l').val(id_l);
+            $('#box_id_w').val(id_w);
+            $('#box_id_h').val(id_h);
+        }
+
+        // Standard clearance to OD: +7cm walls, +20cm base height (or standard +7cm)
+        const od_l = id_l > 0 ? (id_l + 7.0) : 0;
+        const od_w = id_w > 0 ? (id_w + 7.0) : 0;
+        const od_h = id_h > 0 ? (id_h + 20.0) : 0;
+
+        const in_l = (od_l / 2.54).toFixed(1);
+        const in_w = (od_w / 2.54).toFixed(1);
+        const in_h = (od_h / 2.54).toFixed(1);
+
+        const ft_l = (od_l / 30.48).toFixed(2);
+        const ft_w = (od_w / 30.48).toFixed(2);
+        const ft_h = (od_h / 30.48).toFixed(2);
+
+        $('#badge_od_cm').text(`OD: ${od_l.toFixed(1)} × ${od_w.toFixed(1)} × ${od_h.toFixed(1)} cm`);
+        if (typeof updateAllFormulaQuantities === 'function') updateAllFormulaQuantities();
+        $('#badge_od_in').text(`${in_l} × ${in_w} × ${in_h} in`);
+        $('#badge_od_ft').text(`${ft_l} × ${ft_w} × ${ft_h} ft`);
+
+        return { od_l, od_w, od_h, ft_l, ft_w, ft_h };
+    }
+
+    // Modal Search & Selection Implementation
+    function runModalSearch() {
+        const query = ($('#modal_pc_search_input').val() || '').trim();
+        const filterType = $('#modal_pc_type_filter label.active').data('type') || '';
+        const statusEl = $('#modal_pc_status');
+        const tbody = $('#modal_pc_results_tbody');
+
+        statusEl.text('Searching warehouse catalog...');
+        tbody.html('<tr><td colspan="7" class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i>Loading part codes...</td></tr>');
+
+        fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(query)}&type=${encodeURIComponent(filterType)}&limit=40`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && data.results && data.results.length > 0) {
+                    statusEl.text(`Found ${data.results.length} items`);
+                    let rows = '';
+                    data.results.forEach(item => {
+                        const dims = (item.length > 0 || item.width > 0 || item.height > 0) ? `${item.length} × ${item.width} × ${item.height}` : '-';
+                        const grnBadge = item.grn_number ? `<span class="badge badge-success px-1" style="font-size:0.7rem;">${item.grn_number}</span>` : '-';
+                        const rateDisplay = item.batch_rate > 0 ? `₹${item.batch_rate.toFixed(2)}` : '-';
+                        rows += `
+                            <tr class="modal-pc-row" style="cursor: pointer;"
+                                data-code="${item.code || ''}"
+                                data-desc="${item.description || item.stock_type || ''}"
+                                data-grn="${item.grn_number || ''}"
+                                data-sp-id="${item.stock_purchase_id || ''}"
+                                data-rate="${item.batch_rate || ''}"
+                                data-l="${item.length || 0}"
+                                data-w="${item.width || 0}"
+                                data-h="${item.height || 0}"
+                                data-is-wood="${item.is_wood}"
+                                data-is-ply="${item.is_plywood}">
+                                <td class="font-weight-bold text-success">${item.code || '-'}</td>
+                                <td><small class="text-dark font-weight-bold">${item.description || item.stock_type || '-'}</small></td>
+                                <td><small class="text-muted">${item.stock_type || '-'}</small></td>
+                                <td class="text-center">${dims}</td>
+                                <td class="text-center">${grnBadge}</td>
+                                <td class="text-right font-weight-bold">${rateDisplay}</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-xs btn-outline-success font-weight-bold px-2 py-0 select-modal-pc-btn">Select</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.html(rows);
+                } else {
+                    statusEl.text('No results');
+                    tbody.html('<tr><td colspan="7" class="text-center py-3 text-muted">No warehouse part codes found.</td></tr>');
+                }
+            })
+            .catch(err => {
+                statusEl.text('Search failed');
+                tbody.html('<tr><td colspan="7" class="text-center py-3 text-danger">Failed to load part codes.</td></tr>');
+            });
+    }
+
+    // Modal Row Selection
+    $(document).on('click', '.modal-pc-row, .select-modal-pc-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const row = $(this).closest('tr.modal-pc-row');
+        const code = (row.attr('data-code') || row.data('code') || row.find('td').first().text() || '').trim();
+        const desc = (row.attr('data-desc') || row.data('desc') || '').trim();
+        const spId = row.attr('data-sp-id') || row.data('sp-id') || '';
+        const grn = row.attr('data-grn') || row.data('grn') || '';
+        const rate = parseFloat(row.attr('data-rate') || row.data('rate')) || 0;
+        const l = parseFloat(row.attr('data-l') || row.data('l')) || 0;
+        const w = parseFloat(row.attr('data-w') || row.data('w')) || 0;
+        const h = parseFloat(row.attr('data-h') || row.data('h')) || 0;
+        const isWood = row.data('is-wood') === true || row.data('is-wood') === 'true' || row.attr('data-is-wood') === 'true';
+        const isPly = row.data('is-ply') === true || row.data('is-ply') === 'true' || row.attr('data-is-ply') === 'true';
+
+        if (activeRowTarget && activeTargetType === 'struct') {
+            activeRowTarget.find('.f-partcode').val(code);
+            activeRowTarget.find('.f-grn').val(grn);
+            activeRowTarget.find('.f-stock-purchase-id').val(spId);
+            activeRowTarget.data('custom-pc', true);
+
+            if (isWood) {
+                activeRowTarget.find('.f-mat').val('wood');
+                if (rate > 0) activeRowTarget.find('.f-rate').val(rate);
+            } else if (isPly) {
+                activeRowTarget.find('.f-mat').val('plywood');
+                if (rate > 0) activeRowTarget.find('.f-rate').val(rate);
+            }
+            if (h > 0) activeRowTarget.find('.f-h').val(h);
+            if (w > 0) activeRowTarget.find('.f-w').val(w);
+            if (l > 0) activeRowTarget.find('.f-l').val(l);
+        } else if (activeRowTarget && activeTargetType === 'nail') {
+            activeRowTarget.find('.n-partcode').val(code);
+            activeRowTarget.find('.n-stock-purchase-id').val(spId);
+            if (desc) {
+                activeRowTarget.find('.n-name').val(desc);
+            }
+            if (rate > 0) activeRowTarget.find('.n-rate').val(rate);
+        } else if (activeRowTarget && activeTargetType === 'mat') {
+            activeRowTarget.find('.m-partcode').val(code);
+            activeRowTarget.find('.m-stock-purchase-id').val(spId);
+            if (desc) {
+                activeRowTarget.find('.m-name').val(desc);
+            }
+            if (rate > 0) activeRowTarget.find('.m-rate').val(rate);
+
+            // Auto-calculate quantity from live Box OD formula
+            const autoQty = calculateConsumableFormulaQty(code, desc);
+            if (autoQty > 0) {
+                activeRowTarget.find('.m-qty').val(autoQty);
+                activeRowTarget.data('has-formula', true);
+                activeRowTarget.data('formula-code', code);
+            }
+        }
+
+        $('#matrixPartCodeModal').modal('hide');
+        recalculateMatrix();
+    });
+
+    // modalSearchTimer already declared in top scope
+    $(document).on('input', '#modal_pc_search_input', function() {
+        clearTimeout(modalSearchTimer);
+        modalSearchTimer = setTimeout(runModalSearch, 200);
+    });
+    $(document).on('change', '#modal_pc_type_filter input', function() {
+        runModalSearch();
+    });
+    $(document).on('click', '#modal_pc_clear_btn', function() {
+        $('#modal_pc_search_input').val('');
+        runModalSearch();
+    });
+
+    $(document).on('change blur', '.m-partcode', function() {
+        const row = $(this).closest('tr');
+        const code = $(this).val().trim();
+        if (code) {
+            fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(code)}&type=consumables&limit=5`)
+                .then(res => res.json())
+                .then(data => {
+                    let desc = '';
+                    let rate = 0;
+                    let spId = '';
+                    if (data.status === 'success' && data.results && data.results.length > 0) {
+                        const exact = data.results.find(r => r.code.toUpperCase() === code.toUpperCase()) || data.results[0];
+                        desc = exact.description || exact.stock_type || '';
+                        rate = exact.batch_rate || 0;
+                        spId = exact.stock_purchase_id || '';
+                        if (desc) row.find('.m-name').val(desc);
+                        if (rate > 0 && (!row.find('.m-rate').val() || parseFloat(row.find('.m-rate').val()) === 0)) {
+                            row.find('.m-rate').val(rate);
+                        }
+                        if (spId) row.find('.m-stock-purchase-id').val(spId);
+                    }
+                    const autoQty = calculateConsumableFormulaQty(code, desc || row.find('.m-name').val());
+                    if (autoQty > 0) {
+                        row.find('.m-qty').val(autoQty);
+                        row.data('has-formula', true);
+                        row.data('formula-code', code);
+                    }
+                    recalculateMatrix();
+                })
+                .catch(() => {
+                    const autoQty = calculateConsumableFormulaQty(code, row.find('.m-name').val());
+                    if (autoQty > 0) {
+                        row.find('.m-qty').val(autoQty);
+                    }
+                    recalculateMatrix();
+                });
+        }
+    });
+
+    $(document).on('change blur', '.n-partcode', function() {
+        const row = $(this).closest('tr');
+        const code = $(this).val().trim();
+        if (code) {
+            fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(code)}&type=nails&limit=5`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.results && data.results.length > 0) {
+                        const exact = data.results.find(r => r.code.toUpperCase() === code.toUpperCase()) || data.results[0];
+                        if (exact.description) row.find('.n-name').val(exact.description);
+                        if (exact.batch_rate > 0 && (!row.find('.n-rate').val() || parseFloat(row.find('.n-rate').val()) === 0)) {
+                            row.find('.n-rate').val(exact.batch_rate);
+                        }
+                        if (exact.stock_purchase_id) row.find('.n-stock-purchase-id').val(exact.stock_purchase_id);
+                        recalculateMatrix();
+                    }
+                })
+                .catch(() => {});
+        }
+    });
+
+    // Event Handlers
+    $(document).ready(function() {
+        // Starting/Create time: nails & consumables tables start BLANK
+        if (initialSavedNails && initialSavedNails.length > 0) {
+            renderNails(initialSavedNails);
+        } else {
+            renderNails([]);
+        }
+
+        if (initialSavedMaterials && initialSavedMaterials.length > 0) {
+            renderMaterials(initialSavedMaterials);
+        } else {
+            renderMaterials([]);
+        }
+
+        if (initialSavedCustomBreakdown && initialSavedCustomBreakdown.length > 0) {
+            renderCustomBreakdown(initialSavedCustomBreakdown);
+        } else {
+            renderCustomBreakdown([]);
+        }
+
+        // Filter: Show only active/quoted boxes
+        $('#chk_quoted_only').on('change', function() {
+            const onlyQuoted = $(this).is(':checked');
+            $('#matrix_requirement_select option').each(function() {
+                const isQuoted = $(this).data('quoted') === true || $(this).data('quoted') === 'true';
+                if (onlyQuoted && !isQuoted) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                }
+            });
+            if ($('#matrix_requirement_select option:selected').is(':hidden')) {
+                $('#matrix_requirement_select option:visible:first').prop('selected', true);
+            }
+            $('#matrix_requirement_select').trigger('change');
+        });
+
+        function renderEmptyMatrixState() {
+            $('#box_id_l').val('');
+            $('#box_id_w').val('');
+            $('#box_id_h').val('');
+            $('#box_clearance').val('2');
+            $('#od_cm_display').text('-- cm');
+            $('#od_in_display').text('-- in');
+            $('#od_ft_display').text('-- ft');
+
+            // Render the standard structural template (BASE, LENGTH, WIDTH, TOP, SUPPORTS)
+            // with empty part codes, empty dimensions, and empty quantities!
+            renderStructureRows([]);
+            renderNails([]);
+            renderMaterials([]);
+            renderCustomBreakdown([]);
+
+            $('.f-nail-qty').val('0');
+            $('.f-cons-qty').val('0');
+            $('#total_cost_display, #total_wood_cost, #total_ply_cost, #total_nail_cost, #total_hardware_cost, #grand_total_display').text('₹0.00');
+            $('#per_box_cost_display').text('Unit Cost: ₹0.00 / box');
+            $('#badge_job_qty').text('Box Qty: 0');
+            $('#ply_total_sqft, #total_wood_cft').text('0.00');
+        }
+
+        // When selected box/job requirement changes
+        $('#matrix_requirement_select').on('change', function() {
+            const reqId = $(this).val();
+            if (!reqId) {
+                renderEmptyMatrixState();
+                return;
+            }
+
+            // Sync URL parameter in browser address bar so each box has its distinct item URL
+            try {
+                const newUrl = `${window.location.pathname}?summary_id={{ summary_id }}&requirement_id=${reqId}`;
+                window.history.replaceState({ reqId: reqId }, '', newUrl);
+            } catch(e) {}
+            const opt = $(this).find('option:selected');
+            const l = parseFloat(opt.data('l')) || 0;
+            const w = parseFloat(opt.data('w')) || 0;
+            const h = parseFloat(opt.data('h')) || 0;
+            const clr = parseFloat(opt.data('clearance')) || 2.0;
+
+            $('#job_size_l').val(l);
+            $('#job_size_w').val(w);
+            $('#job_size_h').val(h);
+            const plyClr = parseFloat(opt.data('ply-thick')) || 5.0;
+            $('#box_clearance').val(plyClr);
+            $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
+
+            const dims = syncDimensions();
+            const tmpl = $('#matrix_template_type').val();
+
+            // Check if we have preloaded items for this requirement
+            if (String(reqId) === String('{{ selected_requirement_id }}') && initialSavedStruct && initialSavedStruct.length > 0) {
+                renderStructureRows(initialSavedStruct);
+
+                if (initialSavedNails && initialSavedNails.length > 0) {
+                    renderNails(initialSavedNails);
+                } else {
+                    renderNails([]);
+                }
+
+                if (initialSavedMaterials && initialSavedMaterials.length > 0) {
+                    renderMaterials(initialSavedMaterials);
+                } else {
+                    renderMaterials([]);
+                }
+                recalculateMatrix();
+            } else if (String(reqId) === String('{{ selected_requirement_id }}') && (!initialSavedStruct || initialSavedStruct.length === 0)) {
+                renderSectionHeadersOnly();
+                renderNails([]);
+                renderMaterials([]);
+                renderCustomBreakdown([]);
+                recalculateMatrix();
+            } else {
+                // Fetch saved rows from load_quotation_matrix endpoint
+                fetch(`{% url 'load_quotation_matrix' %}?assessment_id={{ na_assessment_num_id }}&requirement_id=${reqId}&summary_id={{ summary_id }}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.existing_rows && data.existing_rows.length > 0) {
+                            renderStructureRows(data.existing_rows);
+
+                            if (data.saved_nails && data.saved_nails.length > 0) {
+                                renderNails(data.saved_nails);
+                            } else {
+                                renderNails([]);
+                            }
+
+                            if (data.saved_materials && data.saved_materials.length > 0) {
+                                renderMaterials(data.saved_materials);
+                            } else {
+                                renderMaterials([]);
+                            }
+
+                            if (data.saved_custom_breakdown && data.saved_custom_breakdown.length > 0) {
+                                renderCustomBreakdown(data.saved_custom_breakdown);
+                            } else {
+                                renderCustomBreakdown([]);
+                            }
+                        } else {
+                            renderSectionHeadersOnly();
+                            renderNails([]);
+                            renderMaterials([]);
+                            renderCustomBreakdown([]);
+                        }
+                        recalculateMatrix();
+                    })
+                    .catch(() => {
+                        renderSectionHeadersOnly();
+                        renderNails([]);
+                        renderMaterials([]);
+                        renderCustomBreakdown([]);
+                        recalculateMatrix();
+                    });
+            }
+        });
+
+        // Template or Dimension Changes
+        $('#matrix_template_type, #btn_reload_template').on('change click', function() {
+            const reqId = $('#matrix_requirement_select').val();
+            if (!reqId) {
+                alert('Please select a Box / Job Item first.');
+                return;
+            }
+            const dims = syncDimensions();
+            const tmpl = $('#matrix_template_type').val();
+            const items = generateStructureTemplate(tmpl, dims.ft_l, dims.ft_w, dims.ft_h);
+            renderStructureRows(items);
+        });
+
+        $('#job_size_l, #job_size_w, #job_size_h, #box_clearance').on('input', function() {
+            $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
+            syncDimensions();
+        });
+
+        $('#box_id_l, #box_id_w, #box_id_h').on('input', function() {
+            $(this).data('user-edited', true);
+            syncDimensions();
+        });
+
+        $('#job_size_l, #job_size_w, #job_size_h').on('change', function() {
+            const dims = syncDimensions();
+            $('#structure_tbody tr.struct-row').each(function() {
+                const name = $(this).find('.f-name').val();
+                if (name.includes('LENGTH PANEL') || name.includes('LIFTING RUNNER')) {
+                    $(this).find('.f-l').val(dims.ft_l);
+                } else if (name.includes('WIDTH PANEL') || name.includes('BASE RUNNER')) {
+                    $(this).find('.f-l').val(dims.ft_w);
+                } else if (name.includes('TOP PANEL')) {
+                    $(this).find('.f-l').val(dims.ft_l);
+                    $(this).find('.f-w').val(dims.ft_w);
+                }
+                if (!$(this).data('custom-pc')) {
+                    const mat = $(this).find('.f-mat').val();
+                    const l = $(this).find('.f-l').val();
+                    const w = $(this).find('.f-w').val();
+                    const h = $(this).find('.f-h').val();
+                    $(this).find('.f-partcode').val(derivePartCode(mat, h, w, l));
+                }
+            });
+            recalculateMatrix();
+        });
+
+        // Live input updates
+        $(document).on('input change', '.matrix-input', function() {
+            if ($(this).hasClass('f-mat') || $(this).hasClass('f-h') || $(this).hasClass('f-w') || $(this).hasClass('f-l')) {
+                const row = $(this).closest('tr');
+                if (!row.data('custom-pc')) {
+                    const mat = row.find('.f-mat').val();
+                    const l = row.find('.f-l').val();
+                    const w = row.find('.f-w').val();
+                    const h = row.find('.f-h').val();
+                    row.find('.f-partcode').val(derivePartCode(mat, h, w, l));
+                }
+            }
+            recalculateMatrix();
+        });
+
+        $('#sum_ht_input').on('input', function() {
+            $(this).data('manual', true);
+        });
+
+        // Delete structure row
+        $(document).on('click', '.btn-del-row', function() {
+            $(this).closest('tr').remove();
+            recalculateMatrix();
+        });
+
+        // Add custom component row
+        $('#btn_add_structure_row').on('click', function() {
+            const newRow = $(`
+                <tr class="struct-row" data-section="BASE">
+                    <td><input type="text" class="matrix-input text-left font-weight-bold f-name" value="" placeholder="Component description"></td>
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                            <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
+                            </button>
+                            <input type="hidden" class="f-stock-purchase-id" value="">
+                            <input type="hidden" class="f-grn" value="">
+                        </div>
+                    </td>
+                    <td>
+                        <select class="matrix-input f-mat">
+                            <option value="wood" selected>Wood</option>
+                            <option value="plywood">Plywood</option>
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="matrix-input f-l" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="0.01" class="matrix-input f-w" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="0.1" class="matrix-input f-h" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="1" class="matrix-input f-nos font-weight-bold" value="1" placeholder="1"></td>
+                    <td><span class="badge badge-warning w-100 py-1 font-weight-bold f-calc-badge" style="font-size: 0.8rem;">0.000 CFT</span></td>
+                    <td><input type="number" step="any" class="matrix-input f-rate" value="" placeholder="0"></td>
+                    <td class="text-right font-weight-bold f-line-total text-dark">₹0.00</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-xs text-danger btn-del-row" style="background: none; border: none;" title="Delete row">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+            $('#structure_tbody').append(newRow);
+            recalculateMatrix();
+        });
+
+        // ==========================================
+        // PART CODE & GRN SEARCH ENGINE
+        // ==========================================
+        // Uses shared activeRowTarget, activeTargetType declared in outer IIFE scope
+
+        // 1. Live Typeahead on Table Part Code Input
+        $(document).on('input', '.f-partcode', function() {
+            const input = $(this);
+            const row = input.closest('tr');
+            row.data('custom-pc', true);
+            const query = input.val().trim();
+            const suggestionsBox = input.closest('.partcode-wrapper').find('.pc-suggestions');
+
+            clearTimeout(typeaheadTimer);
+            if (query.length < 1) {
+                suggestionsBox.hide().empty();
+                return;
+            }
+
+            typeaheadTimer = setTimeout(function() {
+                const mat = row.find('.f-mat').val() || '';
+                fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(query)}&type=${encodeURIComponent(mat)}&limit=12`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.results && data.results.length > 0) {
+                            let html = '';
+                            data.results.forEach(item => {
+                                const dimsStr = (item.length > 0 || item.width > 0 || item.height > 0) ? `${item.length}×${item.width}×${item.height}` : '';
+                                const grnTag = item.grn_number ? `<span class="badge badge-primary px-1 mr-1" style="font-size:0.68rem;">GRN: ${item.grn_number}</span>` : '';
+                                html += `
+                                    <a href="javascript:void(0);" class="dropdown-item px-2 py-1 text-wrap d-flex justify-content-between align-items-center border-bottom pc-suggest-item"
+                                       data-code="${item.code}"
+                                       data-grn="${item.grn_number || ''}"
+                                       data-sp-id="${item.stock_purchase_id || ''}"
+                                       data-rate="${item.batch_rate || ''}"
+                                       data-is-wood="${item.is_wood}"
+                                       data-is-ply="${item.is_plywood}"
+                                       data-l="${item.length}"
+                                       data-w="${item.width}"
+                                       data-h="${item.height}">
+                                        <div>
+                                            <strong class="text-success">${item.code}</strong> ${grnTag}
+                                            <div class="text-muted small" style="font-size: 0.72rem; line-height: 1.1;">${item.description || item.stock_type}</div>
+                                        </div>
+                                        <div class="text-right small text-muted font-weight-bold" style="font-size: 0.72rem;">
+                                            ${dimsStr}
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                            suggestionsBox.html(html).show();
+                        } else {
+                            suggestionsBox.html('<div class="p-2 text-muted small text-center">No warehouse code found</div>').show();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Typeahead search error:', err);
+                    });
+            }, 200);
+        });
+
+        // 2. Click on Typeahead Suggestion Item
+        $(document).on('click', '.pc-suggest-item', function(e) {
+            e.preventDefault();
+            const item = $(this);
+            const wrapper = item.closest('.partcode-wrapper');
+            const row = item.closest('tr');
+            const code = item.data('code');
+            const grn = item.data('grn') || '';
+            const spId = item.data('sp-id') || '';
+            const batchRate = parseFloat(item.data('rate')) || 0;
+            const isWood = item.data('is-wood') === true || item.data('is-wood') === 'true';
+            const isPly = item.data('is-ply') === true || item.data('is-ply') === 'true';
+            const l = parseFloat(item.data('l')) || 0;
+            const w = parseFloat(item.data('w')) || 0;
+            const h = parseFloat(item.data('h')) || 0;
+
+            wrapper.find('.f-partcode').val(code);
+            row.data('custom-pc', true);
+
+            // Update GRN info
+            row.find('.f-grn').val(grn);
+            row.find('.f-stock-purchase-id').val(spId);
+            row.find('.f-grn-badge').text(grn || '-');
+
+            if (isWood) {
+                row.find('.f-mat').val('wood');
+                if (batchRate > 0) {
+                    row.find('.f-rate').val(batchRate);
+                } else if (parseFloat(row.find('.f-rate').val()) === currentPlyRate) {
+                    row.find('.f-rate').val(currentWoodRate);
+                }
+            } else if (isPly) {
+                row.find('.f-mat').val('plywood');
+                if (batchRate > 0) {
+                    row.find('.f-rate').val(batchRate);
+                } else if (parseFloat(row.find('.f-rate').val()) === currentWoodRate) {
+                    row.find('.f-rate').val(currentPlyRate);
+                }
+            }
+
+            if (h > 0) row.find('.f-h').val(h);
+            if (w > 0) row.find('.f-w').val(w);
+            if (l > 0) row.find('.f-l').val(l);
+
+            wrapper.find('.pc-suggestions').hide().empty();
+            recalculateMatrix();
+        });
+
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.partcode-wrapper').length) {
+                $('.pc-suggestions').hide().empty();
+            }
+        });
+
+        // 3. Open Search Modal Handlers
+        $(document).on('click', '.btn-search-pc, .f-grn-badge', function() {
+            activeRowTarget = $(this).closest('tr');
+            activeTargetType = 'struct';
+            const compName = activeRowTarget.find('.f-name').val() || 'Component';
+            const currPC = activeRowTarget.find('.f-partcode').val() || '';
+            const currMat = activeRowTarget.find('.f-mat').val() || 'wood';
+
+            $('#modal_target_component_badge').text('Target: ' + compName);
+            $('#modal_pc_search_input').val(currPC);
+
+            $('#modal_pc_type_filter label').removeClass('active');
+            const targetFilter = $('#modal_pc_type_filter label[data-type="' + currMat + '"]');
+            if (targetFilter.length) {
+                targetFilter.addClass('active').find('input').prop('checked', true);
+            } else {
+                $('#modal_pc_type_filter label[data-type=""]').addClass('active').find('input').prop('checked', true);
+            }
+
+            $('#matrixPartCodeModal').modal('show');
+            setTimeout(function() {
+                $('#modal_pc_search_input').focus().select();
+                runModalSearch();
+            }, 250);
+        });
+
+        $(document).on('click', '.btn-nail-search', function() {
+            activeRowTarget = $(this).closest('tr');
+            activeTargetType = 'nail';
+            const name = activeRowTarget.find('.n-name').val() || 'Nail';
+            const code = activeRowTarget.find('.n-partcode').val() || '';
+
+            $('#modal_target_component_badge').text('Target: ' + name);
+            $('#modal_pc_search_input').val(code);
+
+            $('#modal_pc_type_filter label').removeClass('active');
+            $('#modal_pc_type_filter label[data-type="nails"]').addClass('active').find('input').prop('checked', true);
+
+            $('#matrixPartCodeModal').modal('show');
+            setTimeout(function() {
+                $('#modal_pc_search_input').focus().select();
+                runModalSearch();
+            }, 250);
+        });
+
+        $(document).on('click', '.btn-mat-search', function() {
+            activeRowTarget = $(this).closest('tr');
+            activeTargetType = 'mat';
+            const name = activeRowTarget.find('.m-name').val() || 'Consumable';
+            const code = activeRowTarget.find('.m-partcode').val() || '';
+
+            $('#modal_target_component_badge').text('Target: ' + name);
+            $('#modal_pc_search_input').val(code);
+
+            $('#modal_pc_type_filter label').removeClass('active');
+            $('#modal_pc_type_filter label[data-type="consumables"]').addClass('active').find('input').prop('checked', true);
+
+            $('#matrixPartCodeModal').modal('show');
+            setTimeout(function() {
+                $('#modal_pc_search_input').focus().select();
+                runModalSearch();
+            }, 250);
+        });
+
+        // Add New Line Item in Consumables
+        $(document).on('click', '#btn_add_material_row, .btn_add_material_row', function() {
+            const tbody = $('#materials_tbody');
+            const newRow = $(`
+                <tr class="mat-row" data-code="">
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 3px;">
+                            <input type="text" class="matrix-input partcode-input m-partcode text-center font-weight-bold" value="" placeholder="Part Code" style="border-color: #93c5fd; background: #eff6ff; color: #1e40af; font-size: 0.8rem; height: 26px; border-radius: 4px;">
+                            <button type="button" class="btn btn-sm btn-light border btn-mat-search" title="Search Warehouse Consumable Code" style="height: 26px; padding: 0 6px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-primary" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <input type="hidden" class="m-stock-purchase-id" value="">
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="matrix-input text-left font-weight-bold m-name" value="" placeholder="Material description" style="text-align: left !important; padding-left: 0.4rem;">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input m-qty font-weight-bold text-center" value="1" placeholder="0">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input m-rate text-right font-weight-bold" value="" placeholder="0">
+                    </td>
+                    <td class="text-center p-0">
+                        <button type="button" class="btn btn-xs text-danger btn-del-mat-row" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+            tbody.append(newRow);
+            newRow.find('.m-partcode').focus();
+            try {
+                const container = tbody.closest('div');
+                container.scrollTop(container[0].scrollHeight);
+            } catch(e) {}
+            recalculateMatrix();
+        });
+
+        // Delete Consumable Row
+        $(document).on('click', '.btn_add_breakdown_item', function() {
+            const container = $('#custom_breakdown_items_container');
+            const rowHtml = `
+                <div class="summary-line custom-breakdown-row" style="margin-bottom: 4px;">
+                    <div style="flex: 1; padding-right: 6px;">
+                        <input type="text" class="matrix-input text-left font-weight-bold custom-breakdown-label" value="" placeholder="Charge description" style="padding-left: 0.35rem; font-size: 0.8rem; height: 26px;">
+                    </div>
+                    <div style="width: 95px; display: flex; align-items: center; gap: 4px;">
+                        <input type="number" step="any" class="matrix-input text-right font-weight-bold custom-breakdown-val" value="" placeholder="0" style="font-size: 0.85rem; height: 26px;">
+                        <button type="button" class="btn btn-xs text-danger btn-del-breakdown-item p-0" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.append(rowHtml);
+            container.find('.custom-breakdown-label').last().focus();
+        });
+
+        $(document).on('click', '.btn-del-breakdown-item', function() {
+            $(this).closest('.custom-breakdown-row').remove();
+            recalculateMatrix();
+        });
+
+        $(document).on('input', '.custom-breakdown-val', function() {
+            recalculateMatrix();
+        });
+
+        $(document).on('click', '.btn-del-mat-row', function() {
+            $(this).closest('tr').remove();
+            recalculateMatrix();
+        });
+
+        // Add New Line Item in Nails
+        $(document).on('click', '.btn_add_nail_row', function() {
+            const tbody = $('#nails_tbody');
+            const newRow = $(`
+                <tr class="nail-row" data-code="">
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 3px;">
+                            <input type="text" class="matrix-input partcode-input n-partcode text-center font-weight-bold" value="" placeholder="Part Code" style="border-color: #fca5a5; background: #fef2f2; color: #991b1b; font-size: 0.8rem; height: 26px; border-radius: 4px;">
+                            <button type="button" class="btn btn-sm btn-light border btn-nail-search" title="Search Warehouse Nail Code" style="height: 26px; padding: 0 6px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-danger" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <input type="hidden" class="n-stock-purchase-id" value="">
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="matrix-input text-left font-weight-bold n-name" value="" placeholder="Nail description" style="text-align: left !important; padding-left: 0.4rem;">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input n-qty font-weight-bold text-center" value="1" placeholder="0">
+                    </td>
+                    <td>
+                        <input type="number" step="any" class="matrix-input n-rate text-right font-weight-bold" value="" placeholder="0">
+                    </td>
+                    <td class="text-center p-0">
+                        <button type="button" class="btn btn-xs text-danger btn-del-nail-row" style="background: none; border: none; font-size: 0.85rem;" title="Delete item">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+            tbody.append(newRow);
+            newRow.find('.n-partcode').focus();
+            try {
+                const container = tbody.closest('div');
+                container.scrollTop(container[0].scrollHeight);
+            } catch(e) {}
+            recalculateMatrix();
+        });
+
+        // Delete Nail Row
+        $(document).on('click', '.btn-del-nail-row', function() {
+            $(this).closest('tr').remove();
+            recalculateMatrix();
+        });
+
+        // Add Section Row (Base, Length, Width, Top, Supports)
+        $(document).on('click', '.btn-add-section-row', function(e) {
+            e.stopPropagation();
+            const secName = $(this).data('section') || 'BASE';
+            const defaultMat = secName.includes('PANEL') ? 'plywood' : 'wood';
+            const defaultRate = defaultMat === 'wood' ? currentWoodRate : currentPlyRate;
+            
+            const newRow = $(`
+                <tr class="struct-row" data-section="${secName}">
+                    <td><input type="text" class="matrix-input text-left font-weight-bold f-name" value="" placeholder="Component description"></td>
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                            <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
+                                <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
+                            </button>
+                            <input type="hidden" class="f-stock-purchase-id" value="">
+                            <input type="hidden" class="f-grn" value="">
+                        </div>
+                    </td>
+                    <td>
+                        <select class="matrix-input f-mat">
+                            <option value="wood" ${defaultMat === 'wood' ? 'selected' : ''}>Wood</option>
+                            <option value="plywood" ${defaultMat === 'plywood' ? 'selected' : ''}>Plywood</option>
+                        </select>
+                    </td>
+                    <td><input type="number" step="0.01" class="matrix-input f-l" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="0.01" class="matrix-input f-w" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="0.1" class="matrix-input f-h" value="" placeholder="0.0"></td>
+                    <td><input type="number" step="1" class="matrix-input f-nos font-weight-bold" value="1" placeholder="1"></td>
+                    <td><span class="badge ${defaultMat === 'plywood' ? 'badge-primary f-calc-ply' : 'badge-warning f-calc-wood'} w-100 py-1 font-weight-bold f-calc-badge" style="font-size: 0.8rem;">0.00</span></td>
+                    <td><input type="number" step="any" class="matrix-input f-rate" value="" placeholder="0"></td>
+                    <td class="text-right font-weight-bold f-line-total text-dark">₹0.00</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-xs text-danger btn-del-row" style="background: none; border: none;" title="Delete row">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+
+            // Find section header row and insert right after its last sibling row
+            const secRow = $(this).closest('tr.matrix-section-row');
+            let insertAfterTarget = secRow;
+            let nextEl = secRow.next();
+            while (nextEl.length && !nextEl.hasClass('matrix-section-row') && !nextEl.is('tfoot tr')) {
+                insertAfterTarget = nextEl;
+                nextEl = nextEl.next();
+            }
+            newRow.insertAfter(insertAfterTarget);
+            newRow.find('.f-name').focus();
+            recalculateMatrix();
+        });
+
+        
+        // 7. Save Quotation Matrix Handler
+        $('#btn_save_matrix').on('click', function() {
+            const btn = $(this);
+            const statusDiv = $('#matrix_save_status');
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Saving Quotation...');
+            statusDiv.removeClass('text-danger text-success').text('Saving line items to database...');
+
+            const structuralItems = [];
+            $('#structure_tbody tr.struct-row').each(function() {
+                const name = $(this).find('.f-name').val();
+                const part_code = $(this).find('.f-partcode').val();
+                const stock_purchase_id = $(this).find('.f-stock-purchase-id').val();
+                const grn_number = $(this).find('.f-grn').val();
+                const section = $(this).data('section') || '';
+                const mat = $(this).find('.f-mat').val();
+                const l = parseFloat($(this).find('.f-l').val()) || 0;
+                const w = parseFloat($(this).find('.f-w').val()) || 0;
+                const h = parseFloat($(this).find('.f-h').val()) || 0;
+                const nos = parseFloat($(this).find('.f-nos').val()) || 0;
+                const rate = parseFloat($(this).find('.f-rate').val()) || 0;
+
+                const calcVal = (mat === 'wood') ? ((l * w * h * nos) / 144.0) : (l * w * nos);
+                const totalCost = calcVal * rate;
+
+                if (nos > 0 && totalCost > 0) {
+                    structuralItems.push({
+                        name: name,
+                        section: section,
+                        part_code: part_code,
+                        stock_purchase_id: stock_purchase_id,
+                        grn_number: grn_number,
+                        material_type: mat,
+                        length: l,
+                        width: w,
+                        height: h,
+                        nos: nos,
+                        calc_val: calcVal,
+                        rate: rate,
+                        total_cost: totalCost
+                    });
+                }
+            });
+
+            const nails = [];
+            $('#nails_tbody tr.nail-row').each(function() {
+                const name = $(this).find('.n-name').val();
+                const part_code = $(this).find('.n-partcode').val();
+                const stock_purchase_id = $(this).find('.n-stock-purchase-id').val();
+                const qty = parseFloat($(this).find('.n-qty').val()) || 0;
+                const rate = parseFloat($(this).find('.n-rate').val()) || 0;
+                if (qty > 0 && rate > 0) {
+                    nails.push({ name: name, code: part_code, stock_purchase_id: stock_purchase_id, qty: qty, rate: rate, total_cost: qty * rate });
+                }
+            });
+
+            const materials = [];
+            $('#materials_tbody tr.mat-row').each(function() {
+                const name = $(this).find('.m-name').val();
+                const part_code = $(this).find('.m-partcode').val();
+                const stock_purchase_id = $(this).find('.m-stock-purchase-id').val();
+                const qty = parseFloat($(this).find('.m-qty').val()) || 0;
+                const rate = parseFloat($(this).find('.m-rate').val()) || 0;
+                if (qty > 0 && rate > 0) {
+                    materials.push({ name: name, code: part_code, stock_purchase_id: stock_purchase_id, qty: qty, rate: rate, total_cost: qty * rate });
+                }
+            });
+
+            const payload = {
+                assessment_id: '{{ na_assessment_num_id }}',
+                summary_id: '{{ summary_id|default:"" }}' || new URLSearchParams(window.location.search).get('summary_id') || '',
+                requirement_id: $('#matrix_requirement_select').val(),
+                box_dims: {
+                    id_l: $('#box_id_l').val(),
+                    id_w: $('#box_id_w').val(),
+                    id_h: $('#box_id_h').val(),
+                    clearance: $('#box_clearance').val()
+                },
+                structural_items: structuralItems,
+                nails: nails,
+                materials: materials,
+                total_wood_cost: parseFloat($('#wood_total_cost_cell').text().replace(/[^0-9.]/g, '')) || 0,
+                total_wood_cft: parseFloat($('#wood_total_cft_cell').text().replace(/[^0-9.]/g, '')) || 0,
+                total_ply_cost: parseFloat($('#sum_ply_cost').text().replace(/[^0-9.]/g, '')) || 0,
+                total_ply_sqft: parseFloat($('#ply_total_sqft').val()) || 0,
+                total_nail_cost: parseFloat($('#badge_nail_total').text().replace(/[^0-9.]/g, '')) || 0,
+                total_material_cost: parseFloat($('#badge_materials_total').text().replace(/[^0-9.]/g, '')) || 0,
+                labour_cost: parseFloat($('#sum_labour_input').val()) || 0,
+                onsite_labour_cost: parseFloat($('#sum_onsite_labour_input').val()) || 0,
+                transport_cost: parseFloat($('#sum_transport_input').val()) || 0,
+                ht_cost: parseFloat($('#sum_ht_input').val()) || 0,
+                crane_cost: parseFloat($('#sum_crane_input').val()) || 0,
+                fumigation_cost: parseFloat($('#sum_fumigation_input').val()) || 0,
+                custom_breakdown_items: (() => {
+                    const items = [];
+                    $('#custom_breakdown_items_container .custom-breakdown-row').each(function() {
+                        const label = $(this).find('.custom-breakdown-label').val().trim();
+                        const val = parseFloat($(this).find('.custom-breakdown-val').val()) || 0;
+                        if (label || val > 0) items.push({ label: label || 'Other Charges', amount: val });
+                    });
+                    return items;
+                })(),
+                margin_pct: isNaN(parseFloat($('#sum_margin_pct').val())) ? 0 : parseFloat($('#sum_margin_pct').val()),
+                cost_without_margin: parseFloat($('#sum_cost_wom').text().replace(/[^0-9.]/g, '')) || 0,
+                cost_with_margin: parseFloat($('#grand_total_display').text().replace(/[^0-9.]/g, '')) || 0
+            };
+
+            fetch("{% url 'save_quotation_matrix' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.prop('disabled', false).html('<i class="fas fa-check-circle mr-2"></i> SAVE QUOTATION NOW');
+                if (data.status === 'success') {
+                    statusDiv.addClass('text-success').html(`
+                        <i class="fas fa-check-circle mr-1"></i> ${data.message} 
+                        <a href="javascript:location.reload();" class="text-primary font-weight-bold ml-2"><u>Refresh Page</u></a>
+                    `);
+                    setTimeout(() => { location.reload(); }, 1500);
+                } else {
+                    statusDiv.addClass('text-danger').html('<i class="fas fa-exclamation-triangle mr-1"></i> ' + data.message);
+                }
+            })
+            .catch(err => {
+                btn.prop('disabled', false).html('<i class="fas fa-check-circle mr-2"></i> SAVE QUOTATION NOW');
+                statusDiv.addClass('text-danger').text('Network error saving quotation: ' + err);
+            });
+        });
+
+// 8. Add New Box / Item Modal Handler
+        $('#btn_open_add_box_modal').on('click', function() {
+            $('#modal_box_error').addClass('d-none').text('');
+            $('#new_box_l').val('');
+            $('#new_box_w').val('');
+            $('#new_box_h').val('');
+            $('#new_box_clearance').val('2');
+            $('#new_box_qty').val('1');
+            $('#modal_add_new_box').modal('show');
+            setTimeout(function() { $('#new_box_l').focus(); }, 400);
+        });
+
+        // Select an item from the Assessment box items list
+        $(document).on('click', '.modal-item-row, .btn-modal-pick-item', function(e) {
+            e.stopPropagation();
+            const itemId = $(this).data('id');
+            if (itemId) {
+                $('#chk_quoted_only').prop('checked', false);
+                $('#matrix_requirement_select option').show();
+                $('#matrix_requirement_select').val(itemId).trigger('change');
+                $('#modal_add_new_box').modal('hide');
+            }
+        });
+
+        $('#btn_submit_create_box').on('click', function() {
+            const errDiv = $('#modal_box_error');
+            errDiv.addClass('d-none').text('');
+            const btn = $(this);
+
+            const itemNumber = ($('#new_box_item_number').val() || '').trim();
+            const typeId = $('#new_box_type').val();
+            const l = parseFloat($('#new_box_l').val()) || 0;
+            const w = parseFloat($('#new_box_w').val()) || 0;
+            const h = parseFloat($('#new_box_h').val()) || 0;
+            const clearance = parseFloat($('#new_box_clearance').val()) || 2.0;
+            const qty = parseInt($('#new_box_qty').val(), 10) || 1;
+
+            if (l <= 0 || w <= 0 || h <= 0) {
+                errDiv.removeClass('d-none').text('Please enter valid positive dimensions for Length, Width, and Height.');
+                return;
+            }
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Creating...');
+
+            fetch("{% url 'matrix_create_box_item' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    assessment_id: '{{ na_assessment_num_id }}',
+                    item_number: itemNumber,
+                    type_of_req_id: typeId,
+                    length: l,
+                    width: w,
+                    height: h,
+                    clearance: clearance,
+                    quantity: qty
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.prop('disabled', false).html('<i class="fas fa-check-circle mr-1"></i> Create & Cost Now');
+                if (data.status === 'success') {
+                    const item = data.item;
+                    const select = $('#matrix_requirement_select');
+                    
+                    // Remove placeholder if exists
+                    select.find('option[value=""]').remove();
+
+                    const optText = `${item.nad_item} - ${item.nad_type_of_req} (${Math.round(item.length)}x${Math.round(item.width)}x${Math.round(item.height)} cm) (Not Quoted)`;
+                    const newOpt = $('<option>', {
+                        value: item.id,
+                        text: optText,
+                        'data-l': item.length,
+                        'data-w': item.width,
+                        'data-h': item.height,
+                        'data-uom': item.uom,
+                        'data-qty': item.quantity,
+                        'data-clearance': item.clearance,
+                        'data-quoted': 'false'
+                    });
+                    select.append(newOpt);
+
+                    // Ensure unquoted options are shown
+                    $('#chk_quoted_only').prop('checked', false);
+                    select.find('option').show();
+
+                    // Switch select to this new item and trigger calculation
+                    select.val(item.id).trigger('change');
+
+                    $('#modal_add_new_box').modal('hide');
+                } else {
+                    errDiv.removeClass('d-none').text(data.message || 'Error creating box item.');
+                }
+            })
+            .catch(err => {
+                btn.prop('disabled', false).html('<i class="fas fa-check-circle mr-1"></i> Create & Cost Now');
+                errDiv.removeClass('d-none').text('Network error creating box: ' + err);
+            });
+        });
+
+        // ==========================================
+        // 9. CUT SHEET & NESTING OPTIMIZER ENGINE
+        // ==========================================
+        let currentPlywoodOptimization = null;
+        let currentTimberOptimization = null;
+        let activeSheetIndex = 0;
+
+        const panelPalette = [
+            { fill: '#bae6fd', border: '#0284c7', text: '#0369a1', name: 'Sky Blue' },
+            { fill: '#bbf7d0', border: '#16a34a', text: '#15803d', name: 'Emerald' },
+            { fill: '#fef08a', border: '#ca8a04', text: '#854d0e', name: 'Amber' },
+            { fill: '#fed7aa', border: '#ea580c', text: '#c2410c', name: 'Orange' },
+            { fill: '#e9d5ff', border: '#9333ea', text: '#7e22ce', name: 'Purple' },
+            { fill: '#fbcfe8', border: '#db2777', text: '#be185d', name: 'Pink' },
+            { fill: '#a7f3d0', border: '#0d9488', text: '#0f766e', name: 'Teal' },
+            { fill: '#ddd6fe', border: '#6366f1', text: '#4338ca', name: 'Indigo' }
+        ];
+
+        function openCutSheetOptimizer() {
+            const selText = $('#matrix_requirement_select option:selected').text() || 'Active Box';
+            $('#cut_opt_item_name').text(selText.split('-')[0].trim());
+            $('#modal_cut_sheet_optimizer').modal('show');
+            setTimeout(function() {
+                runPlywoodCutOptimization();
+                runTimberCutOptimization();
+            }, 300);
+        }
+
+        $(document).on('click', '.btn-trigger-cut-optimizer, .btn-open-cut-optimizer-link', function(e) {
+            e.preventDefault();
+            openCutSheetOptimizer();
+        });
+
+        $('#btn_rerun_optimizer').on('click', function() {
+            runPlywoodCutOptimization();
+        });
+
+        $('#opt_sheet_preset').on('change', function() {
+            if ($(this).val() === 'custom') {
+                $('#custom_sheet_dims').show();
+            } else {
+                $('#custom_sheet_dims').hide();
+            }
+            runPlywoodCutOptimization();
+        });
+
+        $('#opt_kerf, #opt_rotation').on('change', function() {
+            runPlywoodCutOptimization();
+        });
+
+        $('#btn_rerun_timber_opt').on('click', function() {
+            runTimberCutOptimization();
+        });
+
+        $('#timber_stock_len').on('change', function() {
+            runTimberCutOptimization();
+        });
+
+        // 2D Guillotine Plywood Optimization
+        function runPlywoodCutOptimization() {
+            let stockW = 48; // inches
+            let stockL = 96; // inches
+            const preset = $('#opt_sheet_preset').val();
+            if (preset === '84x48') { stockW = 48; stockL = 84; }
+            else if (preset === '72x48') { stockW = 48; stockL = 72; }
+            else if (preset === 'custom') {
+                stockW = parseFloat($('#opt_custom_w').val()) || 48;
+                stockL = parseFloat($('#opt_custom_l').val()) || 96;
+            }
+
+            const kerf = parseFloat($('#opt_kerf').val()) || 0.125;
+            const allowRotate = ($('#opt_rotation').val() === 'allow');
+            const boxQty = parseInt($('#matrix_requirement_select option:selected').data('qty')) || 1;
+
+            const partsToCut = [];
+            const colorMap = {};
+            let colorIdx = 0;
+
+            $('#structure_tbody tr.struct-row').each(function() {
+                const mat = $(this).find('.f-mat').val();
+                if (mat === 'plywood') {
+                    const name = $(this).find('.f-name').val() || 'Plywood Panel';
+                    const l_ft = parseFloat($(this).find('.f-l').val()) || 0;
+                    const w_ft = parseFloat($(this).find('.f-w').val()) || 0;
+                    const nos = parseInt($(this).find('.f-nos').val(), 10) || 1;
+                    const totalPieces = nos * boxQty;
+
+                    if (!colorMap[name]) {
+                        colorMap[name] = panelPalette[colorIdx % panelPalette.length];
+                        colorIdx++;
+                    }
+
+                    // Convert to inches
+                    const pL = Math.round(l_ft * 12 * 100) / 100;
+                    const pW = Math.round(w_ft * 12 * 100) / 100;
+
+                    if (pL > 0 && pW > 0) {
+                        const maxSheetDim = Math.max(stockL, stockW);
+                        const minSheetDim = Math.min(stockL, stockW);
+
+                        // If piece is oversized, split into sub-panels that fit standard commercial sheets
+                        if (pL > maxSheetDim || pW > maxSheetDim) {
+                            const tilesL = Math.ceil(pL / maxSheetDim);
+                            const tilesW = Math.ceil(pW / minSheetDim);
+                            const subL = Math.round((pL / tilesL) * 10) / 10;
+                            const subW = Math.round((pW / tilesW) * 10) / 10;
+                            for (let p = 0; p < totalPieces * tilesL * tilesW; p++) {
+                                partsToCut.push({
+                                    name: name + ` (${subL.toFixed(0)}"×${subW.toFixed(0)}")`,
+                                    rawName: name,
+                                    w: subW,
+                                    l: subL,
+                                    sqft: (subW * subL) / 144.0,
+                                    color: colorMap[name]
+                                });
+                            }
+                        } else {
+                            for (let p = 0; p < totalPieces; p++) {
+                                partsToCut.push({
+                                    name: name,
+                                    rawName: name,
+                                    w: pW,
+                                    l: pL,
+                                    sqft: (pW * pL) / 144.0,
+                                    color: colorMap[name]
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (partsToCut.length === 0) {
+                $('#kpi_sheets_needed').text('0');
+                $('#kpi_sheet_area').text('0.00 SQFT');
+                $('#kpi_net_area').text('0.00 SQFT');
+                $('#kpi_waste_pct').text('0.0%');
+                $('#kpi_yield_pct').text('0.0%');
+                $('#sheet_pagination_tabs').empty();
+                clearCanvas();
+                return;
+            }
+
+            // Sort parts by Area descending (First-Fit Decreasing)
+            partsToCut.sort((a, b) => (b.w * b.l) - (a.w * a.l));
+
+            // Guillotine Bin Packing
+            const sheets = [];
+
+            function createSheet() {
+                return {
+                    sheetIndex: sheets.length + 1,
+                    w: stockW,
+                    l: stockL,
+                    freeRects: [{ x: 0, y: 0, w: stockW, h: stockL }],
+                    placedParts: []
+                };
+            }
+
+            partsToCut.forEach((part, partIdx) => {
+                let placed = false;
+
+                // Search open sheets
+                for (let s = 0; s < sheets.length; s++) {
+                    const sheet = sheets[s];
+                    let bestIdx = -1;
+                    let bestAreaFit = Infinity;
+                    let bestRotated = false;
+
+                    for (let r = 0; r < sheet.freeRects.length; r++) {
+                        const fr = sheet.freeRects[r];
+
+                        // Normal orientation
+                        if (part.w <= fr.w && part.l <= fr.h) {
+                            const remArea = (fr.w * fr.h) - (part.w * part.l);
+                            if (remArea < bestAreaFit) {
+                                bestAreaFit = remArea;
+                                bestIdx = r;
+                                bestRotated = false;
+                            }
+                        }
+                        // Rotated orientation
+                        if (allowRotate && part.l <= fr.w && part.w <= fr.h) {
+                            const remArea = (fr.w * fr.h) - (part.w * part.l);
+                            if (remArea < bestAreaFit) {
+                                bestAreaFit = remArea;
+                                bestIdx = r;
+                                bestRotated = true;
+                            }
+                        }
+                    }
+
+                    if (bestIdx !== -1) {
+                        const fr = sheet.freeRects.splice(bestIdx, 1)[0];
+                        const pw = bestRotated ? part.l : part.w;
+                        const pl = bestRotated ? part.w : part.l;
+
+                        sheet.placedParts.push({
+                            ...part,
+                            id: partIdx + 1,
+                            x: fr.x,
+                            y: fr.y,
+                            w: pw,
+                            h: pl,
+                            rotated: bestRotated,
+                            sheetNum: sheet.sheetIndex
+                        });
+
+                        // Split remainder using Guillotine cuts
+                        const remW = fr.w - pw - kerf;
+                        const remH = fr.h - pl - kerf;
+
+                        if (remW * fr.h > fr.w * remH) {
+                            if (remW > 0.5) sheet.freeRects.push({ x: fr.x + pw + kerf, y: fr.y, w: remW, h: fr.h });
+                            if (remH > 0.5) sheet.freeRects.push({ x: fr.x, y: fr.y + pl + kerf, w: pw, h: remH });
+                        } else {
+                            if (remW > 0.5) sheet.freeRects.push({ x: fr.x + pw + kerf, y: fr.y, w: remW, h: pl });
+                            if (remH > 0.5) sheet.freeRects.push({ x: fr.x, y: fr.y + pl + kerf, w: fr.w, h: remH });
+                        }
+
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed) {
+                    const newSheet = createSheet();
+                    const fr = newSheet.freeRects.shift();
+                    let rotated = false;
+                    let pw = part.w;
+                    let pl = part.l;
+
+                    if (allowRotate && (part.w > fr.w || (part.l <= fr.w && part.w <= fr.h && (fr.w - part.l) < (fr.w - part.w)))) {
+                        rotated = true;
+                        pw = part.l;
+                        pl = part.w;
+                    }
+
+                    newSheet.placedParts.push({
+                        ...part,
+                        id: partIdx + 1,
+                        x: fr.x,
+                        y: fr.y,
+                        w: pw,
+                        h: pl,
+                        rotated: rotated,
+                        sheetNum: newSheet.sheetIndex
+                    });
+
+                    const remW = fr.w - pw - kerf;
+                    const remH = fr.h - pl - kerf;
+
+                    if (remW * fr.h > fr.w * remH) {
+                        if (remW > 0.5) newSheet.freeRects.push({ x: fr.x + pw + kerf, y: fr.y, w: remW, h: fr.h });
+                        if (remH > 0.5) newSheet.freeRects.push({ x: fr.x, y: fr.y + pl + kerf, w: pw, h: remH });
+                    } else {
+                        if (remW > 0.5) newSheet.freeRects.push({ x: fr.x + pw + kerf, y: fr.y, w: remW, h: pl });
+                        if (remH > 0.5) newSheet.freeRects.push({ x: fr.x, y: fr.y + pl + kerf, w: fr.w, h: remH });
+                    }
+
+                    sheets.push(newSheet);
+                }
+            });
+
+            // Calculate KPIs
+            const totalSheets = sheets.length;
+            const singleSheetSqft = (stockW * stockL) / 144.0;
+            const totalPurchasedSqft = totalSheets * singleSheetSqft;
+            const netPartsSqft = partsToCut.reduce((sum, p) => sum + p.sqft, 0);
+            const wasteSqft = Math.max(0, totalPurchasedSqft - netPartsSqft);
+            const wastePct = totalPurchasedSqft > 0 ? (wasteSqft / totalPurchasedSqft) * 100.0 : 0.0;
+            const yieldPct = totalPurchasedSqft > 0 ? (netPartsSqft / totalPurchasedSqft) * 100.0 : 0.0;
+
+            $('#kpi_sheets_needed').text(totalSheets);
+            $('#kpi_sheet_area').text(totalPurchasedSqft.toFixed(2) + ' SQFT');
+            $('#kpi_net_area').text(netPartsSqft.toFixed(2) + ' SQFT');
+            $('#kpi_waste_pct').text(wastePct.toFixed(1) + '%');
+            $('#kpi_yield_pct').text(yieldPct.toFixed(1) + '%');
+
+            $('#opt_btn_waste_pct').text(wastePct.toFixed(1) + '%');
+            $('#opt_btn_sheets_sqft').text(`${totalSheets} Sheets = ${totalPurchasedSqft.toFixed(0)} SQFT`);
+
+            $('#cut_opt_summary_footer').html(`
+                <i class="fas fa-check-circle text-success mr-1"></i>
+                Requires <strong>${totalSheets} sheets</strong> (${preset === 'custom' ? stockL + 'x' + stockW + '"' : '8×4 ft'}).
+                Net: <strong>${netPartsSqft.toFixed(2)} sqft</strong>, Wastage: <strong>${wastePct.toFixed(1)}%</strong> (${wasteSqft.toFixed(2)} sqft), Yield: <strong>${yieldPct.toFixed(1)}%</strong>.
+            `);
+
+            currentPlywoodOptimization = {
+                sheets: sheets,
+                stockW: stockW,
+                stockL: stockL,
+                totalSheets: totalSheets,
+                totalPurchasedSqft: totalPurchasedSqft,
+                netPartsSqft: netPartsSqft,
+                wastePct: wastePct,
+                colorMap: colorMap,
+                parts: partsToCut
+            };
+
+            // Render Sheet Tabs
+            renderSheetPagination();
+            renderLegend(colorMap);
+            renderWorkshopCutList(partsToCut, sheets);
+
+            activeSheetIndex = 0;
+            drawSheetCanvas(0);
+        }
+
+        function renderSheetPagination() {
+            const container = $('#sheet_pagination_tabs');
+            container.empty();
+            if (!currentPlywoodOptimization || !currentPlywoodOptimization.sheets.length) return;
+
+            currentPlywoodOptimization.sheets.forEach((sheet, idx) => {
+                const partsCount = sheet.placedParts.length;
+                const placedArea = sheet.placedParts.reduce((s, p) => s + (p.w * p.h), 0);
+                const sheetArea = sheet.w * sheet.l;
+                const efficiency = Math.round((placedArea / sheetArea) * 100);
+
+                const btn = $(`
+                    <button type="button" class="btn btn-outline-primary btn-sm sheet-page-btn ${idx === activeSheetIndex ? 'active' : ''}" data-idx="${idx}">
+                        Sheet ${idx + 1} <span class="badge badge-light border ml-1">${efficiency}%</span>
+                    </button>
+                `);
+                container.append(btn);
+            });
+        }
+
+        $(document).on('click', '.sheet-page-btn', function() {
+            $('.sheet-page-btn').removeClass('active');
+            $(this).addClass('active');
+            activeSheetIndex = parseInt($(this).data('idx'), 10) || 0;
+            drawSheetCanvas(activeSheetIndex);
+        });
+
+        function renderLegend(colorMap) {
+            const legend = $('#cut_sheet_legend');
+            legend.empty();
+            Object.keys(colorMap).forEach(k => {
+                const c = colorMap[k];
+                legend.append(`
+                    <div class="d-flex align-items-center">
+                        <span style="display: inline-block; width: 14px; height: 14px; background: ${c.fill}; border: 1.5px solid ${c.border}; border-radius: 3px; margin-right: 5px;"></span>
+                        <span class="font-weight-bold text-dark">${k}</span>
+                    </div>
+                `);
+            });
+            legend.append(`
+                <div class="d-flex align-items-center">
+                    <span style="display: inline-block; width: 14px; height: 14px; background: #e2e8f0; border: 1.5px dashed #94a3b8; border-radius: 3px; margin-right: 5px;"></span>
+                    <span class="text-muted">Offcut / Remnant</span>
+                </div>
+            `);
+        }
+
+        function drawSheetCanvas(sheetIdx) {
+            const canvas = document.getElementById('cut_sheet_canvas');
+            if (!canvas || !currentPlywoodOptimization) return;
+            const ctx = canvas.getContext('2d');
+            const sheet = currentPlywoodOptimization.sheets[sheetIdx];
+            if (!sheet) return;
+
+            const stockW = currentPlywoodOptimization.stockW;
+            const stockL = currentPlywoodOptimization.stockL;
+
+            const cWidth = canvas.width;
+            const cHeight = canvas.height;
+
+            ctx.clearRect(0, 0, cWidth, cHeight);
+
+            const padX = 40;
+            const padY = 40;
+            const drawW = cWidth - (padX * 2);
+            const drawH = cHeight - (padY * 2);
+
+            const scaleX = drawW / stockL;
+            const scaleY = drawH / stockW;
+
+            const partsCount = sheet.placedParts.length;
+            const placedArea = sheet.placedParts.reduce((s, p) => s + (p.w * p.h), 0);
+            const sheetArea = sheet.w * sheet.l;
+            const efficiency = Math.round((placedArea / sheetArea) * 100);
+            $('#sheet_stat_badge').html(`Sheet ${sheetIdx + 1} of ${currentPlywoodOptimization.sheets.length} &bull; <strong>${partsCount} Parts</strong> &bull; Yield: <strong>${efficiency}%</strong>`);
+
+            // 1. Draw Stock Sheet Background
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(padX, padY, drawW, drawH);
+
+            // 2. Draw Unused Offcuts
+            sheet.freeRects.forEach(fr => {
+                const rx = padX + (fr.x * scaleX);
+                const ry = padY + (fr.y * scaleY);
+                const rw = fr.w * scaleX;
+                const rh = fr.h * scaleY;
+
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fillRect(rx, ry, rw, rh);
+
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.setLineDash([4, 4]);
+                ctx.lineWidth = 1;
+                ctx.strokeRect(rx, ry, rw, rh);
+                ctx.setLineDash([]);
+
+                if (rw > 45 && rh > 25) {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '600 11px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('OFFCUT', rx + (rw / 2), ry + (rh / 2) - 3);
+                    ctx.font = '500 10px Inter, sans-serif';
+                    ctx.fillText(`${fr.w.toFixed(0)}" × ${fr.h.toFixed(0)}"`, rx + (rw / 2), ry + (rh / 2) + 10);
+                }
+            });
+
+            // 3. Draw Placed Parts
+            sheet.placedParts.forEach(p => {
+                const px = padX + (p.x * scaleX);
+                const py = padY + (p.y * scaleY);
+                const pw = p.w * scaleX;
+                const ph = p.h * scaleY;
+
+                ctx.fillStyle = p.color ? p.color.fill : '#bae6fd';
+                ctx.fillRect(px, py, pw, ph);
+
+                ctx.strokeStyle = p.color ? p.color.border : '#0284c7';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px, py, pw, ph);
+
+                // Cut mark badge
+                ctx.fillStyle = p.color ? p.color.border : '#0284c7';
+                ctx.beginPath();
+                ctx.arc(px + 12, py + 12, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 9px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.id, px + 12, py + 12);
+
+                if (pw > 50 && ph > 30) {
+                    ctx.fillStyle = p.color ? p.color.text : '#0369a1';
+                    ctx.font = 'bold 12px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'alphabetic';
+
+                    const cleanName = (p.rawName || p.name).replace(/\(.*?\)/g, '').trim();
+                    ctx.fillText(cleanName, px + (pw / 2), py + (ph / 2) - 4);
+
+                    ctx.font = '600 11px Inter, sans-serif';
+                    const dimLabel = `${p.w.toFixed(1)}" × ${p.h.toFixed(1)}" (${p.sqft.toFixed(1)} sqft)`;
+                    ctx.fillText(dimLabel, px + (pw / 2), py + (ph / 2) + 12);
+
+                    if (p.rotated) {
+                        ctx.font = 'bold 9px Inter, sans-serif';
+                        ctx.fillStyle = '#c2410c';
+                        ctx.fillText('↻ 90° ROTATED', px + (pw / 2), py + (ph / 2) + 24);
+                    }
+                }
+            });
+
+            // 4. Outer Sheet Border
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(padX, padY, drawW, drawH);
+
+            // 5. Measurements
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${stockL}" (${(stockL / 12).toFixed(1)} ft)`, padX + (drawW / 2), padY - 12);
+
+            ctx.save();
+            ctx.translate(padX - 14, padY + (drawH / 2));
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(`${stockW}" (${(stockW / 12).toFixed(1)} ft)`, 0, 0);
+            ctx.restore();
+        }
+
+        function clearCanvas() {
+            const canvas = document.getElementById('cut_sheet_canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 1D Timber Battens Optimization
+        function runTimberCutOptimization() {
+            const stockLenFt = parseFloat($('#timber_stock_len').val()) || 14.0;
+            const stockLenIn = stockLenFt * 12;
+            const kerfIn = 0.25;
+            const boxQty = parseInt($('#matrix_requirement_select option:selected').data('qty')) || 1;
+
+            const timberCuts = [];
+            $('#structure_tbody tr.struct-row').each(function() {
+                const mat = $(this).find('.f-mat').val();
+                if (mat === 'wood') {
+                    const name = $(this).find('.f-name').val() || 'Frame Batten';
+                    const l_ft = parseFloat($(this).find('.f-l').val()) || 0;
+                    const nos = parseInt($(this).find('.f-nos').val(), 10) || 1;
+                    const totalPieces = nos * boxQty;
+
+                    if (l_ft > 0) {
+                        for (let i = 0; i < totalPieces; i++) {
+                            timberCuts.push({
+                                name: name,
+                                lenFt: l_ft,
+                                lenIn: Math.round(l_ft * 12 * 10) / 10
+                            });
+                        }
+                    }
+                }
+            });
+
+            if (timberCuts.length === 0) {
+                $('#kpi_timber_planks').text('0 Planks');
+                $('#kpi_timber_purchased').text('0.0 ft');
+                $('#kpi_timber_net').text('0.0 ft');
+                $('#kpi_timber_waste').text('0.0%');
+                $('#timber_cut_list_container').html('<div class="text-center text-muted py-4">No timber battens found in active box.</div>');
+                return;
+            }
+
+            timberCuts.sort((a, b) => b.lenIn - a.lenIn);
+            const planks = [];
+
+            timberCuts.forEach(cut => {
+                let remainingCutIn = cut.lenIn;
+                while (remainingCutIn > 0) {
+                    const pieceIn = Math.min(stockLenIn, remainingCutIn);
+                    remainingCutIn -= pieceIn;
+
+                    let bestPlankIdx = -1;
+                    let minRemaining = Infinity;
+                    for (let p = 0; p < planks.length; p++) {
+                        const rem = planks[p].remaining - pieceIn - kerfIn;
+                        if (rem >= 0 && rem < minRemaining) {
+                            minRemaining = rem;
+                            bestPlankIdx = p;
+                        }
+                    }
+
+                    if (bestPlankIdx !== -1) {
+                        planks[bestPlankIdx].cuts.push({
+                            name: cut.name,
+                            lenIn: pieceIn,
+                            lenFt: pieceIn / 12.0
+                        });
+                        planks[bestPlankIdx].remaining -= (pieceIn + kerfIn);
+                    } else {
+                        planks.push({
+                            stockLenFt: stockLenFt,
+                            stockLenIn: stockLenIn,
+                            cuts: [{
+                                name: cut.name,
+                                lenIn: pieceIn,
+                                lenFt: pieceIn / 12.0
+                            }],
+                            remaining: stockLenIn - pieceIn - kerfIn
+                        });
+                    }
+                }
+            });
+
+            const totalPlanks = planks.length;
+            const totalPurchasedFt = totalPlanks * stockLenFt;
+            const netUsedFt = timberCuts.reduce((s, c) => s + c.lenFt, 0);
+            const wasteFt = Math.max(0, totalPurchasedFt - netUsedFt);
+            const wastePct = totalPurchasedFt > 0 ? (wasteFt / totalPurchasedFt) * 100.0 : 0.0;
+
+            $('#kpi_timber_planks').text(`${totalPlanks} Planks`);
+            $('#kpi_timber_purchased').text(`${totalPurchasedFt.toFixed(1)} ft`);
+            $('#kpi_timber_net').text(`${netUsedFt.toFixed(1)} ft`);
+            $('#kpi_timber_waste').text(`${wastePct.toFixed(1)}% (${wasteFt.toFixed(1)} ft)`);
+
+            const container = $('#timber_cut_list_container');
+            container.empty();
+
+            const colors = ['#0284c7', '#0d9488', '#ea580c', '#7c3aed', '#16a34a'];
+
+            planks.forEach((plank, pIdx) => {
+                const usedIn = plank.stockLenIn - Math.max(0, plank.remaining);
+                const efficiency = Math.round((usedIn / plank.stockLenIn) * 100);
+
+                let cutBarsHtml = '';
+                plank.cuts.forEach((c, cIdx) => {
+                    const widthPct = (c.lenIn / plank.stockLenIn) * 100.0;
+                    const col = colors[cIdx % colors.length];
+                    cutBarsHtml += `
+                        <div style="width: ${widthPct}%; background: ${col}; color: white; font-size: 0.72rem; font-weight: 700; text-align: center; overflow: hidden; white-space: nowrap; padding: 4px 2px; border-right: 2px solid white;" title="${c.name}: ${c.lenFt.toFixed(2)} ft (${c.lenIn.toFixed(0)} in)">
+                            ${c.name.split(' ')[0]} ${c.lenFt.toFixed(1)}'
+                        </div>
+                    `;
+                });
+
+                const remPct = Math.max(0, (plank.remaining / plank.stockLenIn) * 100.0);
+                if (remPct > 0) {
+                    cutBarsHtml += `
+                        <div style="width: ${remPct}%; background: #e2e8f0; color: #64748b; font-size: 0.7rem; font-weight: 600; text-align: center; padding: 4px 2px;" title="Scrap: ${(plank.remaining / 12).toFixed(1)} ft">
+                            Scrap ${(plank.remaining / 12).toFixed(1)}'
+                        </div>
+                    `;
+                }
+
+                container.append(`
+                    <div class="mb-2 p-2 bg-light rounded border">
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <strong><i class="fas fa-bars text-secondary mr-1"></i> Stock Plank #${pIdx + 1} (${stockLenFt} ft)</strong>
+                            <span class="badge badge-info">${efficiency}% Utilized &bull; Scrap: ${(Math.max(0, plank.remaining) / 12).toFixed(1)} ft</span>
+                        </div>
+                        <div class="progress" style="height: 24px; border-radius: 4px; overflow: hidden; background: #cbd5e1;">
+                            ${cutBarsHtml}
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // Tab 3: Workshop Cut List Table
+        function renderWorkshopCutList(plyParts, sheets) {
+            const tbody = $('#workshop_cut_list_tbody');
+            tbody.empty();
+
+            let rowIdx = 1;
+            sheets.forEach(sheet => {
+                sheet.placedParts.forEach(p => {
+                    tbody.append(`
+                        <tr>
+                            <td class="font-weight-bold text-center">${rowIdx++}</td>
+                            <td class="font-weight-bold text-primary">${p.rawName || p.name}</td>
+                            <td><span class="badge badge-info">Plywood</span></td>
+                            <td class="text-center font-weight-bold">${p.w.toFixed(1)}" × ${p.h.toFixed(1)}" (${(p.w / 12).toFixed(2)}' × ${(p.h / 12).toFixed(2)}')</td>
+                            <td class="text-center font-weight-bold">1</td>
+                            <td class="text-center"><span class="badge badge-primary font-weight-bold">Sheet #${sheet.sheetIndex}</span></td>
+                            <td class="text-center"><span class="badge badge-light border">Ready to Cut</span></td>
+                        </tr>
+                    `);
+                });
+            });
+
+            $('#structure_tbody tr.struct-row').each(function() {
+                const mat = $(this).find('.f-mat').val();
+                if (mat === 'wood') {
+                    const name = $(this).find('.f-name').val() || 'Frame Batten';
+                    const l_ft = parseFloat($(this).find('.f-l').val()) || 0;
+                    const w_in = parseFloat($(this).find('.f-w').val()) || 0;
+                    const h_in = parseFloat($(this).find('.f-h').val()) || 0;
+                    const nos = parseInt($(this).find('.f-nos').val(), 10) || 1;
+
+                    tbody.append(`
+                        <tr class="table-light">
+                            <td class="font-weight-bold text-center">${rowIdx++}</td>
+                            <td class="font-weight-bold text-dark">${name}</td>
+                            <td><span class="badge badge-secondary">Timber Wood</span></td>
+                            <td class="text-center font-weight-bold">${l_ft.toFixed(2)} ft &bull; ${w_in}" × ${h_in}"</td>
+                            <td class="text-center font-weight-bold">${nos}</td>
+                            <td class="text-center"><span class="badge badge-secondary font-weight-bold">Stock Planks</span></td>
+                            <td class="text-center"><span class="badge badge-light border">Ready to Cut</span></td>
+                        </tr>
+                    `);
+                }
+            });
+        }
+
+        // Apply Real Wastage % to Matrix
+        $('#btn_apply_optimized_wastage').on('click', function() {
+            if (currentPlywoodOptimization && currentPlywoodOptimization.wastePct >= 0) {
+                const wastePct = currentPlywoodOptimization.wastePct.toFixed(1);
+                $('#ply_wastage_pct').val(wastePct);
+                recalculateMatrix();
+                $('#modal_cut_sheet_optimizer').modal('hide');
+                alert(`Cut Sheet Optimizer: Real measured cut wastage of ${wastePct}% applied to Quotation Matrix.`);
+            }
+        });
+
+        // Apply Full Purchased Sheets to Matrix
+        $('#btn_apply_optimized_sheets').on('click', function() {
+            if (currentPlywoodOptimization && currentPlywoodOptimization.totalPurchasedSqft > 0) {
+                const fullSqft = currentPlywoodOptimization.totalPurchasedSqft;
+                const netSqft = currentPlywoodOptimization.netPartsSqft;
+                const wastePct = netSqft > 0 ? (((fullSqft - netSqft) / netSqft) * 100.0).toFixed(1) : '0.0';
+
+                $('#ply_wastage_pct').val(wastePct);
+                recalculateMatrix();
+                $('#modal_cut_sheet_optimizer').modal('hide');
+                alert(`Cut Sheet Optimizer: Full purchased sheets (${currentPlywoodOptimization.totalSheets} Sheets = ${fullSqft.toFixed(0)} SQFT) applied to Quotation Matrix.`);
+            }
+        });
+
+        // Print Cut Plan
+        $('#btn_print_cut_plan').on('click', function() {
+            window.print();
+        });
+
+        // Trigger initial load
+        {% if selected_requirement_id %}
+            $('#chk_quoted_only').prop('checked', false);
+            $('#matrix_requirement_select option').show();
+            $('#matrix_requirement_select').val('{{ selected_requirement_id }}').trigger('change');
+        {% else %}
+            $('#matrix_requirement_select').val('');
+            renderEmptyMatrixState();
+        {% endif %}
+    });
+})(jQuery);
+</script>
+{% endblock %}
