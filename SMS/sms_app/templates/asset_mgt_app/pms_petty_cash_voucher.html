@@ -292,7 +292,7 @@
             </span>
 
             <span class="value">
-                {{ ppc.ppc_date|default:ppc.ppc_transaction_date|date:"d-m-Y" }}
+                {{ ppc.ppc_date|date:"d-m-Y"|default:"-" }}
             </span>
 
         </div>

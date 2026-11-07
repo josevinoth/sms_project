@@ -1,55 +1,193 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block title %}Role List | BVM Management System{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       ROLE LIST - MODERN BVM STYLING
+       ══════════════════════════════════════════════════════════════════════════ */
+    .mini-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mini-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+    }
+    .mini-stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .mini-stat-info h4 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+    .mini-stat-info span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    /* Table Typography */
+    #role_list tbody td {
+        font-weight: 700;
+        color: #1e293b;
+        vertical-align: middle;
+    }
+    #role_list thead th {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    /* Action Buttons */
+    .btn-action-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none !important;
+        border: none;
+    }
+    .btn-action-edit {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+    .btn-action-edit:hover {
+        background: #2563eb;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+    .btn-action-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    .btn-action-delete:hover {
+        background: #dc2626;
+        color: #ffffff;
+        transform: scale(1.08);
+    }
+
+    .filter-input {
+        min-width: 90px;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+    }
+</style>
+{% endblock extra_css %}
 
 {% block content %}
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
-    </div>
-    <div class="col-md-1">
-      <a href="{% url 'role_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-      </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-<table  id="role_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th>Role</th>
-            <th>Edit</th>
-            <th>Delete</th>
-    </thead>
-    <tbody>
-        {% for roleinfo in role_list %}
-            <tr>
-                <td> {{roleinfo.role_name}}</td>
-                <td>
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fas fa-shield-alt text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.3px;">User Role Master</h3>
+                <span class="text-white-50 small">Define system user role classifications and authorization scopes</span>
+            </div>
+        </div>
 
-                    <a class="btn btn-primary" href="{% url 'role_update' roleinfo.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'role_delete' roleinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a href="{% url 'role_insert' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-plus mr-1"></i> Add Role
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="role_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th style="width: 70px;">#</th>
+                        <th>Role Name</th>
+                        <th class="text-center" style="width: 90px;">Edit</th>
+                        <th class="text-center" style="width: 90px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for roleinfo in role_list %}
+                    <tr>
+                        <td class="align-middle text-muted font-weight-bold">{{ forloop.counter }}</td>
+                        <td class="align-middle font-weight-bold text-dark" style="font-size: 0.95rem;">
+                            {{ roleinfo.role_name }}
+                        </td>
+                        <td class="align-middle text-center">
+                            <a class="btn-action-icon btn-action-edit" href="{% url 'role_update' roleinfo.id %}" title="Edit Role">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="align-middle text-center">
+                            <form action="{% url 'role_delete' roleinfo.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete \'{{ roleinfo.role_name }}\'?');" style="display:inline-block; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-icon btn-action-delete" title="Delete Role">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
 <script>
     $(document).ready(function() {
-    $('#role_list').DataTable();
-} );
+        $('#role_list').DataTable({
+            order: [[0, 'asc']],
+            scrollX: false,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
 </script>
-
 {% endblock content %}

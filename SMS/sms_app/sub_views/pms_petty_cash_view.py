@@ -18,15 +18,107 @@ from ..sub_forms.pms_petty_cash_form import PMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
 
-def generate_pms_petty_cash_number(model_class, field_name, branch_obj=None):
+def is_admin_or_supervisor_user(request):
     """
-    Generates Voucher Number format in UPPERCASE: [BranchCode]-Pkg-[MM]-[FY]-[Seq]
-    Example: MAA-Pkg-09-26/27-01 or BLR-Pkg-09-26/27-01
+    Returns True if current user is admin, superuser, staff, or has supervisor/manager/admin role or designation.
     """
-    fy = get_financial_year() # e.g. "26-27"
+    user = getattr(request, 'user', None)
+    if not user or not user.is_authenticated:
+        ses_user_id = request.session.get('ses_userID')
+        if not ses_user_id:
+            return False
+        from django.contrib.auth.models import User
+        try:
+            user = User.objects.get(id=ses_user_id)
+        except User.DoesNotExist:
+            return False
+
+    if user.is_superuser or user.is_staff:
+        return True
+
+    user_role = (request.session.get('ses_role') or '').lower()
+    if user_role in ['admin', 'super user', 'superuser']:
+        return True
+
+    try:
+        from ..sub_models.user_ext_mod import User_extInfo
+        user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+        desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+        role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+        if 'supervisor' in desig or 'admin' in role or 'super' in role:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def get_user_branch_code(request):
+    """
+    Determines the user's branch code: 'MAA', 'BLR', etc.
+    Checks User_extInfo.emp_branch, falling back to session ses_branch_id.
+    """
+    user = getattr(request, 'user', None)
+    user_id = user.id if (user and user.is_authenticated) else request.session.get('ses_userID')
+    branch_name = ''
+
+    if user_id:
+        try:
+            from ..sub_models.user_ext_mod import User_extInfo
+            user_ext = User_extInfo.objects.select_related('emp_branch').get(user_id=user_id)
+            if user_ext.emp_branch and user_ext.emp_branch.loc_name:
+                branch_name = user_ext.emp_branch.loc_name
+        except Exception:
+            pass
+
+    if not branch_name:
+        branch_id = request.session.get('ses_branch_id')
+        if branch_id:
+            try:
+                from ..models import Location_info
+                loc = Location_info.objects.get(id=branch_id)
+                branch_name = loc.loc_name or ''
+            except Exception:
+                pass
+
+    name_upper = branch_name.upper()
+    if 'BLR' in name_upper or 'BANGALORE' in name_upper or 'BENGALURU' in name_upper:
+        return 'BLR'
+    elif 'MAA' in name_upper or 'CHENNAI' in name_upper:
+        return 'MAA'
+    elif 'PNY' in name_upper or 'PONDICHERRY' in name_upper:
+        return 'PNY'
+    elif 'HYD' in name_upper or 'HYDERABAD' in name_upper:
+        return 'HYD'
+    elif 'CJB' in name_upper or 'COIMBATORE' in name_upper:
+        return 'CJB'
+    elif branch_name:
+        return branch_name.split()[-1].upper()
+    return ''
+
+
+def generate_pms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
+    """
+    Generates Voucher Number format in UPPERCASE: [BranchCode]-PKG-[MM]-[FY]-[Seq]
+    strictly based on voucher_date. No fallback date is permitted.
+    """
+    if not voucher_date:
+        raise ValueError("Voucher Date is strictly required to generate PMS voucher number. No fallback date is permitted.")
+
+    if isinstance(voucher_date, str):
+        try:
+            v_date = datetime.strptime(voucher_date[:10], "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError(f"Invalid voucher_date format: {voucher_date}")
+    elif isinstance(voucher_date, datetime):
+        v_date = voucher_date.date()
+    elif hasattr(voucher_date, 'month') and hasattr(voucher_date, 'year'):
+        v_date = voucher_date
+    else:
+        raise ValueError(f"Invalid voucher_date: {voucher_date}")
+
+    fy = get_financial_year(v_date) # e.g. "26-27"
     fy_slash = fy.replace('-', '/') # "26/27"
-    today = datetime.now()
-    month_str = today.strftime("%m") # "09"
+    month_str = f"{v_date.month:02d}"
 
     branch_code = "MAA"
     if branch_obj and branch_obj.loc_name:
@@ -46,22 +138,28 @@ def generate_pms_petty_cash_number(model_class, field_name, branch_obj=None):
 
     prefix = f"{branch_code}-PKG-{month_str}-{fy_slash}-"
 
-    # fetch latest for this prefix (case-insensitive check)
-    latest_obj = model_class.objects.filter(
+    # fetch all existing numbers for this prefix to get the maximum sequence
+    existing_nums = model_class.objects.filter(
         Q(**{f"{field_name}__istartswith": prefix}) | Q(**{f"{field_name}__istartswith": f"{branch_code.title()}-PKG-{month_str}-{fy_slash}-"})
-    ).order_by('-id').first()
+    ).values_list(field_name, flat=True)
 
-    if latest_obj:
-        latest_num_str = getattr(latest_obj, field_name)
-        try:
-            seq = int(latest_num_str.split('-')[-1])
-            new_seq = seq + 1
-        except ValueError:
-            new_seq = 1
-    else:
-        new_seq = 1
+    max_seq = 0
+    for num_str in existing_nums:
+        if num_str:
+            try:
+                seq = int(num_str.split('-')[-1])
+                if seq > max_seq:
+                    max_seq = seq
+            except (ValueError, IndexError):
+                pass
+    new_seq = max_seq + 1
+    new_num = f"{prefix}{str(new_seq).zfill(2)}"
 
-    return f"{prefix}{str(new_seq).zfill(2)}"
+    while model_class.objects.filter(Q(**{f"{field_name}__iexact": new_num})).exists():
+        new_seq += 1
+        new_num = f"{prefix}{str(new_seq).zfill(2)}"
+
+    return new_num
 
 
 def pms_petty_cash_add(request, ppc_id=0):
@@ -142,14 +240,48 @@ def pms_petty_cash_add(request, ppc_id=0):
             saved_wpc = form.save(commit=False)
             if post_data.get('ppc_bill_attachment-clear') in ['on', '1', 'true']:
                 saved_wpc.ppc_bill_attachment = None
-            expected_branch_code = "BLR" if (saved_wpc.ppc_branch and ("BLR" in saved_wpc.ppc_branch.loc_name.upper() or "BANGALORE" in saved_wpc.ppc_branch.loc_name.upper())) else "MAA"
+            voucher_date = saved_wpc.ppc_date
+            if not voucher_date:
+                messages.error(request, "Voucher Date is strictly required to generate voucher number.")
+                return render(request, "asset_mgt_app/pms_petty_cash_add.html", context)
+
+            expected_branch_code = "MAA"
+            if saved_wpc.ppc_branch and saved_wpc.ppc_branch.loc_name:
+                loc_upper = saved_wpc.ppc_branch.loc_name.upper()
+                if "BLR" in loc_upper or "BANGALORE" in loc_upper or "BENGALURU" in loc_upper:
+                    expected_branch_code = "BLR"
+                elif "MAA" in loc_upper or "CHENNAI" in loc_upper:
+                    expected_branch_code = "MAA"
+                elif "PNY" in loc_upper or "PONDICHERRY" in loc_upper:
+                    expected_branch_code = "PNY"
+                elif "HYD" in loc_upper or "HYDERABAD" in loc_upper:
+                    expected_branch_code = "HYD"
+                elif "CBE" in loc_upper or "COIMBATORE" in loc_upper:
+                    expected_branch_code = "CBE"
+                else:
+                    expected_branch_code = saved_wpc.ppc_branch.loc_name.split()[-1].upper()
+
+            v_fy = get_financial_year(voucher_date).replace('-', '/')
+            v_month = f"{voucher_date.month:02d}"
+            expected_prefix = f"{expected_branch_code}-PKG-{v_month}-{v_fy}-"
+
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if ppc_id == 0:
-                saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch)
-                saved_wpc.ppc_created_by = request.user
+                saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
+                saved_wpc.ppc_created_by = created_user
             else:
-                if not saved_wpc.ppc_number or not saved_wpc.ppc_number.startswith(f"{expected_branch_code}-PKG-"):
-                    saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch)
-            saved_wpc.ppc_updated_by = request.user
+                if not saved_wpc.ppc_number or not saved_wpc.ppc_number.upper().startswith(expected_prefix):
+                    saved_wpc.ppc_number = generate_pms_petty_cash_number(PMSPettyCashInfo, 'ppc_number', saved_wpc.ppc_branch, voucher_date=voucher_date)
+                if not saved_wpc.ppc_created_by and created_user:
+                    saved_wpc.ppc_created_by = created_user
+            saved_wpc.ppc_updated_by = created_user
             saved_wpc.save()
             messages.success(request, "PMS Petty Cash saved successfully.")
             return redirect('pms_petty_cash_list')
@@ -181,29 +313,36 @@ def pms_petty_cash_list(request):
     if ppc_number:
         filters &= Q(ppc_number__icontains=ppc_number)
     if search_date:
-        filters &= (Q(ppc_date=search_date) | Q(ppc_transaction_date=search_date))
+        filters &= Q(ppc_date=search_date)
     if from_date:
-        filters &= (Q(ppc_date__gte=from_date) | Q(ppc_date__isnull=True, ppc_transaction_date__gte=from_date))
+        filters &= Q(ppc_date__gte=from_date)
     if to_date:
-        filters &= (Q(ppc_date__lte=to_date) | Q(ppc_date__isnull=True, ppc_transaction_date__lte=to_date))
+        filters &= Q(ppc_date__lte=to_date)
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
-    if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+    search_user = request.GET.get('search_user', "").strip()
 
-    if search_branch:
-        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+
+    if not is_admin_or_supervisor:
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(ppc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
@@ -218,6 +357,12 @@ def pms_petty_cash_list(request):
     from ..sub_models.pms_petty_cash_mod import UNIT_CHOICES
     unit_list = [choice[0] for choice in UNIT_CHOICES]
 
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = PMSPettyCashInfo.objects.filter(ppc_created_by__isnull=False).values_list('ppc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'ppc_list': page_obj,
         'search_ppc_number': ppc_number,
@@ -226,6 +371,8 @@ def pms_petty_cash_list(request):
         'to_date': to_date,
         'search_unit': search_unit,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'unit_list': unit_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
@@ -355,9 +502,9 @@ def get_pms_job_details(request):
     """
     AJAX endpoint to fetch full package job details from Packingjobs and PkcostingsummaryInfo
     """
-    from sms_app.sub_models.packing_jobs_mod import Packingjobs
-    from sms_app.sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
-    from sms_app.sub_models.na_dimension_mod import Nadimension
+    from ..sub_models.packing_jobs_mod import Packingjobs
+    from ..sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
+    from ..sub_models.na_dimension_mod import Nadimension
     from django.db.models import Sum
 
     job_no = request.GET.get('job_no', '').strip()
@@ -419,29 +566,34 @@ def pms_petty_cash_export_tally(request):
     if ppc_number:
         filters &= Q(ppc_number__icontains=ppc_number)
     if search_date:
-        filters &= (Q(ppc_date=search_date) | Q(ppc_transaction_date=search_date))
+        filters &= Q(ppc_date=search_date)
     if from_date:
-        filters &= (Q(ppc_date__gte=from_date) | Q(ppc_date__isnull=True, ppc_transaction_date__gte=from_date))
+        filters &= Q(ppc_date__gte=from_date)
     if to_date:
-        filters &= (Q(ppc_date__lte=to_date) | Q(ppc_date__isnull=True, ppc_transaction_date__lte=to_date))
+        filters &= Q(ppc_date__lte=to_date)
     if search_unit:
         filters &= Q(ppc_unit__icontains=search_unit)
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
-    if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
 
-    if search_branch:
-        filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+    if not is_admin_or_supervisor:
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(ppc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
@@ -466,7 +618,7 @@ def pms_petty_cash_export_tally(request):
         cell.alignment = Alignment(horizontal="center")
 
     for wpc in ppc_list:
-        tally_date = wpc.ppc_date or wpc.ppc_transaction_date
+        tally_date = wpc.ppc_date
         date_str = tally_date.strftime("%d-%m-%Y") if tally_date else ""
         vou_no = wpc.ppc_number or ""
         debit = wpc.ppc_expense_type.pms_exp_type_name if wpc.ppc_expense_type else ""

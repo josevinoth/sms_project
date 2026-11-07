@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 from ..forms import IncidentReportForm,IncidentEmailForm
 from ..models import IncidentReportInfo
 from django.contrib import messages
@@ -109,7 +110,7 @@ def incident_report(request):
         for item in paginated_list:
             data.append([
                 str(item.id),
-                item.inc_incident_date.strftime('%b %d, %Y, %I:%M %p') if item.inc_incident_date else '',
+                timezone.localtime(item.inc_incident_date).strftime('%b %d, %Y, %I:%M %p') if item.inc_incident_date else '',
                 str(item.inc_branch if item.inc_branch else ''),
                 str(item.inc_unit if item.inc_unit else ''),
                 str(item.inc_customer if item.inc_customer else ''),

@@ -167,7 +167,19 @@
                 { "data": 12 }
             ],
             "columnDefs": [
-                { "orderable": false, "targets": [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
+                { "orderable": false, "targets": [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+                {
+                    "targets": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                    "render": function(data, type, row) {
+                        if (type === 'export' || type === 'filter' || type === 'sort') {
+                            if (typeof data === 'string') {
+                                return $('<div>').html(data).text().trim();
+                            }
+                            return data;
+                        }
+                        return data;
+                    }
+                }
             ],
             "dom": '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
             "lengthMenu": [
@@ -179,17 +191,44 @@
             "buttons": [
                 {
                     extend: 'copy',
-                    className: 'btn btn-sm btn-outline-secondary'
+                    className: 'btn btn-sm btn-outline-secondary',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (node) return $(node).text().trim();
+                                if (typeof data === 'string') return $('<div>').html(data).text().trim();
+                                return data;
+                            }
+                        }
+                    }
                 },
                 {
                     extend: 'csv',
-                    className: 'btn btn-sm btn-outline-secondary'
+                    className: 'btn btn-sm btn-outline-secondary',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (node) return $(node).text().trim();
+                                if (typeof data === 'string') return $('<div>').html(data).text().trim();
+                                return data;
+                            }
+                        }
+                    }
                 },
                 {
                     extend: 'excelHtml5',
                     text: 'Excel',
                     title: 'Trip Status Count Report',
                     className: 'btn btn-sm btn-outline-success',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (node) return $(node).text().trim();
+                                if (typeof data === 'string') return $('<div>').html(data).text().trim();
+                                return data;
+                            }
+                        }
+                    },
                     customize: function (xlsx) {
                         let sheet = xlsx.xl.worksheets['sheet1.xml'];
                         let styles = xlsx.xl['styles.xml'];
@@ -211,6 +250,15 @@
                     pageSize: 'A4',
                     title: 'Trip Status Count Report',
                     className: 'btn btn-sm btn-outline-danger',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (node) return $(node).text().trim();
+                                if (typeof data === 'string') return $('<div>').html(data).text().trim();
+                                return data;
+                            }
+                        }
+                    },
                     customize: function (doc) {
                         doc.styles.tableHeader.fillColor = '#0A3278';
                         doc.styles.tableHeader.color = 'white';
@@ -221,6 +269,15 @@
                     extend: 'print',
                     title: 'Trip Status Count Report',
                     className: 'btn btn-sm btn-outline-info',
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (node) return $(node).text().trim();
+                                if (typeof data === 'string') return $('<div>').html(data).text().trim();
+                                return data;
+                            }
+                        }
+                    },
                     customize: function (win) {
                         $(win.document.body).find('thead th')
                             .css('background-color', '#0A3278')
@@ -277,15 +334,28 @@
 </div>
 
 <script>
-    function showStatusModal(title, element) {
+    function showStatusModal(titleOrElement, maybeElement) {
+        var element = maybeElement || titleOrElement;
+        var title = (typeof titleOrElement === 'string') ? titleOrElement : ($(element).attr('data-title') || 'Enquiries');
+
         // Hide the tooltip so it doesn't stay stuck on the screen
         $(element).tooltip('hide');
-        
+
         // Update modal title and body
         $('#enquiriesModalTitle').text(title);
-        var fullList = $(element).attr('data-full-list');
-        $('#enquiriesModalBody').html(fullList);
-        
+        var fullList = $(element).attr('data-full-list') || '';
+
+        var htmlContent = '';
+        if (fullList.indexOf('<br>') !== -1) {
+            htmlContent = fullList;
+        } else {
+            var lines = fullList.split('\n').filter(function(line) { return line.trim().length > 0; });
+            htmlContent = lines.map(function(line) {
+                return $('<div>').text(line).html();
+            }).join('<br>');
+        }
+        $('#enquiriesModalBody').html(htmlContent);
+
         // Show modal
         var myModal = new bootstrap.Modal(document.getElementById('enquiriesModal'));
         myModal.show();

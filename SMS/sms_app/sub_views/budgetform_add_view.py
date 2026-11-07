@@ -446,6 +446,7 @@ def budgetform_clone(request, budget_id):
             'bf_vehicle_maintenance': budget.bf_vehicle_maintenance,
             'bf_weighment': budget.bf_weighment,
             'bf_vehicle_source': budget.bf_vehicle_source,
+            'bf_unit': budget.bf_unit,
         })
         context = {
             'form': form,
@@ -466,7 +467,8 @@ def budgetform_clone(request, budget_id):
                 bf_company=form.cleaned_data['bf_company'],
                 bf_location=form.cleaned_data['bf_location'],
                 bf_unit_reference=form.cleaned_data['bf_unit_reference'],
-                bf_vehicle_source=form.cleaned_data['bf_vehicle_source']
+                bf_vehicle_source=form.cleaned_data['bf_vehicle_source'],
+                bf_unit=form.cleaned_data.get('bf_unit')
             ).exists()
 
             if existing_budget:

@@ -36,7 +36,25 @@ def format_email_date(dt):
         return str(dt)
 
 
-@login_required(login_url='login_page')
+def is_trip_closed_for_replacement(trip):
+    if not trip:
+        return False
+    remarks = getattr(trip, 'tr_remarks', '') or ''
+    if "Closed for replacement" in remarks or "[AUTO-NOTE] Journey ended" in remarks:
+        return True
+    if getattr(trip, 'tc_financestatus_id', None) == 2 and getattr(trip, 'tr_enquirynumber_id', None):
+        veh_num = (getattr(trip, 'tr_vehiclenumber', '') or '').strip()
+        if veh_num:
+            return Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber_id=trip.tr_enquirynumber_id,
+                va_status_id=2
+            ).filter(
+                Q(va_vehiclenumber__vm_registrationnumber__iexact=veh_num) |
+                Q(va_vehiclenumber_mkt__iexact=veh_num)
+            ).exists()
+    return False
+
+
 def tripdetail_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
@@ -227,18 +245,17 @@ def tripdetail_add(request, tripdetail_id=0):
                         trip_det_form.fields['tr_departedlocation'].initial = rep_place
                     elif rep_place and initial_data.get('tr_category') in [2, 3]:
                         trip_det_form.fields['tr_reportedlocation'].initial = rep_place
-                    else:
-                        previous_trip = TripdetailInfo.objects.filter(
-                            tr_enquirynumber_id=enquiry_num_id
-                        ).order_by('-tr_created_at').first()
-                        if previous_trip and previous_trip.tr_reportedlocation:
-                            trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+                    elif enquiry and enquiry.en_fromlocaion:
+                        trip_det_form.fields['tr_departedlocation'].initial = enquiry.en_fromlocaion
+
+                    if enquiry and enquiry.en_tolocation:
+                        trip_det_form.fields['tr_reportedlocation'].initial = enquiry.en_tolocation
             else:
-                previous_trip = TripdetailInfo.objects.filter(
-                    tr_enquirynumber_id=enquiry_num_id
-                ).order_by('-tr_created_at').first()
-                if previous_trip and previous_trip.tr_reportedlocation:
-                    trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+                # Market vehicle or vehicle without allotment: Default directly to Enquiry locations
+                if enquiry and enquiry.en_fromlocaion:
+                    trip_det_form.fields['tr_departedlocation'].initial = enquiry.en_fromlocaion
+                if enquiry and enquiry.en_tolocation:
+                    trip_det_form.fields['tr_reportedlocation'].initial = enquiry.en_tolocation
 
             tripclosurefiles_form = TripclosurefilesForm()
             trip_list = TripdetailInfo.objects.select_related(
@@ -444,17 +461,22 @@ def tripdetail_add(request, tripdetail_id=0):
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-            allowed_next = get_allowed_next_statuses(status_selected or trip_instance.tc_financestatus_id,
-                                                     is_admin=is_admin_user(request))
-            if allowed_next is not None:
-                allowed_statuses = allowed_next
+            is_replaced_closed = is_trip_closed_for_replacement(trip_instance)
+            if is_replaced_closed:
+                status_selected = 2
+                allowed_statuses = [2]
             else:
-                if status_selected == 8:
-                    allowed_statuses = [8, 10, 11]
+                allowed_next = get_allowed_next_statuses(status_selected or trip_instance.tc_financestatus_id,
+                                                         is_admin=is_admin_user(request))
+                if allowed_next is not None:
+                    allowed_statuses = allowed_next
                 else:
-                    allowed_statuses = [1, 2, 8, 10, 11]
-            if status_selected and status_selected not in allowed_statuses:
-                allowed_statuses.append(status_selected)
+                    if status_selected == 8:
+                        allowed_statuses = [8, 10, 11]
+                    else:
+                        allowed_statuses = [1, 2, 8, 10, 11]
+                if status_selected and status_selected not in allowed_statuses:
+                    allowed_statuses.append(status_selected)
 
             status_list = Tripstatusinfo.objects.filter(id__in=allowed_statuses)
 
@@ -642,6 +664,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
             context['trip_attachments'] = TripAttachmentInfo.objects.filter(
                 ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at')
+            context['is_trip_frozen_closed'] = is_replaced_closed
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
@@ -827,22 +850,26 @@ def tripdetail_add(request, tripdetail_id=0):
                         cg_consignmentnumber=trip.tr_consignmentnumber_id).exists()
 
                 # Manual capture of status from POST
-                manual_status_id = request.POST.get('tc_financestatus')
-                if manual_status_id:
-                    status_id_val = int(manual_status_id)
-                    if status_id_val == 8 and not has_goods:
-                        status_id_val = 12  # Work In Progress
-                    trip.tc_financestatus_id = status_id_val
-                    trip.tr_operational_status_id = status_id_val  # Keep both fields in sync
+                if is_trip_closed_for_replacement(trip):
+                    trip.tc_financestatus_id = 2
+                    trip.tr_operational_status_id = 2
                 else:
-                    if trip.tr_category_id in [2, 3]:
-                        if status_open:
-                            trip.tc_financestatus_id = status_open.id
-                            trip.tr_operational_status_id = status_open.id  # Keep both fields in sync
+                    manual_status_id = request.POST.get('tc_financestatus')
+                    if manual_status_id:
+                        status_id_val = int(manual_status_id)
+                        if status_id_val == 8 and not has_goods:
+                            status_id_val = 12  # Work In Progress
+                        trip.tc_financestatus_id = status_id_val
+                        trip.tr_operational_status_id = status_id_val  # Keep both fields in sync
                     else:
-                        target_status = 8 if has_goods else 12
-                        trip.tc_financestatus_id = target_status
-                        trip.tr_operational_status_id = target_status  # Keep both fields in sync
+                        if trip.tr_category_id in [2, 3]:
+                            if status_open:
+                                trip.tc_financestatus_id = status_open.id
+                                trip.tr_operational_status_id = status_open.id  # Keep both fields in sync
+                        else:
+                            target_status = 8 if has_goods else 12
+                            trip.tc_financestatus_id = target_status
+                            trip.tr_operational_status_id = target_status  # Keep both fields in sync
 
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
@@ -1363,7 +1390,7 @@ def tripdetail_list_ajax(request):
         updated_at = timezone.localtime(t.tr_updated_at).strftime('%Y-%m-%d %H:%M') if t.tr_updated_at else ''
 
         data.append([
-            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            timezone.localtime(t.tr_created_at).strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
             str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
             t.tr_tripnumber or '',

@@ -274,6 +274,13 @@
                     <div class="form-section p-3 h-100">
                         <div class="form-group-modern mb-0">
                             <label class="form-label-modern small mb-1">Trip Status</label>
+                            {% if is_trip_frozen_closed %}
+                            <select name="tc_financestatus_display" id="tc_financestatus_display" class="form-control form-control-modern form-control-sm border-warning" disabled="disabled">
+                                <option value="2" selected>Trip Closed (Frozen - Replaced Vehicle)</option>
+                            </select>
+                            <input type="hidden" name="tc_financestatus" id="tc_financestatus" value="2">
+                            <small class="text-danger d-block mt-1 font-weight-bold" style="font-size:0.75rem;"><i class="fas fa-lock mr-1"></i> Frozen in "Trip Closed" due to vehicle replacement.</small>
+                            {% else %}
                             <select name="tc_financestatus" id="tc_financestatus" class="form-control form-control-modern form-control-sm border-success">
                                 {% for item in status_list %}
                                 <option value="{{ item.id }}"
@@ -286,6 +293,7 @@
                                 </option>
                                 {% endfor %}
                             </select>
+                            {% endif %}
 
                             <!-- Cancellation status info banners -->
                             <div id="cancel_with_billing_info" class="alert alert-info alert-sm trip-status-info mt-1 mb-0 py-1 px-2">
@@ -547,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				if (data.reported_date && !$('#tr_departeddate_pickup').val()) {
 					$('#tr_departeddate_pickup').val(data.reported_date).trigger('change');
 				}
-				if (data.last_location_id) {
+				if (data.last_location_id && !info.is_mkt) {
 					$('#tr_departedlocation').val(data.last_location_id).trigger('change');
 				}
 			})
@@ -951,9 +959,8 @@ document.addEventListener("DOMContentLoaded", function () {
 						if (data.error) {
 							alert(data.error);
 						} else {
-							// ✅ Fill only if category is normal and From Location is not already set by vehicle
-							var hasFromLoc = Boolean($("#tr_departedlocation").val());
-							if (!g_locationLocked && !hasFromLoc) {
+							// ✅ Fill only if category is normal and From Location is not locked by vehicle continuity
+							if (!g_locationLocked && data.from_location_id) {
 								$("#tr_departedlocation").val(data.from_location_id).trigger('change');
 							}
 							$("#tr_reportedlocation").val(data.to_location_id).trigger('change');

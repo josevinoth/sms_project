@@ -162,7 +162,8 @@ def driver_expense_add(request, expense_id=0):
                             tpc_customer=customer_obj,
                             tpc_source_driver_expense_id=exp.id
                         )
-                        tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj)
+                        if tpc.tpc_transaction_date:
+                            tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj, voucher_date=tpc.tpc_transaction_date)
                         tpc.save()
             # ------------------------------------------------------------------
 

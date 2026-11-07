@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from datetime import datetime
+from django.utils import timezone
 from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
@@ -12,13 +13,107 @@ from ..models import Business_Sol_info, Location_info
 from ..sub_forms.tms_petty_cash_form import TMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
-def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None):
+
+def is_admin_or_supervisor_user(request):
     """
-    Generates [BranchCode]_T_26-27_yy_xxx
+    Returns True if current user is admin, superuser, staff, or has supervisor/manager/admin role or designation.
     """
-    fy = get_financial_year() # returns e.g. "24-25"
-    today = datetime.now()
-    month_str = today.strftime("%m")
+    user = getattr(request, 'user', None)
+    if not user or not user.is_authenticated:
+        ses_user_id = request.session.get('ses_userID')
+        if not ses_user_id:
+            return False
+        from django.contrib.auth.models import User
+        try:
+            user = User.objects.get(id=ses_user_id)
+        except User.DoesNotExist:
+            return False
+
+    if user.is_superuser or user.is_staff:
+        return True
+
+    user_role = (request.session.get('ses_role') or '').lower()
+    if user_role in ['admin', 'super user', 'superuser']:
+        return True
+
+    try:
+        from ..sub_models.user_ext_mod import User_extInfo
+        user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+        desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+        role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+        if 'supervisor' in desig or 'admin' in role or 'super' in role:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def get_user_branch_code(request):
+    """
+    Determines the user's branch code: 'MAA', 'BLR', etc.
+    Checks User_extInfo.emp_branch, falling back to session ses_branch_id.
+    """
+    user = getattr(request, 'user', None)
+    user_id = user.id if (user and user.is_authenticated) else request.session.get('ses_userID')
+    branch_name = ''
+
+    if user_id:
+        try:
+            from ..sub_models.user_ext_mod import User_extInfo
+            user_ext = User_extInfo.objects.select_related('emp_branch').get(user_id=user_id)
+            if user_ext.emp_branch and user_ext.emp_branch.loc_name:
+                branch_name = user_ext.emp_branch.loc_name
+        except Exception:
+            pass
+
+    if not branch_name:
+        branch_id = request.session.get('ses_branch_id')
+        if branch_id:
+            try:
+                from ..models import Location_info
+                loc = Location_info.objects.get(id=branch_id)
+                branch_name = loc.loc_name or ''
+            except Exception:
+                pass
+
+    name_upper = branch_name.upper()
+    if 'BLR' in name_upper or 'BANGALORE' in name_upper or 'BENGALURU' in name_upper:
+        return 'BLR'
+    elif 'MAA' in name_upper or 'CHENNAI' in name_upper:
+        return 'MAA'
+    elif 'PNY' in name_upper or 'PONDICHERRY' in name_upper:
+        return 'PNY'
+    elif 'HYD' in name_upper or 'HYDERABAD' in name_upper:
+        return 'HYD'
+    elif 'CJB' in name_upper or 'COIMBATORE' in name_upper:
+        return 'CJB'
+    elif branch_name:
+        return branch_name.split()[-1].upper()
+    return ''
+
+
+def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None, voucher_date=None):
+    """
+    Generates [BranchCode]_T_26-27_yy_xxx strictly based on voucher_date.
+    No fallback date is permitted.
+    """
+    if not voucher_date:
+        raise ValueError("Voucher Date is strictly required to generate TMS voucher number. No fallback date is permitted.")
+
+    if isinstance(voucher_date, str):
+        try:
+            v_date = datetime.strptime(voucher_date[:10], "%Y-%m-%d").date()
+        except Exception:
+            raise ValueError(f"Invalid voucher_date format: {voucher_date}")
+    elif isinstance(voucher_date, datetime):
+        v_date = voucher_date.date()
+    elif hasattr(voucher_date, 'month') and hasattr(voucher_date, 'year'):
+        v_date = voucher_date
+    else:
+        raise ValueError(f"Invalid voucher_date: {voucher_date}")
+
+    fy = get_financial_year(v_date) # returns e.g. "26-27"
+    month_str = f"{v_date.month:02d}"
     
     branch_prefix = "M"
     if branch_obj and branch_obj.loc_name:
@@ -28,21 +123,25 @@ def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None):
             
     prefix = f"{branch_prefix}_T_{fy}_{month_str}_"
     
-    # fetch latest for this prefix
-    latest_obj = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).order_by('-id').first()
-    
-    if latest_obj:
-        latest_num_str = getattr(latest_obj, field_name)
-        # extract xxx
-        try:
-            seq = int(latest_num_str.split('_')[-1])
-            new_seq = seq + 1
-        except ValueError:
-            new_seq = 1
-    else:
-        new_seq = 1
-        
-    return f"{prefix}{str(new_seq).zfill(3)}"
+    # fetch all existing numbers with this prefix to get the maximum sequence
+    existing_nums = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).values_list(field_name, flat=True)
+    max_seq = 0
+    for num_str in existing_nums:
+        if num_str:
+            try:
+                seq = int(num_str.split('_')[-1])
+                if seq > max_seq:
+                    max_seq = seq
+            except (ValueError, IndexError):
+                pass
+    new_seq = max_seq + 1
+    new_num = f"{prefix}{str(new_seq).zfill(3)}"
+
+    while model_class.objects.filter(**{field_name: new_num}).exists():
+        new_seq += 1
+        new_num = f"{prefix}{str(new_seq).zfill(3)}"
+
+    return new_num
 
 def tms_petty_cash_add(request, tpc_id=0):
     initial_data = {}
@@ -91,29 +190,42 @@ def tms_petty_cash_add(request, tpc_id=0):
     if request.method == 'POST':
         post_data = request.POST.copy()
         
-        # If vehicle number or driver name are raw text from Select2 (because they were missing from masters), 
-        # create them dynamically and update POST data with the new ForeignKey ID.
-        if post_data.get('tpc_vehicle_number') and not str(post_data['tpc_vehicle_number']).isdigit():
-            from ..models import VehiclemasterInfo
-            veh, _ = VehiclemasterInfo.objects.get_or_create(
-                vm_registrationnumber=str(post_data['tpc_vehicle_number']).strip(),
-                defaults={
-                    'vm_numberoftyres': None, 
-                    'vm_primarydrivermob': None, 
-                    'vm_secondarydrivermob': None
-                }
-            )
-            post_data['tpc_vehicle_number'] = str(veh.id)
-            
-        if post_data.get('tpc_driver_name') and not str(post_data['tpc_driver_name']).isdigit():
-            from ..models import DrivermasterInfo
-            drv, _ = DrivermasterInfo.objects.get_or_create(
-                dm_name=str(post_data['tpc_driver_name']).strip(),
-                defaults={
-                    'dm_vehiclesource_id': post_data.get('tpc_vehicle_source') or 1
-                }
-            )
-            post_data['tpc_driver_name'] = str(drv.id)
+        # Handle vehicle number: if selected from master (digit), link to master.
+        # If entered manually or from a trip where vehicle is not in master,
+        # DO NOT add to Vehicle Master; store in tpc_vehicle_number_manual.
+        if post_data.get('tpc_vehicle_number'):
+            veh_input = str(post_data['tpc_vehicle_number']).strip()
+            if not veh_input.isdigit():
+                from ..models import VehiclemasterInfo
+                veh = VehiclemasterInfo.objects.filter(vm_registrationnumber__iexact=veh_input).first()
+                if veh:
+                    post_data['tpc_vehicle_number'] = str(veh.id)
+                    post_data['tpc_vehicle_number_manual'] = ''
+                else:
+                    post_data['tpc_vehicle_number'] = ''
+                    post_data['tpc_vehicle_number_manual'] = veh_input.upper()
+            else:
+                post_data['tpc_vehicle_number_manual'] = ''
+        else:
+            post_data['tpc_vehicle_number_manual'] = ''
+
+        # Handle driver name: if selected from master (digit), link to master.
+        # If entered manually, DO NOT add to Driver Master; store in tpc_driver_name_manual.
+        if post_data.get('tpc_driver_name'):
+            drv_input = str(post_data['tpc_driver_name']).strip()
+            if not drv_input.isdigit():
+                from ..models import DrivermasterInfo
+                drv = DrivermasterInfo.objects.filter(dm_name__iexact=drv_input).first()
+                if drv:
+                    post_data['tpc_driver_name'] = str(drv.id)
+                    post_data['tpc_driver_name_manual'] = ''
+                else:
+                    post_data['tpc_driver_name'] = ''
+                    post_data['tpc_driver_name_manual'] = drv_input
+            else:
+                post_data['tpc_driver_name_manual'] = ''
+        else:
+            post_data['tpc_driver_name_manual'] = ''
 
         if post_data.get('tpc_to'):
             if not str(post_data['tpc_to']).isdigit():
@@ -130,35 +242,83 @@ def tms_petty_cash_add(request, tpc_id=0):
             tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
             form = TMSPettyCashForm(post_data, instance=tpc, request=request)
             
+        from_location = ""
+        to_location = ""
+        job_lookup = post_data.get('tpc_job_no') if tpc_id == 0 else tpc.tpc_job_no
+        if job_lookup:
+            trip = TripdetailInfo.objects.filter(
+                Q(tr_consignmentnumber__co_consignmentnumber=job_lookup) | 
+                Q(tr_tripnumber=job_lookup)
+            ).first()
+            if trip:
+                from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
+                to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
+
+        context = {
+            'form': form,
+            'tpc_id': tpc_id,
+            'from_location': from_location,
+            'to_location': to_location,
+        }
+
         if form.is_valid():
             saved_tpc = form.save(commit=False)
+            voucher_date = saved_tpc.tpc_transaction_date
+            if not voucher_date:
+                messages.error(request, "Voucher Date is strictly required to generate voucher number.")
+                return render(request, "asset_mgt_app/tms_petty_cash_add.html", context)
+
+            branch_prefix = "M"
+            if saved_tpc.tpc_branch and saved_tpc.tpc_branch.loc_name:
+                loc_lower = saved_tpc.tpc_branch.loc_name.lower()
+                if "blr" in loc_lower or "bengaluru" in loc_lower or "bangalore" in loc_lower:
+                    branch_prefix = "B"
+
+            v_fy = get_financial_year(voucher_date)
+            v_month = f"{voucher_date.month:02d}"
+            expected_prefix = f"{branch_prefix}_T_{v_fy}_{v_month}_"
+
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            if not created_user and request.session.get('ses_userID'):
+                from django.contrib.auth.models import User
+                try:
+                    created_user = User.objects.get(id=request.session['ses_userID'])
+                except User.DoesNotExist:
+                    pass
+
             if tpc_id == 0:
-                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch)
-                saved_tpc.tpc_created_by = request.user
-            saved_tpc.tpc_updated_by = request.user
+                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
+                saved_tpc.tpc_created_by = created_user
+            else:
+                if not saved_tpc.tpc_number or not saved_tpc.tpc_number.startswith(expected_prefix):
+                    saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch, voucher_date=voucher_date)
+                if not saved_tpc.tpc_created_by and created_user:
+                    saved_tpc.tpc_created_by = created_user
+            saved_tpc.tpc_updated_by = created_user
             saved_tpc.save()
             messages.success(request, "Petty Cash saved successfully.")
             return redirect('tms_petty_cash_list')
         else:
             messages.error(request, "Please correct the errors below.")
             
-    from_location = ""
-    to_location = ""
-    if tpc_id != 0:
-        trip = TripdetailInfo.objects.filter(
-            Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
-            Q(tr_tripnumber=tpc.tpc_job_no)
-        ).first()
-        if trip:
-            from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
-            to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
+    else:
+        from_location = ""
+        to_location = ""
+        if tpc_id != 0:
+            trip = TripdetailInfo.objects.filter(
+                Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
+                Q(tr_tripnumber=tpc.tpc_job_no)
+            ).first()
+            if trip:
+                from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
+                to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
 
-    context = {
-        'form': form,
-        'tpc_id': tpc_id,
-        'from_location': from_location,
-        'to_location': to_location,
-    }
+        context = {
+            'form': form,
+            'tpc_id': tpc_id,
+            'from_location': from_location,
+            'to_location': to_location,
+        }
     return render(request, "asset_mgt_app/tms_petty_cash_add.html", context)
 
 
@@ -169,6 +329,7 @@ def tms_petty_cash_list(request):
     to_date = request.GET.get('to_date', "").strip()
     search_vehicle = request.GET.get('search_vehicle', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
     
     filters = Q()
     if tpc_number:
@@ -180,24 +341,28 @@ def tms_petty_cash_list(request):
     if to_date:
         filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
-        filters &= Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle)
+        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
         
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
-    if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
 
-    if search_branch:
-        filters &= Q(tpc_branch__loc_name__icontains=search_branch)
-            
+    if not is_admin_or_supervisor:
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(tpc_branch__loc_name__icontains='BLR') | Q(tpc_branch__loc_name__icontains='Bangalore') | Q(tpc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(tpc_branch__loc_name__icontains='MAA') | Q(tpc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(tpc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(tpc_branch__loc_name__icontains='BLR') | Q(tpc_branch__loc_name__icontains='Bangalore') | Q(tpc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(tpc_branch__loc_name__icontains='MAA') | Q(tpc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(tpc_created_by_id=search_user)
             
     tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
         'tpc_business', 'tpc_branch', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
@@ -216,7 +381,10 @@ def tms_petty_cash_list(request):
                 Q(tpc_number__icontains=search_value) |
                 Q(tpc_business__bvm_business__icontains=search_value) |
                 Q(tpc_branch__loc_name__icontains=search_value) |
-                Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_value)
+                Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_value) |
+                Q(tpc_vehicle_number_manual__icontains=search_value) |
+                Q(tpc_created_by__first_name__icontains=search_value) |
+                Q(tpc_created_by__username__icontains=search_value)
             )
             tpc_list = tpc_list.filter(search_filters)
             
@@ -246,7 +414,17 @@ def tms_petty_cash_list(request):
             
             created_by = tpc.tpc_created_by.first_name if tpc.tpc_created_by and tpc.tpc_created_by.first_name else (tpc.tpc_created_by.username if tpc.tpc_created_by else "-")
             updated_by = tpc.tpc_updated_by.first_name if tpc.tpc_updated_by and tpc.tpc_updated_by.first_name else (tpc.tpc_updated_by.username if tpc.tpc_updated_by else "-")
-            veh_no = tpc.tpc_vehicle_number.vm_registrationnumber if tpc.tpc_vehicle_number else ""
+            veh_no = tpc.tpc_vehicle_number.vm_registrationnumber if tpc.tpc_vehicle_number else (tpc.tpc_vehicle_number_manual or "")
+            if not veh_no and tpc.tpc_job_no:
+                try:
+                    trip_obj = TripdetailInfo.objects.filter(
+                        Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
+                        Q(tr_tripnumber=tpc.tpc_job_no)
+                    ).first()
+                    if trip_obj and trip_obj.tr_vehiclenumber:
+                        veh_no = trip_obj.tr_vehiclenumber
+                except Exception:
+                    pass
             
             edit_url = f"/SMS/petty_cash_insert/{tpc.id}/"
             if tpc.tpc_source_driver_expense_id:
@@ -267,10 +445,10 @@ def tms_petty_cash_list(request):
                 str(tpc.tpc_amount) if tpc.tpc_amount else "0.0",
                 from_to_location,
                 veh_no,
-                tpc.tpc_created_on.strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
+                timezone.localtime(tpc.tpc_created_on).strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
                 created_by,
                 updated_by,
-                tpc.tpc_updated_at.strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
+                timezone.localtime(tpc.tpc_updated_at).strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
                 f'''<div class="d-flex justify-content-center" style="gap: 5px;">
                     <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
                         <i class="fas fa-print"></i>
@@ -295,6 +473,12 @@ def tms_petty_cash_list(request):
             'data': data
         })
         
+    user_list = []
+    if is_admin_or_supervisor:
+        from django.contrib.auth.models import User
+        creator_ids = TMSPettyCashInfo.objects.filter(tpc_created_by__isnull=False).values_list('tpc_created_by_id', flat=True).distinct()
+        user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
+
     context = {
         'search_tpc_number': tpc_number,
         'search_date': search_date,
@@ -302,6 +486,8 @@ def tms_petty_cash_list(request):
         'to_date': to_date,
         'search_vehicle': search_vehicle,
         'search_branch': search_branch,
+        'search_user': search_user,
+        'user_list': user_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
@@ -334,6 +520,8 @@ def tms_petty_cash_voucher_print(request, tpc_id):
         payment_to = tpc.tpc_to_manual
     elif tpc.tpc_driver_name:
         payment_to = tpc.tpc_driver_name.dm_name
+    elif tpc.tpc_driver_name_manual:
+        payment_to = tpc.tpc_driver_name_manual
     elif tpc.tpc_to:
         payment_to = tpc.tpc_to.first_name or tpc.tpc_to.username
         
@@ -410,6 +598,7 @@ def tms_petty_cash_export_tally(request):
     to_date = request.GET.get('to_date', "").strip()
     search_vehicle = request.GET.get('search_vehicle', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
     
     filters = Q()
     if tpc_number:
@@ -421,27 +610,32 @@ def tms_petty_cash_export_tally(request):
     if to_date:
         filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
-        filters &= Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle)
+        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
 
-    user = request.user
-    is_admin_or_supervisor = user.is_superuser
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+
     if not is_admin_or_supervisor:
-        try:
-            from ..sub_models.user_ext_mod import User_extInfo
-            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
-            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
-            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
-            if 'supervisor' in desig or 'admin' in role:
-                is_admin_or_supervisor = True
-        except Exception:
-            pass
-
-    if search_branch:
-        filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(tpc_branch__loc_name__icontains='BLR') | Q(tpc_branch__loc_name__icontains='Bangalore') | Q(tpc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(tpc_branch__loc_name__icontains='MAA') | Q(tpc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(tpc_branch__loc_name__icontains=user_branch_code)
+    else:
+        if search_branch:
+            if search_branch == 'BLR':
+                filters &= (Q(tpc_branch__loc_name__icontains='BLR') | Q(tpc_branch__loc_name__icontains='Bangalore') | Q(tpc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(tpc_branch__loc_name__icontains='MAA') | Q(tpc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(tpc_created_by_id=search_user)
         
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 
-        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_driver_name'
+        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_driver_name', 'tpc_created_by'
     )
     
     wb = Workbook()
@@ -513,12 +707,14 @@ def tms_petty_cash_export_tally(request):
                 veh_no = f"{reg_num}(A)"
             else:
                 veh_no = reg_num
+        elif tpc.tpc_vehicle_number_manual:
+            veh_no = tpc.tpc_vehicle_number_manual
             
         # Amount
         amount = tpc.tpc_amount or 0.0
         
         # Driver Name
-        driver_name = tpc.tpc_driver_name.dm_name if tpc.tpc_driver_name else ""
+        driver_name = (tpc.tpc_driver_name.dm_name if tpc.tpc_driver_name else tpc.tpc_driver_name_manual) or ""
         
         # Trn Date (DD-MMM, e.g. 28-Jul)
         trn_date = tpc.tpc_trip_date.strftime("%d-%b") if tpc.tpc_trip_date else ""

@@ -82,6 +82,7 @@ class BudgetInfo(models.Model):
     bf_unit_reference = models.ForeignKey(UnitInfo, null=True, on_delete=models.CASCADE, default='')
     bf_company = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,null=True,blank=True)
     bf_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE,null=True,blank=True)
+    bf_unit = models.CharField(max_length=50, blank=True, null=True, choices=(('M-Dept', 'M-Dept'), ('B-Dept', 'B-Dept')))
     bf_rent_furniture_fittings = models.FloatField(blank=True, null=True, default=0.0)
     bf_rent_office = models.FloatField(blank=True, null=True, default=0.0)
     bf_exgratia_corp_staff = models.FloatField(blank=True, null=True, default=0.0)

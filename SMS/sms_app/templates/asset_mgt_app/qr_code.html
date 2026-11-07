@@ -1,31 +1,154 @@
-{% extends "asset_mgt_app/base.html" %}
-{% load widget_tweaks %}
-{% block content %}
-{% load crispy_forms_tags %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block title %}Asset QR Code Label | {{ Asset_Number|default:"Asset" }} | BVM Management System{% endblock %}
 
-<!-- On-Screen Display -->
-<div id="content" class="print-label bg-warning" style="width:300px;padding: 1px; text-align: left; font-family: Arial, sans-serif;">
-    <div style="display: flex; align-items: center;">
-        <!-- QR Code -->
-        <div style="text-align: center;">
-            <img src="{{ qr_code }}" alt="QR Code" style="width: 100px; height: 100px;object-fit: contain;">
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       ASSET QR CODE & LABEL PREVIEW - MODERN BVM STYLING
+       ══════════════════════════════════════════════════════════════════════════ */
+    .qr-preview-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+        min-height: 520px;
+    }
+
+    .qr-card-container {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        padding: 2rem;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Modern Printable Sticker Label Preview */
+    .print-label-box {
+        background: #fffbeb;
+        border: 2px dashed #f59e0b;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin: 1.5rem auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        text-align: left;
+        max-width: 400px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .print-label-qr {
+        width: 100px;
+        height: 100px;
+        background: #ffffff;
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid #fde68a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .print-label-qr img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .print-label-details {
+        flex: 1;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 0.85rem;
+        line-height: 1.35;
+        color: #1e293b;
+    }
+    .print-label-details p {
+        margin: 0 0 3px 0;
+    }
+    .print-label-details .asset-num-title {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-weight: 800;
+        color: #0284c7;
+        font-size: 0.95rem;
+        letter-spacing: 0.3px;
+    }
+
+    /* Actions */
+    .btn-print-action {
+        background: linear-gradient(135deg, #0284c7, #0369a1);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .btn-print-action:hover {
+        background: linear-gradient(135deg, #0369a1, #075985);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container-fluid py-3 px-3">
+    <!-- ══ Page Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="d-flex align-items-center" style="gap: 12px;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fas fa-qrcode text-white"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.3px;">Asset QR Code Label</h3>
+                <span class="text-white-50 small">Printable barcode label and physical asset tracking badge</span>
+            </div>
         </div>
-        <!-- Asset Info -->
-        <div style="flex: 1; padding-left: 8px; font-size: 14px; line-height: 1.2;">
-            <p style="margin: 0;">{{ Asset_Number }}</p>
-            <p style="margin: 0;">{{ Asset_Assigned_To }}</p>
-            <p style="margin: 0;">{{ Asset_Location }}</p>
-            <p style="margin: 0;">{{ Asset_Product }}</p>
-            <p style="margin: 0;">{{ Asset_ID }}</p>
+
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'assign_asset_search' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; height: 36px; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Asset List
+            </a>
         </div>
     </div>
-</div>
 
-<!-- Print Button -->
-<div style="text-align: center; margin-top: 10px;">
-    <button onclick="printDiv()" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        Print Asset Info
-    </button>
+    <!-- ══ QR Code Card ══ -->
+    <div class="qr-preview-wrapper">
+        <div class="qr-card-container">
+            <h4 class="font-weight-bold text-dark mb-1" style="font-size: 1.2rem;">Physical Sticker Label Preview</h4>
+            <p class="text-muted small mb-3">48mm × 25mm thermal / sticker printable label format</p>
+
+            <!-- Printable content element -->
+            <div id="content" class="print-label-box">
+                <div class="print-label-qr">
+                    <img src="{{ qr_code }}" alt="QR Code">
+                </div>
+                <div class="print-label-details">
+                    <p class="asset-num-title">{{ Asset_Number }}</p>
+                    <p><strong>Assigned:</strong> {{ Asset_Assigned_To|default:"Unassigned" }}</p>
+                    <p><strong>Location:</strong> {{ Asset_Location|default:"-" }}</p>
+                    <p><strong>Product:</strong> {{ Asset_Product|default:"-" }}</p>
+                    <p><strong>ID:</strong> {{ Asset_ID|default:"-" }}</p>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="d-flex justify-content-center align-items-center mt-3" style="gap: 12px;">
+                <button type="button" class="btn-print-action" onclick="printDiv()">
+                    <i class="fas fa-print"></i> Print Asset Label
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Print Script -->
@@ -34,43 +157,57 @@ function printDiv() {
     const content = document.getElementById("content").outerHTML;
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
+        <!DOCTYPE html>
         <html>
             <head>
-                <title>Print</title>
+                <title>Asset Label - {{ Asset_Number }}</title>
                 <style>
-                    @media print {
-                        body {
-                            margin: 0;
-                            padding: 0;
-                            width: 48mm;
-                            height: 25mm;
-                        }
-<!--                        .print-label {-->
-<!--                            display: flex;-->
-<!--                            flex-direction: row;-->
-<!--                            align-items: center;-->
-<!--                            justify-content: space-between;-->
-<!--                            width: 100%;-->
-<!--                            height: 100%;-->
-<!--                            padding: 2mm;-->
-<!--                            box-sizing: border-box;-->
-<!--                            border: 2px solid black;-->
-<!--                            border-radius: 2mm;-->
-<!--                            font-family: Arial, sans-serif;-->
-<!--                            font-size: 2.8mm;-->
-<!--                            background-color: white;-->
-<!--                        }-->
-                        .print-label img {
-                            width: 15mm;
-                            height: 15mm;
-                            object-fit: contain;
-                        }
-                        .print-label p {
-                            margin: 0;
-                            padding: 0;
-                            line-height: 1.1;
-                            word-break: break-word;
-                        }
+                    @page {
+                        margin: 0;
+                        size: 48mm 25mm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        font-family: Arial, sans-serif;
+                        background: #ffffff;
+                    }
+                    .print-label-box {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        width: 48mm;
+                        height: 25mm;
+                        padding: 2mm;
+                        box-sizing: border-box;
+                        border: 1px solid #cbd5e1;
+                        background-color: #ffffff !important;
+                    }
+                    .print-label-qr {
+                        width: 19mm;
+                        height: 19mm;
+                        margin-right: 2mm;
+                        flex-shrink: 0;
+                    }
+                    .print-label-qr img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain;
+                    }
+                    .print-label-details {
+                        flex: 1;
+                        font-size: 2.1mm;
+                        line-height: 1.15;
+                        color: #000000;
+                        overflow: hidden;
+                    }
+                    .print-label-details p {
+                        margin: 0 0 0.5mm 0;
+                        word-break: break-word;
+                    }
+                    .print-label-details .asset-num-title {
+                        font-weight: bold;
+                        font-size: 2.4mm;
                     }
                 </style>
             </head>
@@ -78,8 +215,14 @@ function printDiv() {
                 ${content}
                 <script>
                     const img = document.querySelector("img");
-                    img.onload = () => window.print();
-                    if (img.complete) window.print();
+                    img.onload = () => {
+                        window.print();
+                        window.close();
+                    };
+                    if (img.complete) {
+                        window.print();
+                        window.close();
+                    }
                 <\/script>
             </body>
         </html>
@@ -87,5 +230,4 @@ function printDiv() {
     printWindow.document.close();
 }
 </script>
-
 {% endblock content %}

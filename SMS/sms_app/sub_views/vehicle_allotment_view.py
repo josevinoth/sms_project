@@ -26,6 +26,13 @@ from ..sub_models.emailmaster_mod import Emailmaster
 from ..sub_models.emailtype_mod import Email_type
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.vehicle_replacement_status_mod import Replacementstatus
+from .gps_utils import (
+    get_live_gps_devices,
+    get_place_coordinates,
+    haversine_distance,
+    normalize_reg,
+    get_vehicle_last_known_trip_location
+)
 
 VEHICLE_NUMBER_REGEX = re.compile(r'^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$')
 
@@ -308,6 +315,118 @@ def vehicle_allotment_nav(request, vehicle_allotment_id=0):
     return render(request, "asset_mgt_app/vehicle_allotment_add.html", context)
 
 
+def _render_vehicle_allotment_add(request, enquiry_id, form):
+    user_id = request.session.get('ses_userID')
+    first_name = request.session.get('first_name')
+    enquiry = EnquirynoteInfo.objects.filter(id=enquiry_id).first()
+    if not enquiry:
+        return redirect('enquirynote_list')
+
+    env_first = Enquirynotevehicle.objects.filter(
+        env_enquirynumber_id=enquiry_id
+    ).select_related('env_vehiclecategory').first()
+    vehicle_category_name = env_first.env_vehiclecategory.vc_vehiclecategory if (
+            env_first and env_first.env_vehiclecategory) else ""
+    vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
+
+    # Adding a new vehicle allotment to an enquiry should not be blocked by other trips
+    is_invoiced = False
+    user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+    user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
+    return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
+        'first_name': first_name,
+        'user_id': user_id,
+        'vehicle_allotment_form': form,
+        'enquiry_num_id': enquiry_id,
+        'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry_id
+        ).order_by('-id'),
+        'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by(
+            'vm_registrationnumber'),
+        'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
+        'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
+        'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+        'vehicle_category_name': vehicle_category_name,
+        'vehicle_category_id': vehicle_category_id,
+        'all_vehicletypes': VehicletypeInfo.objects.all(),
+        'all_vendors': Vendor_info.objects.all(),
+        'is_admin': is_admin_user(request),
+        'is_invoiced': is_invoiced,
+        'user_role': user_role,
+    })
+
+
+def _render_vehicle_allotment_update(request, va, form):
+    user_id = request.session.get('ses_userID')
+    first_name = request.session.get('first_name')
+    enquiry_id = va.va_enquirynumber_id
+    enquiry = va.va_enquirynumber
+
+    env = Enquirynotevehicle.objects.filter(
+        env_enquirynumber_id=enquiry_id,
+        env_vehicletype_id=va.va_vehicletype_id or va.va_vehicletype_placed_id
+    ).select_related('env_vehiclecategory').first()
+    if not env:
+        env = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id
+        ).select_related('env_vehiclecategory').first()
+
+    vehicle_category_name = env.env_vehiclecategory.vc_vehiclecategory if (env and env.env_vehiclecategory) else ""
+    vehicle_category_id = env.env_vehiclecategory.id if (env and env.env_vehiclecategory) else ""
+
+    curr_v_num = str(va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else (va.va_vehiclenumber_mkt or '')).strip()
+    is_invoiced = False
+    if curr_v_num:
+        allotment_trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber=enquiry_id,
+            tr_vehiclenumber__iexact=curr_v_num
+        )
+        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=allotment_trips).exists() or allotment_trips.filter(
+            tc_financestatus_id=10).exists()
+    user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+    user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
+    active_trip = None
+    if va:
+        curr_v_num = str(va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else (va.va_vehiclenumber_mkt or '')).strip()
+        if curr_v_num:
+            active_trip = TripdetailInfo.objects.filter(
+                tr_enquirynumber=enquiry_id,
+                tr_vehiclenumber__iexact=curr_v_num
+            ).exclude(
+                Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                Q(tc_financestatus__status__icontains='Closed') |
+                Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
+            ).select_related('tr_departedlocation', 'tr_reportedlocation').first()
+
+    return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
+        'first_name': first_name,
+        'user_id': user_id,
+        'vehicle_allotment_form': form,
+        'va': va,
+        'active_trip': active_trip,
+        'all_places': Places.objects.all().order_by('place_name'),
+        'enquiry_num_id': enquiry_id,
+        'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry_id
+        ).select_related('va_status', 'va_vehicletype', 'va_vehicletype_placed', 'va_vendor',
+                         'va_vehiclesource').order_by('-id'),
+        'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by(
+            'vm_registrationnumber'),
+        'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
+        'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
+        'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+        'vehicle_category_name': vehicle_category_name,
+        'vehicle_category_id': vehicle_category_id,
+        'all_vehicletypes': VehicletypeInfo.objects.all(),
+        'all_vendors': Vendor_info.objects.all(),
+        'is_admin': is_admin_user(request),
+        'is_invoiced': is_invoiced,
+        'user_role': user_role,
+    })
+
+
 @login_required(login_url='login_page')
 def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
     first_name = request.session.get('first_name')
@@ -316,47 +435,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
     # ---------- ADD MODE (GET) ----------
     if request.method == "GET" and vehicle_allotment_id == 0:
         form = VehicleallotmentForm(initial={'va_enquirynumber': enquiry_id})
-
-        # Store enquiry ID in session for POST usage
         request.session['ses_enquiry_id'] = enquiry_id
-        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
-
-        env_first = Enquirynotevehicle.objects.filter(
-            env_enquirynumber_id=enquiry_id
-        ).select_related('env_vehiclecategory').first()
-        vehicle_category_name = env_first.env_vehiclecategory.vc_vehiclecategory if (
-                env_first and env_first.env_vehiclecategory) else ""
-        vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
-
-        # Check if any trip under this enquiry is invoiced
-
-        trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
-        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(
-            tc_financestatus_id=10).exists()
-        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
-        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
-
-        return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
-            'first_name': first_name,
-            'user_id': user_id,
-            'vehicle_allotment_form': form,
-            'enquiry_num_id': enquiry_id,
-            'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=enquiry_id
-            ).order_by('-id'),
-            'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by(
-                'vm_registrationnumber'),
-            'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
-            'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
-            'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
-            'vehicle_category_name': vehicle_category_name,
-            'vehicle_category_id': vehicle_category_id,
-            'all_vehicletypes': VehicletypeInfo.objects.all(),
-            'all_vendors': Vendor_info.objects.all(),
-            'is_admin': is_admin_user(request),
-            'is_invoiced': is_invoiced,
-            'user_role': user_role,
-        })
+        return _render_vehicle_allotment_add(request, enquiry_id, form)
 
     # ---------- UPDATE MODE (GET) ----------
     if request.method == "GET" and vehicle_allotment_id != 0:
@@ -393,13 +473,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             va.va_sale = env.env_sale
             va.va_special_sale = env.env_special_sale
 
-        # Check if any trip under this enquiry is invoiced
-
-        trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
-        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(
-            tc_financestatus_id=10).exists()
-        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
-        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+        # (Invoicing check is handled inside _render_vehicle_allotment_update)
 
         active_trip = None
         if va:
@@ -414,31 +488,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
                 ).select_related('tr_departedlocation', 'tr_reportedlocation').first()
 
-        return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
-            'first_name': first_name,
-            'user_id': user_id,
-            'vehicle_allotment_form': form,
-            'va': va,
-            'active_trip': active_trip,
-            'all_places': Places.objects.all().order_by('place_name'),
-            'enquiry_num_id': enquiry_id,
-            'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=enquiry_id
-            ).select_related('va_status', 'va_vehicletype', 'va_vehicletype_placed', 'va_vendor',
-                             'va_vehiclesource').order_by('-id'),
-            'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by(
-                'vm_registrationnumber'),
-            'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
-            'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
-            'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
-            'vehicle_category_name': vehicle_category_name,
-            'vehicle_category_id': vehicle_category_id,
-            'all_vehicletypes': VehicletypeInfo.objects.all(),
-            'all_vendors': Vendor_info.objects.all(),
-            'is_admin': is_admin_user(request),
-            'is_invoiced': is_invoiced,
-            'user_role': user_role,
-        })
+        return _render_vehicle_allotment_update(request, va, form)
 
     # ---------- POST SAVE (ADD + UPDATE) ----------
     # ---------- POST SAVE (ADD + UPDATE) ----------
@@ -467,8 +517,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             if not form.is_valid():
                 err_str = "; ".join([f"{k}: {', '.join(v)}" for k, v in form.errors.items()])
                 messages.error(request, f"Invalid form data: {err_str}")
-                referer = request.META.get('HTTP_REFERER')
-                return redirect(referer if referer else request.path)
+                return _render_vehicle_allotment_add(request, enquiry_id, form)
 
             obj = form.save(commit=False)
             obj.va_enquirynumber_id = enquiry_id
@@ -704,6 +753,10 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         rate_approval_status = Replacementstatus.objects.filter(id=6).first()
                         if rate_approval_status:
                             obj.va_status = rate_approval_status
+                    elif obj.va_status_id == 6:
+                        assigned_status = Replacementstatus.objects.filter(id=1).first()
+                        if assigned_status:
+                            obj.va_status = assigned_status
 
             # ✅ SAVE
             obj.save()
@@ -754,8 +807,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 # Show actual form errors for debugging
                 error_msgs = "; ".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
                 messages.error(request, f"Invalid form data: {error_msgs}")
-                referer = request.META.get('HTTP_REFERER')
-                return redirect(referer if referer else request.path)
+                return _render_vehicle_allotment_update(request, va, form)
 
             obj = form.save(commit=False)
             obj.va_enquirynumber_id = orig_enquiry_id
@@ -908,6 +960,10 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         rate_approval_status = Replacementstatus.objects.filter(id=6).first()
                         if rate_approval_status:
                             obj.va_status = rate_approval_status
+                    elif obj.va_status_id == 6:
+                        assigned_status = Replacementstatus.objects.filter(id=1).first()
+                        if assigned_status:
+                            obj.va_status = assigned_status
 
             obj.save()
             sync_allotment_rate_to_trips(obj)
@@ -1310,8 +1366,8 @@ def load_vehicle_number(request):
     current_vehicle_id = request.GET.get('current_vehicle_id')
 
     # basic validation
-    if not vehicletype_placed or not vehicletype_source:
-        return JsonResponse({'vehicle_number_list': [], 'vehicle_number_list_id': []})
+    if not vehicletype_source and not vehicletype_placed:
+        return JsonResponse({'vehicle_number_list': [], 'vehicle_number_list_id': [], 'nearest_vehicles': []})
 
     closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
 
@@ -1342,14 +1398,15 @@ def load_vehicle_number(request):
         va_status_id__in=[2, 3, 4, 5]
     ).exclude(
         va_enquirynumber__en_status_id=8
-    ).exclude(va_vehiclenumber__isnull=True)
+    ).exclude(
+        va_vehiclenumber__isnull=True
+    ).values_list('va_enquirynumber_id', 'va_vehiclenumber_id', 'va_vehiclenumber__vm_registrationnumber')
 
     busy_vehicle_ids = set()
-    allotments = list(busy_allotments_qs.select_related('va_vehiclenumber'))
+    allotment_data = list(busy_allotments_qs)
 
-    # Pre-fetch trips to avoid N+1 queries
-    enquiry_ids = [a.va_enquirynumber_id for a in allotments]
-    vehicle_regs = [a.va_vehiclenumber.vm_registrationnumber for a in allotments if a.va_vehiclenumber]
+    enquiry_ids = [a[0] for a in allotment_data if a[0]]
+    vehicle_regs = [a[2] for a in allotment_data if a[2]]
 
     trips_qs = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids,
@@ -1366,10 +1423,10 @@ def load_vehicle_number(request):
         fin_status = t['tc_financestatus_id'] if t['tc_financestatus_id'] else 1
         trip_map[key].append((op_status, fin_status))
 
-    for a in allotments:
-        if not a.va_vehiclenumber:
+    for enq_id, veh_id, veh_reg in allotment_data:
+        if not veh_id:
             continue
-        key = (a.va_enquirynumber_id, (a.va_vehiclenumber.vm_registrationnumber or '').strip().upper())
+        key = (enq_id, (veh_reg or '').strip().upper())
 
         if key in trip_map:
             # If any trip is active / not closed
@@ -1378,10 +1435,10 @@ def load_vehicle_number(request):
                 for op, fin in trip_map[key]
             )
             if has_active_trip:
-                busy_vehicle_ids.add(a.va_vehiclenumber_id)
+                busy_vehicle_ids.add(veh_id)
         else:
             # No trip exists yet -> vehicle is in 'Vehicle Assigned' status and is busy
-            busy_vehicle_ids.add(a.va_vehiclenumber_id)
+            busy_vehicle_ids.add(veh_id)
 
     # 3) Prevent vehicles already allotted in this enquiry from being double-allotted
     if enquiry_id:
@@ -1407,23 +1464,65 @@ def load_vehicle_number(request):
             pass
 
     # 5) Get vehicles matching type+ownership (Active only)
+    candidate_filter = Q()
+    if vehicletype_source:
+        candidate_filter &= Q(vm_ownership=vehicletype_source)
+    if vehicletype_placed:
+        candidate_filter &= Q(vm_vehicletype=vehicletype_placed)
+
     candidate_qs = VehiclemasterInfo.objects.filter(
         Q(vm_status_id=1) | Q(vm_status__isnull=True),
-        vm_vehicletype=vehicletype_placed,
-        vm_ownership=vehicletype_source
+        candidate_filter
     )
     if current_vehicle_id:
         try:
             curr_vid = int(current_vehicle_id)
             candidate_qs = VehiclemasterInfo.objects.filter(
                 (Q(vm_status_id=1) | Q(vm_status__isnull=True) | Q(pk=curr_vid)),
-                vm_vehicletype=vehicletype_placed,
-                vm_ownership=vehicletype_source
+                candidate_filter
             )
         except (ValueError, TypeError):
             pass
 
     candidate_qs = candidate_qs.exclude(id__in=busy_vehicle_ids).values_list('id', 'vm_registrationnumber')
+
+    # Resolve Origin coordinates (prioritize Replacement / Handover Place if provided)
+    replacement_place_id = request.GET.get('replacement_place_id')
+    replacement_place_name = request.GET.get('replacement_place')
+
+    from_lat, from_lon = None, None
+    from_loc_name = ''
+
+    # 1. If Replacement / Handover Place is specified, calculate distance relative to it
+    if replacement_place_id:
+        try:
+            r_place = Places.objects.filter(pk=replacement_place_id).select_related('city').first()
+            if r_place:
+                from_loc_name = r_place.place_name
+                city_name = r_place.city.city_name if r_place.city else ''
+                from_lat, from_lon, _ = get_place_coordinates(from_loc_name, city_name)
+        except Exception as e:
+            print(f'[load_vehicle_number] Error resolving replacement_place_id: {e}')
+
+    if not (from_lat and from_lon) and replacement_place_name:
+        try:
+            from_loc_name = str(replacement_place_name).strip()
+            from_lat, from_lon, _ = get_place_coordinates(from_loc_name)
+        except Exception as e:
+            print(f'[load_vehicle_number] Error resolving replacement_place_name: {e}')
+
+    # 2. Fallback to Enquiry's From Location if Replacement Place not chosen or not resolved
+    if not (from_lat and from_lon) and enquiry_id:
+        try:
+            enq = EnquirynoteInfo.objects.filter(pk=enquiry_id).select_related('en_fromlocaion', 'en_fromlocaion__city').first()
+            if enq and enq.en_fromlocaion:
+                from_loc_name = enq.en_fromlocaion.place_name
+                city_name = enq.en_fromlocaion.city.city_name if enq.en_fromlocaion.city else ''
+                from_lat, from_lon, _ = get_place_coordinates(from_loc_name, city_name)
+        except Exception as e:
+            print(f'[load_vehicle_number] Error resolving from_location: {e}')
+
+    live_gps = get_live_gps_devices() if (from_lat and from_lon) else {}
 
     vehicle_data = []
     seen_regs = set()
@@ -1435,12 +1534,61 @@ def load_vehicle_number(request):
         if clean_reg in open_trip_regs and not (current_vehicle_id and str(vid) == str(current_vehicle_id)):
             continue
 
-        vehicle_data.append({'id': vid, 'number': reg})
+        norm_no = normalize_reg(reg)
+        dist = None
+        loc_desc = ''
+
+        if from_lat and from_lon:
+            if norm_no in live_gps:
+                d = live_gps[norm_no]
+                dist = haversine_distance(from_lat, from_lon, d['lat'], d['lon'])
+                loc_desc = d['short_addr'] or d['address']
+            else:
+                t_lat, t_lon, t_desc = get_vehicle_last_known_trip_location(reg)
+                if t_lat and t_lon:
+                    dist = haversine_distance(from_lat, from_lon, t_lat, t_lon)
+                    loc_desc = t_desc
+
+        if dist is not None:
+            display_text = f'{reg} ({dist} km · {loc_desc})'
+            sort_dist = dist
+        elif from_lat and from_lon:
+            display_text = f'{reg} (Location unavailable)'
+            sort_dist = 999999.0
+        else:
+            display_text = reg
+            sort_dist = 999999.0
+
+        vehicle_data.append({
+            'id': vid,
+            'number': reg,
+            'display_text': display_text,
+            'distance': dist,
+            'location': loc_desc,
+            'sort_dist': sort_dist
+        })
         seen_regs.add(clean_reg)
 
+    # Sort nearest vehicles first (lowest distance), then alphabetically
+    vehicle_data.sort(key=lambda x: (x['sort_dist'], x['number']))
+
+    nearest_vehicles = [
+        {
+            'id': v['id'],
+            'reg': v['number'],
+            'distance': v['distance'],
+            'location': v['location'],
+            'display_text': v['display_text']
+        }
+        for v in vehicle_data if v['distance'] is not None and v['distance'] < 999999.0
+    ][:3]
+
     return JsonResponse({
-        'vehicle_number_list': [v['number'] for v in vehicle_data],
-        'vehicle_number_list_id': [v['id'] for v in vehicle_data]
+        'vehicle_number_list': [v['display_text'] for v in vehicle_data],
+        'vehicle_number_list_raw': [v['number'] for v in vehicle_data],
+        'vehicle_number_list_id': [v['id'] for v in vehicle_data],
+        'nearest_vehicles': nearest_vehicles,
+        'from_location_name': from_loc_name,
     })
 
 
@@ -2047,6 +2195,22 @@ def vehicle_allotment_replace(request, allotment_id):
                     if active_trip_in_transit.tr_departedkm and rep_km_val < active_trip_in_transit.tr_departedkm:
                         return JsonResponse({'success': False, 'message': f'Replacement KM ({rep_km_val}) cannot be less than trip departure KM ({active_trip_in_transit.tr_departedkm})!'})
 
+
+                # Validate Mandatory Driver License Expiry Date for Own and Attached vehicles
+                # Validate Mandatory Vehicle Number for all sources
+                if str(new_vehicle_source_id) in ['1', '2']:
+                    if not new_vehicle_id or not str(new_vehicle_id).strip():
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'New Vehicle Number is mandatory for OWN and ATTACHED vehicles.'
+                        })
+                elif str(new_vehicle_source_id) == '3':
+                    if not new_vehicle_mkt:
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'New Market Vehicle Number is mandatory.'
+                        })
+
                 # Validate Mandatory Driver License Expiry Date for Own and Attached vehicles
                 if str(new_vehicle_source_id) in ['1', '2']:
                     if not new_driver_lic_expiry or not str(new_driver_lic_expiry).strip():
@@ -2255,6 +2419,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                 if not reason or not new_driver_name:
                     return JsonResponse({'success': False, 'message': 'Reason and New Driver Name are required.'})
 
+
                 # Validate Mandatory Driver License Expiry Date for Own and Attached vehicles
                 if old_va.va_vehiclesource_id in [1, 2]:
                     if not new_driver_lic_expiry or not str(new_driver_lic_expiry).strip():
@@ -2328,13 +2493,63 @@ def vehicle_allotment_driver_replace(request, allotment_id):
 
 @login_required(login_url='login_page')
 def sell_rate_approval_list(request):
-    allotments = Vehicle_allotmentInfo.objects.filter(va_status_id=6).select_related(
+    allotments = list(Vehicle_allotmentInfo.objects.filter(va_status_id=6).select_related(
         'va_enquirynumber',
         'va_enquirynumber__en_customername',
         'va_enquirynumber__en_fromlocaion',
         'va_enquirynumber__en_tolocation',
-        'va_vehiclenumber'
-    ).order_by('-id')
+        'va_vehiclenumber',
+        'va_vehicletype',
+        'va_vehicletype_placed'
+    ).order_by('-id'))
+
+    enquiry_ids = [va.va_enquirynumber_id for va in allotments if va.va_enquirynumber_id]
+    if enquiry_ids:
+        env_qs = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enquiry_ids)
+        env_by_enq_vt = {}
+        env_by_enq = {}
+        for env in env_qs:
+            if env.env_enquirynumber_id not in env_by_enq:
+                env_by_enq[env.env_enquirynumber_id] = env
+            env_by_enq_vt[(env.env_enquirynumber_id, env.env_vehicletype_id)] = env
+
+        auto_approved_vas = []
+        pending_allotments = []
+
+        for va in allotments:
+            env_obj = None
+            for vt_id in filter(None, [va.va_vehicletype_id, va.va_vehicletype_placed_id]):
+                env_obj = env_by_enq_vt.get((va.va_enquirynumber_id, vt_id))
+                if env_obj:
+                    break
+            if not env_obj:
+                env_obj = env_by_enq.get(va.va_enquirynumber_id)
+
+            if env_obj:
+                if env_obj.env_sale is not None:
+                    va.va_sale = env_obj.env_sale
+                if env_obj.env_special_sale is not None:
+                    va.va_special_sale = env_obj.env_special_sale
+
+            # If Special Sell is no longer less than Standard Sell (e.g. equal or higher), auto-approve
+            sale_val = float(va.va_sale or 0)
+            spec_val = float(va.va_special_sale or 0)
+            if not (0 < spec_val < sale_val):
+                auto_approved_vas.append(va)
+            else:
+                pending_allotments.append(va)
+
+        if auto_approved_vas:
+            assigned_status = Replacementstatus.objects.filter(id=1).first()
+            if assigned_status:
+                auto_ids = [v.id for v in auto_approved_vas]
+                Vehicle_allotmentInfo.objects.filter(id__in=auto_ids).update(va_status=assigned_status)
+                for v in auto_approved_vas:
+                    v.va_status = assigned_status
+                    sync_allotment_rate_to_trips(v)
+
+        allotments = pending_allotments
+
     return render(request, 'asset_mgt_app/sell_rate_approval_list.html', {'vehicle_allotment_list': allotments})
 
 
@@ -2345,6 +2560,7 @@ def approve_sell_rate(request, va_id):
     if approved_status:
         va.va_status = approved_status
         va.save(update_fields=['va_status'])
+        sync_allotment_rate_to_trips(va)
         messages.success(request, 'Rate approved successfully and vehicle assigned.')
     else:
         messages.error(request, 'Status "Vehicle Assigned" not found.')

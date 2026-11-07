@@ -71,6 +71,16 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_halting_days"})
     )
 
+    mb_cancellation_cost = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_cancellation_cost"})
+    )
+
+    mb_handling_cost = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_handling_cost"})
+    )
+
     mb_total_cost = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_total_cost"})
@@ -116,6 +126,8 @@ class MarketBillForm(forms.ModelForm):
             'mb_weighment_cost',
             'mb_halting_cost',
             'mb_halting_days',
+            'mb_cancellation_cost',
+            'mb_handling_cost',
             'mb_total_cost',
             'mb_tds_percent',
             'mb_tds_amount',
@@ -141,6 +153,14 @@ class MarketBillForm(forms.ModelForm):
 
     def clean_mb_halting_cost(self):
         val = self.cleaned_data.get('mb_halting_cost')
+        return val if val is not None else 0.0
+
+    def clean_mb_cancellation_cost(self):
+        val = self.cleaned_data.get('mb_cancellation_cost')
+        return val if val is not None else 0.0
+
+    def clean_mb_handling_cost(self):
+        val = self.cleaned_data.get('mb_handling_cost')
         return val if val is not None else 0.0
 
     def clean_mb_total_cost(self):

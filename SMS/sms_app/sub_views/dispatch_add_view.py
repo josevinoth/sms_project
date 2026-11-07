@@ -432,8 +432,8 @@ def dispatch_add_goods(request):
 
         check_in_date = goods_info.wh_checkin_time.date()
         check_out_date = current_date.date()
-        date_diff = (check_out_date - check_in_date).days
-        goods_info.wh_storage_time = date_diff
+        date_diff = (check_out_date - check_in_date).days + 1
+        goods_info.wh_storage_time = max(date_diff, 1)
 
         goods_to_update.append(goods_info)
 
@@ -537,9 +537,9 @@ def qr_dispatch_decoder(request, dispatch_id):
                 messages.success(request, 'Stock Matching. Approved for Dispatch')
 
                 goods = Warehouse_goods_info.objects.get(pk=dispatch_id)
-                check_in_date = goods.wh_checkin_time
-                check_out_date = goods.wh_checkout_time
-                date_diff_days = (check_out_date - check_in_date).days
+                check_in_date = goods.wh_checkin_time.date() if hasattr(goods.wh_checkin_time, 'date') else goods.wh_checkin_time
+                check_out_date = goods.wh_checkout_time.date() if hasattr(goods.wh_checkout_time, 'date') else goods.wh_checkout_time
+                date_diff_days = max((check_out_date - check_in_date).days + 1, 1)
 
                 Warehouse_goods_info.objects.filter(pk=dispatch_id).update(
                     wh_storage_time=date_diff_days
@@ -768,7 +768,12 @@ def dispatch_partial_goods(request):
     )
     goods.wh_dispatch_num = dispatch_info.dispatch_num
     goods.wh_dispatch_id = dispatch_info
-    goods.wh_checkout_time = now()
+    current_checkout = now()
+    goods.wh_checkout_time = current_checkout
+    if goods.wh_checkin_time:
+        check_in_date = goods.wh_checkin_time.date()
+        check_out_date = current_checkout.date()
+        goods.wh_storage_time = max((check_out_date - check_in_date).days + 1, 1)
 
     new_total_dispatched = total_dispatched + dispatch_qty
     if new_total_dispatched >= goods.wh_goods_pieces:

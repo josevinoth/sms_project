@@ -14,46 +14,90 @@
         display: flex;
         align-items: center;
     }
+    .dsr-email-label {
+        min-width: 90px;
+        font-weight: 700;
+        color: #334155;
+    }
 </style>
 <form method="post" action="{% url 'dsr_send_email' %}">
     {% csrf_token %}
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
-            <div class="input-group-text">Customer</div>
+            <div class="input-group-text dsr-email-label">Customer</div>
         </div>
         {% render_field form.ds_customer id="ds_customer_modal" class="form-control" %}
     </div>
 
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
-            <div class="input-group-text">To</div>
+            <div class="input-group-text dsr-email-label">To</div>
         </div>
-        <input type="text" id="recipient" name="recipient" class="form-control" value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
+        <input type="text" id="recipient" name="recipient" class="form-control font-weight-bold" placeholder="Recipient emails (comma-separated)">
     </div>
+
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
-            <div class="input-group-text">Message</div>
+            <div class="input-group-text dsr-email-label">CC</div>
         </div>
-        <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form_dsr_email.message.value }}</textarea>
+        <input type="text" id="cc_recipient" name="cc" class="form-control font-weight-bold" placeholder="CC emails (comma-separated)">
     </div>
 
+    <div class="input-group mb-2 mr-sm-2">
+        <div class="input-group-prepend">
+            <div class="input-group-text dsr-email-label">Message</div>
+        </div>
+        <textarea id="message" name="message" class="form-control" rows="5" placeholder="Enter email message"></textarea>
+    </div>
 
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary"><i class="fas fa-envelope-square"></i> Send Email</button>
+    <div class="form-group mt-3 mb-1 text-left">
+        <button type="submit" class="btn btn-primary px-4 font-weight-bold shadow-sm" style="border-radius: 8px;">
+            <i class="fas fa-paper-plane mr-1"></i> Send Email
+        </button>
     </div>
 </form>
 
 <script>
-    function email_message_fn() {
-     // Assign Django template variables to JavaScript variables
-       var message = 	"Dear Customer,\n\n" +
-                "Please find the DSR report attached.\n\n" +
-                  "Regards,\n" +
-                  "BVM Warehouse Team";
+    function fetch_dsr_customer_email(customerId) {
+        if (!customerId) {
+            $('#recipient').val('');
+            $('#cc_recipient').val('');
+            return;
+        }
+        $.ajax({
+            url: "{% url 'get_dsr_email_details' %}",
+            type: "GET",
+            data: { 'customer_id': customerId },
+            success: function(res) {
+                if (res.status === true) {
+                    $('#recipient').val(res.to_mail || '');
+                    $('#cc_recipient').val(res.cc_mail || '');
+                } else {
+                    $('#recipient').val('');
+                    $('#cc_recipient').val('');
+                }
+            },
+            error: function() {
+                console.error("Failed to auto-fetch customer email");
+            }
+        });
+    }
 
-        // Set the consolidated message as the value of the form field with id 'message'
+    function email_message_fn() {
+        var message = "Dear Customer,\n\n" +
+                      "Please find the DSR report attached.\n\n" +
+                      "Regards,\n" +
+                      "BVM Warehouse Team";
+
         document.getElementById("message").value = message;
-        
+
+        // Sync selected customer from main page filter if present
+        var pageCustomer = $('#ds_customer').val();
+        if (pageCustomer) {
+            $('#ds_customer_modal').val(pageCustomer);
+            fetch_dsr_customer_email(pageCustomer);
+        }
+
         // Initialize Select2 for modal
         if ($.fn.select2) {
             $('#ds_customer_modal').select2({
@@ -62,7 +106,13 @@
                 theme: 'classic'
             });
         }
-
     }
+
+    $(document).ready(function() {
+        $('#ds_customer_modal').on('change', function() {
+            var selectedId = $(this).val();
+            fetch_dsr_customer_email(selectedId);
+        });
+    });
 </script>
 {% endblock content %}

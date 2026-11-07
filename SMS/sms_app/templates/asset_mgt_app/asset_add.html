@@ -1,243 +1,369 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
-{% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="" id="asset_add" data-branches-url="{% url 'load_units' %}" enctype="multipart/form-data">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Asset</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Location</span>
-									</div>
-									{% render_field form.asset_location class="form-control" id="myLocation" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unit</span>
-									</div>
-									{% render_field form.asset_unit id="asset_unit" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" id="">Asset Number</span>
-									</div>
-									{% render_field form.asset_number class="form-control" id="asset_number" readonly=True%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Asset ID</span>
-									</div>
-									{% render_field form.asset_Id class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Assigned To</span>
-									</div>
-									{% render_field form.asset_assignedto class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assigned On</span>
-									</div>
-									{% render_field form.asset_assignedon type="datetime-local" class="form-control" name="qr_text" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Product</span>
-									</div>
-									{% render_field form.asset_product class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Make</span>
-									</div>
-									{% render_field form.asset_make class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Model</span>
-									</div>
-									{% render_field form.asset_model class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unique Number</span>
-									</div>
-									{% render_field form.asset_serial_num1 class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor</span>
-									</div>
-									{% render_field form.asset_vendor class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Invoice Number</span>
-									</div>
-									{% render_field form.asset_order_number class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Purchase Date</span>
-									</div>
-									<!--<input type="date" value="2021-09-09" min="2021-09-09">-->
-									{% render_field form.asset_purchase_date type="date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Insurance Details</span>
-									</div>
-									{% render_field form.asset_insurance_details class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Cost (INR)</span>
-									</div>
-									{% render_field form.asset_cost class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Audit Date</span>
-									</div>
-									{% render_field form.asset_audit_date type='Datetime-local' class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Attachment</span>
-									</div>
-									{% render_field form.asset_attach class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								{% render_field form.asset_updated_by id="asset_updated_by"  hidden="True" class="form-control" %}
-							</div>
-							<div class="container-fluid">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field form.asset_remarks class="form-control" name="qr_text" %}
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'assign_asset_search' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel </a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
+{% block title %}Add/Update Asset | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       ASSET FORM - MODERN COMPACT 4-COLUMN CARD LAYOUT (MATCHING VEHICLE ALLOTMENT)
+       ══════════════════════════════════════════════════════════════════════════ */
+    .asset-form-modern .legacy-form-card {
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .asset-form-modern .form-grid-body {
+        padding: 0.9rem 1rem 0.75rem;
+    }
+
+    .asset-form-modern .form-section {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem !important;
+        margin-bottom: 0.65rem !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .asset-form-modern .form-section-title {
+        margin-bottom: 0.75rem !important;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.4rem;
+    }
+    .asset-form-modern .form-section-title i {
+        color: #0284c7;
+        font-size: 0.85rem;
+    }
+
+    .asset-form-modern .form-group-modern {
+        margin-bottom: 0.65rem !important;
+    }
+
+    .asset-form-modern .form-label-modern {
+        margin-bottom: 0.25rem !important;
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #334155;
+        letter-spacing: 0.2px;
+        display: block;
+        text-transform: uppercase;
+    }
+
+    .asset-form-modern .form-control,
+    .asset-form-modern .custom-select,
+    .asset-form-modern select.form-control {
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        background-color: #ffffff;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        padding: 3px 10px !important;
+        line-height: 1.2;
+    }
+
+    .asset-form-modern .form-control:focus,
+    .asset-form-modern .custom-select:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+        outline: none;
+    }
+
+    .asset-form-modern .form-control[readonly] {
+        background-color: #f1f5f9 !important;
+        color: #475569 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    /* Select2 overrides for modern theme */
+    .asset-form-modern .select2-container .select2-selection--single {
+        height: 32px !important;
+        border-radius: 8px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+    }
+    .asset-form-modern .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 28px !important;
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: #1e293b !important;
+        padding-left: 0.6rem;
+    }
+    .asset-form-modern .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 30px !important;
+        right: 6px;
+    }
+    .asset-form-modern .select2-container--default.select2-container--focus .select2-selection--single,
+    .asset-form-modern .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+    }
+
+    .asset-form-modern textarea.form-control {
+        min-height: 52px !important;
+        height: 52px !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+
+    .asset-form-modern .disable_a_href {
+        pointer-events: none;
+        opacity: 0.7;
+        background-color: #f1f5f9 !important;
+    }
+
+    /* Actions Bar */
+    .asset-form-modern .form-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 0.5rem;
+        margin-top: 0.25rem;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .row-compact {
+        margin-left: -6px;
+        margin-right: -6px;
+    }
+    .col-compact {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container-fluid py-2 px-3 asset-form-modern">
+    <form method="POST" action="" id="asset_add" data-branches-url="{% url 'load_units' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card modern-card legacy-form-card mb-2">
+            <!-- ══ Header Banner ══ -->
+            <div class="modern-header d-flex justify-content-between align-items-center flex-wrap py-2 px-3" style="gap: 8px;">
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fas fa-boxes text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 text-white font-weight-bold" style="font-size: 1.15rem; letter-spacing: 0.3px;">Add / Update Asset</h4>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <a href="{% url 'assign_asset_search' %}" class="btn-modern btn-cancel py-1 px-3 m-0" style="font-size: 0.82rem; height: 32px; display: inline-flex; align-items: center; text-decoration: none;">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Asset List
+                    </a>
+                </div>
+            </div>
+
+            <!-- ══ Messages ══ -->
+            {% if messages %}
+            <div class="px-3 pt-2">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm py-1 px-3 mb-2" role="alert" style="font-size: 0.85rem;">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="padding: 0.25rem 0.5rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- ══ Compact 4-Column Form Body ══ -->
+            <div class="form-grid-body">
+                <div class="row row-compact">
+                    <!-- Column 1: Location & ID -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                        <div class="form-section h-100">
+                            <div class="form-section-title">
+                                <i class="fas fa-map-marker-alt"></i> Location & Identity
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="myLocation">Location</label>
+                                {% render_field form.asset_location class="form-control" id="myLocation" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="asset_unit">Unit</label>
+                                {% render_field form.asset_unit id="asset_unit" class="form-control disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="asset_number">Asset Number</label>
+                                {% render_field form.asset_number class="form-control" id="asset_number" readonly=True %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_Id">Asset ID</label>
+                                {% render_field form.asset_Id class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Equipment & Specs -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                        <div class="form-section h-100">
+                            <div class="form-section-title">
+                                <i class="fas fa-laptop"></i> Equipment & Specs
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_product">Product / Category</label>
+                                {% render_field form.asset_product class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_make">Make / Manufacturer</label>
+                                {% render_field form.asset_make class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_model">Model</label>
+                                {% render_field form.asset_model class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_serial_num1">Unique / Serial Number</label>
+                                {% render_field form.asset_serial_num1 class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Allocation & Vendor -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                        <div class="form-section h-100">
+                            <div class="form-section-title">
+                                <i class="fas fa-user-check"></i> Allocation & Vendor
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_assignedto">Assigned To</label>
+                                {% render_field form.asset_assignedto class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_assignedon">Assigned On</label>
+                                {% render_field form.asset_assignedon type="datetime-local" class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_vendor">Vendor</label>
+                                {% render_field form.asset_vendor class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_order_number">Invoice / Order Number</label>
+                                {% render_field form.asset_order_number class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 4: Commercial, Warranty & Files -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                        <div class="form-section h-100">
+                            <div class="form-section-title">
+                                <i class="fas fa-file-invoice-dollar"></i> Commercial & Files
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_purchase_date">Purchase Date</label>
+                                {% render_field form.asset_purchase_date type="date" class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_insurance_details">Insurance Details</label>
+                                {% render_field form.asset_insurance_details class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_cost">Cost (INR)</label>
+                                {% render_field form.asset_cost class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_audit_date">Audit Date</label>
+                                {% render_field form.asset_audit_date type="datetime-local" class="form-control" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern" for="id_asset_attach">Attachment</label>
+                                {% render_field form.asset_attach class="form-control" style="padding: 2px 4px !important;" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full-Width Remarks Card -->
+                <div class="form-section mb-2" style="padding: 0.75rem 1rem !important;">
+                    <div class="form-section-title mb-1 pb-1">
+                        <i class="fas fa-sticky-note"></i> Remarks
+                    </div>
+                    {% render_field form.asset_remarks class="form-control" rows="2" placeholder="Enter remarks..." %}
+                </div>
+
+                {% render_field form.asset_updated_by id="asset_updated_by" hidden="True" class="form-control" %}
+
+                <!-- Form Action Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern btn-submit px-4" style="height: 34px; font-size: 0.85rem; display: inline-flex; align-items: center; border: none; cursor: pointer;">
+                        <i class="fas fa-check mr-1"></i> Submit
+                    </button>
+                    <a href="{% url 'assign_asset_search' %}" class="btn-modern btn-cancel px-3" style="height: 34px; font-size: 0.85rem; display: inline-flex; align-items: center; text-decoration: none;">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
 <script>
 $(document).ready(function() {
-	document.getElementById("asset_updated_by").value ='{{user_id}}';
-	var asset_num=document.getElementById("asset_number").value;
-	if (asset_num=="")
-	{
-		$('#myLocation').removeClass('disable_a_href');
-	}
-	else
-	{
-		$('#myLocation').addClass('disable_a_href');
-	}
-});
-</script>
+    var updatedBy = document.getElementById("asset_updated_by");
+    if (updatedBy) {
+        updatedBy.value = '{{ user_id }}';
+    }
+    
+    var assetNumElem = document.getElementById("asset_number");
+    var asset_num = assetNumElem ? assetNumElem.value : "";
+    if (asset_num == "") {
+        $('#myLocation').removeClass('disable_a_href');
+    } else {
+        $('#myLocation').addClass('disable_a_href');
+    }
 
-<!--Fetch Units-->
-<script>
-   $("#myLocation").change(function () {
-      var url = $("#asset_add").attr("data-branches-url");
-      var branchId = $(this).val();
-      $.ajax({
+    // Initialize Select2 on dropdowns
+    $('#id_asset_assignedto, #id_asset_product, #id_asset_vendor, #id_asset_insurance_details').select2({
+        width: '100%',
+        dropdownAutoWidth: true
+    });
+});
+
+/* Dynamic Unit Loading on Location Change */
+$("#myLocation").change(function () {
+    var url = $("#asset_add").attr("data-branches-url");
+    var branchId = $(this).val();
+    if (!branchId || branchId === '0') return;
+    
+    $.ajax({
         url: url,
         data: {
-          'branchId': branchId,
+            'branchId': branchId,
         },
-		success: function (data) {
-			console.log(data);
-			$('#asset_unit').removeClass('disable_a_href');
-			$("#asset_unit").empty();
-			$('#wh_bay').empty().append("<option value='0'>--Select--</option>");
-			$("#wh_stack_layer").val($("#selectBox option:first").val());
-        	var unit_name=JSON.parse(data)["unit_name_list"];
-        	var unit_id=JSON.parse(data)["unit_id"];
-        	var len = (unit_name).length;
-        	$('#asset_unit').empty().append("<option value='0'>--Select--</option>");
-        	for( var i = 0; i<len; i++){
-        		$("#asset_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-			}
+        success: function (data) {
+            $('#asset_unit').removeClass('disable_a_href');
+            $("#asset_unit").empty();
+            var parsed = typeof data === 'string' ? JSON.parse(data) : data;
+            var unit_name = parsed["unit_name_list"];
+            var unit_id = parsed["unit_id"];
+            var len = unit_name ? unit_name.length : 0;
+            $('#asset_unit').append("<option value='0'>--Select--</option>");
+            for (var i = 0; i < len; i++) {
+                $("#asset_unit").append("<option value='" + unit_id[i] + "'>" + unit_name[i] + "</option>");
+            }
         }
-      });
     });
-  </script>
-<!--<script>-->
-<!--function myAssetnum() {-->
-<!--  selectElement = document.querySelector('#myLocation');-->
-<!--  output = selectElement.options[selectElement.selectedIndex].value;-->
-<!--	if (output==1)-->
-<!--	{-->
-<!--		nam="BLR"-->
-<!--	}-->
-<!--	else if(output==2)-->
-<!--	{-->
-<!--		nam="MAA"-->
-<!--	}-->
-<!--	else if(output==3)-->
-<!--	{-->
-<!--		nam="PNY"-->
-<!--	}-->
-<!--	else if(output==4)-->
-<!--	{-->
-<!--		nam="HYD"-->
-<!--	}-->
-<!--	else-->
-<!--	{-->
-<!--		nam="TCR"-->
-<!--	}-->
-<!--&lt;!&ndash;  var ran=Math.floor((Math.random() * 1000000) + 1)&ndash;&gt;-->
-<!--  var ran='{{asset_num}}';-->
-<!--  document.getElementById("asset_number").value =nam+"_"+ ran;-->
-<!--}-->
-<!--</script>-->
+});
+</script>
 {% endblock content %}
-

@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 import requests
 from django.contrib.auth.decorators import login_required
@@ -266,6 +267,29 @@ def tripclosure_add(request, tripclosure_id=0):
                 )
                 return redirect('tripdetail_update', tripdetail_id=tripclosure_id)
 
+            # 🔒 Block access: Trips closed due to vehicle replacement/breakdown
+            remarks = tripclosure.tr_remarks or ""
+            is_rep_closed = (
+                tripclosure.tc_financestatus_id == 2 and (
+                    "Closed for replacement" in remarks or
+                    "[AUTO-NOTE] Journey ended" in remarks or
+                    Vehicle_allotmentInfo.objects.filter(
+                        va_enquirynumber_id=tripclosure.tr_enquirynumber_id,
+                        va_status_id=2
+                    ).filter(
+                        Q(va_vehiclenumber__vm_registrationnumber__iexact=tripclosure.tr_vehiclenumber) |
+                        Q(va_vehiclenumber_mkt__iexact=tripclosure.tr_vehiclenumber)
+                    ).exists()
+                )
+            )
+            if is_rep_closed:
+                messages.error(
+                    request,
+                    f'Trip Settlement is locked for "{tripclosure.tr_tripnumber}" — '
+                    f'this trip was closed due to vehicle replacement and cannot proceed to settlement or invoicing.'
+                )
+                return redirect('tripdetail_update', tripdetail_id=tripclosure_id)
+
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             
@@ -482,7 +506,7 @@ def tripclosure_add(request, tripclosure_id=0):
                         except Tripstatusinfo.DoesNotExist:
                             tripclousre_status.append('Unknown')
                 # Update closure status and touch parent enquiry timestamp
-                from django.utils import timezone
+                # timezone already imported above
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
                     en_tripclosure=tripclousre_status,
@@ -664,7 +688,7 @@ def tripclosure_list_ajax(request):
     data = []
     for t in qs:
         data.append([
-            t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
+            timezone.localtime(t.tr_created_at).strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
             str(t.tr_consignmentnumber) if t.tr_consignmentnumber else '',
             t.tr_tripnumber or '',

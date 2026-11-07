@@ -112,9 +112,10 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
         
         if selected_trip_id:
             is_invoiced = TInvoiceInfo.objects.filter(ti_trip_id=selected_trip_id).exists() or TDetailInfo.objects.filter(id=selected_trip_id, tc_financestatus_id=10).exists()
-        elif enquiry_num_id:
-            trips = TDetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id)
-            is_invoiced = TInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+        elif consignment_detail_id != 0:
+            linked_trip = TDetailInfo.objects.filter(tr_consignmentnumber_id=consignment_detail_id).first()
+            if linked_trip:
+                is_invoiced = TInvoiceInfo.objects.filter(ti_trip=linked_trip).exists() or (linked_trip.tc_financestatus_id == 10)
             
         from ..models import User_extInfo as UExtInfo
         user_ext = UExtInfo.objects.filter(user_id=user_id).first()
@@ -159,10 +160,11 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form.save_m2m()
             
             # ✅ Auto-advance linked trip status to Awaiting Trip Approval (8) when goods are created/updated
+            # NEVER touch trips in Trip Closed (ID 2), Cancelled (ID 3, 10, 11), or closed for replacement
             if goods_obj and goods_obj.cg_consignmentnumber_id:
                 linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber_id=goods_obj.cg_consignmentnumber_id)
                 for trip in linked_trips:
-                    if trip.tc_financestatus_id in [1, 2]: # Open / Work In Progress
+                    if trip.tc_financestatus_id in [1, 12]:  # Open (1=Trip Started, 12=Work In Progress)
                         trip.tc_financestatus_id = 8  # Awaiting Trip Approval
                         trip.tr_operational_status_id = 8
                         trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
