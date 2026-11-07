@@ -1,1336 +1,2727 @@
 
+
 {% extends "asset_mgt_app/base_modern.html" %}
+
 {% load widget_tweaks %}
+
 {% block content %}
 
+
+
 <style>
+
     /* Compact Styles for One-Page Layout */
+
     .container-fluid { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+
     .modern-header { padding: 0.8rem 1.5rem !important; border-radius: 12px 12px 0 0 !important; }
+
     .modern-header h2 { font-size: 1.4rem !important; }
+
     .modern-card { padding: 1rem !important; border-radius: 0 0 15px 15px !important; }
+
     .form-section { padding: 0.8rem !important; margin-bottom: 0.8rem !important; border-radius: 12px !important; }
+
     .form-section-title { margin-bottom: 1rem !important; font-size: 0.85rem !important; gap: 8px !important; }
+
     .form-label-modern { font-size: 0.75rem !important; margin-bottom: 0.4rem !important; letter-spacing: 0.5px !important; }
+
     .form-control-modern { height: 38px !important; padding: 0.5rem 0.8rem !important; font-size: 0.9rem !important; border-radius: 8px !important; }
+
     .select2-container--default .select2-selection--single { height: 38px !important; border-radius: 8px !important; }
+
     .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 34px !important; font-size: 0.9rem !important; }
+
     .btn-modern { padding: 0.6rem 1.2rem !important; font-size: 0.95rem !important; border-radius: 10px !important; }
+
     .form-row-modern { display: flex; flex-direction: column; gap: 0.8rem; }
+
     .input-group-append .btn { padding: 0 0.8rem !important; height: 38px !important; }
+
     
+
     /* Grid Adjustments */
+
     .col-compact { padding: 0 5px !important; }
+
     .row-compact { margin: 0 -5px !important; }
+
     
+
     /* Calculator Card Overrides */
+
     .pms-sticky-calculation { position: static !important; height: auto !important; padding: 0 !important; overflow: visible !important; }
+
     .pms-sticky-calculation .modern-card { border-radius: 12px !important; border-top: 3px solid var(--accent-orange) !important; padding: 1rem !important; }
+
     
+
     /* List & Search Sections */
+
     .section-divider { border-top: 2px dashed var(--border-light); margin: 2rem 0; position: relative; }
+
     .section-divider span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg-page); padding: 0 15px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+
 </style>
 
+
+
 <div class="container-fluid">
+
     <!-- Progress Tracker (Optional: could be moved to top or made smaller) -->
+
     <div class="pms-tracker-wrapper mb-3">
+
         {% include "asset_mgt_app/pms_progress_tracker.html" with current_step="quotation" %}
+
     </div>
 
-    <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}">
-        {% csrf_token %}
-        
-        <div class="modern-header d-flex justify-content-between align-items-center">
-            <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Quotation Management</h2>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn-modern py-1 px-3" data-toggle="modal" data-target="#calculatorModal" style="background: #2563eb; border: 1px solid #3b82f6; color: white; font-size: 0.85rem; font-weight: 700;">
-                    <i class="fas fa-calculator mr-1"></i> Calculator
-                </button>
-                <a href="{% url 'pk_quotation_insert' %}" class="btn-modern btn-submit py-1 px-3" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); font-size: 0.8rem;"><i class="fas fa-plus"></i> New</a>
-            </div>
+
+
+    <!-- Mode Switcher Tabs -->
+
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+
+        <ul class="nav nav-pills shadow-sm" id="quotationTabs" role="tablist" style="background: #e2e8f0; padding: 4px; border-radius: 10px;">
+
+            <li class="nav-item">
+
+                <a class="nav-link active font-weight-bold" id="matrix-tab" data-toggle="pill" href="#tab-matrix" role="tab" style="border-radius: 8px; font-size: 0.9rem; padding: 0.45rem 1.25rem;">
+
+                    <i class="fas fa-table mr-1 text-success"></i> Excel-Style Box Costing (Fast)
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a class="nav-link font-weight-bold text-secondary" id="classic-tab" data-toggle="pill" href="#tab-classic" role="tab" style="border-radius: 8px; font-size: 0.9rem; padding: 0.45rem 1.25rem;">
+
+                    <i class="fas fa-sliders-h mr-1 text-primary"></i> Classic Single-Item Entry
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+
+
+    <div class="tab-content" id="quotationTabContent">
+
+        <!-- Tab 1: Excel Matrix -->
+
+        <div class="tab-pane fade show active" id="tab-matrix" role="tabpanel">
+
+            {% include "asset_mgt_app/excel_quotation_matrix.html" %}
+
         </div>
+
+
+
+        <!-- Tab 2: Classic Single Item Entry -->
+
+        <div class="tab-pane fade" id="tab-classic" role="tabpanel">
+
+            <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}">
+
+        {% csrf_token %}
+
         
-        <div class="modern-card">
-            {% if form.errors %}
-            <div class="alert alert-danger p-2 mb-3" style="border-radius: 8px; font-size: 0.85rem;">
-                <ul class="mb-0">
-                    {% for field, errors in form.errors.items %}
-                        <li>{{ field|title }}: {{ errors|join:", " }}</li>
-                    {% endfor %}
-                </ul>
+
+        <div class="modern-header d-flex justify-content-between align-items-center">
+
+            <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Quotation Management</h2>
+
+            <div class="d-flex gap-2">
+
+                <button type="button" class="btn-modern py-1 px-3" data-toggle="modal" data-target="#calculatorModal" style="background: #2563eb; border: 1px solid #3b82f6; color: white; font-size: 0.85rem; font-weight: 700;">
+
+                    <i class="fas fa-calculator mr-1"></i> Calculator
+
+                </button>
+
+                <a href="{% url 'pk_quotation_insert' %}" class="btn-modern btn-submit py-1 px-3" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); font-size: 0.8rem;"><i class="fas fa-plus"></i> New</a>
+
             </div>
+
+        </div>
+
+        
+
+        <div class="modern-card">
+
+            {% if form.errors %}
+
+            <div class="alert alert-danger p-2 mb-3" style="border-radius: 8px; font-size: 0.85rem;">
+
+                <ul class="mb-0">
+
+                    {% for field, errors in form.errors.items %}
+
+                        <li>{{ field|title }}: {{ errors|join:", " }}</li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+
             {% endif %}
 
+
+
             <div class="row row-compact">
+
                 <!-- Section 1: Basic Info (3 Cols) -->
+
                 <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_basic">
+
                     <div class="form-section h-100">
+
                         <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
+
                         <div class="form-row-modern">
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Assessment #</label>
+
                                 {% render_field form.pkqt_assessment_num id="pkqt_assessment_num" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Customer</label>
+
                                 {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="form-group-modern" id="grp_new_customer">
+
                                 <label class="form-label-modern">New Customer</label>
+
                                 {% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-6 pr-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Cost Type</label>
+
                                         {% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Job Qty</label>
+
                                         {% render_field form.pkqt_na_quantity id="pkqt_na_quantity" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Job Type</label>
+
                                 {% render_field form.pkqt_requirement id="pkqt_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Req. Name & Size</label>
+
                                 {% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
+
 
                 <!-- Section 2: Stock & Part Code (3 Cols) -->
+
                 <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_part">
+
                     <div class="form-section h-100">
+
                         <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock</div>
+
                         <div class="form-row-modern">
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Part Code</label>
+
                                 {% render_field form.pkqt_part_code id="pkqt_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-6 pr-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Stock Type</label>
+
                                         {% render_field form.pkqt_stock_type id="pkqt_stock_type" onchange="toggleFields()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Stock Desc</label>
+
                                         {% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Stock Purchase #</label>
+
                                 {% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Available Qty</label>
+
                                 {% render_field form.pkqt_quantity id="pkqt_quantity" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <button id="search_wood" type="button" class="btn-modern btn-highlight w-100 mt-2">
+
                                 <i class="fas fa-search"></i> Search Item
+
                             </button>
+
                         </div>
+
                     </div>
+
                 </div>
+
+
 
                 <!-- Section 3: Item Specification & Dimensions (3 Cols) -->
+
                 <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_item">
+
                     <div class="form-section h-100">
+
                         <div class="form-section-title"><i class="fas fa-box-open"></i> Item Details</div>
+
                         <div class="form-row-modern">
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Item Name</label>
+
                                 {% render_field form.pkqt_item id="pkqt_item" onchange="changeItemDescription()" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="form-group-modern">
+
                                 <label class="form-label-modern">Item Description</label>
+
                                 {% render_field form.pkqt_itemdescription id="pkqt_itemdescription" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-4 pr-1">
+
                                     <div class="form-group-modern" id="length_group">
+
                                         <label class="form-label-modern">L (ft)</label>
+
                                         {% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-4 px-1">
+
                                     <div class="form-group-modern" id="width_group">
+
                                         <label class="form-label-modern">W (in/ft)</label>
+
                                         {% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-4 pl-1">
+
                                     <div class="form-group-modern" id="height_group">
+
                                         <label class="form-label-modern">H (in/mm)</label>
+
                                         {% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-6 pr-1">
+
                                     <div class="form-group-modern" id="uom_group">
+
                                         <label class="form-label-modern">UOM</label>
+
                                         {% render_field form.pkqt_uom id="pkqt_uom" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern" id="diameter_width_group">
+
                                         <label class="form-label-modern">Dia/Width</label>
+
                                         {% render_field form.pkqt_size id="pkqt_size" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
+
 
                 <!-- Section 4: Calculations & Cost Information (3 Cols) -->
+
                 <div class="col-12 col-md-6 col-xl-3 col-compact" id="sec_calc">
+
                     <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
+
                         <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Calculations & Cost</div>
+
                         <div class="form-row-modern">
+
                             <div class="row no-gutters" id="grp_uom_row">
+
                                 <div class="col-6 pr-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Purch. UOM</label>
+
                                         {% render_field form.pkqt_weight_received id="pkqt_weight_received" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Cons. UOM</label>
+
                                         {% render_field form.pkqt_weight_Consumption id="pkqt_weight_Consumption" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-6 pr-1" id="grp_qty_req">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern" id="qty_req_label">Qty Req</label>
+
                                         {% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1" id="grp_req_value">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern" id="req_value_label">Req Value <i class="fas fa-info-circle text-info ml-1" id="req_value_icon" data-toggle="tooltip" title="Calculated Volume (CFT) or Area (SQFT) required for calculation"></i></label>
+
                                         {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="row no-gutters" id="row_conv_cft">
+
                                 <div class="col-6 pr-1" id="grp_conversion">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Conversion</label>
+
                                         {% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern" id="total_cft">
+
                                         <label class="form-label-modern">Job Total CFT (Wood)</label>
+
                                         {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="form-group-modern" id="grp_days">
+
                                 <label class="form-label-modern">Days/Hours</label>
+
                                 {% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+
                             </div>
+
                             <div class="row no-gutters">
+
                                 <div class="col-6 pr-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Rate / Unit</label>
+
                                         {% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control form-control-modern" %}
+
                                     </div>
+
                                 </div>
+
                                 <div class="col-6 pl-1">
+
                                     <div class="form-group-modern">
+
                                         <label class="form-label-modern">Unit Cost</label>
+
                                         {% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                             <div class="form-group-modern mb-1">
+
                                 <label class="form-label-modern">Total Cost (INR)</label>
+
                                 {% render_field form.pkqt_totalbox_cost id="pkqt_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" style="font-size: 1.1rem !important; color: var(--accent-emerald) !important; text-align: center; font-weight: 700;" %}
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- Action Buttons Row -->
+
             <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light);">
+
                 <button type="submit" class="btn-modern btn-submit px-4">
+
                     <i class="fas fa-check mr-2"></i> Submit Quotation
+
                 </button>
+
                 <a href="{% url 'pk_quotation_cancel' %}" class="btn-modern btn-cancel px-4">
+
                     <i class="fas fa-times mr-2"></i> Cancel
+
                 </a>
+
             </div>
+
+
 
             <input type="hidden" id="hidden_pc_stock_description">
+
             <input type="hidden" id="hidden_pc_code">
+
             {% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" %}
+
         </div>
+
     </form>
 
+    </div> <!-- /#tab-classic -->
+
+</div> <!-- /#quotationTabContent -->
+
+
+
     <!-- Calculator Dialog Modal -->
+
     <div class="modal fade" id="calculatorModal" tabindex="-1" role="dialog" aria-labelledby="calculatorModalLabel" aria-hidden="true" style="z-index: 9999;">
+
         <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 520px;">
+
             <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+
                 <div class="modal-header bg-primary text-white" style="border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 0.5rem 1rem;">
+
                     <h5 class="modal-title font-weight-bold" id="calculatorModalLabel" style="font-size: 0.9rem;">
+
                         <i class="fas fa-calculator mr-2"></i> Dimension & Surface Calculator
+
                     </h5>
+
                     <button type="button" class="close text-white p-0 m-0" data-dismiss="modal" aria-label="Close" style="line-height: 1;">
+
                         <span aria-hidden="true">&times;</span>
+
                     </button>
+
                 </div>
+
                 <div class="modal-body p-2">
+
                     {% include "asset_mgt_app/calculation_card.html" %}
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <!-- Stock Search Results Dialog Modal -->
+
     <div class="modal fade" id="stockSearchResultModal" tabindex="-1" role="dialog" aria-labelledby="stockSearchResultModalLabel" aria-hidden="true" style="z-index: 9999;">
+
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+
             <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+
                 <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 0.8rem 1.2rem;">
+
                     <h5 class="modal-title font-weight-bold" id="stockSearchResultModalLabel">
+
                         <i class="fas fa-boxes mr-2"></i> Select Available Stock Purchase Record
+
                     </h5>
+
                     <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+
                         <span aria-hidden="true">&times;</span>
+
                     </button>
+
                 </div>
+
                 <div class="modal-body p-3">
+
                     <div id="pk_item_search_page_costing_modal_container">
+
                         <!-- Search results dynamically injected here -->
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <!-- Message Area -->
+
     <div class="message-container my-2">
+
         {% for message in messages %}
+
         <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 shadow-sm" style="font-size: 0.85rem;">
+
             <i class="fas fa-info-circle"></i> {{ message }}
+
         </div>
+
         {% endfor %}
+
     </div>
 
+
+
     <!-- Collapsible Section for List -->
+
     <div class="mt-4">
+
         {% include "asset_mgt_app/pk_quotation_list_WOH.html" %}
+
     </div>
+
 </div>
+
+
 
 {% endblock content %}
 
+
+
 {% block extra_js %}
+
 <script>
+
 (function($) {
+
     $(document).ready(function () {
+
         // Prevent all interaction (mouse and keyboard) for pseudo-disabled fields
+
         $(document).on('mousedown keydown focus', '.disable_a_href', function(e) {
+
             e.preventDefault();
+
             $(this).blur();
+
             return false;
+
         });
+
         
+
         const assessment_num_field = document.getElementById("pkqt_assessment_num");
+
         const customer_name_field = document.getElementById("pkqt_customer_name");
+
         const customer_new_name_field = document.getElementById("pkqt_customer_new_name2");
+
         const updated_by_field = document.getElementById("pkqt_updated_by");
 
+
+
         if (updated_by_field && updated_by_field.value === "") {
+
             updated_by_field.value = '{{user_id}}';
+
         }
+
+
 
         if (assessment_num_field && assessment_num_field.value === "") {
+
             assessment_num_field.value = '{{na_assessment_num_id}}';
+
         }
+
+
 
         if (customer_name_field && customer_name_field.value === "") {
+
             customer_name_field.value = '{{na_customer_name_id}}';
+
         }
+
         
+
         if (customer_new_name_field && customer_new_name_field.value === "") {
+
             customer_new_name_field.value = '{{na_customer_new_name_id}}';
+
         }
+
+
 
         var initial_part_code = $("#pkqt_part_code").val();
+
         if (!initial_part_code) {
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_item').addClass('disable_a_href');
+
         } else {
+
             $('#pkqt_stock_type').removeClass('disable_a_href');
+
             $('#pkqt_item').removeClass('disable_a_href');
+
             if (typeof fetchPartCodeDetails === 'function') fetchPartCodeDetails();
+
         }
+
+
 
         if (typeof pk_store_na_dimension_id === 'function') pk_store_na_dimension_id();
+
         if (typeof load_pk_requirement_type === 'function') load_pk_requirement_type();
+
         if (typeof change_cost_type === 'function') change_cost_type();
+
         
+
         $(document).on("click", "#search_wood", function (e) {
+
             e.preventDefault();
+
             if (typeof search_wood === 'function') search_wood();
+
         });
+
+
 
         // Toggle Calculator visibility and adjust layout grid dynamically
+
         $("#toggle_calculator_btn").on("click", function () {
+
             var calcCol = $("#calculator_wrapper_col");
+
             var mainCols = $("#quotation_main_cols");
+
             var btnText = $("#calc_btn_text");
+
             var btnIcon = $(this).find("i");
 
+
+
             if (calcCol.is(":visible")) {
+
                 calcCol.hide();
+
                 mainCols.removeClass("col-xl-9").addClass("col-xl-12");
+
                 btnText.text("Show Calculator");
+
                 btnIcon.removeClass("fa-calculator").addClass("fa-calculator");
+
                 $(this).css({"background": "#2563eb", "border-color": "#3b82f6"});
+
             } else {
+
                 calcCol.show();
+
                 mainCols.removeClass("col-xl-12").addClass("col-xl-9");
+
                 btnText.text("Hide Calculator");
+
                 btnIcon.removeClass("fa-calculator").addClass("fa-calculator");
+
                 $(this).css({"background": "#f59e0b", "border-color": "#fbbf24"});
+
             }
+
         });
+
     });
+
 })(jQuery);
+
 </script>
 
+
+
 <script>
+
     function change_cost_type() {
+
         var sqrt_req_elem = document.getElementById("pkqt_sqrt_req");
+
         var na_qty_elem = document.getElementById("pkqt_na_quantity");
+
         var cft_sqft_elem = document.getElementById("pkqt_cft_sqft_req");
+
         var hidden_desc_elem = document.getElementById("hidden_pc_stock_description");
 
+
+
         var CFT_Sqft_Req_unit = sqrt_req_elem ? (parseFloat(sqrt_req_elem.value) || 0) : 0;
+
         var job_type_qty = na_qty_elem ? (parseFloat(na_qty_elem.value) || 0) : 0;
+
         var CFT_Sqft_Req_total = parseFloat(CFT_Sqft_Req_unit * job_type_qty);
+
         let desc = hidden_desc_elem ? (hidden_desc_elem.value || '') : '';
+
         var total_sqft_elem = document.getElementById("total_sqft");
+
         var total_sqft = total_sqft_elem ? (parseFloat(total_sqft_elem.value) || 0) : 0;
+
         
+
         if (cft_sqft_elem) {
+
             cft_sqft_elem.innerText = CFT_Sqft_Req_total;
+
         }
+
         $("#total_cft").hide();
+
         var cost_type_elem = document.getElementById("pkqt_cost_type");
+
         var jn = cost_type_elem ? cost_type_elem.value : '';
+
         $('#pkqt_item').addClass('disable_a_href');
+
         $('#pkqt_itemdescription').addClass('disable_a_href');
+
         var part_code_elem = document.getElementById("pkqt_part_code");
+
         var part_code_val = part_code_elem ? part_code_elem.value : '';
+
         var req_label_elem = $('#req_value_label');
+
         
+
         if (jn == 8) {
+
             $('#pkqt_part_code').prop('disabled', false);
+
             $('#search_wood').show();
+
         } else {
+
             if ($('#pkqt_part_code').val()) {
+
                 $('#pkqt_part_code').val(null).trigger('change.select2');
+
             }
+
             $('#pkqt_part_code').prop('disabled', true);
+
             
+
             $('#pkqt_stock_purchase_number').addClass('disable_a_href');
+
             if (document.getElementById("pkqt_stock_purchase_number")) document.getElementById("pkqt_stock_purchase_number").value = "";
+
             $('#search_wood').hide();
+
             
+
             // Clear irrelevant fields so they don't get saved for non-packing materials
+
             if (document.getElementById("pkqt_item")) document.getElementById("pkqt_item").value = "";
+
             if (document.getElementById("pkqt_itemdescription")) document.getElementById("pkqt_itemdescription").value = "";
+
             if (document.getElementById("pkqt_length_req")) document.getElementById("pkqt_length_req").value = "0.0";
+
             if (document.getElementById("pkqt_width_req")) document.getElementById("pkqt_width_req").value = "0.0";
+
             if (document.getElementById("pkqt_height_req")) document.getElementById("pkqt_height_req").value = "0.0";
+
             if (document.getElementById("pkqt_uom")) document.getElementById("pkqt_uom").value = "";
+
         }
+
         
+
         var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+
         var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+
         var part_code_check = part_code_code || part_code_text;
+
         var desc_check = desc.toUpperCase();
+
         var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
 
-        if (jn == 8) {
-            var jn1 = document.getElementById("pkqt_stock_type").value;
-            if (is_reused) {
-                req_label_elem.html('Req Wt (Kg) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required Weight in Kg for reused material"></i>');
-            } else if (jn1 == 1 || jn1 == 5) {
-                req_label_elem.html('Req Vol (CFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Cubic Feet (CFT) volume"></i>');
-            } else if (jn1 == 2) {
-                req_label_elem.html('Req Area (SQFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Box Surface Area in SQFT"></i>');
-            } else {
-                req_label_elem.html('Req Value <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required value for calculation"></i>');
-            }
-        } else {
-            req_label_elem.html('Req Value <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required value for calculation"></i>');
-        }
+
 
         if (jn == 8) {
-            $('#pkqt_stock_type').addClass('disable_a_href');
-            if (part_code_val) {
-                $('#pkqt_item').removeClass('disable_a_href');
-            }
+
             var jn1 = document.getElementById("pkqt_stock_type").value;
+
             if (is_reused) {
+
+                req_label_elem.html('Req Wt (Kg) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required Weight in Kg for reused material"></i>');
+
+            } else if (jn1 == 1 || jn1 == 5) {
+
+                req_label_elem.html('Req Vol (CFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Cubic Feet (CFT) volume"></i>');
+
+            } else if (jn1 == 4 || jn1 == 6) {
+
+                req_label_elem.html('Req Area (SQFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Plywood / Marine Ply Area in SQFT"></i>');
+
+            } else if (jn1 == 2) {
+
+                req_label_elem.html('Req Area (SQFT) <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Calculated Box Surface Area in SQFT"></i>');
+
+            } else {
+
+                req_label_elem.html('Req Value <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required value for calculation"></i>');
+
+            }
+
+        } else {
+
+            req_label_elem.html('Req Value <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip" title="Required value for calculation"></i>');
+
+        }
+
+
+
+        if (jn == 8) {
+
+            $('#pkqt_stock_type').addClass('disable_a_href');
+
+            if (part_code_val) {
+
+                $('#pkqt_item').removeClass('disable_a_href');
+
+            }
+
+            var jn1 = document.getElementById("pkqt_stock_type").value;
+
+            if (is_reused) {
+
                 $('#pkqt_stock_description').addClass('disable_a_href');
+
                 $('#pkqt_uom').addClass('disable_a_href');
+
                 $('#pkqt_quantity').removeClass('disable_a_href');
+
                 $('#pkqt_sqrt_req').addClass('disable_a_href');
+
                 $('#pkqt_days').addClass('disable_a_href');
+
                 document.getElementById("pkqt_days").value = 0;
+
+
 
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
+
 
                 // Reused material formula: Unit Cost = Qty Req (Kg) * Rate
+
                 var totalCost = rate * quantity_req;
+
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                 var totalboxCost = totalCost * na_quantity;
+
                 document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
+
 
                 document.getElementById("pkqt_sqrt_req").value = quantity_req.toFixed(3);
+
                 if (document.getElementById("pkqt_cft")) {
+
                     document.getElementById("pkqt_cft").value = "0.000";
+
                 }
+
             }
+
             else if (jn1 == 1 || jn1 == 5) {
+
                 $('#pkqt_stock_description').addClass('disable_a_href');
+
                 $('#pkqt_uom').addClass('disable_a_href');
+
                 $('#pkqt_quantity').removeClass('disable_a_href');
+
                 $('#pkqt_sqrt_req').addClass('disable_a_href');
+
                 $('#pkqt_days').addClass('disable_a_href');
+
                 document.getElementById("pkqt_days").value = 0;
 
+
+
                 var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
+
                 var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
+
                 var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
+
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
                 
+
                 // CFT Calculation formula: (L * W * H / 144) * Qty Req
+
                 var cft_req = (length_req * width_req * height_req / 144) * quantity_req;
+
                 document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(3);
+
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
+
 
                 var totalCost = rate * cft_req;
+
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                 var totalboxCost = totalCost * na_quantity;
+
                 document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
             }
+
             else if (jn1 == 4 || jn1 == 6) {
+
                 $('#pkqt_stock_description').addClass('disable_a_href');
+
                 $('#pkqt_uom').addClass('disable_a_href');
+
                 $('#pkqt_quantity').removeClass('disable_a_href');
+
                 $('#pkqt_sqrt_req').addClass('disable_a_href');
+
                 $('#pkqt_days').addClass('disable_a_href');
 
+
+
                 var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
+
                 var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
+
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
                 
+
                 // Plywood SQFT calculation
+
                 var sqft_req = length_req * width_req * quantity_req;
+
                 document.getElementById("pkqt_sqrt_req").value = sqft_req.toFixed(3);
 
+
+
                 var totalCost = rate * sqft_req;
+
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                 var totalboxCost = totalCost * na_quantity;
+
                 document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             }
+
+
 
             else if (jn1 == 2) {
+
                 $('#pkqt_sqrt_req').removeClass('disable_a_href');
+
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
                 var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 
+
+
                 if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam")) {
+
                     $('#pkqt_quantity_req').addClass('disable_a_href');
+
                     $('#pkqt_sqrt_req').removeClass('disable_a_href');
+
                     $('#pkqt_days').addClass('disable_a_href');
+
                     var pkqt_weight_sqft = parseFloat(document.getElementById("pkqt_weight_sqft").value) || 0;
+
                     var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
                     document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
+
                     var totalCost = rate * total_sqft * pkqt_weight_sqft * quantity_req;
+
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                     var totalboxCost = totalCost * na_quantity;
+
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
                 }
+
+
 
                 else if (desc.includes("Belt") || desc.startsWith("Strech") || desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
+
                     var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
+
                     var totalCost = rate * pkqt_sqrt_req * quantity_req;
+
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                     var totalboxCost = totalCost * na_quantity;
+
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
                 }
+
                 else {
+
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
                     var totalCost = rate * quantity_req;
+
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
                     var totalboxCost = totalCost * na_quantity;
+
                     document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
                 }
+
             }
+
         }
+
         else if (jn == 4) {
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').addClass('disable_a_href');
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
             var totalCost = rate * quantity;
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             document.getElementById("pkqt_sqrt_req").value = "0.00";
+
         }
+
         else if (jn == 5) {
+
             $("#total_cft").show();
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').addClass('disable_a_href');
+
             
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+
             
+
             // Calculate CFT for the currently selected Job Type only
+
             var selected_req = $('#pkqt_requirement').val();
+
             var total_cft = 0;
+
             if (window.jobCftMap && selected_req && window.jobCftMap[selected_req] !== undefined) {
+
                 total_cft = parseFloat(window.jobCftMap[selected_req]) || 0;
+
             } else if (window.currentJobCft !== undefined) {
+
                 total_cft = window.currentJobCft;
+
             } else {
+
                 total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+
             }
+
             
+
             document.getElementById("pkqt_total_cft_display").value = total_cft.toFixed(3);
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             
+
             if (document.getElementById("pkqt_cft_sqft_req")) { 
+
                 document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); 
+
             }
+
             
+
             // Unit CFT per box for this selected Job Type
+
             var unit_cft = na_quantity > 0 ? (total_cft / na_quantity) : 0;
+
             if (document.getElementById("pkqt_sqrt_req")) {
+
                 document.getElementById("pkqt_sqrt_req").value = unit_cft.toFixed(3);
+
             }
+
             var totalCost = rate * unit_cft;
+
             
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
+
         }
+
         else if (jn == 6) {
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').addClass('disable_a_href');
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
             var totalCost = rate * quantity;
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             document.getElementById("pkqt_sqrt_req").value = "0.00";
+
         }
+
         else if (jn == 7) {
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').addClass('disable_a_href');
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var totalCost = rate;
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             document.getElementById("pkqt_sqrt_req").value = "0.00";
+
         }
+
         else if (jn == 3 || jn == 9) {
+
             // Labour Cost In-house (3) & On-site (9): Days/Hours enabled
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').removeClass('disable_a_href');
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
             var days = parseFloat(document.getElementById("pkqt_days").value) || 1;
+
             var totalCost = rate * days * quantity;
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             document.getElementById("pkqt_sqrt_req").value = "0.00";
+
         }
+
         else {
+
             $('#pkqt_stock_type').addClass('disable_a_href');
+
             $('#pkqt_stock_description').addClass('disable_a_href');
+
             document.getElementById("pkqt_stock_type").value = ""
+
             document.getElementById("pkqt_stock_description").value = ""
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
             $('#pkqt_days').addClass('disable_a_href');
+
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
+
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
+
             var totalCost = rate * quantity;
+
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
+
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
+
             var totalboxCost = totalCost * na_quantity;
+
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+
             if (jn != 5) {
+
                 document.getElementById("pkqt_sqrt_req").value = "0.00";
+
             }
+
         }
+
     }
+
 </script>
+
 <script>
+
     $("#pkqt_stock_type").change(function () {
+
         var url = $("#quotation_add").attr("data-stock_description-url");
+
         var stock_type = $(this).val();
+
         var part_code = $("#pkqt_part_code").val();
 
-        if (part_code && (stock_type == 1 || stock_type == 4)) {
+
+
+        if (part_code && (stock_type == 1 || stock_type == 4 || stock_type == 5 || stock_type == 6)) {
+
             $('#pkqt_item').removeClass('disable_a_href');
+
             $('#pkqt_itemdescription').removeClass('disable_a_href');
+
             $('#pkqt_width_req').removeClass('disable_a_href');
+
             $('#pkqt_height_req').removeClass('disable_a_href');
+
             $('#pkqt_length_req').removeClass('disable_a_href');
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
         }
+
         else if (part_code && stock_type == 2) {
+
             $('#pkqt_item').addClass('disable_a_href');
+
             $('#pkqt_itemdescription').addClass('disable_a_href');
+
             $('#pkqt_width_req').addClass('disable_a_href');
+
             $('#pkqt_height_req').addClass('disable_a_href');
+
             $('#pkqt_length_req').addClass('disable_a_href');
+
             $('#pkqt_quantity_req').removeClass('disable_a_href');
+
         }
+
         else {
+
             $('#pkqt_item').addClass('disable_a_href');
+
             $('#pkqt_itemdescription').addClass('disable_a_href');
+
             $('#pkqt_width_req').addClass('disable_a_href');
+
             $('#pkqt_height_req').addClass('disable_a_href');
+
             $('#pkqt_length_req').addClass('disable_a_href');
+
             $('#pkqt_quantity_req').addClass('disable_a_href');
+
         }
+
         $.ajax({
+
             url: url,
+
             data: {
+
                 'stock_type': stock_type,
+
             },
+
             success: function (data) {
+
                 console.log(data);
+
                 $('#pkqt_stock_description').removeClass('disable_a_href');
+
                 $("#pkqt_stock_description").empty();
+
                 $('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
+
                 var pkqt_stock_description_name = JSON.parse(data)["stock_description"];
+
                 var pkqt_stock_description_id = JSON.parse(data)["stock_description_id"];
+
                 var len = (pkqt_stock_description_id).length;
+
                 $('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
+
                 for (var i = 0; i < len; i++) {
+
                     $("#pkqt_stock_description").append("<option value='" + pkqt_stock_description_id[i] + "'>" + pkqt_stock_description_name[i] + "</option>");
+
                 }
+
             }
+
         });
+
     });
+
 </script>
 
+
+
 <script>
+
     window.jobCftMap = {{ job_cft_map_json|safe|default:"{}" }};
 
+
+
     function pk_store_na_dimension_id() {
+
         var pkqt_requirement_id = $('#pkqt_requirement').val();
 
+
+
         $.ajax({
+
             url: '{% url "pk_store_na_dimension_id" %}',
+
             type: 'GET',
+
             data: { 'ct_requirement_id': pkqt_requirement_id },
+
             dataType: 'json',
+
             success: function (data) {
+
                 var na_dimension_box_val = data.na_dimension_box_val;
+
                 var na_dimension_type_val = data.na_dimension_type;
+
                 var na_dimension_type_id_val = data.na_dimension_type_id;
+
                 var na_quantity = parseFloat(data.na_quantity);
+
                 var l = parseFloat(data.na_length);
+
                 var w = parseFloat(data.na_width);
+
                 var h = parseFloat(data.na_height);
+
                 var na_uom_val = data.na_uom;
+
                 var na_uom_id_val = data.na_uom_id;
 
+
+
                 if (data.job_total_cft !== undefined) {
+
                     window.jobCftMap = window.jobCftMap || {};
+
                     window.jobCftMap[pkqt_requirement_id] = parseFloat(data.job_total_cft) || 0;
+
                     window.currentJobCft = parseFloat(data.job_total_cft) || 0;
+
                 }
 
+
+
                 document.getElementById("pkqt_requirement_size").value = na_dimension_box_val;
+
                 document.getElementById("pkqt_dimension_type").value = na_dimension_type_val;
+
                 document.getElementById("pkqt_dimension_type_id").value = na_dimension_type_id_val;
+
                 document.getElementById("pkqt_na_quantity").value = na_quantity;
+
                 document.getElementById("pkqt_l").value = l;
+
                 document.getElementById("pkqt_w").value = w;
+
                 document.getElementById("pkqt_h").value = h;
+
                 document.getElementById("pkqt_uom_calc").value = na_uom_val;
+
+
 
                 calculateDimensions(na_uom_id_val, l, w, h);
 
+
+
                 var jn1 = parseInt($('#pkqt_stock_type').val());
+
                 var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+
                 let desc = (document.getElementById("hidden_pc_stock_description") ? document.getElementById("hidden_pc_stock_description").value : "") || "";
 
+
+
                 if (jn1 === 2) {
+
                     if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam")) {
+
                         document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
+
                     } else {
+
                         document.getElementById("pkqt_sqrt_req").value = "0";
+
                     }
+
                 }
+
                 if (typeof change_cost_type === 'function') {
+
                     change_cost_type();
+
                 }
+
             }
+
         });
+
     }
 
+
+
 </script>
+
 <script>
+
     function search_wood() {
+
         var stock_description = $("#pkqt_stock_description").val();
+
         var stock_type = $("#pkqt_stock_type").val();
+
         var length_req = parseFloat($("#pkqt_length_req").val()) || 0;
+
         var width_req = parseFloat($("#pkqt_width_req").val()) || 0;
+
         var height_req = parseFloat($("#pkqt_height_req").val()) || 0;
+
         var part_code = $("#pkqt_part_code").val();
+
         var includeContainer = $('#pk_item_search_page_costing_modal_container');
 
+
+
         $.ajax({
+
             url: "{% url 'pk_item_search_page_costing' %}",
+
             data: {
+
                 'stock_type': stock_type,
+
                 'stock_description': stock_description,
+
                 'length_req': length_req,
+
                 'width_req': width_req,
+
                 'height_req': height_req,
+
                 'part_code': part_code
+
             },
+
             success: function (results) {
+
                 var tableHtml = '<div class="table-container-modern"><table id="stockTable" class="table modern-table display nowrap" style="width:100%">';
+
                 tableHtml += '<thead class="thead-dark">';
+
                 tableHtml += '<tr>';
+
                 tableHtml += '<th>Select</th>';
+
                 tableHtml += '<th>ID</th>';
+
                 tableHtml += '<th style="min-width: 140px;">Vendor Bill</th>';
+
                 tableHtml += '<th style="min-width: 110px;">Date</th>';
+
                 tableHtml += '<th style="min-width: 200px;">Stock Purchases Number</th>';
+
                 tableHtml += '<th>Part Code</th>';
+
                 tableHtml += '<th>Stock Type</th>';
+
                 tableHtml += '<th style="min-width: 160px;">Stock Description</th>';
+
                 tableHtml += '<th>Thick/Height</th>';
+
                 tableHtml += '<th>Width</th>';
+
                 tableHtml += '<th>Length</th>';
+
                 tableHtml += '<th>CFT</th>';
+
                 tableHtml += '<th>Quantity</th>';
+
                 tableHtml += '<th>Rate/Qty (CFT)</th>';
+
                 tableHtml += '<th>UOM</th>';
+
                 tableHtml += '<th>Size</th>';
+
                 tableHtml += '</tr></thead><tbody>';
 
+
+
                 if (results.length === 0) {
+
                     // Let DataTables handle empty state
+
                 } else {
+
                     for (var i = 0; i < results.length; i++) {
+
                         var row = results[i];
+
                         tableHtml += '<tr>';
+
                         tableHtml += '<td><a href="#" class="btn btn-primary btn-sm select-stock" ' +
+
                             'data-id="' + row.id + '" ' +
+
                             'data-length="' + row.sp_length + '" ' +
+
                             'data-width="' + row.sp_width + '" ' +
+
                             'data-height="' + row.sp_thick_height + '" ' +
+
                             'data-cft="' + row.sp_cft + '" ' +
+
                             'data-quantity="' + row.sp_quantity + '" ' +
+
                             'data-rate="' + row.sp_rate + '" ' +
+
                             'data-uom="' + row.sp_uom__unit_of_measure + '"' +
+
                             '>Select</a></td>';
+
                         tableHtml += '<td>' + row.id + '</td>';
+
                         tableHtml += '<td>' + row.sp_vendor_bill_id + '</td>';
+
                         tableHtml += '<td>' + row.sp_stock_in_date + '</td>';
+
                         tableHtml += '<td>' + row.sp_purchase_num + '</td>';
+
                         tableHtml += '<td>' + row.sp_part_code__pc_code + '</td>';
+
                         tableHtml += '<td>' + row.sp_stock_type__pk_stocktype + '</td>';
+
                         tableHtml += '<td>' + row.sp_stock_description__stock_description + '</td>';
+
                         tableHtml += '<td>' + row.sp_thick_height + '</td>';
+
                         tableHtml += '<td>' + row.sp_width + '</td>';
+
                         tableHtml += '<td>' + row.sp_length + '</td>';
+
                         tableHtml += '<td>' + row.sp_cft + '</td>';
+
                         tableHtml += '<td>' + row.sp_quantity + '</td>';
+
                         tableHtml += '<td>' + row.sp_rate + '</td>';
+
                         tableHtml += '<td>' + row.sp_uom__unit_of_measure + '</td>';
+
                         tableHtml += '<td>' + row.sp_size + '</td>';
+
                         tableHtml += '</tr>';
+
                     }
+
                 }
+
+
 
                 tableHtml += '</tbody></table></div>';
+
                 includeContainer.html('<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">' + tableHtml + '</div>');
 
+
+
                 // Show the modal dialog box
+
                 $('#stockSearchResultModal').modal('show');
+
             }
+
         });
+
+
 
         includeContainer.off('click', 'a.select-stock').on('click', 'a.select-stock', function (e) {
+
             e.preventDefault();
 
+
+
             // Use data-* attributes
+
             var stockId = $(this).data('id');
+
             var height = $(this).data('height');
+
             var width = $(this).data('width');
+
             var length = $(this).data('length');
+
             var cft = $(this).data('cft');
+
             var quantity = $(this).data('quantity');
+
             var rate = $(this).data('rate');
+
             var uom = $(this).data('uom');
 
+
+
             // Set form fields
+
             $("#pkqt_stock_purchase_number").val(stockId);
+
             $("#pkqt_length").val(length);
+
             $("#pkqt_width").val(width);
+
             $("#pkqt_height").val(height);
+
             $("#pkqt_cft").val(cft);
+
             $("#pkqt_quantity").val(quantity);
+
             $("#pkqt_rate").val(rate);
 
+
+
             // Hide the modal popup after selection
+
             $('#stockSearchResultModal').modal('hide');
 
+
+
             // Trigger any dependent changes
+
             change_cost_type();
+
         });
+
     }
-</script>
-<script>
-    function changeItemDescription() {
-        var item_id = $('#pkqt_item').val();
-        $.ajax({
-            url: "{% url 'pk_get_item_description' %}",
-            type: 'GET',
-            data: { 'item_id': item_id },
-            dataType: 'json',
-            success: function (data) {
-                console.log("Data", data);
-                $('#pkqt_itemdescription').removeClass('disable_a_href');
-                $('#pkqt_itemdescription').empty();
-                $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_itemdescription_name = data.item_description_val;
-                var pkqt_itemdescription_id = data.item_description_id;
-                var len = (pkqt_itemdescription_id).length;
-                $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
-                for (var i = 0; i < len; i++) {
-                    $("#pkqt_itemdescription").append("<option value='" + pkqt_itemdescription_id[i] + "'>" + pkqt_itemdescription_name[i] + "</option>");
-                }
-            }
-        });
-    }
+
 </script>
 
 <script>
-    function load_pk_requirement_type() {
-        var pkqt_assessment_num_id = $('#pkqt_assessment_num').val();
-        var selected_req = $('#pkqt_requirement').val();
+
+    function changeItemDescription() {
+
+        var item_id = $('#pkqt_item').val();
+
         $.ajax({
-            url: "{% url 'pk_get_pk_requirement_type' %}",
+
+            url: "{% url 'pk_get_item_description' %}",
+
             type: 'GET',
-            data: { 'ct_assessment_num_id': pkqt_assessment_num_id },
+
+            data: { 'item_id': item_id },
+
             dataType: 'json',
+
             success: function (data) {
-                $('#pkqt_requirement').removeClass('disable_a_href');
-                $('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_requirement_name = data.requirement_type_val;
-                var pkqt_requirement_id = data.requirement_type_id;
-                var len = (pkqt_requirement_id).length;
+
+                console.log("Data", data);
+
+                $('#pkqt_itemdescription').removeClass('disable_a_href');
+
+                $('#pkqt_itemdescription').empty();
+
+                $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
+
+                var pkqt_itemdescription_name = data.item_description_val;
+
+                var pkqt_itemdescription_id = data.item_description_id;
+
+                var len = (pkqt_itemdescription_id).length;
+
+                $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
+
                 for (var i = 0; i < len; i++) {
-                    var selected = (selected_req && selected_req == pkqt_requirement_id[i]) ? " selected" : "";
-                    $("#pkqt_requirement").append("<option value='" + pkqt_requirement_id[i] + "'" + selected + ">" + pkqt_requirement_name[i] + "</option>");
+
+                    $("#pkqt_itemdescription").append("<option value='" + pkqt_itemdescription_id[i] + "'>" + pkqt_itemdescription_name[i] + "</option>");
+
                 }
-                if (selected_req && selected_req != '0') {
-                    pk_store_na_dimension_id();
-                }
+
             }
+
         });
+
     }
+
 </script>
+
+
+
 <script>
+
+    function load_pk_requirement_type() {
+
+        var pkqt_assessment_num_id = $('#pkqt_assessment_num').val();
+
+        var selected_req = $('#pkqt_requirement').val();
+
+        $.ajax({
+
+            url: "{% url 'pk_get_pk_requirement_type' %}",
+
+            type: 'GET',
+
+            data: { 'ct_assessment_num_id': pkqt_assessment_num_id },
+
+            dataType: 'json',
+
+            success: function (data) {
+
+                $('#pkqt_requirement').removeClass('disable_a_href');
+
+                $('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
+
+                var pkqt_requirement_name = data.requirement_type_val;
+
+                var pkqt_requirement_id = data.requirement_type_id;
+
+                var len = (pkqt_requirement_id).length;
+
+                for (var i = 0; i < len; i++) {
+
+                    var selected = (selected_req && selected_req == pkqt_requirement_id[i]) ? " selected" : "";
+
+                    $("#pkqt_requirement").append("<option value='" + pkqt_requirement_id[i] + "'" + selected + ">" + pkqt_requirement_name[i] + "</option>");
+
+                }
+
+                if (selected_req && selected_req != '0') {
+
+                    pk_store_na_dimension_id();
+
+                }
+
+            }
+
+        });
+
+    }
+
+</script>
+
+<script>
+
     function onChangeHandler() {
+
         change_cost_type();
+
         load_pk_requirement_type();
+
     }
+
 </script>
+
 <script>
+
     function fetchPartCodeDetails() {
+
         var partCodeId = $('#pkqt_part_code').val();  // Get selected Part Code ID
 
+
+
         $.ajax({
+
             url: '{% url "fetch_part_code_details" %}',  // Ensure URL is mapped in Django
+
             type: 'GET',
+
             data: { 'part_code_id': partCodeId },  // Make sure param name matches the backend
+
             dataType: 'json',
+
             success: function (data) {
+
                 var pc_stock_type = data.pc_stock_type;
+
                 var pc_stock_type_id = data.pc_stock_type_id;
+
                 document.getElementById("pkqt_stock_type").value = pc_stock_type_id;
+
                 var pc_stock_description = data.pc_stock_description;
+
                 document.getElementById("hidden_pc_stock_description").value = data.pc_stock_description;
+
                 var pc_stock_description_id = data.pc_stock_description_id;
+
                 document.getElementById("pkqt_stock_description").value = pc_stock_description_id;
+
                 var pc_uom_id = data.pc_uom_id;
+
                 document.getElementById("pkqt_uom").value = pc_uom_id;
+
                 var pc_length = parseFloat(data.pc_length);
+
                 document.getElementById("pkqt_length_req").value = pc_length;
+
                 var pc_width = parseFloat(data.pc_width);
+
                 document.getElementById("pkqt_width_req").value = pc_width;
+
                 var pc_height = parseFloat(data.pc_height);
+
                 document.getElementById("pkqt_height_req").value = pc_height;
+
                 var pc_size = parseFloat(data.pc_size);
+
                 document.getElementById("pkqt_size").value = pc_size;
 
+
+
                 const weightConvField = document.getElementById("pkqt_weight_received");
+
                 const weightConsField = document.getElementById("pkqt_weight_Consumption");
+
                 const weightSqftField = document.getElementById("pkqt_weight_sqft");
 
+
+
                 if (data.stock_received_id && weightConvField) {
+
                     weightConvField.value = data.stock_received_id;
-                }
-                if (data.stock_consumption_id && weightConsField) {
-                    weightConsField.value = data.stock_consumption_id;
+
                 }
 
-                if (
-                    data.stock_received_id &&
-                    data.stock_consumption_id &&
-                    data.stock_received_id === data.stock_consumption_id
-                ) {
-                    weightSqftField.value = 1;
-                    $('#pkqt_weight_sqft').addClass('disable_a_href');
-                } else {
-                    weightSqftField.value = 1;
-                    $('#pkqt_weight_sqft').removeClass('disable_a_href');
+                if (data.stock_consumption_id && weightConsField) {
+
+                    weightConsField.value = data.stock_consumption_id;
+
                 }
+
+
+
+                if (
+
+                    data.stock_received_id &&
+
+                    data.stock_consumption_id &&
+
+                    data.stock_received_id === data.stock_consumption_id
+
+                ) {
+
+                    weightSqftField.value = 1;
+
+                    $('#pkqt_weight_sqft').addClass('disable_a_href');
+
+                } else {
+
+                    weightSqftField.value = 1;
+
+                    $('#pkqt_weight_sqft').removeClass('disable_a_href');
+
+                }
+
+
+
 
 
                 if (data.pc_code && document.getElementById("hidden_pc_code")) {
+
                     document.getElementById("hidden_pc_code").value = data.pc_code;
+
                 }
+
+
 
                 $('#pkqt_stock_type').removeClass('disable_a_href');
-                if (pc_stock_type_id == 1 || pc_stock_type_id == 4) {
+
+                if (pc_stock_type_id == 1 || pc_stock_type_id == 4 || pc_stock_type_id == 5 || pc_stock_type_id == 6) {
+
                     $('#pkqt_item').removeClass('disable_a_href');
+
                     $('#pkqt_itemdescription').removeClass('disable_a_href');
+
                 }
+
+
 
                 change_cost_type();
+
                 toggleFields()
+
             }
+
         });
+
     }
+
 </script>
+
 <script>
+
     function toggleFields() {
+
         var stockType = $("#pkqt_stock_type").val();
+
         var part_code_text = ($('#pkqt_part_code option:selected').text() || '').trim().toUpperCase();
+
         var part_code_code = ($('#hidden_pc_code').val() || '').trim().toUpperCase();
+
         var part_code_check = part_code_code || part_code_text;
+
         var desc_check = ($('#hidden_pc_stock_description').val() || $('#pkqt_stock_description option:selected').text() || '').trim().toUpperCase();
+
         var is_reused = part_code_check.includes('RE') || desc_check.includes('RE - USED') || desc_check.includes('RE-USED') || desc_check.includes('REUSED');
 
+
+
         if (is_reused) {
+
             $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group").hide();
+
             $("#length_group, #width_group, #height_group").hide();
+
         } else if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
+
             $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group ").hide();
+
             $("#length_group, #width_group, #height_group").show();
+
         } else {
+
             $("#diameter_width_group, #con_length_group, #uom_group, #weight_group, #weight_sq_group ").show();
+
             $("#length_group, #width_group, #height_group").hide();
+
         }
+
     }
 
+
+
 </script>
+
 <script>
+
     // Enable select2 for part code field
+
     // Enable select2 for part code field (AJAX search)
+
     $('#pkqt_part_code').select2({
+
         ajax: {
+
             url: "{% url 'get_part_code' %}",
+
             dataType: 'json',
+
             delay: 250,
+
             data: function (params) {
+
                 return { q: params.term };
+
             },
+
             processResults: function (data) {
+
                 return {
+
                     results: data.map(item => ({
+
                         id: item.id,
+
                         text: item.pc_code
+
                     }))
+
                 };
+
             },
+
             cache: true
+
         },
+
         width: '100%',
+
         placeholder: "Type 2+ letters to search...",
+
         allowClear: true,
+
         minimumInputLength: 2
+
     });
+
+
 
     $('#pkqt_part_code').on('select2:select change', function () {
+
         fetchPartCodeDetails();
+
     });
+
+
 
     // Real-time calculation on typing / input change
+
     $(document).on('input change', '#pkqt_rate, #pkqt_quantity_req, #pkqt_days, #pkqt_length_req, #pkqt_width_req, #pkqt_height_req, #pkqt_weight_sqft, #pkqt_sqrt_req, #pkqt_cost_type', function() {
+
         if (typeof change_cost_type === 'function') {
+
             change_cost_type();
+
         }
+
     });
 
+
+
 </script>
+
+
 
 <!-- Stock Summary Modal -->
+
 <div class="modal fade" id="stockSummaryModal" tabindex="-1" role="dialog" aria-labelledby="stockSummaryModalLabel" aria-hidden="true" style="z-index: 9999;">
+
     <div class="modal-dialog modal-lg" role="document">
+
         <div class="modal-content" style="border-radius: 1rem; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+
             <div class="modal-header bg-info text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+
                 <h5 class="modal-title" id="stockSummaryModalLabel">
+
                     <i class="fas fa-warehouse"></i> Stock Summary: <span id="modal_part_code_text" class="badge badge-light ml-2"></span>
+
                 </h5>
+
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+
                     <span aria-hidden="true">&times;</span>
+
                 </button>
+
             </div>
+
             <div class="modal-body p-4">
+
                 <div class="row text-center mb-4">
+
                     <div class="col-3">
+
                         <div class="card border-0 shadow-sm" style="background: #e0f2f1; border-radius: 12px;">
+
                             <div class="card-body p-3">
+
                                 <div class="text-muted small text-uppercase font-weight-bold mb-1">Total IN</div>
+
                                 <h3 id="summary_total_in" class="mb-0 text-dark">0.0</h3>
+
                                 <div class="text-teal small">Purchases</div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                     <div class="col-3">
+
                         <div class="card border-0 shadow-sm" style="background: #fff3e0; border-radius: 12px;">
+
                             <div class="card-body p-3">
+
                                 <div class="text-muted small text-uppercase font-weight-bold mb-1">Retrieved</div>
+
                                 <h3 id="summary_total_retrieved" class="mb-0 text-dark">0.0</h3>
+
                                 <div class="text-warning small">To Sites</div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                     <div class="col-3">
+
                         <div class="card border-0 shadow-sm" style="background: #e3f2fd; border-radius: 12px;">
+
                             <div class="card-body p-3">
+
                                 <div class="text-muted small text-uppercase font-weight-bold mb-1">Returned</div>
+
                                 <h3 id="summary_total_returned" class="mb-0 text-dark">0.0</h3>
+
                                 <div class="text-primary small">Excess</div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                     <div class="col-3">
+
                         <div class="card border-0 shadow-sm" style="background: #f1f8e9; border-radius: 12px; border: 2px solid #81c784 !important;">
+
                             <div class="card-body p-3">
+
                                 <div class="text-muted small text-uppercase font-weight-bold mb-1">Available</div>
+
                                 <h3 id="summary_current_available" class="mb-0 text-success font-weight-bold">0.0</h3>
+
                                 <div class="text-success small">Balance</div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
+
 
                 <div class="p-3 bg-light rounded shadow-sm">
+
                     <h6 class="font-weight-bold mb-3 d-flex align-items-center">
+
                         <i class="fas fa-history text-info mr-2"></i> Retrieval History (By Assessment)
+
                     </h6>
+
                     <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+
                         <table class="table table-sm table-hover table-striped">
+
                             <thead class="bg-white sticky-top">
+
                                 <tr>
+
                                     <th class="border-top-0">Assessment #</th>
+
                                     <th class="border-top-0">Qty (CFT)</th>
+
                                     <th class="border-top-0">Date & Time</th>
+
                                 </tr>
+
                             </thead>
+
                             <tbody id="retrieval_history_body">
+
                                 <!-- Populated via Ajax -->
+
                             </tbody>
+
                         </table>
+
                     </div>
+
                 </div>
+
             </div>
+
             <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+
                 <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Close</button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <style>
+
     .text-teal { color: #00897b; }
+
     .badge-light { background-color: rgba(255,255,255,0.2); color: white; }
+
     #retrieval_history_body tr td { vertical-align: middle; font-weight: 600; font-size: 0.9rem; }
+
 </style>
 
+
+
 <script>
+
     $('#show_stock_summary').on('click', function() {
+
         var partCodeId = $('#pkqt_part_code').val();
+
         var partCodeText = $('#pkqt_part_code option:selected').text();
+
         
+
         if (!partCodeId || partCodeId === "") {
+
             alert("Please select a Part Code first.");
+
             return;
+
         }
+
+
 
         $('#modal_part_code_text').text(partCodeText);
+
         
+
         // Clear previous data
+
         $('#summary_total_in').text('...');
+
         $('#summary_total_retrieved').text('...');
+
         $('#summary_total_returned').text('...');
+
         $('#summary_current_available').text('...');
+
         $('#retrieval_history_body').empty();
 
+
+
         $.ajax({
+
             url: "{% url 'get_partcode_summary' %}",
+
             data: { 'part_code_id': partCodeId },
+
             dataType: 'json',
+
             success: function(data) {
+
                 $('#summary_total_in').text(data.total_in);
+
                 $('#summary_total_retrieved').text(data.total_retrieved);
+
                 $('#summary_total_returned').text(data.total_returned);
+
                 $('#summary_current_available').text(data.current_available);
 
+
+
                 if (data.breakdown.length > 0) {
+
                     data.breakdown.forEach(function(item) {
+
                         $('#retrieval_history_body').append(
+
                             '<tr>' +
+
                             '<td><span class="text-info">' + item.assessment_num + '</span></td>' +
+
                             '<td>' + item.qty_cft + '</td>' +
+
                             '<td><span class="text-muted small">' + item.date + '</span></td>' +
+
                             '</tr>'
+
                         );
+
                     });
+
                 } else {
+
                     $('#retrieval_history_body').append('<tr><td colspan="3" class="text-center p-4 text-muted">No retrieval history found for this part code.</td></tr>');
+
                 }
+
                 
+
                 // Show modal explicitly if it doesn't open
+
                 $('#stockSummaryModal').modal('show');
+
             },
+
             error: function() {
+
                 alert("Error fetching stock summary data. Please ensure you have selected a valid Part Code.");
+
             }
+
         });
+
     });
+
 </script>
+
+
 
 <script>
+
     /*
+
      * Cost-type driven layout: show only the fields that matter for the chosen cost type.
+
      * Hidden inputs are still submitted, so no data/calculation logic is affected.
+
      *   8 = Packing Material  -> Part & Stock + Item Details + stock-type specific fields
+
      *   5 = HT Cost           -> Qty, Req Value (CFT), Proj. Total CFT, Rate
+
      *   3/9 = Labour          -> Qty, Days/Hours, Rate
+
      *   4 = Transport, 6 = Crane, others -> Qty, Rate
+
      */
+
     function applyCostTypeLayout() {
+
         var jn = $('#pkqt_cost_type').val();
+
         var st = $('#pkqt_stock_type').val();
+
         var isPacking = (jn == '8');
+
         var isConsumable = isPacking && st == '2';
 
+
+
         // Whole sections
+
         $('#sec_part, #sec_item').toggle(isPacking);
+
         if (isPacking) {
+
             $('#sec_basic, #sec_calc').removeClass('col-xl-6').addClass('col-xl-3');
+
         } else {
+
             $('#sec_basic, #sec_calc').removeClass('col-xl-3').addClass('col-xl-6');
+
         }
+
+
 
         // New customer only when it actually has a value
+
         $('#grp_new_customer').toggle(!!$.trim($('#pkqt_customer_new_name2').val()));
 
+
+
         // Calculation fields
+
         $('#grp_uom_row').toggle(isConsumable);
+
         $('#grp_conversion').toggle(isConsumable);
+
         $('#grp_req_value').toggle(isPacking || jn == '5');
+
         $('#grp_days').toggle(jn == '3' || jn == '9');
+
         // #total_cft visibility is already handled by change_cost_type (HT only)
+
         $('#row_conv_cft').toggle(isConsumable || jn == '5');
+
     }
 
+
+
     (function () {
+
         if (typeof change_cost_type === 'function') {
+
             var _origChangeCostType = change_cost_type;
+
             window.change_cost_type = function () {
+
                 var r = _origChangeCostType.apply(this, arguments);
+
                 applyCostTypeLayout();
+
                 return r;
+
             };
+
         }
+
         if (typeof toggleFields === 'function') {
+
             var _origToggleFields = toggleFields;
+
             window.toggleFields = function () {
+
                 var r = _origToggleFields.apply(this, arguments);
+
                 applyCostTypeLayout();
+
                 return r;
+
             };
+
         }
+
         $(function () { applyCostTypeLayout(); });
+
     })();
+
 </script>
+
+
 
 {% endblock extra_js %}

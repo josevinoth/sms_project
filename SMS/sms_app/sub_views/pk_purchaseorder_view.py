@@ -420,38 +420,42 @@ def pk_create_batch_job(request):
             for s in job_substitutions:
                 qid_k = str(s.get('quotation_id'))
                 sub_map[qid_k] = s
+                for q_extra in s.get('quotation_ids', []):
+                    sub_map[str(q_extra)] = s
                 for a_id in s.get('absorbed_quotation_ids', []):
                     all_absorbed_ids.add(str(a_id))
         elif isinstance(job_substitutions, dict):
             for qid_k, s in job_substitutions.items():
                 sub_map[str(qid_k)] = s
+                for q_extra in s.get('quotation_ids', []):
+                    sub_map[str(q_extra)] = s
                 for a_id in s.get('absorbed_quotation_ids', []):
                     all_absorbed_ids.add(str(a_id))
 
         # Validate live stock availability for material part codes (Cost Type 8)
+        # PART-CODE WISE GROUPING: Group material requirements by part code across all selected items
         po_dimension_ids = [it['id'] for it in items]
         selected_pods = POdimension.objects.filter(id__in=po_dimension_ids)
-        insufficient_stock_items = []
         item_qty_map = {it['id']: float(it['qty']) for it in items}
-        
+
+        partcode_reqs = {}
+
         for pod in selected_pods:
             job_qty = item_qty_map.get(pod.id, 0.0)
             materials = PkquotationInfo.objects.filter(
                 pkqt_requirement=pod.pod_nad,
                 pkqt_cost_type_id=8
             ).select_related('pkqt_part_code', 'pkqt_stock_description')
-            
+
             for q in materials:
                 str_qid = str(q.id)
-                # If absorbed for this job, skip stock checking
                 if str_qid in all_absorbed_ids:
                     continue
 
                 sub = sub_map.get(str_qid)
                 part_code_obj = q.pkqt_part_code
                 per_item_req = float(q.pkqt_quantity_req) if q.pkqt_quantity_req is not None else (float(q.pkqt_quantity) if q.pkqt_quantity is not None else 1.0)
-                
-                # If substituted for this job, use the substituted part code and qty
+
                 if sub:
                     new_pc_id = sub.get('new_part_code_id')
                     if new_pc_id:
@@ -473,56 +477,107 @@ def pk_create_batch_job(request):
                 if not part_code_obj or per_item_req <= 0:
                     continue
 
-                part_code_str = part_code_obj.pc_code
-                total_needed = per_item_req * job_qty
+                line_needed = per_item_req * job_qty
+                pc_id = part_code_obj.id
 
-                # If user selected specific batches that fully satisfy total_needed, pass check
+                if pc_id not in partcode_reqs:
+                    desc_str = ''
+                    if q.pkqt_stock_description:
+                        desc_str = q.pkqt_stock_description.stock_description
+                    elif part_code_obj.pc_stock_description:
+                        desc_str = part_code_obj.pc_stock_description.stock_description
+                    partcode_reqs[pc_id] = {
+                        'part_code_obj': part_code_obj,
+                        'description': desc_str,
+                        'total_needed': 0.0,
+                        'quotation_ids': [],
+                        'primary_quotation_id': q.id,
+                        'primary_pod_id': pod.id,
+                        'items_breakdown': [],
+                        'selected_batches': []
+                    }
+
+                partcode_reqs[pc_id]['total_needed'] += line_needed
+                partcode_reqs[pc_id]['quotation_ids'].append(q.id)
+                partcode_reqs[pc_id]['items_breakdown'].append({
+                    'item_name': pod.pod_item,
+                    'pod_id': pod.id,
+                    'quotation_id': q.id,
+                    'needed_qty': round(line_needed, 2),
+                    'per_unit_req': round(per_item_req, 2),
+                    'job_qty': round(job_qty, 2)
+                })
                 if sub and sub.get('selected_batches'):
-                    total_allocated = sum(float(b.get('allocated_qty') or 0.0) for b in sub.get('selected_batches', []))
-                    if total_allocated >= (total_needed - 0.001):
-                        continue
+                    partcode_reqs[pc_id]['selected_batches'] = sub.get('selected_batches')
 
-                # Optimised: calculate available stock in 3 bulk queries instead of 3 per batch
-                # 1. Total purchased (type=1)
-                purchased_total = StockMaintenance.objects.filter(
-                    sm_partcode=part_code_obj,
-                    sm_stock_type_id=1
-                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
-                
-                # 2. Total retrieved/consumed (type=2) - linked back to type=1 via invoice no
-                purchased_invoice_nos = list(StockMaintenance.objects.filter(
-                    sm_partcode=part_code_obj,
-                    sm_stock_type_id=1
-                ).values_list('sm_invoice_no', flat=True))
-                
-                retrieved_total = StockMaintenance.objects.filter(
-                    sm_partcode=part_code_obj,
-                    sm_stock_type_id=2,
-                    sm_invoice_no__in=purchased_invoice_nos
-                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
-                
-                # 3. Total vendor-returned (type=3)
-                vendor_returned_total = StockMaintenance.objects.filter(
-                    sm_partcode=part_code_obj,
-                    sm_stock_type_id=3
-                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
-                
-                avail_qty = max(0.0, float(purchased_total) - abs(float(retrieved_total)) - abs(float(vendor_returned_total)))
-                
-                if avail_qty < total_needed:
-                    insufficient_stock_items.append({
-                        'quotation_id': q.id,
-                        'pod_id': pod.id,
-                        'item_name': pod.pod_item,
-                        'part_code_id': part_code_obj.id,
-                        'part_code': part_code_str,
-                        'description': q.pkqt_stock_description.stock_description if q.pkqt_stock_description else '',
-                        'needed_qty': round(total_needed, 2),
-                        'per_unit_req': round(per_item_req, 2),
-                        'job_qty': round(job_qty, 2),
-                        'available_qty': round(avail_qty, 2),
-                        'shortfall': round(total_needed - avail_qty, 2)
-                    })
+        insufficient_stock_items = []
+
+        for pc_id, p_info in partcode_reqs.items():
+            pc_obj = p_info['part_code_obj']
+            total_needed = p_info['total_needed']
+
+            # If user selected specific batches that fully satisfy total_needed, pass check
+            if p_info['selected_batches']:
+                total_allocated = sum(float(b.get('allocated_qty') or 0.0) for b in p_info['selected_batches'])
+                if total_allocated >= (total_needed - 0.001):
+                    continue
+
+            # Calculate accurate FIFO available stock for this partcode (matching pk_costing_view exactly)
+            in_batches = (
+                StockMaintenance.objects
+                .filter(sm_partcode_id=pc_id)
+                .filter(Q(sm_stock_type_id=1) | Q(sm_stock_type_id=3, sm_count__gt=0))
+                .exclude(sm_stock_type_id=3, sm_vendor__isnull=False, sm_description__startswith='Vendor Return')
+            )
+            retrieved_qs = (
+                StockMaintenance.objects.filter(
+                    sm_partcode_id=pc_id,
+                    sm_stock_type_id=2
+                ).values('sm_invoice_no').annotate(total=Sum('sm_count'))
+            )
+            retrieved_map = {r['sm_invoice_no']: abs(float(r['total'] or 0.0)) for r in retrieved_qs}
+
+            returned_qs = (
+                StockMaintenance.objects.filter(
+                    sm_partcode_id=pc_id,
+                    sm_stock_type_id=3,
+                    sm_vendor__isnull=False
+                ).values('sm_stock_purchase_number', 'sm_vendor_id').annotate(total=Sum('sm_count'))
+            )
+            returned_map = {
+                (r['sm_stock_purchase_number'], r['sm_vendor_id']): abs(float(r['total'] or 0.0))
+                for r in returned_qs
+            }
+
+            avail_qty = 0.0
+            for b in in_batches:
+                ref = b.sm_stock_purchase_number or b.sm_invoice_no or f"SM-{b.id}"
+                ret_qty = retrieved_map.get(ref, 0.0)
+                v_ret_qty = returned_map.get((ref, b.sm_vendor_id), 0.0) if b.sm_vendor_id else 0.0
+                orig_qty = float(b.sm_count or 0.0)
+                b_avail = max(0.0, orig_qty - ret_qty - v_ret_qty)
+                avail_qty += b_avail
+
+            avail_qty = round(avail_qty, 2)
+
+            if avail_qty < total_needed:
+                # Group item names with breakdown counts
+                unique_item_names = list(dict.fromkeys([b['item_name'] for b in p_info['items_breakdown']]))
+                insufficient_stock_items.append({
+                    'quotation_id': p_info['primary_quotation_id'],
+                    'quotation_ids': p_info['quotation_ids'],
+                    'pod_id': p_info['primary_pod_id'],
+                    'item_name': ', '.join(unique_item_names),
+                    'part_code_id': pc_obj.id,
+                    'part_code': pc_obj.pc_code,
+                    'description': p_info['description'],
+                    'needed_qty': round(total_needed, 2),
+                    'per_unit_req': round(p_info['items_breakdown'][0]['per_unit_req'], 2) if p_info['items_breakdown'] else 1.0,
+                    'job_qty': p_info['items_breakdown'][0]['job_qty'] if p_info['items_breakdown'] else 1.0,
+                    'available_qty': round(avail_qty, 2),
+                    'shortfall': round(total_needed - avail_qty, 2),
+                    'items_breakdown': p_info['items_breakdown']
+                })
 
         # If user did not pass override flag, warn user and offer Partcode change option
         allow_stock_override = data.get('allow_stock_override', False)
@@ -951,15 +1006,15 @@ def pk_update_quotation_partcode(request):
     try:
         data = json.loads(request.body)
         quotation_id = data.get('quotation_id')
+        quotation_ids = data.get('quotation_ids') or ([quotation_id] if quotation_id else [])
         new_part_code_id = data.get('new_part_code_id')
         new_qty_req = data.get('new_qty_req')
         new_batch_qty = data.get('new_batch_qty')
         absorbed_quotation_ids = data.get('absorbed_quotation_ids', [])
         
-        if not quotation_id or not new_part_code_id:
+        if not quotation_ids or not new_part_code_id:
             return JsonResponse({'success': False, 'message': 'Missing quotation ID or new part code ID'}, status=400)
             
-        quotation = PkquotationInfo.objects.get(id=quotation_id)
         pc_str = str(new_part_code_id).strip()
         try:
             new_pc = PkpartcodeInfo.objects.get(pc_code=pc_str)
@@ -971,12 +1026,14 @@ def pk_update_quotation_partcode(request):
 
         update_master = data.get('update_master', False)
         if not update_master:
-            msg = f'Part code substituted with {new_pc.pc_code} (Qty Req: {new_qty_req}) for this Job only.'
+            msg = f'Part code substituted with {new_pc.pc_code} (Batch Qty: {new_batch_qty or new_qty_req}) for this Job only.'
             if absorbed_quotation_ids:
                 msg += f' {len(absorbed_quotation_ids)} other partcode(s) absorbed for this Job only.'
             return JsonResponse({'success': True, 'message': msg, 'is_job_scoped': True})
         
-        quotation.pkqt_part_code = new_pc
+        for q_id_val in quotation_ids:
+            quotation = PkquotationInfo.objects.get(id=q_id_val)
+            quotation.pkqt_part_code = new_pc
         update_fields = ['pkqt_part_code']
         if new_pc.pc_stock_description:
             quotation.pkqt_stock_description = new_pc.pc_stock_description

@@ -1088,16 +1088,37 @@ def vehicle_allotment_list(request):
                 display_num = v_num
 
             vehicle_dict.setdefault(enq_id, [])
+            # Check trip status for this vehicle in this enquiry
+            v_clean = v_num.upper().replace(' ', '').replace('-', '')
+            matching_trips = [t for t in trip_data if t[1] == enq_id and t[7] and (v_clean in t[7].upper().replace(' ', '').replace('-', '') or t[7].upper().replace(' ', '').replace('-', '') in v_clean)]
+            veh_trip_status = 'active'
+            matched_trip_id = None
+            if matching_trips:
+                matched_trip_id = matching_trips[-1][0]
+                closed_status_ids = [2, 3, 4, 5, 6, 7, 9, 10, 11]
+                closed_keywords = ['closed', 'settled', 'cancel', 'invoice', 'approved', 'clarification', 'awaiting trip settlement']
+                closed_trips = [
+                    t for t in matching_trips
+                    if t[5] in closed_status_ids or (t[4] and any(k in t[4].lower() for k in closed_keywords))
+                ]
+                if len(closed_trips) == len(matching_trips):
+                    veh_trip_status = 'closed'
+
             # Avoid duplicates: skip if this vehicle number already exists in the list
             if not any(v['number'] == display_num or v['number'] == v_num for v in vehicle_dict[enq_id]):
                 vehicle_dict[enq_id].append({
                     'id': va_id,
-                    'number': display_num
+                    'number': display_num,
+                    'raw_number': v_num,
+                    'trip_status': veh_trip_status,
+                    'trip_id': matched_trip_id,
                 })
         else:
             vehicle_dict.setdefault(enq_id, []).append({
                 'id': va_id,
-                'number': 'None'
+                'number': 'None',
+                'raw_number': '',
+                'trip_status': 'none',
             })
 
     # -----------------------------

@@ -5,6 +5,8 @@ from .sub_models.user_ext_mod import User_extInfo
 
 # Public routes accessible without authentication
 PUBLIC_PREFIXES = (
+    '/SMS/get_trip_playback_data',
+    '/SMS/get_vehicle_data',
     '/SMS/login_page',
     '/SMS/logout_page',
     '/SMS/registration_page',
@@ -32,6 +34,9 @@ COMMON_PREFIXES = (
     '/SMS/SMS/customer_',
     '/SMS/customer_',
     '/SMS/ajax/',
+    '/SMS/track_vehicle_position',
+    '/SMS/get_vehicle_data',
+    '/SMS/get_trip_playback_data',
 )
 
 # Module Route Prefixes Mapping
@@ -267,6 +272,10 @@ class GlobalModuleAuthorizationMiddleware:
 
         # Determine allowed modules for this user
         allowed_modules = set()
+
+        # Full system access for Admin / Superuser
+        if user_role_str in ['admin', 'superuser'] or getattr(user_ext, 'emp_role_id', None) == 1 or request.user.is_superuser:
+            allowed_modules.update(['cms', 'vms', 'ams', 'tms', 'wms', 'pms', 'fms', 'sales', 'ems', 'prime'])
 
         # Check TMS Manager override
         is_tms_mgr = (user_role_str == 'user' and 'trans' in org_name and 'manager' in desig_name)

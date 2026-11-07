@@ -211,10 +211,18 @@ def fetch_part_code_details(request):
         stock_received = stock_desc.stock_received if stock_desc and stock_desc.stock_received else None
         stock_consumption = stock_desc.stock_Consumption if stock_desc and stock_desc.stock_Consumption else None
 
+        effective_stock_type = part_code.pc_stock_type
+        if stock_desc and stock_desc.stock_type:
+            if stock_desc.stock_type_id in [4, 6] or (part_code.pc_stock_type_id != stock_desc.stock_type_id):
+                effective_stock_type = stock_desc.stock_type
+                if part_code.pc_stock_type_id != stock_desc.stock_type_id:
+                    part_code.pc_stock_type = stock_desc.stock_type
+                    part_code.save(update_fields=['pc_stock_type'])
+
         data = {
             'pc_code': part_code.pc_code,
-            'pc_stock_type': str(part_code.pc_stock_type) if part_code.pc_stock_type else '',
-            'pc_stock_type_id': part_code.pc_stock_type.id if part_code.pc_stock_type else None,
+            'pc_stock_type': str(effective_stock_type) if effective_stock_type else '',
+            'pc_stock_type_id': effective_stock_type.id if effective_stock_type else None,
             'pc_stock_description': str(stock_desc) if stock_desc else '',
             'pc_stock_description_id': stock_desc.id if stock_desc else None,
             'pc_uom': str(part_code.pc_uom) if part_code.pc_uom else '',

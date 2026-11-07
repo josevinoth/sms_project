@@ -754,13 +754,15 @@ def customer_enquiry_list(request):
 
         # Is Delivered?
         is_delivered = False
-        if trip and (trip.tc_financestatus_id in [2, 7, 9] or (trip.tr_tripnumber and trip.tr_tripnumber in _closed_trip_numbers)):
+        if trip and (trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11] or (trip.tr_tripnumber and trip.tr_tripnumber in _closed_trip_numbers)):
             is_delivered = True
 
         # Tracking link - generate from vehicle number using Trans GPS (only if NOT delivered)
         track_link = ''
         if not is_delivered and vehicle_no and vehicle_no != '-':
             track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={vehicle_no}'
+            if trip:
+                track_link += f'&trip_id={trip.id}'
 
         # POD download - only show if file actually exists
         import os
@@ -813,10 +815,65 @@ def customer_enquiry_list(request):
 
 @login_required
 def customer_track_vehicle(request):
-    """Customer-facing vehicle tracking page with clean UI."""
-    vehicle_number = request.GET.get('vehicle', '').upper().replace(' ', '').replace('-', '')
+    """Customer-facing vehicle tracking page with clean UI and trip lifecycle integration."""
+    raw_vehicle = request.GET.get('vehicle', '').strip()
+    vehicle_number = raw_vehicle.upper().replace(' ', '').replace('-', '')
+    trip_id = request.GET.get('trip_id')
+    trip = None
+    is_closed = False
+    assigned_time = None
+    closed_time = None
+    trip_number = None
+    trip_status = None
+    origin = None
+    destination = None
+
+    if trip_id:
+        trip = TripdetailInfo.objects.filter(id=trip_id).select_related(
+            'tr_departedlocation', 'tr_reportedlocation', 'tc_financestatus', 'tr_enquirynumber',
+            'tr_enquirynumber__en_fromlocaion', 'tr_enquirynumber__en_tolocation'
+        ).first()
+    elif vehicle_number:
+        trip = TripdetailInfo.objects.filter(
+            Q(tr_vehiclenumber__iexact=raw_vehicle) |
+            Q(tr_vehiclenumber__iexact=vehicle_number) |
+            Q(tr_vehiclenumber__icontains=vehicle_number)
+        ).select_related(
+            'tr_departedlocation', 'tr_reportedlocation', 'tc_financestatus', 'tr_enquirynumber',
+            'tr_enquirynumber__en_fromlocaion', 'tr_enquirynumber__en_tolocation'
+        ).order_by('-id').first()
+
+    if trip:
+        if not vehicle_number and trip.tr_vehiclenumber:
+            vehicle_number = trip.tr_vehiclenumber.upper().replace(' ', '').replace('-', '')
+            raw_vehicle = trip.tr_vehiclenumber
+        trip_number = trip.tr_tripnumber
+        trip_status = str(trip.tc_financestatus) if trip.tc_financestatus else 'Trip Started'
+        closed_status_ids = [2, 3, 4, 5, 6, 7, 9, 10, 11]
+        closed_keywords = ['closed', 'settled', 'cancel', 'invoice', 'approved', 'clarification', 'awaiting trip settlement']
+        if trip.tc_financestatus_id in closed_status_ids or any(k in trip_status.lower() for k in closed_keywords):
+            is_closed = True
+
+        assigned_time = trip.tr_departeddate or trip.tr_created_at
+        closed_time = trip.tr_reporteddate or trip.tr_updated_at if is_closed else None
+        origin = trip.tr_departedlocation.place_name if trip.tr_departedlocation else (
+            str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_fromlocaion else ''
+        )
+        destination = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else (
+            str(trip.tr_enquirynumber.en_tolocation) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_tolocation else ''
+        )
+
     return render(request, 'asset_mgt_app/customer_track_vehicle.html', {
         'vehicle_number': vehicle_number,
+        'display_vehicle_number': raw_vehicle or vehicle_number,
+        'trip': trip,
+        'trip_number': trip_number,
+        'trip_status': trip_status,
+        'is_closed': is_closed,
+        'assigned_time': assigned_time,
+        'closed_time': closed_time,
+        'origin': origin,
+        'destination': destination,
     })
 
 

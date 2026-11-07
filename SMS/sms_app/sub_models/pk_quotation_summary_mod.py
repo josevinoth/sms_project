@@ -37,6 +37,12 @@ class PkquotationsummaryInfo(models.Model):
     qs_final_cost = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
 
+    # Quotation Revision and Versioning Fields
+    qs_revision_number = models.IntegerField(blank=True, null=True, default=0)
+    qs_parent_quotation = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='revisions', blank=True, null=True)
+    qs_revision_reason = models.TextField(blank=True, null=True)
+    qs_is_latest = models.BooleanField(default=True)
+
     class Meta:
         ordering = ["id"]
 
