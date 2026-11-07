@@ -253,10 +253,10 @@
 </div>
 
 <!-- Job Creation Modal (Preserved & Styled) -->
-<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div class="modal-header bg-white py-4" style="border-bottom: 2px solid var(--border-light) !important;">
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true" style="overflow-y: auto;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 92vh;">
+            <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
                 <h5 class="modal-title font-weight-bold text-dark" id="jobCreationModalLabel">
                     <i class="fas fa-industry mr-2 text-primary"></i> Create Production Batch Job
                 </h5>
@@ -264,7 +264,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 bg-light" style="overflow-y: auto; max-height: calc(92vh - 160px);">
                 <div id="modal_job_error_alert" class="alert alert-danger shadow-sm mb-3 d-none" style="border-radius: 12px; border-left: 5px solid #ef4444 !important; font-weight: 600;">
                     <i class="fas fa-exclamation-triangle mr-2"></i> <span id="modal_job_error_text"></span>
                 </div>
@@ -628,7 +628,7 @@
                         html += '<button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
                         html += '</div>';
 
-                        html += '<table class="table table-sm table-bordered bg-white text-center small mb-3" id="shortfall_items_table"><thead><tr class="bg-light">';
+                        html += '<div class="table-responsive rounded shadow-sm mb-3" style="max-height: 380px; overflow-y: auto;"><table class="table table-sm table-bordered bg-white text-center small mb-0" id="shortfall_items_table"><thead class="bg-light" style="position: sticky; top: 0; z-index: 3;"><tr class="bg-light">';
                         html += '<th style="width: 35px;"><input type="checkbox" id="select_all_stk_cbs" title="Select All"></th>';
                         html += '<th style="min-width: 90px;">Part Code</th>';
                         html += '<th class="text-left" style="min-width: 140px;">Description</th>';
@@ -659,12 +659,21 @@
                             html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-edit mr-1"></i> Change</button></td>';
                             html += '</tr>';
                         });
-                        html += '</tbody></table>';
+                        html += '</tbody></table></div>';
                         html += '<div class="d-flex justify-content-between align-items-center" id="shortfall_footer_bar"><span class="small text-muted"><i class="fas fa-paper-plane mr-1"></i> Stock Team has been notified.</span>';
                         html += '<button type="button" class="btn btn-sm btn-warning font-weight-bold" id="force_release_job_btn"><i class="fas fa-arrow-right"></i> Proceed with Available Stock &amp; Generate Indent</button></div>';
                         
                         $('#modal_job_error_text').html(html);
                         $('#modal_job_error_alert').removeClass('d-none');
+
+
+        // Prevent Bootstrap multi-modal backdrop & scrolling freeze
+        $(document).on('hidden.bs.modal', function () {
+            if ($('.modal.show').length > 0 || $('.modal:visible').length > 0) {
+                $('body').addClass('modal-open');
+                $('.modal.show, .modal:visible').css('overflow-y', 'auto');
+            }
+        });
 
                         // Quick select all wood lines listener
                         $(document).off('click', '#quick_select_wood_btn').on('click', '#quick_select_wood_btn', function() {
@@ -989,7 +998,7 @@ function openJobModal() {
                 errorMsg = xhr.status + ': ' + error;
             }
             console.error('AJAX Error:', errorMsg);
-            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">' + errorMsg.replace(/\n/g, '<br>') + '</td></tr>');
+            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">' + errorMsg.replace(/\n/g, '<br>') + '<br><button type="button" class="btn btn-sm btn-outline-danger mt-2 font-weight-bold" onclick="openJobModal()"><i class="fas fa-redo mr-1"></i> Retry Loading Items</button></td></tr>');
         }
     });
 }
