@@ -4,96 +4,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Vehicle — {{ vehicle_number }}</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <title>Live GPS Tracking - {{ vehicle_number }} | BVM</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            background-color: #0b0f19;
+            color: #f8fafc;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         /* Top Bar */
         .top-bar {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding: 0.8rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             z-index: 1000;
+            flex-shrink: 0;
         }
 
-        .top-bar .back-link {
+        .back-link {
             color: #94a3b8;
             text-decoration: none;
-            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
             transition: color 0.2s;
         }
 
-        .top-bar .back-link:hover {
+        .back-link:hover {
             color: #38bdf8;
         }
 
-        .top-bar .vehicle-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+        .vehicle-title {
+            font-size: 1.15rem;
+            font-weight: 800;
             color: #f1f5f9;
-            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: 0.5px;
         }
 
-        .top-bar .vehicle-title i {
+        .vehicle-title i {
             color: #38bdf8;
-            margin-right: 0.5rem;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mode-toggle-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .mode-toggle-btn:hover {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+        }
+
+        .mode-toggle-btn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            border-color: #10b981;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
         }
 
         .live-badge {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 0.4rem;
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
             font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 700;
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
         }
 
         .live-badge .dot {
             width: 8px;
             height: 8px;
-            background: #ef4444;
+            background: #22c55e;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.85); }
         }
 
         /* Map Container */
@@ -111,18 +147,20 @@
         .info-card {
             position: absolute;
             bottom: 1.5rem;
-            left: 1.5rem;
-            right: 1.5rem;
-            background: rgba(15, 23, 42, 0.92);
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 3rem);
+            max-width: 760px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 1.2rem 1.5rem;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 18px;
+            padding: 1.1rem 1.6rem;
             z-index: 1000;
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            max-width: 700px;
+            gap: 1.4rem;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
@@ -139,24 +177,26 @@
             justify-content: center;
             font-size: 1.4rem;
             flex-shrink: 0;
+            transition: all 0.3s ease;
         }
 
         .status-indicator.moving {
             background: rgba(34, 197, 94, 0.15);
             color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 14px rgba(34, 197, 94, 0.3);
         }
 
         .status-indicator.idle {
             background: rgba(251, 191, 36, 0.15);
             color: #fbbf24;
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            border: 1px solid rgba(251, 191, 36, 0.4);
         }
 
         .status-indicator.stopped {
             background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.4);
         }
 
         .info-details {
@@ -165,11 +205,14 @@
         }
 
         .info-details .status-text {
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .info-details .status-text.moving {
@@ -185,8 +228,9 @@
         }
 
         .info-details .address {
-            font-size: 0.9rem;
-            color: #cbd5e1;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f1f5f9;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -194,14 +238,17 @@
 
         .info-details .timestamp {
             font-size: 0.75rem;
-            color: #64748b;
+            color: #94a3b8;
             margin-top: 0.2rem;
         }
 
         .info-metrics {
             display: flex;
-            gap: 1.2rem;
+            align-items: center;
+            gap: 1.4rem;
             flex-shrink: 0;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 1.4rem;
         }
 
         .metric {
@@ -209,20 +256,264 @@
         }
 
         .metric .value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #f1f5f9;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #38bdf8;
+            line-height: 1.1;
+        }
+
+        .metric .value.speed {
+            color: #22c55e;
         }
 
         .metric .label {
             font-size: 0.65rem;
-            color: #64748b;
+            font-weight: 600;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 0.1rem;
+            margin-top: 0.2rem;
         }
 
-        /* No data state */
+        /* Moving radar vehicle marker */
+        .truck-marker-wrap {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.35s linear;
+        }
+
+        .radar-halo {
+            position: absolute;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: rgba(34, 197, 94, 0.35);
+            animation: radarPulse 1.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.6); opacity: 0.95; }
+            100% { transform: scale(1.7); opacity: 0; }
+        }
+
+        .truck-core-box {
+            position: relative;
+            z-index: 2;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 17px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            transition: background 0.3s ease;
+        }
+
+        .truck-core-box.moving {
+            background: #22c55e;
+            box-shadow: 0 4px 18px rgba(34, 197, 94, 0.7);
+        }
+
+        .truck-core-box.idle {
+            background: #fbbf24;
+            box-shadow: 0 4px 18px rgba(251, 191, 36, 0.7);
+        }
+
+        .truck-core-box.stopped {
+            background: #ef4444;
+            box-shadow: 0 4px 18px rgba(239, 68, 68, 0.7);
+        }
+
+        /* Stoppage Pulse Marker & Timeline Drawer Styles */
+        .stoppage-halt-marker {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stoppage-pin-box {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.7);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stoppage-pin-box:hover {
+            transform: scale(1.18);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9);
+        }
+
+        .stoppage-pulse {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.4);
+            animation: pulse-ring 2s infinite ease-out;
+            pointer-events: none;
+        }
+
+        /* Timeline Stoppages Drawer */
+        .stoppages-drawer {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 380px;
+            max-width: calc(100vw - 30px);
+            max-height: calc(100% - 100px);
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stoppages-drawer.collapsed {
+            transform: translateX(calc(100% + 25px));
+        }
+
+        .drawer-header {
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-header h4 {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drawer-body {
+            padding: 12px 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .timeline-stop-item {
+            position: relative;
+            padding-left: 24px;
+            padding-bottom: 14px;
+            border-left: 2px dashed rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .timeline-stop-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+
+        .stop-dot {
+            position: absolute;
+            left: -7px;
+            top: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            border: 2px solid #0f172a;
+        }
+
+        .stop-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #f87171;
+            margin-bottom: 2px;
+        }
+
+        .stop-addr {
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .stop-meta {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drawer-toggle-tab {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #0284c7;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Waypoint badges */
+        .milestone-badge {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .milestone-badge.origin {
+            border: 2px solid #22c55e;
+            color: #22c55e;
+        }
+
+        .milestone-badge.dest {
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+
+        /* No data fallback */
         .no-data-overlay {
             position: absolute;
             top: 50%;
@@ -251,11 +542,17 @@
                 bottom: 0.8rem;
                 left: 0.8rem;
                 right: 0.8rem;
+                transform: none;
+                width: calc(100% - 1.6rem);
             }
 
             .info-metrics {
                 width: 100%;
                 justify-content: space-around;
+                border-left: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-left: 0;
+                padding-top: 0.8rem;
             }
         }
     </style>
@@ -268,16 +565,68 @@
             <i class="fas fa-arrow-left"></i> Back to Shipments
         </a>
         <div class="vehicle-title">
-            <i class="fas fa-truck"></i> {{ vehicle_number }}
+            <i class="fas fa-truck"></i> {{ display_vehicle_number|default:vehicle_number }}
+            {% if trip_number %}
+            <span style="font-size: 0.82rem; font-weight: 500; color: #94a3b8; margin-left: 8px;">({{ trip_number }})</span>
+            {% endif %}
         </div>
-        <div class="live-badge">
-            <span class="dot"></span> LIVE
+        <div class="top-actions">
+            <button id="toggleDemoBtn" class="mode-toggle-btn" onclick="toggleRouteDemo()">
+                <i class="fas fa-play"></i> Simulated Trip
+            </button>
+            {% if is_closed %}
+            <div class="closed-badge" id="liveBadge" style="display:flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; color:#cbd5e1; background:rgba(148,163,184,0.15); border:1px solid rgba(148,163,184,0.3); padding:0.35rem 0.8rem; border-radius:20px; letter-spacing:0.5px;">
+                <i class="fas fa-flag-checkered" style="color: #f59e0b;"></i> TRIP COMPLETED
+            </div>
+            {% else %}
+            <div class="live-badge" id="liveBadge">
+                <span class="dot"></span> LIVE GPS
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Map -->
+    <!-- Trip Lifecycle Information Bar -->
+    {% if trip %}
+    <div style="background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 0.5rem 1.5rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: #cbd5e1; flex-wrap: wrap; gap: 10px; z-index: 999; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            {% if origin and destination %}
+            <span><i class="fas fa-map-marker-alt" style="color: #34d399;"></i> <b>{{ origin }}</b> &rarr; <b>{{ destination }}</b></span>
+            {% endif %}
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem;">{{ trip_status }}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px; font-size: 0.78rem; flex-wrap: wrap;">
+            <span><i class="fas fa-clock" style="color: #94a3b8;"></i> Assigned: <b>{{ assigned_time|date:"d M Y, H:i"|default:"-" }}</b></span>
+            {% if is_closed %}
+            <span style="color: #94a3b8;"><i class="fas fa-flag-checkered" style="color: #f59e0b;"></i> Closed: <b>{{ closed_time|date:"d M Y, H:i"|default:"-" }}</b> <span style="background: rgba(148, 163, 184, 0.2); padding: 2px 6px; border-radius: 4px; margin-left: 4px;">Tracking ended</span></span>
+            {% else %}
+            <span style="color: #22c55e;"><i class="fas fa-broadcast-tower"></i> Live GPS streaming active</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Map Container -->
     <div class="map-container">
         <div id="map"></div>
+        <!-- Floating Stoppages Toggle Button -->
+        <button id="toggleStoppageBtn" class="drawer-toggle-tab" onclick="toggleStoppageDrawer()" style="display:none;">
+            <i class="fas fa-hand-paper"></i> <span id="stoppageBtnText">Stoppages (0)</span>
+        </button>
+
+        <!-- Stoppages Side Timeline Drawer -->
+        <div id="stoppagesDrawer" class="stoppages-drawer collapsed">
+            <div class="drawer-header">
+                <h4><i class="fas fa-route text-info"></i> Trip Stoppages & Halts</h4>
+                <button class="btn btn-sm btn-outline-light py-0 px-2" onclick="toggleStoppageDrawer()" style="background:transparent; border:none; color:#94a3b8; font-size:1.1rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body" id="drawerBody">
+                <div class="text-muted text-center py-3 small">Loading stoppage events...</div>
+            </div>
+        </div>
+
 
         <!-- Info Card (hidden until data loads) -->
         <div class="info-card loading" id="infoCard" style="display: none;">
@@ -291,7 +640,7 @@
             </div>
             <div class="info-metrics">
                 <div class="metric">
-                    <div class="value" id="speedVal">—</div>
+                    <div class="value speed" id="speedVal">—</div>
                     <div class="label">km/h</div>
                 </div>
                 <div class="metric">
@@ -308,6 +657,9 @@
         </div>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         const targetVehicle = "{{ vehicle_number }}".toUpperCase().replace(/[\s\-]/g, '');
 
@@ -315,34 +667,103 @@
             return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
         }
 
-        // Init map
+        // Initialize Map
         const map = L.map('map', {
             zoomControl: false
-        }).setView([13.3338, 80.1989], 14);
+        }).setView([12.915, 80.06], 12);
 
+        window.map = map;
         L.control.zoom({ position: 'topright' }).addTo(map);
 
-        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        // Accelerated Google Maps Multi-Subdomain Layer
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
             attribution: '© Google Maps',
-            maxZoom: 19
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
         }).addTo(map);
 
         let marker = null;
+        let routeTrail = null;
+        let currentPos = null;
+        let animFrameId = null;
+        let isSimulationActive = false;
+        let simInterval = null;
+        let demoLayers = [];
 
-        const truckIcons = {
-            Moving: L.divIcon({
-                html: '<div style="background:#22c55e;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(34,197,94,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
-                iconSize: [36, 36], iconAnchor: [18, 18]
-            }),
-            Idle: L.divIcon({
-                html: '<div style="background:#fbbf24;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(251,191,36,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
-                iconSize: [36, 36], iconAnchor: [18, 18]
-            }),
-            Stopped: L.divIcon({
-                html: '<div style="background:#ef4444;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(239,68,68,0.4);"><i class="fas fa-truck" style="color:#fff;font-size:16px;"></i></div>',
-                iconSize: [36, 36], iconAnchor: [18, 18]
-            }),
-        };
+        // Dynamic Moving Truck Icon Generator with Heading Rotation
+        function createMovingTruckIcon(status, headingDeg = 0) {
+            const statusClass = (status || 'stopped').toLowerCase();
+            const showPulse = statusClass === 'moving';
+
+            return L.divIcon({
+                className: 'custom-truck-leaflet-icon',
+                html: `
+                    <div class="truck-marker-wrap" id="truckMarkerWrap" style="transform: rotate(${headingDeg}deg);">
+                        ${showPulse ? '<div class="radar-halo"></div>' : ''}
+                        <div class="truck-core-box ${statusClass}">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                    </div>
+                `,
+                iconSize: [46, 46],
+                iconAnchor: [23, 23]
+            });
+        }
+
+        // Compass Heading / Bearing Calculation
+        function calculateBearing(startLat, startLng, endLat, endLng) {
+            const startLatRad = (startLat * Math.PI) / 180;
+            const startLngRad = (startLng * Math.PI) / 180;
+            const endLatRad = (endLat * Math.PI) / 180;
+            const endLngRad = (endLng * Math.PI) / 180;
+            const dLng = endLngRad - startLngRad;
+
+            const y = Math.sin(dLng) * Math.cos(endLatRad);
+            const x = Math.cos(startLatRad) * Math.sin(endLatRad) -
+                      Math.sin(startLatRad) * Math.cos(endLatRad) * Math.cos(dLng);
+            const brng = (Math.atan2(y, x) * 180) / Math.PI;
+            return (brng + 360) % 360;
+        }
+
+        // Smooth 60 FPS Gliding Movement between GPS Coordinates
+        function smoothGlideTo(fromLat, fromLng, toLat, toLng, durationMs, status) {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            const startTime = performance.now();
+            const bearing = calculateBearing(fromLat, fromLng, toLat, toLng);
+
+            // Update rotation immediately
+            const wrap = document.getElementById('truckMarkerWrap');
+            if (wrap && bearing !== 0) {
+                wrap.style.transform = `rotate(${Math.round(bearing)}deg)`;
+            }
+
+            function frame(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(1.0, elapsed / durationMs);
+
+                // Smooth cubic ease out
+                const ease = 1 - Math.pow(1 - progress, 3);
+
+                const curLat = fromLat + (toLat - fromLat) * ease;
+                const curLng = fromLng + (toLng - fromLng) * ease;
+
+                if (marker) {
+                    marker.setLatLng([curLat, curLng]);
+                }
+
+                if (routeTrail) {
+                    routeTrail.addLatLng([curLat, curLng]);
+                }
+
+                if (progress < 1.0) {
+                    animFrameId = requestAnimationFrame(frame);
+                } else {
+                    currentPos = [toLat, toLng];
+                }
+            }
+
+            animFrameId = requestAnimationFrame(frame);
+        }
 
         function timeAgo(timestamp) {
             if (!timestamp) return '';
@@ -357,6 +778,8 @@
         }
 
         function updateUI(v) {
+            if (isSimulationActive) return; // Don't override while demo is playing
+
             const card = document.getElementById('infoCard');
             const noData = document.getElementById('noDataMsg');
 
@@ -379,13 +802,15 @@
 
             // Status text
             const sText = document.getElementById('statusText');
-            sText.textContent = v.running_status || 'Stopped';
+            sText.innerHTML = statusClass === 'moving' 
+                ? `<span style="color:#22c55e;">● IN-TRANSIT (MOVING)</span>`
+                : statusClass === 'idle' 
+                ? `<span style="color:#fbbf24;">● IDLE / REST</span>` 
+                : `<span style="color:#ef4444;">● STOPPED</span>`;
             sText.className = 'status-text ' + statusClass;
 
-            // Address
+            // Address & Timestamp
             document.getElementById('addressText').textContent = v.address || 'Location unavailable';
-
-            // Timestamp
             const ago = timeAgo(v.timestamp);
             const ts = v.timestamp || '';
             const agoStr = ago ? ' · ' + ago : '';
@@ -396,23 +821,41 @@
             const odo = v.Odometer ? Math.round(parseFloat(v.Odometer)).toLocaleString() : '—';
             document.getElementById('odometerVal').textContent = odo;
 
-            // Map marker
-            const lat = parseFloat(v.lat);
-            const lon = parseFloat(v.lon);
-            if (!isNaN(lat) && !isNaN(lon)) {
-                const iconObj = truckIcons[v.running_status] || truckIcons.Stopped;
-                if (marker) {
-                    marker.setLatLng([lat, lon]);
-                    marker.setIcon(iconObj);
-                } else {
-                    marker = L.marker([lat, lon], { icon: iconObj }).addTo(map);
-                    map.setView([lat, lon], 17);
+            // Live Moving Map Marker
+            const newLat = parseFloat(v.lat);
+            const newLon = parseFloat(v.lon);
+
+            if (!isNaN(newLat) && !isNaN(newLon)) {
+                if (!routeTrail) {
+                    // Initial green illuminated trail
+                    routeTrail = L.polyline([[newLat, newLon]], {
+                        color: '#22c55e',
+                        weight: 6,
+                        opacity: 0.95,
+                        lineJoin: 'round'
+                    }).addTo(map);
+                }
+
+                if (!marker) {
+                    currentPos = [newLat, newLon];
+                    marker = L.marker([newLat, newLon], {
+                        icon: createMovingTruckIcon(v.running_status, 0)
+                    }).addTo(map);
+                    map.setView([newLat, newLon], 14);
+                } else if (currentPos) {
+                    const dist = Math.hypot(newLat - currentPos[0], newLon - currentPos[1]);
+                    if (dist > 0.00005) {
+                        smoothGlideTo(currentPos[0], currentPos[1], newLat, newLon, 4500, v.running_status);
+                        map.panTo([newLat, newLon], { animate: true, duration: 1.5 });
+                    }
                 }
             }
         }
 
         let firstLoad = true;
         function loadData() {
+            if (isSimulationActive) return;
+
             fetch("/SMS/get_vehicle_data/?_t=" + Date.now(), { cache: "no-store" })
                 .then(res => res.json())
                 .then(data => {
@@ -431,8 +874,338 @@
                 });
         }
 
-        loadData();
-        setInterval(loadData, 5000);
+        // -------------------------------------------------------------
+        // SIMULATED HIGHWAY CORRIDOR TRIP (Interactive Showcase)
+        // -------------------------------------------------------------
+        const corridorRoute = [
+            { lat: 12.9856, lon: 80.1693, name: "Chennai Airport (Air Cargo Complex)", speed: 35, odo: 82450.0, eta: "42 mins" },
+            { lat: 12.9780, lon: 80.1320, name: "Pallavaram Pammal Main Road", speed: 45, odo: 82452.8, eta: "36 mins" },
+            { lat: 12.9960, lon: 80.0880, name: "Kundrathur Industrial Corridor", speed: 52, odo: 82458.4, eta: "28 mins" },
+            { lat: 13.0120, lon: 80.0380, name: "Outer Ring Road / Poonamallee Junction", speed: 60, odo: 82466.8, eta: "21 mins" },
+            { lat: 13.0030, lon: 79.9920, name: "Chembarambakkam NH48 Expressway", speed: 65, odo: 82478.0, eta: "14 mins" },
+            { lat: 12.9880, lon: 79.9680, name: "Irungattukottai SIPCOT Connector", speed: 55, odo: 82492.0, eta: "7 mins" },
+            { lat: 12.9750, lon: 79.9450, name: "Sriperumbudur (SIPCOT Logistics Hub, Tamil Nadu)", speed: 25, odo: 82508.8, eta: "Arrived" }
+        ];
+
+        function toggleRouteDemo() {
+            if (isSimulationActive) {
+                stopRouteDemo();
+            } else {
+                startRouteDemo();
+            }
+        }
+
+        function startRouteDemo() {
+            isSimulationActive = true;
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            if (simInterval) clearInterval(simInterval);
+
+            const btn = document.getElementById('toggleDemoBtn');
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="fas fa-stop"></i> Exit Demo';
+
+            const badge = document.getElementById('liveBadge');
+            badge.style.color = '#38bdf8';
+            badge.style.borderColor = '#38bdf8';
+            badge.style.background = 'rgba(56, 189, 248, 0.15)';
+            badge.innerHTML = '<span class="dot" style="background:#38bdf8;"></span> CORRIDOR TRIP DEMO';
+
+            // Clean previous layers (prevent duplicate lines and multiple destinations)
+            demoLayers.forEach(l => map.removeLayer(l));
+            demoLayers = [];
+            tripPlaybackLayers.forEach(l => map.removeLayer(l));
+            if (routeTrail) { map.removeLayer(routeTrail); routeTrail = null; }
+            if (marker) { map.removeLayer(marker); marker = null; }
+
+            const latlngs = corridorRoute.map(p => [p.lat, p.lon]);
+            map.fitBounds(L.latLngBounds(latlngs), { padding: [70, 70] });
+
+            // 1. Dotted Highway Corridor
+            const corridorLine = L.polyline(latlngs, {
+                color: '#38bdf8',
+                weight: 6,
+                opacity: 0.5,
+                dashArray: '8, 8',
+                lineJoin: 'round'
+            }).addTo(map);
+            demoLayers.push(corridorLine);
+
+            // 2. Solid Green Route Trail
+            const completedLine = L.polyline([], {
+                color: '#22c55e',
+                weight: 6,
+                opacity: 0.95,
+                lineJoin: 'round'
+            }).addTo(map);
+            demoLayers.push(completedLine);
+
+            // 3. Origin Milestone Flag
+            const startIcon = L.divIcon({
+                html: `<div class="milestone-badge origin"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;"></span> ORIGIN: CHENNAI AIRPORT</div>`,
+                iconSize: [170, 28], iconAnchor: [85, 14]
+            });
+            const startM = L.marker([corridorRoute[0].lat, corridorRoute[0].lon], { icon: startIcon }).addTo(map);
+            demoLayers.push(startM);
+
+            // 4. Destination Milestone Flag
+            const endIcon = L.divIcon({
+                html: `<div class="milestone-badge dest"><i class="fas fa-flag-checkered"></i> DESTINATION: SRIPERUMBUDUR HUB</div>`,
+                iconSize: [220, 28], iconAnchor: [110, 14]
+            });
+            const endM = L.marker([corridorRoute[corridorRoute.length - 1].lat, corridorRoute[corridorRoute.length - 1].lon], { icon: endIcon }).addTo(map);
+            demoLayers.push(endM);
+
+            // 5. Moving Truck Marker
+            marker = L.marker([corridorRoute[0].lat, corridorRoute[0].lon], {
+                icon: createMovingTruckIcon('moving', 45)
+            }).addTo(map);
+            demoLayers.push(marker);
+
+            const card = document.getElementById('infoCard');
+            card.style.display = 'flex';
+            card.classList.remove('loading');
+
+            // Animate across corridor smoothly
+            let step = 0;
+            const totalSteps = 240; // ~24 seconds smooth journey
+            simInterval = setInterval(() => {
+                step++;
+                const progress = Math.min(1.0, step / totalSteps);
+                const segCount = corridorRoute.length - 1;
+                const totalFloat = progress * segCount;
+                const segIdx = Math.min(segCount - 1, Math.floor(totalFloat));
+                const segProgress = totalFloat - segIdx;
+
+                const p1 = corridorRoute[segIdx];
+                const p2 = corridorRoute[segIdx + 1];
+
+                const curLat = p1.lat + (p2.lat - p1.lat) * segProgress;
+                const curLon = p1.lon + (p2.lon - p1.lon) * segProgress;
+                const curSpeed = Math.round(p1.speed + (p2.speed - p1.speed) * segProgress);
+                const curOdo = (p1.odo + (p2.odo - p1.odo) * segProgress).toFixed(1);
+
+                const bearing = calculateBearing(p1.lat, p1.lon, p2.lat, p2.lon);
+                marker.setLatLng([curLat, curLon]);
+
+                const wrap = document.getElementById('truckMarkerWrap');
+                if (wrap) wrap.style.transform = `rotate(${Math.round(bearing)}deg)`;
+
+                const completedPts = latlngs.slice(0, segIdx + 1);
+                completedPts.push([curLat, curLon]);
+                completedLine.setLatLngs(completedPts);
+
+                // Update UI HUD
+                document.getElementById('statusIcon').className = 'status-indicator moving';
+                document.getElementById('statusText').innerHTML = `<span style="color:#22c55e;">● IN-TRANSIT (MOVING)</span> &nbsp;|&nbsp; <b>{{ vehicle_number }}</b>`;
+                document.getElementById('addressText').innerHTML = `<b>Landmark:</b> ${p1.name} &nbsp;•&nbsp; <b>ETA:</b> <span style="color:#38bdf8;">${p1.eta}</span>`;
+                document.getElementById('timestampText').textContent = `Driver: Ravikumar (📞 +91 8438119317)  •  GPS Live Updates`;
+                document.getElementById('speedVal').textContent = curSpeed;
+                document.getElementById('odometerVal').textContent = `${curOdo} / 42.0`;
+
+                if (step >= totalSteps) {
+                    clearInterval(simInterval);
+                    document.getElementById('statusText').innerHTML = `<span style="color:#f59e0b;">● ARRIVED AT DESTINATION</span>`;
+                    document.getElementById('speedVal').textContent = '0';
+                }
+            }, 100);
+        }
+
+        function stopRouteDemo() {
+            isSimulationActive = false;
+            if (simInterval) clearInterval(simInterval);
+            simInterval = null;
+
+            const btn = document.getElementById('toggleDemoBtn');
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fas fa-play"></i> Simulated Trip';
+
+            const badge = document.getElementById('liveBadge');
+            badge.style.color = '#22c55e';
+            badge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+            badge.style.background = 'rgba(34, 197, 94, 0.12)';
+            badge.innerHTML = '<span class="dot" style="background:#22c55e;"></span> LIVE GPS';
+
+            demoLayers.forEach(l => map.removeLayer(l));
+            demoLayers = [];
+            marker = null;
+            routeTrail = null;
+            currentPos = null;
+
+            firstLoad = true;
+            loadData();
+        }
+        const isClosedTrip = "{{ is_closed|yesno:'true,false' }}" === "true";
+
+        // Start polling (only for active trips; closed trips stop streaming)
+        
+        let tripPlaybackLayers = [];
+        let tripStoppages = [];
+
+        function toggleStoppageDrawer() {
+            const drawer = document.getElementById('stoppagesDrawer');
+            if (drawer) {
+                drawer.classList.toggle('collapsed');
+            }
+        }
+
+        function focusStoppage(lat, lon, stopNum) {
+            map.setView([lat, lon], 16);
+            tripPlaybackLayers.forEach(layer => {
+                if (layer.stopNumber === stopNum && layer.openPopup) {
+                    layer.openPopup();
+                }
+            });
+        }
+
+        function loadTripPlayback() {
+            const tripId = "{{ trip.id|default:'' }}";
+            const veh = targetVehicle;
+            const url = `/SMS/get_trip_playback_data/?vehicle=${encodeURIComponent(veh)}&trip_id=${tripId}&_t=${Date.now()}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success || !data.route_coordinates || data.route_coordinates.length === 0) {
+                        return;
+                    }
+
+                    tripStoppages = data.stoppages || [];
+                    const coords = data.route_coordinates;
+                    
+                    // Clear previous playback layers
+                    tripPlaybackLayers.forEach(l => map.removeLayer(l));
+                    tripPlaybackLayers = [];
+
+                    // 1. Draw Time-Bounded Route Polyline (Emerald Corridor)
+                    const latlngs = coords.map(c => [c.lat, c.lon]);
+                    const tripLine = L.polyline(latlngs, {
+                        color: '#059669',
+                        weight: 6,
+                        opacity: 0.85,
+                        lineJoin: 'round'
+                    }).addTo(map);
+                    tripPlaybackLayers.push(tripLine);
+
+                    // 2. Origin & Destination Waypoints
+                    const startPt = coords[0];
+                    const endPt = coords[coords.length - 1];
+
+                    const originIcon = L.divIcon({
+                        className: 'origin-marker',
+                        html: `<div class="milestone-badge origin"><i class="fas fa-box"></i> ALLOTTED &bull; ${data.start_time}</div>`,
+                        iconSize: [160, 26],
+                        iconAnchor: [80, 26]
+                    });
+                    const originMarker = L.marker([startPt.lat, startPt.lon], { icon: originIcon }).addTo(map);
+                    originMarker.bindPopup(`<b>Trip Origin / Allotment</b><br>${startPt.address}<br>🕒 Allotted Time: <b>${data.start_time}</b>`);
+                    tripPlaybackLayers.push(originMarker);
+
+                    const destIcon = L.divIcon({
+                        className: 'dest-marker',
+                        html: `<div class="milestone-badge dest" style="${data.is_closed ? 'background:#1e293b; border-color:#6366f1; color:#a5b4fc;' : ''}"><i class="fas fa-flag-checkered text-warning"></i> ${data.is_closed ? 'TRIP CLOSED' : 'DESTINATION'} &bull; ${data.end_time}</div>`,
+                        iconSize: [180, 26],
+                        iconAnchor: [90, 26]
+                    });
+                    const destMarker = L.marker([endPt.lat, endPt.lon], { icon: destIcon }).addTo(map);
+                    destMarker.bindPopup(`<b>${data.is_closed ? 'Trip Closed / Completed Destination' : 'Destination Point'}</b><br>${endPt.address}<br>🕒 Closed Time: <b>${data.end_time}</b>`);
+                    tripPlaybackLayers.push(destMarker);
+
+                    // 3. Stoppage Markers with Halt Timing & Address
+                    const btn = document.getElementById('toggleStoppageBtn');
+                    const btnText = document.getElementById('stoppageBtnText');
+                    const drawerBody = document.getElementById('drawerBody');
+
+                    if (tripStoppages.length > 0) {
+                        btn.style.display = 'flex';
+                        btnText.textContent = `Stoppages (${tripStoppages.length})`;
+
+                        let timelineHtml = `
+                            <div class="p-2 mb-2" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 0.78rem;">
+                                <i class="fas fa-clock text-danger mr-1"></i> Total Halts: <b>${tripStoppages.length}</b> &bull; Total Idle Time: <b>${data.total_halt_minutes} mins</b>
+                            </div>
+                        `;
+
+                        tripStoppages.forEach(s => {
+                            const stopIcon = L.divIcon({
+                                className: 'stoppage-halt-marker',
+                                html: `
+                                    <div class="stoppage-pulse"></div>
+                                    <div class="stoppage-pin-box" title="Stop #${s.stop_number} (${s.duration_text})">
+                                        ${s.stop_number}
+                                    </div>
+                                `,
+                                iconSize: [36, 36],
+                                iconAnchor: [18, 18]
+                            });
+
+                            const sMarker = L.marker([s.lat, s.lon], { icon: stopIcon }).addTo(map);
+                            sMarker.stopNumber = s.stop_number;
+                            sMarker.bindPopup(`
+                                <div style="min-width: 200px;">
+                                    <h6 style="color:#ef4444; margin-bottom: 4px;"><i class="fas fa-hand-paper"></i> Vehicle Stoppage #${s.stop_number}</h6>
+                                    <b>Location:</b> ${s.address}<br>
+                                    <b>Halt Duration:</b> <span class="badge bg-danger" style="color:#fff;">${s.duration_text}</span><br>
+                                    <b>Timing:</b> ${s.start_time} &rarr; ${s.end_time}<br>
+                                    <b>Odometer:</b> ${s.odometer} km
+                                </div>
+                            `);
+                            tripPlaybackLayers.push(sMarker);
+
+                            timelineHtml += `
+                                <div class="timeline-stop-item" onclick="focusStoppage(${s.lat}, ${s.lon}, ${s.stop_number})">
+                                    <div class="stop-dot"></div>
+                                    <div class="stop-header">
+                                        <span>Stop #${s.stop_number}</span>
+                                        <span class="badge" style="background: rgba(239,68,68,0.2); color:#f87171; font-weight:700;">${s.duration_text}</span>
+                                    </div>
+                                    <div class="stop-addr">📍 ${s.address}</div>
+                                    <div class="stop-meta">
+                                        <span><i class="fas fa-clock"></i> ${s.start_time} - ${s.end_time}</span>
+                                        <span><i class="fas fa-tachometer-alt"></i> ${s.odometer} km</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        drawerBody.innerHTML = timelineHtml;
+                    } else {
+                        btn.style.display = 'none';
+                        drawerBody.innerHTML = '<div class="text-muted text-center py-3 small">No major stoppages detected during this trip window.</div>';
+                    }
+
+                    // Fit bounds to the complete time-bounded route
+                    map.fitBounds(latlngs, { padding: [50, 50] });
+                })
+                .catch(err => {
+                    console.error("Playback fetch error:", err);
+                });
+        }
+
+        loadTripPlayback();
+        if (!isClosedTrip) {
+            loadData();
+            window._pollInterval = setInterval(loadData, 5000);
+        } else {
+            console.log("Trip closed: vehicle tracking from assigned time to trip closed time complete.");
+            const infoCard = document.getElementById('infoCard');
+            if (infoCard) {
+                infoCard.style.display = 'flex';
+                infoCard.classList.remove('loading');
+                const sIcon = document.getElementById('statusIcon');
+                if (sIcon) {
+                    sIcon.className = 'status-indicator stopped';
+                    sIcon.innerHTML = '<i class="fas fa-flag-checkered" style="color: #f59e0b;"></i>';
+                }
+                const sText = document.getElementById('statusText');
+                if (sText) sText.innerHTML = '<span style="color:#a5b4fc; font-weight:700;">● TRIP COMPLETED (REVIEW)</span> &nbsp;|&nbsp; <b>{{ display_vehicle_number|default:vehicle_number }}</b>';
+                const aText = document.getElementById('addressText');
+                if (aText) aText.innerHTML = '<b>Origin:</b> {{ origin|default:"Origin" }} &rarr; <b>Destination:</b> {{ destination|default:"Destination" }}';
+                const tText = document.getElementById('timestampText');
+                if (tText) tText.innerHTML = 'Assigned: <b>{{ assigned_time|date:"d M Y, H:i"|default:"-" }}</b> &bull; Closed: <b>{{ closed_time|date:"d M Y, H:i"|default:"-" }}</b>';
+                const spVal = document.getElementById('speedVal');
+                if (spVal) spVal.textContent = '0';
+            }
+        }
     </script>
 </body>
 

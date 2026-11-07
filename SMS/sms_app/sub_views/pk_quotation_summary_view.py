@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
-from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete,get_tracker_flags
+# Circular imports moved inside functions
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
 from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo,StatusList,POdimension
 from django.shortcuts import render, redirect
@@ -37,6 +37,26 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     initial_data['pkqt_customer_new_name'] = na_obj.na_customer_new_name or ''
                 except PkneedassessmentInfo.DoesNotExist:
                     pass
+            # If an existing quotation summary already exists for this assessment, redirect to it
+            if na_id:
+                existing_qs = PkquotationsummaryInfo.objects.filter(qs_assessment_num_id=na_id, qs_is_latest=True).first()
+                if not existing_qs:
+                    existing_qs = PkquotationsummaryInfo.objects.filter(qs_assessment_num_id=na_id).order_by('-id').first()
+                if existing_qs:
+                    return redirect('pk_quotationsummary_update', pk_quotationsummary_id=existing_qs.id)
+
+            needassessment_id = None
+            needassessment_num = None
+            if na_id:
+                try:
+                    na_obj = PkneedassessmentInfo.objects.get(pk=na_id)
+                    needassessment_id = na_obj.id
+                    needassessment_num = na_obj.na_assessment_num
+                    request.session['na_assessment_id'] = na_obj.id
+                    request.session['na_assessment_num_id'] = na_obj.id
+                except PkneedassessmentInfo.DoesNotExist:
+                    pass
+
             form = PkquotationsummaryForm(initial=initial_data, na_id=na_id)
             context = {
                 'form': form,
@@ -45,6 +65,11 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'role': role,
                 'role_id': role_id,
                 'current_step': 'quotation',
+                'na_assessment_num_id': needassessment_id,
+                'assessment_num': str(needassessment_num) if needassessment_num else '',
+                'current_summary': None,
+                'revisions_list': [],
+                'has_revisions': False,
             }
         else:
             quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
@@ -54,16 +79,23 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             customer_new_name_id = quotationsummary.pkqt_customer_new_name if quotationsummary.pkqt_customer_new_name else ""
 
             request.session['na_assessment_id'] = needassessment_id
+            request.session['na_assessment_num_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['na_customer_new_name'] = customer_new_name_id
             # Ensure dependent costs (e.g. HT Cost per job type) are recalculated before aggregation
             from .pk_quotation_view import recalculate_dependent_costs
             recalculate_dependent_costs(needassessment_id, request)
 
-            quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
+            # Revision-aware line items retrieval
+            rev_items = PkquotationInfo.objects.filter(pkqt_quotation_summary=quotationsummary)
+            if rev_items.exists():
+                quotation_list = rev_items
+                all_q_items = rev_items.select_related('pkqt_requirement')
+            else:
+                quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
+                all_q_items = quotation_list.select_related('pkqt_requirement')
 
-            # Optimized single-pass aggregation
-            all_q_items = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id).select_related('pkqt_requirement')
+            revisions_list = PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id).order_by('qs_revision_number', 'id')
 
             wood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [1, 5]), 3)
             plywood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [4, 6]), 3)
@@ -83,8 +115,14 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 if not q.pkqt_requirement or not q.pkqt_requirement.nad_item:
                     continue
                 jname = q.pkqt_requirement.nad_item
+                qty_val = int(q.pkqt_na_quantity or (q.pkqt_requirement.nad_na_quantity if hasattr(q.pkqt_requirement, 'nad_na_quantity') else 0) or q.pkqt_requirement.nad_quantity or 1)
                 if jname not in job_map:
-                    job_map[jname] = {'wood': 0.0, 'plywood': 0.0, 'consumables': 0.0, 'engineer': 0.0, 'labour': 0.0, 'crane': 0.0, 'ht': 0.0, 'transport': 0.0}
+                    job_map[jname] = {
+                        'req_id': q.pkqt_requirement_id,
+                        'assessment_id': quotationsummary.qs_assessment_num_id,
+                        'qty': qty_val,
+                        'wood': 0.0, 'plywood': 0.0, 'consumables': 0.0, 'engineer': 0.0, 'labour': 0.0, 'crane': 0.0, 'ht': 0.0, 'transport': 0.0
+                    }
 
                 ct = q.pkqt_cost_type_id
                 st = q.pkqt_stock_type_id
@@ -100,19 +138,28 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 elif ct == 4: job_map[jname]['transport'] += val
 
             aggregated_jobs = []
+            margin_pct = float(quotationsummary.qs_margin or 0.0)
             for jname, costs in job_map.items():
-                j_wood = round(costs['wood'], 3)
-                j_plywood = round(costs['plywood'], 3)
-                j_consumables = round(costs['consumables'], 3)
-                j_engineer = round(costs['engineer'], 3)
-                j_labour = round(costs['labour'], 3)
-                j_crane = round(costs['crane'], 3)
-                j_ht = round(costs['ht'], 3)
-                j_transport = round(costs['transport'], 3)
-                j_unit_cost = round(sum([j_wood, j_plywood, j_consumables, j_engineer, j_labour, j_crane, j_ht, j_transport]), 3)
+                j_wood = round(costs['wood'], 2)
+                j_plywood = round(costs['plywood'], 2)
+                j_consumables = round(costs['consumables'], 2)
+                j_engineer = round(costs['engineer'], 2)
+                j_labour = round(costs['labour'], 2)
+                j_crane = round(costs['crane'], 2)
+                j_ht = round(costs['ht'], 2)
+                j_transport = round(costs['transport'], 2)
+                j_total_cost = round(sum([j_wood, j_plywood, j_consumables, j_engineer, j_labour, j_crane, j_ht, j_transport]), 2)
+                j_qty = costs.get('qty', 1) or 1
+                j_unit_cost = round(j_total_cost / j_qty, 2)
+                j_margin_cost = round(j_total_cost * (margin_pct / 100.0), 2)
+                j_total_with_margin = round(j_total_cost + j_margin_cost, 2)
+                j_unit_with_margin = round(j_total_with_margin / j_qty, 2)
 
                 aggregated_jobs.append({
                     'job_type': jname,
+                    'req_id': costs.get('req_id'),
+                    'assessment_id': costs.get('assessment_id'),
+                    'qty': j_qty,
                     'wood_cost': j_wood,
                     'plywood_cost': j_plywood,
                     'consumables': j_consumables,
@@ -121,14 +168,19 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     'crane_cost': j_crane,
                     'ht_cost': j_ht,
                     'transport_cost': j_transport,
-                    'unit_cost': j_unit_cost
+                    'margin_pct': margin_pct,
+                    'margin_cost': j_margin_cost,
+                    'unit_cost': j_unit_cost,
+                    'total_cost': j_total_cost,
+                    'unit_with_margin': j_unit_with_margin,
+                    'total_with_margin': j_total_with_margin,
                 })
 
             rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
             rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
 
             # Update quotation summary
-            PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id).update(
+            PkquotationsummaryInfo.objects.filter(id=pk_quotationsummary_id).update(
                 qs_wood_cost=wood_cost,
                 qs_plywood_cost=plywood_cost,
                 qs_total_cft=total_cft,
@@ -148,10 +200,29 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             # Fetch linked POs for the hub
             linked_pos = PkpurchaseorderInfo.objects.filter(po_quotation_num=pk_quotationsummary_id)
 
+            assess_requirements = Nadimension.objects.filter(nad_assess_num_id=needassessment_id).order_by('id')
+            assessment_items_summary = []
+            quoted_req_ids = set(all_q_items.filter(pkqt_requirement__isnull=False).values_list('pkqt_requirement_id', flat=True))
+            for req in assess_requirements:
+                assessment_items_summary.append({
+                    'id': req.id,
+                    'item_number': req.nad_item,
+                    'type_of_req': req.nad_type_of_req or '',
+                    'length': float(req.nad_length or 0.0),
+                    'width': float(req.nad_width or 0.0),
+                    'height': float(req.nad_height or 0.0),
+                    'quantity': req.nad_quantity or 1,
+                    'is_quoted': req.id in quoted_req_ids,
+                })
+
             context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
+                'na_assessment_num_id': needassessment_id,
+                'assessment_num': str(needassessment_num),
+                'quotationsummary_id': pk_quotationsummary_id,
+                'assessment_items_summary': assessment_items_summary,
                 'quotation_list': quotation_list,
                 'aggregated_jobs': aggregated_jobs,
                 'wood_cost': wood_cost,
@@ -170,7 +241,10 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'role': role,
                 'linked_pos': linked_pos,
                 'current_step': 'quotation',
-                'tracker_flags': get_tracker_flags(needassessment_id),
+                'current_summary': quotationsummary,
+                'revisions_list': revisions_list,
+                'has_revisions': (revisions_list.count() > 1),
+                'tracker_flags': (lambda nid: getattr(__import__('sms_app.views', fromlist=['get_tracker_flags']), 'get_tracker_flags')(nid))(needassessment_id),
             }
 
         return render(request, "asset_mgt_app/pk_quotationsummary_add.html", context)
@@ -257,6 +331,7 @@ def pk_quotationsummary_delete(request,pk_quotationsummary_id):
     quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
     assessment_num=quotationsummary.qs_assessment_num
 
+    from sms_app.views import Pkcosting_delete, Pkcostingsummary_delete, Pkpurchaseorder_delete, Pkpurchaseorder_dim_delete, Pkquotation_delete, Pkquotation_summary_delete
     # Deleting PkcostingInfo objects
     Pkcosting_delete(assessment_num)
 
@@ -304,19 +379,36 @@ def pk_quotation_summary_check_unique_field(request):
 
 @login_required(login_url='login_page')
 def pk_bvm_quotation_pdf(request,quotation_id=0):
-    needassessment_id = request.session.get('na_assessment_id')
-    address=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_address
-    cost_includes=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_cost_includes
-    notes=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_notes
-    terms_condition=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_terms_condition
-    client_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_client_scope
-    bvm_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_bvm_scope
-    if not needassessment_id and quotation_id:
-        qs_obj = PkquotationsummaryInfo.objects.filter(pk=quotation_id).first()
-        if qs_obj and qs_obj.qs_assessment_num:
-            needassessment_id = qs_obj.qs_assessment_num.id if hasattr(qs_obj.qs_assessment_num, 'id') else qs_obj.qs_assessment_num
+    if not quotation_id:
+        qid_param = request.GET.get('quotation_id')
+        if qid_param and str(qid_param).isdigit():
+            quotation_id = int(qid_param)
 
-    needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
+    needassessment_id = request.session.get('na_assessment_id') or request.session.get('na_assessment_num_id')
+    qs_obj = None
+    if quotation_id:
+        qs_obj = PkquotationsummaryInfo.objects.filter(pk=quotation_id).first()
+    else:
+        summary_id = request.session.get('quotationsummary_id')
+        if summary_id:
+            qs_obj = PkquotationsummaryInfo.objects.filter(pk=summary_id).first()
+        if not qs_obj and needassessment_id:
+            qs_obj = PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id).order_by('-qs_is_latest', '-id').first()
+
+    if qs_obj and qs_obj.qs_assessment_num:
+        assess_obj = qs_obj.qs_assessment_num
+        needassessment_id = assess_obj.id if hasattr(assess_obj, 'id') else assess_obj
+    else:
+        assess_obj = PkneedassessmentInfo.objects.filter(pk=needassessment_id).first() if needassessment_id else None
+
+    address = qs_obj.qs_address if qs_obj else ''
+    cost_includes = qs_obj.qs_cost_includes if qs_obj else ''
+    notes = qs_obj.qs_notes if qs_obj else ''
+    terms_condition = qs_obj.qs_terms_condition if qs_obj else ''
+    client_scope = qs_obj.qs_client_scope if qs_obj else ''
+    bvm_scope = qs_obj.qs_bvm_scope if qs_obj else ''
+
+    needassessment_num = assess_obj.na_assessment_num if assess_obj else ''
     
     # Filter dimensions: Only include dimensions that were actually quoted (exist in PkquotationInfo for this assessment)
     quoted_dim_ids = list(
@@ -329,10 +421,10 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         na_req = Nadimension.objects.filter(id__in=quoted_dim_ids)
     else:
         na_req = Nadimension.objects.filter(nad_assess_num=needassessment_id)
-    quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number
-    margin = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_margin
-    gst_val = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_gst
-    quotation_summary = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id)
+    quotation_summary = qs_obj
+    quotation_number = qs_obj.qs_quotation_number if qs_obj else ''
+    margin = qs_obj.qs_margin if qs_obj else 0.0
+    gst_val = qs_obj.qs_gst if qs_obj else 0.0
     customer_obj = quotation_summary.qs_customer_name_2
     new_customer_name = quotation_summary.pkqt_customer_new_name
 
@@ -692,3 +784,185 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
         return redirect('/SMS/costingsummary_update/' + str(summary.id))
     
     return redirect('costing_list')
+
+@login_required(login_url='login_page')
+def pk_quotationsummary_revise(request, pk_quotationsummary_id):
+    """
+    Creates a new Revision of an existing Quotation Summary.
+    Preserves the previous revision intact with status 'Cancelled/Rejected',
+    creates the new revision with -R{N} suffix, clones all line items,
+    and opens the new revision for editing in the Excel Costing Matrix.
+    """
+    user_id = request.session.get('ses_userID')
+    quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+
+    revision_reason = request.POST.get('revision_reason', '').strip()
+    if not revision_reason and request.GET.get('reason'):
+        revision_reason = request.GET.get('reason', '').strip()
+    if not revision_reason:
+        revision_reason = 'Customer requested pricing / specification revision'
+
+    root_parent = quotationsummary.qs_parent_quotation or quotationsummary
+    current_rev = quotationsummary.qs_revision_number or 0
+    new_rev = current_rev + 1
+
+    # Base quotation number
+    raw_num = quotationsummary.qs_quotation_number or f"QS_{quotationsummary.id}"
+    if '-R' in raw_num:
+        base_num = raw_num.split('-R')[0]
+    else:
+        base_num = raw_num
+    new_quotation_number = f"{base_num}-R{new_rev}"
+
+    # Archive the old quotation summary
+    try:
+        cancelled_status = StatusList.objects.get(id=8)
+    except StatusList.DoesNotExist:
+        cancelled_status = quotationsummary.qs_status
+
+    quotationsummary.qs_status = cancelled_status
+    quotationsummary.qs_is_latest = False
+    quotationsummary.save()
+
+    # Also mark any sibling revisions as not latest
+    PkquotationsummaryInfo.objects.filter(
+        Q(id=root_parent.id) | Q(qs_parent_quotation=root_parent)
+    ).update(qs_is_latest=False)
+
+    try:
+        wip_status = StatusList.objects.get(id=6)
+    except StatusList.DoesNotExist:
+        wip_status = quotationsummary.qs_status
+
+    # Create new revision record
+    new_qs = PkquotationsummaryInfo.objects.create(
+        qs_assessment_num=quotationsummary.qs_assessment_num,
+        qs_wood_cost=quotationsummary.qs_wood_cost,
+        qs_plywood_cost=quotationsummary.qs_plywood_cost,
+        qs_engineer_cost=quotationsummary.qs_engineer_cost,
+        qs_labour_cost=quotationsummary.qs_labour_cost,
+        qs_margin=quotationsummary.qs_margin,
+        qs_total_cost_wm=quotationsummary.qs_total_cost_wm,
+        qs_rate_per_cft=quotationsummary.qs_rate_per_cft,
+        qs_total_cft=quotationsummary.qs_total_cft,
+        qs_total_sqft=quotationsummary.qs_total_sqft,
+        qs_crane_cost=quotationsummary.qs_crane_cost,
+        qs_ht_cost=quotationsummary.qs_ht_cost,
+        qs_management_cost=quotationsummary.qs_management_cost,
+        qs_material_cost=quotationsummary.qs_material_cost,
+        qs_transport_cost=quotationsummary.qs_transport_cost,
+        qs_total_cost_wom=quotationsummary.qs_total_cost_wom,
+        qs_address=quotationsummary.qs_address,
+        qs_cost_includes=quotationsummary.qs_cost_includes,
+        qs_notes=quotationsummary.qs_notes,
+        qs_terms_condition=quotationsummary.qs_terms_condition,
+        qs_client_scope=quotationsummary.qs_client_scope,
+        qs_bvm_scope=quotationsummary.qs_bvm_scope,
+        qs_quotation_number=new_quotation_number,
+        qs_customer_name_2=quotationsummary.qs_customer_name_2,
+        qs_status=wip_status,
+        qs_gst=quotationsummary.qs_gst,
+        qs_final_cost=quotationsummary.qs_final_cost,
+        pkqt_customer_new_name=quotationsummary.pkqt_customer_new_name,
+        qs_revision_number=new_rev,
+        qs_parent_quotation=root_parent,
+        qs_revision_reason=revision_reason,
+        qs_is_latest=True,
+        qs_updated_by_id=user_id
+    )
+
+    # Clone all line items from the old quote to the new revision
+    items_to_clone = PkquotationInfo.objects.filter(pkqt_quotation_summary=quotationsummary)
+    if not items_to_clone.exists():
+        items_to_clone = PkquotationInfo.objects.filter(pkqt_assessment_num=quotationsummary.qs_assessment_num)
+
+    cloned_items_count = 0
+    for itm in items_to_clone:
+        itm.pk = None
+        itm.id = None
+        itm.pkqt_quotation_summary = new_qs
+        itm.save()
+        cloned_items_count += 1
+
+    # Update session
+    request.session['na_assessment_id'] = new_qs.qs_assessment_num_id
+    request.session['na_assessment_num_id'] = new_qs.qs_assessment_num_id
+    request.session['quotationsummary_id'] = new_qs.id
+
+    from django.contrib import messages
+    messages.success(
+        request, 
+        f'Quotation Revision Created! Revision R{new_rev} ({new_quotation_number}) is now ready. Previous Revision R{current_rev} has been archived.'
+    )
+
+    redirect_target = request.GET.get('target', 'summary')
+    if redirect_target == 'matrix':
+        return redirect(f"/SMS/box_costing_matrix/{new_qs.qs_assessment_num_id}/?summary_id={new_qs.id}")
+    return redirect(f"/SMS/pk_quotationsummary_update/{new_qs.id}")
+
+
+@login_required(login_url='login_page')
+def pk_quotation_job_delete(request, pk_quotationsummary_id, req_id):
+    """
+    Deletes all quotation line items associated with a specific requirement / job
+    from the quotation summary and recalculates totals.
+    """
+    quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
+    needassessment_id = quotationsummary.qs_assessment_num_id
+
+    # Target quotation items for this requirement
+    q_filter = Q(pkqt_assessment_num_id=needassessment_id, pkqt_requirement_id=req_id)
+    if PkquotationInfo.objects.filter(pkqt_quotation_summary_id=pk_quotationsummary_id, pkqt_requirement_id=req_id).exists():
+        q_filter = Q(pkqt_quotation_summary_id=pk_quotationsummary_id, pkqt_requirement_id=req_id)
+
+    deleted_count, _ = PkquotationInfo.objects.filter(q_filter).delete()
+
+    from .pk_quotation_view import recalculate_dependent_costs
+    recalculate_dependent_costs(needassessment_id, request)
+
+    # Recalculate remaining summary costs
+    remaining_items = PkquotationInfo.objects.filter(
+        Q(pkqt_quotation_summary_id=pk_quotationsummary_id) |
+        (Q(pkqt_assessment_num_id=needassessment_id) & Q(pkqt_quotation_summary__isnull=True))
+    )
+
+    wood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [1, 5]), 3)
+    plywood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [4, 6]), 3)
+    material_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if (q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id == 2) or q.pkqt_cost_type_id == 11), 3)
+    engineer_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 2), 3)
+    labour_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id in [3, 9]), 3)
+    crane_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 6), 3)
+    ht_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 5), 3)
+    transport_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 4), 3)
+    total_cft = round(sum(q.pkqt_total_cft_display or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [1, 5]), 3)
+    total_sqft = round(sum(q.pkqt_sqrt_req or 0.0 for q in remaining_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [4, 6]), 3)
+
+    total_wom = round(sum([wood_cost, plywood_cost, material_cost, engineer_cost, labour_cost, crane_cost, ht_cost, transport_cost]), 2)
+    margin_pct = float(quotationsummary.qs_margin or 0.0)
+    total_wm = round(total_wom / (1.0 - margin_pct / 100.0), 2) if margin_pct < 100 else total_wom
+    gst_pct = float(quotationsummary.qs_gst or 0.0)
+    final_cost = round(total_wm * (1.0 + gst_pct / 100.0), 2)
+
+    rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
+    rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
+
+    PkquotationsummaryInfo.objects.filter(id=pk_quotationsummary_id).update(
+        qs_wood_cost=wood_cost,
+        qs_plywood_cost=plywood_cost,
+        qs_total_cft=total_cft,
+        qs_total_sqft=total_sqft,
+        qs_rate_per_cft=rate_per_cft,
+        qs_engineer_cost=engineer_cost,
+        qs_labour_cost=labour_cost,
+        qs_crane_cost=crane_cost,
+        qs_ht_cost=ht_cost,
+        qs_material_cost=material_cost,
+        qs_transport_cost=transport_cost,
+        qs_total_cost_wom=total_wom,
+        qs_total_cost_wm=total_wm,
+        qs_final_cost=final_cost
+    )
+
+    from django.contrib import messages
+    messages.success(request, f'Quotation line items for the selected box item deleted successfully.')
+    return redirect('pk_quotationsummary_update', pk_quotationsummary_id=pk_quotationsummary_id)

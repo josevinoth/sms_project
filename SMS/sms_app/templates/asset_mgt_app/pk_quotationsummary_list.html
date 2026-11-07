@@ -71,15 +71,32 @@
                         {% endcomment %}
 
                         <td>
-                            <a class="btn btn-primary btn-sm" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
-                                <i class="far fa-edit"></i>
-                            </a>
+                            <div class="d-flex align-items-center" style="gap: 4px;">
+                                <a class="btn btn-primary btn-sm" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}" title="Edit Quotation Summary">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <a class="btn btn-warning btn-sm text-dark font-weight-bold" href="{% url 'pk_quotationsummary_revise' quotationsummaryinfo.id %}" title="Create Revised Quotation" onclick="return confirm('Create a new Revision from {{ quotationsummaryinfo.qs_quotation_number }}?');">
+                                    <i class="fas fa-code-branch"></i>
+                                </a>
+                            </div>
                         </td>
                         <td>{{ quotationsummaryinfo.qs_created_at|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold">{{ quotationsummaryinfo.qs_assessment_num }}</td>
                         <td>{{ quotationsummaryinfo.qs_customer_name_2 }}</td>
                         <td>{{ quotationsummaryinfo.qs_estimation_type }}</td>
-                        <td class="text-info">{{ quotationsummaryinfo.qs_quotation_number }}</td>
+                        <td class="font-weight-bold" style="white-space: nowrap;">
+                            <span class="text-info">{{ quotationsummaryinfo.qs_quotation_number }}</span>
+                            {% if quotationsummaryinfo.qs_revision_number and quotationsummaryinfo.qs_revision_number > 0 %}
+                                <span class="badge badge-info ml-1" style="font-size:0.72rem;">Rev {{ quotationsummaryinfo.qs_revision_number }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary ml-1" style="font-size:0.72rem;">Rev 0</span>
+                            {% endif %}
+                            {% if quotationsummaryinfo.qs_is_latest %}
+                                <span class="badge badge-success ml-1" style="font-size:0.68rem;">Latest</span>
+                            {% else %}
+                                <span class="badge badge-light border text-muted ml-1" style="font-size:0.68rem;">Archived</span>
+                            {% endif %}
+                        </td>
                         <td>{{ quotationsummaryinfo.qs_wood_cost }}</td>
                         <td>{{ quotationsummaryinfo.qs_engineer_cost }}</td>
                         <td>{{ quotationsummaryinfo.qs_labour_cost }}</td>

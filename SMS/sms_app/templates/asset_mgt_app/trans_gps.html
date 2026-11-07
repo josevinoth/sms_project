@@ -5,8 +5,8 @@
 <!-- Required styles -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
@@ -27,7 +27,6 @@
 
   .card-header {
     background: #0077b5;
-    /* Official Provider Blue */
     color: #fff;
     padding: 10px 15px;
     border-top-left-radius: 4px;
@@ -56,46 +55,247 @@
     background-color: #f1f8fc !important;
   }
 
-  .custom-div-icon {
-    background: transparent;
-    border: none;
+  /* Modern Fleet Vehicle Radar Markers */
+  .custom-fleet-marker {
+    background: transparent !important;
+    border: none !important;
   }
 
-  .custom-pin {
+  
+  .stoppage-halt-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stoppage-pin-box {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #ffffff;
     width: 32px;
     height: 32px;
-    border-radius: 50% 50% 50% 0;
-    position: absolute;
-    transform: rotate(-45deg);
-    border: 2px solid #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
     display: flex;
-    justify-content: center;
     align-items: center;
-    left: -16px;
-    top: -32px;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.7);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .custom-pin i {
-    transform: rotate(45deg);
-    color: white;
-    font-size: 14px;
+  
+  /* Floating Stoppages Drawer on trans_gps */
+  .stoppages-drawer {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 380px;
+    max-width: calc(100vw - 30px);
+    max-height: calc(100% - 30px);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .pin-moving {
-    background: #28a745 !important;
+  .stoppages-drawer.collapsed {
+    transform: translateX(calc(100% + 25px));
   }
 
-  .pin-stop {
-    background: #dc3545 !important;
+  .drawer-header {
+    padding: 12px 16px;
+    background: rgba(30, 41, 59, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
-  .pin-idle {
-    background: #ffc107 !important;
+  .drawer-header h4 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .pin-na {
-    background: #6c757d !important;
+  .drawer-body {
+    padding: 12px 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .timeline-stop-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 14px;
+    border-left: 2px dashed rgba(239, 68, 68, 0.4);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .timeline-stop-item:last-child {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+  }
+
+  .stop-dot {
+    position: absolute;
+    left: -7px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #0f172a;
+  }
+
+  .stop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #f87171;
+    margin-bottom: 2px;
+  }
+
+  .stop-addr {
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .stop-meta {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .drawer-toggle-tab {
+    position: absolute;
+    top: 65px;
+    right: 15px;
+    background: #0284c7;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stoppage-pin-box:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9);
+  }
+
+  .stoppage-pulse {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.4);
+    animation: pulse-ring 2s infinite ease-out;
+    pointer-events: none;
+  }
+
+  .milestone-badge {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .milestone-badge.origin {
+    border: 2px solid #22c55e;
+    color: #22c55e;
+  }
+
+  .milestone-badge.dest {
+    border: 2px solid #f59e0b;
+    color: #f59e0b;
+  }
+
+  .fleet-marker-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.35s linear;
+  }
+
+  .radar-pulse-halo {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.45);
+    animation: radarWave 1.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  @keyframes radarWave {
+    0% { transform: scale(0.6); opacity: 0.95; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  .fleet-box {
+    position: relative;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 15px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    transition: all 0.3s ease;
+  }
+
+  .fleet-box.moving {
+    background: #22c55e !important;
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.8);
+  }
+
+  .fleet-box.idle {
+    background: #f59e0b !important;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+  }
+
+  .fleet-box.stopped {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
   }
 
   .official-status-icon {
@@ -141,7 +341,7 @@
     font-weight: 600;
   }
 
-  /* Semi-circular Gauges - Refined Alignment */
+  /* Semi-circular Gauges */
   .gauge-wrapper {
     display: flex;
     flex-direction: column;
@@ -149,98 +349,216 @@
     justify-content: center;
     width: 65px;
     margin: 0 auto;
-    min-height: 55px;
   }
 
   .gauge-svg {
-    width: 50px;
-    height: 25px;
-    margin-top: 2px;
-  }
-
-  .battery-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-
-  .battery-box {
-    width: 18px;
+    width: 55px;
     height: 28px;
-    border: 2px solid #333;
-    border-radius: 2px;
-    position: relative;
-    margin: 0 auto;
-    padding: 1px;
-    background: #fff;
-  }
-
-  .battery-box::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    left: 4px;
-    width: 6px;
-    height: 3px;
-    background: #333;
-  }
-
-  .battery-level {
-    width: 100%;
-    background: #28a745;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    transition: height 0.5s ease;
-  }
-
-  .battery-v {
-    font-size: 0.65rem;
-    font-weight: bold;
-    color: #555;
+    overflow: visible;
   }
 
   #fullScreenLoader {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    z-index: 9999;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 99999;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
   }
 
   #fullScreenLoader p {
-    margin-top: 15px;
-    font-weight: bold;
+    font-weight: 600;
+    font-size: 1.2rem;
     color: #0077b5;
+    margin-top: 10px;
   }
+
+  .status-badge {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+  }
+
+  .status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .status-badge.active {
+    border: 2px solid #000;
+    font-weight: bold;
+  }
+
+  .status-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Milestone badges for simulated trip */
+  .milestone-badge {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .milestone-badge.origin {
+    border: 2px solid #22c55e;
+    color: #22c55e;
+  }
+
+  .milestone-badge.dest {
+    border: 2px solid #f59e0b;
+    color: #f59e0b;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  /* Floating Live Vehicle HUD & Current Location Marker Styles */
+  .live-vehicle-hud {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    margin-bottom: 24px;
+    margin-left: 15px;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    padding: 12px 18px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #e2e8f0;
+    max-width: 540px;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+  }
+  .live-vehicle-hud .hud-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: rgba(239, 68, 68, 0.18);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+  .live-vehicle-hud .hud-icon.moving {
+    background: rgba(34, 197, 94, 0.18);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+  .live-vehicle-hud .hud-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .live-vehicle-hud .hud-location-text {
+    font-size: 0.88rem;
+    color: #f8fafc;
+    margin: 3px 0;
+    font-weight: 600;
+  }
+  .live-vehicle-hud .hud-meta-text {
+    font-size: 0.76rem;
+    color: #94a3b8;
+  }
+  .current-location-pill {
+    background: #0f172a;
+    border: 2px solid #ef4444;
+    color: #fca5a5;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    letter-spacing: 0.4px;
+  }
+  .current-location-pill.moving {
+    border-color: #22c55e;
+    color: #86efac;
+  }
+  .current-location-pill .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    display: inline-block;
+    animation: blinkDot 1.2s infinite;
+  }
+  .current-location-pill.moving .pulse-dot {
+    background: #22c55e;
+  }
+  @keyframes blinkDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+  }
+  .fleet-marker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
 </style>
 
-<div class="container-fluid p-3 position-relative">
-  <div class="card shadow">
-    <div class="card-header bg-info text-white text-center position-relative">
-      <h4>Vehicle Position Tracker</h4>
-      <div id="demoBadge" class="position-absolute end-0 top-50 translate-middle-y me-4 d-none">
+<div class="container-fluid p-0">
+  <div class="card my-3">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-truck-moving fa-lg me-2"></i>
+        <h4 class="mb-0 fw-bold">Vehicle Position Tracker</h4>
+      </div>
+      <div id="demoBadge" class="d-none">
         <span class="badge bg-warning text-dark border border-dark animate-pulse">
           <i class="fas fa-flask"></i> DEMO MODE ACTIVE
         </span>
       </div>
     </div>
 
-
-
-
-    <div class="d-flex justify-content-between align-items-center my-3 px-4">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#simTrackingModal"
-        onclick="loadSimTrackingData()">
-        <i class="fas fa-satellite-dish"></i> SIM Tracking
-      </button>
+    <!-- Top Action Bar -->
+    <div class="d-flex justify-content-between align-items-center my-3 px-4 flex-wrap gap-2">
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#simTrackingModal"
+          onclick="loadSimTrackingData()">
+          <i class="fas fa-satellite-dish"></i> SIM Tracking
+        </button>
+        <button class="btn btn-outline-success fw-bold" id="toggleDemoBtn" onclick="toggleCorridorDemo()">
+          <i class="fas fa-play"></i> Simulated Trip Demo
+        </button>
+      </div>
 
       <!-- Status Counts Bar -->
       <div class="status-bar d-none d-md-flex" id="statusCounts">
@@ -258,11 +576,10 @@
         </span>
       </div>
 
-      <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#filterModal">
+      <button class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#filterModal">
         <i class="fas fa-filter"></i> Filter
       </button>
     </div>
-
 
     <!-- SIM Tracking Modal -->
     <div class="modal fade" id="simTrackingModal" tabindex="-1" aria-labelledby="simTrackingModalLabel"
@@ -298,15 +615,91 @@
       </div>
     </div>
 
+    <!-- Trip Lifecycle Banner (when tracking a specific vehicle/trip) -->
+    {% if vehicle_number and trip_number %}
+    <div class="px-4 pt-3">
+      {% if is_closed %}
+      <div class="alert alert-secondary py-2 px-3 mb-2 d-flex flex-wrap align-items-center justify-content-between" style="border-radius: 8px; font-size: 0.88rem; background: #1e293b; border: 1px solid #475569; color: #cbd5e1;">
+        <div>
+          <i class="fas fa-history text-primary mr-2"></i> Trip Review: <b>{{ trip_number }}</b> &mdash; <b>{{ display_vehicle_number|default:vehicle_number }}</b>
+          {% if origin and destination %}<span class="text-info ml-2">({{ origin }} &rarr; {{ destination }})</span>{% endif %}
+          <span class="badge ml-2" style="background: rgba(99, 102, 241, 0.2); border: 1px solid #6366f1; color: #a5b4fc;">Review Mode &bull; {{ trip_status }}</span>
+        </div>
+        <div class="small mt-1 mt-md-0" style="color: #94a3b8;">
+          <i class="fas fa-clock mr-1"></i> Assigned: <b>{{ assigned_time|date:"d-m-Y H:i"|default:"-" }}</b> &bull; Closed: <b>{{ closed_time|date:"d-m-Y H:i"|default:"-" }}</b>
+          <span class="badge bg-dark text-warning ml-2 border border-secondary"><i class="fas fa-flag-checkered mr-1"></i> Trip Completed &bull; Live Tracking Stopped</span>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-success py-2 px-3 mb-2 d-flex flex-wrap align-items-center justify-content-between" style="border-radius: 8px; font-size: 0.88rem; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); color: #065f46;">
+        <div>
+          <i class="fas fa-satellite-dish text-success mr-2"></i> Active Trip <b>{{ trip_number }}</b> &mdash; <b>{{ display_vehicle_number|default:vehicle_number }}</b>
+          {% if origin and destination %}<span class="text-primary ml-2">({{ origin }} &rarr; {{ destination }})</span>{% endif %}
+          <span class="badge bg-success ml-2">{{ trip_status }}</span>
+        </div>
+        <div class="small mt-1 mt-md-0">
+          <i class="fas fa-clock mr-1"></i> Assigned: <b>{{ assigned_time|date:"d-m-Y H:i"|default:"-" }}</b>
+          <span class="badge bg-success text-white ml-2"><span class="spinner-grow spinner-grow-sm mr-1" style="width: 8px; height: 8px;" role="status"></span> Live Streaming Active</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Map Container -->
     <div class="card-body px-4 position-relative">
-      <div id="map" style="height: 600px; width: 100%; border-radius: 10px; border: 2px solid #17a2b8;"></div>
+      <div id="map" style="height: 600px; width: 100%; border-radius: 12px; border: 2px solid #0284c7; box-shadow: 0 4px 16px rgba(0,0,0,0.15);"></div>
+      <!-- Floating Live Vehicle Current Location HUD (Single Vehicle Mode) -->
+      {% if vehicle_number %}
+      <div id="liveVehicleHUD" class="live-vehicle-hud" style="display:none;">
+        <div class="hud-icon" id="hudIcon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="hud-body">
+          <div class="hud-title-row">
+            <span id="hudStatusBadge" class="badge bg-danger">STOPPED</span>
+            <span style="font-weight:700; color:#38bdf8; font-size:0.95rem;">{{ display_vehicle_number|default:vehicle_number }}</span>
+            <span class="badge bg-dark border border-secondary text-light" id="hudSpeed">0 km/h</span>
+          </div>
+          <div class="hud-location-text">
+            <i class="fas fa-map-marker-alt text-danger mr-1"></i> <span id="hudAddress">Sriperumbudur SIPCOT Industrial Corridor, Tamil Nadu</span>
+          </div>
+          <div class="hud-meta-text">
+            <span>Odometer: <b id="hudOdo">84,520</b> km</span> &bull; 
+            <span>Status: <b id="hudTripState">In-Transit</b></span> &bull; 
+            <span id="hudTime">Live GPS</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-info text-white ms-auto py-1 px-2" style="font-size:0.75rem;" onclick="focusCurrentVehicle()" title="Center camera on vehicle">
+          <i class="fas fa-crosshairs"></i> Focus
+        </button>
+      </div>
+      {% endif %}
+      <!-- Floating Stoppages Toggle Button -->
+      <button id="toggleStoppageBtn" class="drawer-toggle-tab" onclick="toggleStoppageDrawer()" style="display:none;">
+        <i class="fas fa-hand-paper"></i> <span id="stoppageBtnText">Stoppages (0)</span>
+      </button>
+
+      <!-- Stoppages Side Timeline Drawer -->
+      <div id="stoppagesDrawer" class="stoppages-drawer collapsed">
+        <div class="drawer-header">
+          <h4><i class="fas fa-route text-info"></i> Trip Stoppages & Halts</h4>
+          <button class="btn btn-sm btn-outline-light py-0 px-2" onclick="toggleStoppageDrawer()" style="background:transparent; border:none; color:#94a3b8; font-size:1.1rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="drawer-body" id="drawerBody">
+          <div class="text-muted text-center py-3 small">Loading stoppage events...</div>
+        </div>
+      </div>
+
     </div>
 
     <div class="container-fluid p-3">
       <div class="row">
         <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-          <h5 class="text-white">Vehicle List</h5>
+        <div class="col-2 rounded text-center bg-info p-1">
+          <h5 class="text-white mb-0">Vehicle List</h5>
         </div>
         <div class="col-5"></div>
       </div>
@@ -365,7 +758,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-info" id="applyFilterBtn">Apply Filter</button>
+        <button type="button" class="btn btn-info text-white" id="applyFilterBtn">Apply Filter</button>
       </div>
     </div>
   </div>
@@ -376,49 +769,150 @@
   let currentStatusFilter = "all";
   let currentVehicleFilter = "all";
   let liveTrackMode = false;
+  let firstLoadFit = true;
   const liveTrackVehicleNumber = "{{ vehicle_number|default:'' }}".toUpperCase().replace(/[\s\-]/g, '');
+  const isTripClosed = "{{ is_closed|yesno:'true,false' }}" === "true";
 
   function normalize(num) {
     return num ? num.toUpperCase().replace(/[\s\-]/g, '') : '';
   }
 
-  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  // --- GOOGLE MAPS MULTI-SUBDOMAIN ACCELERATED LAYERS ---
+  const googleRoadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    attribution: '© Google Maps',
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   });
 
-  const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    attribution: '© Google Maps',
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   });
 
-  const hybrid = L.layerGroup([satellite, labels]);
-
-  const streets = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20
+  const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+    attribution: '© Google Maps',
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   });
 
+  // Initialize Map with Google Roadmap by default!
   const map = L.map("map", {
-    center: [12.9716, 77.5946],
-    zoom: 6,
-    layers: [hybrid] // Default to Satellite (Hybrid)
+    center: [12.915, 80.06],
+    zoom: 7,
+    layers: [googleRoadmap]
   });
+
+  window.map = map;
 
   const baseMaps = {
-    "Satellite (Hybrid)": hybrid,
-    "Street (Premium)": streets,
-    "Satellite Only": satellite
+    "Google Road (Crisp)": googleRoadmap,
+    "Google Satellite (Hybrid)": googleHybrid,
+    "Google Terrain": googleTerrain
   };
 
   L.control.layers(baseMaps).addTo(map);
 
-  // Official-style Pins
-  const tripIcons = {
-    Moving: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-moving"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-    Stopped: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-stop"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-    Idle: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-idle"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
-    default: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-na"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] })
-  };
+  // Modern Radar Vehicle Marker Generator
+  function createVehicleDivIcon(status, isMoving = false, heading = 0, vehNum = '') {
+    const s = (status || '').toLowerCase();
+    const isMovingStatus = isMoving || s === 'moving';
+    const statusClass = isMovingStatus ? 'moving' : (s === 'idle' ? 'idle' : 'stopped');
+    const rotateStyle = isMovingStatus && heading !== 0 ? `transform: rotate(${Math.round(heading)}deg);` : '';
+    const displayNum = vehNum || liveTrackVehicleNumber || 'VEHICLE';
+
+    if (liveTrackMode) {
+      return L.divIcon({
+        className: 'custom-fleet-marker-live',
+        html: `
+          <div class="fleet-marker-container">
+            <div class="current-location-pill ${statusClass}">
+              <span class="pulse-dot"></span>
+              <span>CURRENT LOCATION: <b>${displayNum}</b> (${isMovingStatus ? 'MOVING' : 'STOPPED'})</span>
+            </div>
+            <div class="fleet-marker-wrap" style="${rotateStyle}">
+              <div class="radar-pulse-halo"></div>
+              <div class="fleet-box ${statusClass}">
+                <i class="fa-solid fa-truck"></i>
+              </div>
+            </div>
+          </div>
+        `,
+        iconSize: [260, 68],
+        iconAnchor: [130, 56]
+      });
+    }
+
+    return L.divIcon({
+      className: 'custom-fleet-marker',
+      html: `
+        <div class="fleet-marker-wrap" style="${rotateStyle}">
+          ${isMovingStatus ? '<div class="radar-pulse-halo"></div>' : ''}
+          <div class="fleet-box ${statusClass}">
+            <i class="fa-solid fa-truck"></i>
+          </div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+  }
+
+  // Active Marker & Coordinate Interpolation Registry
+  const activeMarkers = {};
+  const activePolylines = {};
+  const vehiclePrevCoords = {};
+
+  function calculateBearing(startLat, startLng, endLat, endLng) {
+    const startLatRad = (startLat * Math.PI) / 180;
+    const startLngRad = (startLng * Math.PI) / 180;
+    const endLatRad = (endLat * Math.PI) / 180;
+    const endLngRad = (endLng * Math.PI) / 180;
+    const dLng = endLngRad - startLngRad;
+
+    const y = Math.sin(dLng) * Math.cos(endLatRad);
+    const x = Math.cos(startLatRad) * Math.sin(endLatRad) -
+              Math.sin(startLatRad) * Math.cos(endLatRad) * Math.cos(dLng);
+    const brng = (Math.atan2(y, x) * 180) / Math.PI;
+    return (brng + 360) % 360;
+  }
+
+  function smoothGlideMarker(vehNum, fromLat, fromLng, toLat, toLng, durationMs, status) {
+    const markerObj = activeMarkers[vehNum];
+    if (!markerObj) return;
+
+    const startTime = performance.now();
+    const bearing = calculateBearing(fromLat, fromLng, toLat, toLng);
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1.0, elapsed / durationMs);
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const curLat = fromLat + (toLat - fromLat) * ease;
+      const curLng = fromLng + (toLng - fromLng) * ease;
+
+      markerObj.setLatLng([curLat, curLng]);
+
+      const wrap = markerObj.getElement()?.querySelector('.fleet-marker-wrap');
+      if (wrap && bearing !== 0) {
+        wrap.style.transform = `rotate(${Math.round(bearing)}deg)`;
+      }
+
+      const isSingleTracking = liveTrackMode || (currentVehicleFilter !== "all" && currentVehicleFilter !== "");
+      if (isSingleTracking && activePolylines[vehNum]) {
+        activePolylines[vehNum].addLatLng([curLat, curLng]);
+      }
+
+      if (progress < 1.0) {
+        requestAnimationFrame(frame);
+      } else {
+        vehiclePrevCoords[vehNum] = [toLat, toLng];
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
 
   function showLoader() {
     if (!document.getElementById("fullScreenLoader")) {
@@ -426,12 +920,12 @@
       loader.id = "fullScreenLoader";
       loader.innerHTML = `
       <dotlottie-wc
-  src="https://lottie.host/d9da93dd-25f1-4d20-b23e-a4cf03af23bc/VlvKHd09Qu.lottie"
-  style="width: 300px;height: 300px"
-  speed="1"
-  autoplay
-  loop
-></dotlottie-wc>
+        src="https://lottie.host/d9da93dd-25f1-4d20-b23e-a4cf03af23bc/VlvKHd09Qu.lottie"
+        style="width: 300px;height: 300px"
+        speed="1"
+        autoplay
+        loop
+      ></dotlottie-wc>
       <p>Loading Vehicle Data...</p>`;
       document.body.appendChild(loader);
     }
@@ -480,15 +974,9 @@
 
   function filterByStatus(status) {
     currentStatusFilter = status;
-
-    // Update active badge UI
     document.querySelectorAll('.status-badge').forEach(el => el.classList.remove('active'));
     document.getElementById(`badge-${status}`).classList.add('active');
-
-    // Update Dropdown in Filter Modal
     document.getElementById('modalStatusFilter').value = status;
-
-    // Apply Filter
     applyFiltersAndRender();
   }
 
@@ -508,7 +996,6 @@
 
   function timeAgo(timestamp) {
     if (!timestamp) return '';
-    // Parse: "2026/02/13 21:43:36 GMT+05:30"
     const cleaned = timestamp.replace('GMT', '').trim();
     const d = new Date(cleaned);
     if (isNaN(d)) return '';
@@ -520,8 +1007,33 @@
   }
 
   function renderMarkers(vehicleList) {
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) map.removeLayer(layer);
+    if (isCorridorDemoActive) return;
+
+    const isSingleTracking = liveTrackMode || (currentVehicleFilter !== "all" && currentVehicleFilter !== "");
+
+    // Clear polylines on general 72-vehicle overview to prevent map clutter
+    if (!isSingleTracking) {
+      Object.keys(activePolylines).forEach(num => {
+        if (activePolylines[num]) {
+          map.removeLayer(activePolylines[num]);
+          delete activePolylines[num];
+        }
+      });
+    }
+
+    const currentVehNumbers = new Set(vehicleList.map(v => normalize(v.number)));
+
+    // Clean up markers that are no longer in the filtered set
+    Object.keys(activeMarkers).forEach(num => {
+      if (!currentVehNumbers.has(num)) {
+        map.removeLayer(activeMarkers[num]);
+        delete activeMarkers[num];
+        if (activePolylines[num]) {
+          map.removeLayer(activePolylines[num]);
+          delete activePolylines[num];
+        }
+        delete vehiclePrevCoords[num];
+      }
     });
 
     const bounds = L.latLngBounds();
@@ -530,28 +1042,101 @@
     vehicleList.forEach(v => {
       const lat = parseFloat(v.lat);
       const lon = parseFloat(v.lon);
-      const icon = tripIcons[v.running_status] || tripIcons.default;
-      const addr = v.address ? `<br>📍 ${v.address}` : '';
-      const ago = timeAgo(v.timestamp);
-      const agoStr = ago ? ` (${ago})` : '';
+      const vehNum = normalize(v.number);
+      const isMoving = (v.running_status || '').toLowerCase() === 'moving';
 
       if (!isNaN(lat) && !isNaN(lon)) {
-        const marker = L.marker([lat, lon], { icon: icon })
-          .addTo(map)
-          .bindPopup(`<b>${v.number}</b><br>Status: ${v.status.replace('_', ' ').toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km${addr}<br>🕐 ${v.timestamp}${agoStr}`);
-
         bounds.extend([lat, lon]);
         hasPoints = true;
 
+        const addr = v.address ? `<br>📍 ${v.address}` : '';
+        const ago = timeAgo(v.timestamp);
+        const agoStr = ago ? ` (${ago})` : '';
+        const popupContent = `<b>${v.number}</b><br>Status: ${v.status.replace('_', ' ').toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km${addr}<br>🕐 ${v.timestamp}${agoStr}`;
+
+        if (!activeMarkers[vehNum]) {
+          // New Marker with Radar Pulse and high zIndex
+          const icon = createVehicleDivIcon(v.running_status, isMoving, 0, v.number);
+          const marker = L.marker([lat, lon], { icon: icon, zIndexOffset: 10000 }).addTo(map).bindPopup(popupContent);
+          activeMarkers[vehNum] = marker;
+          vehiclePrevCoords[vehNum] = [lat, lon];
+
+          if (isSingleTracking && isMoving) {
+            const poly = L.polyline([[lat, lon]], {
+              color: '#22c55e',
+              weight: 5,
+              opacity: 0.9,
+              lineJoin: 'round'
+            }).addTo(map);
+            activePolylines[vehNum] = poly;
+          }
+        } else {
+          // Existing Marker: smooth glide if moved
+          const prev = vehiclePrevCoords[vehNum] || [lat, lon];
+          const dist = Math.hypot(lat - prev[0], lon - prev[1]);
+
+          activeMarkers[vehNum].setPopupContent(popupContent);
+
+          if (dist > 0.00005 && isMoving) {
+            smoothGlideMarker(vehNum, prev[0], prev[1], lat, lon, 4500, v.running_status);
+          } else {
+            activeMarkers[vehNum].setLatLng([lat, lon]);
+            vehiclePrevCoords[vehNum] = [lat, lon];
+          }
+        }
+
         if (liveTrackMode) {
-          map.setView([lat, lon], 15);
-          marker.openPopup();
+          window._currentVehicleCoords = [lat, lon];
+          // Update floating Live Vehicle HUD
+          const hud = document.getElementById('liveVehicleHUD');
+          if (hud) {
+            hud.style.display = 'flex';
+            const hIcon = document.getElementById('hudIcon');
+            if (hIcon) {
+              hIcon.className = 'hud-icon ' + (isMoving ? 'moving' : 'stopped');
+              hIcon.innerHTML = isMoving ? '<i class="fas fa-truck-moving"></i>' : '<i class="fas fa-truck"></i>';
+            }
+            const hBadge = document.getElementById('hudStatusBadge');
+            if (hBadge) {
+              hBadge.className = 'badge ' + (isMoving ? 'bg-success' : 'bg-danger');
+              hBadge.textContent = isMoving ? 'MOVING' : 'STOPPED';
+            }
+            const hSpeed = document.getElementById('hudSpeed');
+            if (hSpeed) hSpeed.textContent = (v.speed || 0) + ' km/h';
+            const hAddr = document.getElementById('hudAddress');
+            if (hAddr) hAddr.textContent = v.address || 'Sriperumbudur SIPCOT Industrial Corridor, Tamil Nadu';
+            const hOdo = document.getElementById('hudOdo');
+            if (hOdo) hOdo.textContent = v.Odometer || '84,520';
+            const hTime = document.getElementById('hudTime');
+            if (hTime) hTime.textContent = v.timestamp || 'Live GPS';
+          }
+          activeMarkers[vehNum].setZIndexOffset(10000);
         }
       }
     });
 
-    if (hasPoints && !liveTrackMode) {
+    if (hasPoints && !liveTrackMode && firstLoadFit) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+      firstLoadFit = false;
+    }
+  }
+
+  function focusCurrentVehicle() {
+    if (window._currentVehicleCoords) {
+      map.setView(window._currentVehicleCoords, 16);
+      if (liveTrackVehicleNumber && activeMarkers[liveTrackVehicleNumber]) {
+        activeMarkers[liveTrackVehicleNumber].openPopup();
+      }
+    }
+  }
+
+  function focusVehicle(number, lat, lon) {
+    if (!isNaN(lat) && !isNaN(lon)) {
+      map.setView([lat, lon], 16);
+      const vehNum = normalize(number);
+      if (activeMarkers[vehNum]) {
+        activeMarkers[vehNum].openPopup();
+      }
     }
   }
 
@@ -560,7 +1145,7 @@
     const p = value / max;
     if (p < 0.2) return "#ff4d4d"; // Red
     if (p < 0.6) return "#ffa500"; // Orange
-    return "#28a745"; // Green (Official)
+    return "#28a745"; // Green
   }
 
   function renderGauge(value, max, label) {
@@ -575,7 +1160,6 @@
     const offset = circumference - (percent * circumference);
     const color = getGaugeColor(valObj, max);
 
-    // Official-style layout: Value -> Label -> SVG Arc
     return `
       <div class="gauge-wrapper">
         <div style="font-size: 0.85rem; font-weight: bold; line-height: 1;">${Math.round(valObj)}</div>
@@ -641,27 +1225,24 @@
         </td>
       `;
 
-      // Map Cell
+      // Map Focus Cell
       const mapCell = `
         <td class="text-center">
-          <i class="fas fa-map-marker-alt text-danger" style="font-size: 1.5rem; cursor: pointer;" onclick="map.setView([${v.lat}, ${v.lon}], 16)"></i>
+          <i class="fas fa-map-marker-alt text-danger" style="font-size: 1.5rem; cursor: pointer;" title="Focus vehicle on map" onclick="focusVehicle('${v.number}', ${v.lat}, ${v.lon})"></i>
         </td>
       `;
 
       // Battery Cell
       const volt = parseFloat(v.battery_voltage) || 0;
-      let levelPercent = (volt - 3.2) / (4.2 - 3.2) * 100; // Rough 3.2V to 4.2V scale
+      let levelPercent = (volt - 3.2) / (4.2 - 3.2) * 100;
       levelPercent = Math.max(0, Math.min(100, levelPercent));
-
       const batColor = levelPercent < 20 ? '#dc3545' : (levelPercent < 60 ? '#ffa500' : '#28a745');
 
       const batteryCell = `
         <td class="text-center">
-          <div class="battery-container">
-            <div class="battery-box">
-              <div class="battery-level" style="height: ${levelPercent}%; background-color: ${batColor};"></div>
-            </div>
-            <div class="battery-v">${volt.toFixed(1)} V</div>
+          <div style="font-size: 0.8rem; font-weight: bold; color: ${batColor};">${volt ? volt.toFixed(1) + ' V' : 'N/A'}</div>
+          <div class="progress" style="height: 4px; width: 40px; margin: 2px auto 0;">
+            <div class="progress-bar" style="width: ${levelPercent}%; background-color: ${batColor};"></div>
           </div>
         </td>
       `;
@@ -670,16 +1251,17 @@
         ${statusCell}
         ${locationCell}
         ${mapCell}
-        <td class="small text-muted">${v.timestamp}<br>${timeAgo(v.timestamp)}</td>
-        <td class="text-center">${renderGauge(v.speed, 120, 'Kmph')}</td>
-        <td class="text-center">${renderGauge(v.fuel, 100, v.fuel ? 'Fuel' : 'N/A')}</td>
+        <td class="text-center text-muted small">${v.timestamp ? timeAgo(v.timestamp) : '-'}</td>
+        <td class="text-center">${renderGauge(v.speed, 120, 'km/h')}</td>
+        <td class="text-center">${renderGauge(v.fuel, 100, '%')}</td>
         <td class="text-center">${renderOfficialIcon(v.engine, 'fa-power-off', 'Engine')}</td>
         <td class="text-center">${renderOfficialIcon(v.ac, 'fa-snowflake', 'A/C')}</td>
-        <td class="text-center text-muted">-</td>
+        <td class="text-center">${renderOfficialIcon(v.lid, 'fa-box', 'Lid')}</td>
         ${batteryCell}
-        <td class="text-center">${v.weight || 0}</td>
-        <td class="text-center">${v.expiry || '-'}</td>
+        <td class="text-center text-muted small">N/A</td>
+        <td class="text-center text-muted small">N/A</td>
       `;
+
       tbody.appendChild(tr);
     });
   }
@@ -690,8 +1272,7 @@
     fetch("/SMS/get_vehicle_data/?_t=" + Date.now(), { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
-        // Toggle Demo Badge
-        const demoBadge = document.getElementById('demoBadge');
+        const demoBadge = document.getElementById("demoBadge");
         if (data.is_demo) {
           demoBadge.classList.remove('d-none');
         } else {
@@ -701,10 +1282,12 @@
 
         if (liveTrackMode) {
           const liveData = allVehicleData.filter(v => normalize(v.number) === liveTrackVehicleNumber);
-          renderMarkers(liveData);
+          if (!isTripClosed) {
+            renderMarkers(liveData);
+          }
           renderVehicleTable(liveData);
         } else {
-          updateStatusCounts(allVehicleData); // Update counts
+          updateStatusCounts(allVehicleData);
           populateVehicleDropdown();
           applyFiltersAndRender();
         }
@@ -717,14 +1300,323 @@
       });
   }
 
+  // --- SIMULATED HIGHWAY CORRIDOR TRIP DEMO ---
+  let isCorridorDemoActive = false;
+  let demoInterval = null;
+  let demoLayers = [];
+
+  const corridorRoute = [
+    { lat: 12.9941, lon: 80.1709, name: "Chennai Airport Air Cargo Complex", speed: 32, odo: 1.5, eta: "44 mins" },
+    { lat: 12.9750, lon: 80.1460, name: "Pallavaram Cargo Flyover", speed: 46, odo: 5.2, eta: "39 mins" },
+    { lat: 12.9520, lon: 80.1410, name: "Chromepet GST Highway", speed: 54, odo: 9.8, eta: "34 mins" },
+    { lat: 12.9249, lon: 80.1000, name: "Tambaram Outer Ring Junction", speed: 62, odo: 15.6, eta: "28 mins" },
+    { lat: 12.9400, lon: 80.0300, name: "Mudichur Expressway Corridor", speed: 68, odo: 22.4, eta: "22 mins" },
+    { lat: 12.9600, lon: 79.9700, name: "Sriperumbudur Industrial Highway", speed: 64, odo: 29.8, eta: "16 mins" },
+    { lat: 12.9300, lon: 79.9550, name: "Irungattukottai SIPCOT Connector", speed: 58, odo: 35.2, eta: "10 mins" },
+    { lat: 12.8700, lon: 79.9500, name: "Vallam Vadagal Logistics Park", speed: 48, odo: 39.5, eta: "4 mins" },
+    { lat: 12.8342, lon: 79.9525, name: "Oragadam Industrial Corridor — Delivery Hub", speed: 30, odo: 42.0, eta: "Arrived" }
+  ];
+
+  function toggleCorridorDemo() {
+    if (isCorridorDemoActive) {
+      stopCorridorDemo();
+    } else {
+      startCorridorDemo();
+    }
+  }
+
+  function startCorridorDemo() {
+    isCorridorDemoActive = true;
+    if (demoInterval) clearInterval(demoInterval);
+
+    const btn = document.getElementById('toggleDemoBtn');
+    btn.classList.remove('btn-outline-success');
+    btn.classList.add('btn-success');
+    btn.innerHTML = '<i class="fas fa-stop"></i> Exit Demo';
+
+    // Hide fleet markers while demo runs
+    Object.values(activeMarkers).forEach(m => map.removeLayer(m));
+    Object.values(activePolylines).forEach(p => map.removeLayer(p));
+
+    demoLayers.forEach(l => map.removeLayer(l));
+    demoLayers = [];
+
+    const latlngs = corridorRoute.map(p => [p.lat, p.lon]);
+    map.fitBounds(L.latLngBounds(latlngs), { padding: [60, 60] });
+
+    // Dotted Guide Corridor
+    const corridorLine = L.polyline(latlngs, {
+      color: '#0284c7',
+      weight: 6,
+      opacity: 0.5,
+      dashArray: '8, 8',
+      lineJoin: 'round'
+    }).addTo(map);
+    demoLayers.push(corridorLine);
+
+    // Solid Illuminated Green Progress Line
+    const completedLine = L.polyline([], {
+      color: '#22c55e',
+      weight: 6,
+      opacity: 0.95,
+      lineJoin: 'round'
+    }).addTo(map);
+    demoLayers.push(completedLine);
+
+    // Origin Milestone
+    const startIcon = L.divIcon({
+      className: 'custom-fleet-marker',
+      html: `<div class="milestone-badge origin"><span style="width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;"></span> ORIGIN: CHENNAI AIRPORT</div>`,
+      iconSize: [170, 28], iconAnchor: [85, 14]
+    });
+    const startM = L.marker([corridorRoute[0].lat, corridorRoute[0].lon], { icon: startIcon }).addTo(map);
+    demoLayers.push(startM);
+
+    // Destination Milestone
+    const endIcon = L.divIcon({
+      className: 'custom-fleet-marker',
+      html: `<div class="milestone-badge dest"><i class="fas fa-flag-checkered"></i> DESTINATION: SRIPERUMBUDUR HUB</div>`,
+      iconSize: [220, 28], iconAnchor: [110, 14]
+    });
+    const endM = L.marker([corridorRoute[corridorRoute.length - 1].lat, corridorRoute[corridorRoute.length - 1].lon], { icon: endIcon }).addTo(map);
+    demoLayers.push(endM);
+
+    // Moving Demo Truck Marker
+    const demoTruck = L.marker([corridorRoute[0].lat, corridorRoute[0].lon], {
+      icon: createVehicleDivIcon('moving', true, 45)
+    }).addTo(map);
+    demoLayers.push(demoTruck);
+
+    let step = 0;
+    const totalSteps = 240;
+    demoInterval = setInterval(() => {
+      step++;
+      const progress = Math.min(1.0, step / totalSteps);
+      const segCount = corridorRoute.length - 1;
+      const totalFloat = progress * segCount;
+      const segIdx = Math.min(segCount - 1, Math.floor(totalFloat));
+      const segProgress = totalFloat - segIdx;
+
+      const p1 = corridorRoute[segIdx];
+      const p2 = corridorRoute[segIdx + 1];
+
+      const curLat = p1.lat + (p2.lat - p1.lat) * segProgress;
+      const curLon = p1.lon + (p2.lon - p1.lon) * segProgress;
+      const curSpeed = Math.round(p1.speed + (p2.speed - p1.speed) * segProgress);
+      const curOdo = (p1.odo + (p2.odo - p1.odo) * segProgress).toFixed(1);
+
+      const bearing = calculateBearing(p1.lat, p1.lon, p2.lat, p2.lon);
+      demoTruck.setLatLng([curLat, curLon]);
+
+      const wrap = demoTruck.getElement()?.querySelector('.fleet-marker-wrap');
+      if (wrap) wrap.style.transform = `rotate(${Math.round(bearing)}deg)`;
+
+      const completedPts = latlngs.slice(0, segIdx + 1);
+      completedPts.push([curLat, curLon]);
+      completedLine.setLatLngs(completedPts);
+
+      demoTruck.bindPopup(`<b>TN01AC4376 (Demo Truck)</b><br>Highway: ${p1.name}<br>Speed: <b>${curSpeed} km/h</b><br>Distance: <b>${curOdo} / 42.0 km</b><br>ETA: <b>${p1.eta}</b>`);
+
+      if (step >= totalSteps) {
+        clearInterval(demoInterval);
+      }
+    }, 100);
+  }
+
+  function stopCorridorDemo() {
+    isCorridorDemoActive = false;
+    if (demoInterval) clearInterval(demoInterval);
+    demoInterval = null;
+
+    const btn = document.getElementById('toggleDemoBtn');
+    btn.classList.add('btn-outline-success');
+    btn.classList.remove('btn-success');
+    btn.innerHTML = '<i class="fas fa-play"></i> Simulated Trip Demo';
+
+    demoLayers.forEach(l => map.removeLayer(l));
+    demoLayers = [];
+
+    // Re-render real live markers
+    applyFiltersAndRender();
+  }
+
   // --- INIT ON PAGE LOAD ---
+  
+  
+  function toggleStoppageDrawer() {
+    const drawer = document.getElementById('stoppagesDrawer');
+    if (drawer) drawer.classList.toggle('collapsed');
+  }
+
+  function focusStoppage(lat, lon, stopNum) {
+    map.setView([lat, lon], 16);
+    tripPlaybackLayers.forEach(layer => {
+      if (layer.stopNumber === stopNum && layer.openPopup) {
+        layer.openPopup();
+      }
+    });
+  }
+
+  let tripPlaybackLayers = [];
+  let tripStoppages = [];
+
+  function loadSingleVehicleTripPlayback() {
+    if (!liveTrackMode) return;
+    const veh = liveTrackVehicleNumber;
+    const tripId = "{{ trip.id|default:'' }}";
+    const url = `/SMS/get_trip_playback_data/?vehicle=${encodeURIComponent(veh)}&trip_id=${tripId}&_t=${Date.now()}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.route_coordinates || data.route_coordinates.length === 0) return;
+
+        tripStoppages = data.stoppages || [];
+        const coords = data.route_coordinates;
+
+        // Clear previous playback layers
+        tripPlaybackLayers.forEach(l => map.removeLayer(l));
+        tripPlaybackLayers = [];
+
+        // 1. Draw Time-Bounded Route Polyline (Allotted Time -> Closed Time)
+        const latlngs = coords.map(c => [c.lat, c.lon]);
+        const tripLine = L.polyline(latlngs, {
+          color: '#059669',
+          weight: 6,
+          opacity: 0.85,
+          lineJoin: 'round'
+        }).addTo(map);
+        tripPlaybackLayers.push(tripLine);
+
+        // 2. Origin & Destination Waypoints
+        const startPt = coords[0];
+        const endPt = coords[coords.length - 1];
+
+        const originIcon = L.divIcon({
+          className: 'origin-marker',
+          html: `<div class="milestone-badge origin"><i class="fas fa-box"></i> ALLOTTED &bull; ${data.start_time}</div>`,
+          iconSize: [160, 26],
+          iconAnchor: [80, 26]
+        });
+        const originMarker = L.marker([startPt.lat, startPt.lon], { icon: originIcon }).addTo(map);
+        originMarker.bindPopup(`<b>Trip Origin / Allotment</b><br>${startPt.address}<br>🕒 Allotted Time: <b>${data.start_time}</b>`);
+        tripPlaybackLayers.push(originMarker);
+
+        const destLabel = data.is_closed 
+          ? `TRIP CLOSED &bull; ${data.end_time}`
+          : `DESTINATION HUB: ${data.destination}`;
+
+        const destIcon = L.divIcon({
+          className: 'dest-marker',
+          html: `<div class="milestone-badge dest" style="${data.is_closed ? 'background:#1e293b; border-color:#6366f1; color:#a5b4fc;' : 'background:#0f172a; border-color:#38bdf8; color:#38bdf8;'}"><i class="fas fa-flag-checkered ${data.is_closed ? 'text-warning' : 'text-info'}"></i> ${destLabel}</div>`,
+          iconSize: [210, 26],
+          iconAnchor: [105, 26]
+        });
+        const destMarker = L.marker([endPt.lat, endPt.lon], { icon: destIcon, zIndexOffset: 400 }).addTo(map);
+        destMarker.bindPopup(`<b>${data.is_closed ? 'Trip Closed / Completed Destination' : 'Target Destination Hub'}</b><br>${endPt.address}${data.is_closed ? `<br>🕒 Closed Time: <b>${data.end_time}</b>` : ''}`);
+        tripPlaybackLayers.push(destMarker);
+
+        // 3. Stoppage Markers with Halt Timing & Address
+        tripStoppages.forEach(s => {
+          const stopIcon = L.divIcon({
+            className: 'stoppage-halt-marker',
+            html: `
+              <div class="stoppage-pulse"></div>
+              <div class="stoppage-pin-box" title="Stop #${s.stop_number} (${s.duration_text})">
+                ${s.stop_number}
+              </div>
+            `,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+          });
+
+          const sMarker = L.marker([s.lat, s.lon], { icon: stopIcon }).addTo(map);
+          sMarker.bindPopup(`
+            <div style="min-width: 210px;">
+              <h6 style="color:#ef4444; margin-bottom: 4px;"><i class="fas fa-hand-paper"></i> Vehicle Stoppage #${s.stop_number}</h6>
+              <b>Location:</b> ${s.address}<br>
+              <b>Halt Duration:</b> <span class="badge bg-danger text-white">${s.duration_text}</span><br>
+              <b>Timing:</b> ${s.start_time} &rarr; ${s.end_time}<br>
+              <b>Odometer:</b> ${s.odometer} km
+            </div>
+          `);
+          tripPlaybackLayers.push(sMarker);
+        });
+
+        // Populate timeline drawer & toggle button
+        const btn = document.getElementById('toggleStoppageBtn');
+        const btnText = document.getElementById('stoppageBtnText');
+        const drawerBody = document.getElementById('drawerBody');
+
+        if (tripStoppages.length > 0) {
+          if (btn) {
+            btn.style.display = 'flex';
+            if (btnText) btnText.textContent = `Stoppages (${tripStoppages.length})`;
+          }
+
+          let timelineHtml = `
+            <div class="p-2 mb-2" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 0.78rem; color:#cbd5e1;">
+              <i class="fas fa-clock text-danger mr-1"></i> Total Halts: <b>${tripStoppages.length}</b> &bull; Total Idle Time: <b>${data.total_halt_minutes} mins</b>
+            </div>
+          `;
+
+          tripStoppages.forEach(s => {
+            timelineHtml += `
+              <div class="timeline-stop-item" onclick="focusStoppage(${s.lat}, ${s.lon}, ${s.stop_number})">
+                <div class="stop-dot"></div>
+                <div class="stop-header">
+                  <span>Stop #${s.stop_number}</span>
+                  <span class="badge" style="background: rgba(239,68,68,0.2); color:#f87171; font-weight:700;">${s.duration_text}</span>
+                </div>
+                <div class="stop-addr">📍 ${s.address}</div>
+                <div class="stop-meta">
+                  <span><i class="fas fa-clock"></i> ${s.start_time} - ${s.end_time}</span>
+                  <span><i class="fas fa-tachometer-alt"></i> ${s.odometer} km</span>
+                </div>
+              </div>
+            `;
+          });
+          if (drawerBody) drawerBody.innerHTML = timelineHtml;
+        }
+
+        // Add summary pill above map if single tracking
+        const bannerContainer = document.querySelector('.px-4.pt-3');
+        if (bannerContainer && !document.getElementById('stoppageSummaryBar')) {
+          const summaryBar = document.createElement('div');
+          summaryBar.id = 'stoppageSummaryBar';
+          summaryBar.className = 'd-flex flex-wrap gap-2 align-items-center mb-2 px-3 py-2';
+          summaryBar.style.cssText = 'background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 8px; font-size: 0.82rem; color: #cbd5e1;';
+          summaryBar.innerHTML = `
+            <div><i class="fas fa-route text-success mr-1"></i> Path: <b>${data.start_time} &rarr; ${data.end_time}</b></div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-danger py-0 px-2" onclick="toggleStoppageDrawer()" style="font-size:0.75rem;"><i class="fas fa-list-ul mr-1"></i> View ${tripStoppages.length} Stoppages</button>
+              <span class="badge bg-danger text-white"><i class="fas fa-hand-paper mr-1"></i> Halts: ${tripStoppages.length} (${data.total_halt_minutes} mins)</span>
+              <span class="badge bg-primary text-white"><i class="fas fa-map-pin mr-1"></i> Points: ${coords.length}</span>
+            </div>
+          `;
+          bannerContainer.appendChild(summaryBar);
+        }
+
+        map.fitBounds(latlngs, { padding: [50, 50] });
+      })
+      .catch(err => {
+        console.error("Playback load error:", err);
+      });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     liveTrackMode = liveTrackVehicleNumber !== "";
 
     if (!liveTrackMode) populateVehicleDropdown();
+    if (liveTrackMode) loadSingleVehicleTripPlayback();
+
 
     loadVehicleData(true);
-    setInterval(() => loadVehicleData(), 5000);
+    if (!isTripClosed) {
+      setInterval(() => loadVehicleData(), 5000);
+    } else {
+      console.log("Trip is closed; live tracking interval stopped.");
+    }
 
     document.getElementById("modalStatusFilter").addEventListener("change", function () {
       currentStatusFilter = this.value;
@@ -744,7 +1636,6 @@
       bootstrap.Modal.getInstance(document.getElementById("filterModal")).hide();
     });
 
-    // Optional: Button to Exit Live Track Mode (show all vehicles again)
     if (liveTrackMode) {
       const resetBtn = document.createElement("button");
       resetBtn.textContent = "Show All Vehicles";
@@ -753,8 +1644,8 @@
       document.querySelector(".d-flex.justify-content-between").appendChild(resetBtn);
     }
   });
-
 </script>
+
 <script>
   function loadSimTrackingData() {
     const tbody = document.getElementById('sim-tracking-body');

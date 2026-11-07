@@ -478,7 +478,6 @@ urlpatterns = [
     path('get_pms_job_details/', views.get_pms_job_details, name='get_pms_job_details'),
     path('get_pms_customers_by_unit/', views.get_pms_customers_by_unit, name='get_pms_customers_by_unit'),
     path('get_pms_jobs_by_customer/', views.get_pms_jobs_by_customer, name='get_pms_jobs_by_customer'),
-    path('add_pms_vehicle/', views.add_pms_vehicle, name='add_pms_vehicle'),
     path('expense_update/<int:expense_id>', views.expense_add, name='expense_update'),  # update expense
     path('expense_delete/<int:expense_id>', views.expense_delete, name='expense_delete'),  # delete expense
     path('expense_search/', views.expense_search, name='expense_search'),  # search expense
@@ -740,6 +739,13 @@ urlpatterns = [
     # delete pk_stock_vendor
     path('pk_process_vendor_return/<int:sm_id>', views.pk_process_vendor_return, name='pk_process_vendor_return'),
     # process vendor return from stock vendor screen
+    path('load_quotation_matrix/', views.load_quotation_matrix, name='load_quotation_matrix'),
+    path('save_quotation_matrix/', views.save_quotation_matrix, name='save_quotation_matrix'),
+    path('matrix_part_code_search/', views.matrix_part_code_search, name='matrix_part_code_search'),
+    path('matrix_create_box_item/', views.matrix_create_box_item, name='matrix_create_box_item'),
+    path('box_costing_matrix/<int:na_assessment_num_id>/', views.box_costing_matrix_view, name='box_costing_matrix_view'),
+    path('box_costing_matrix/<int:na_assessment_num_id>/<int:requirement_id>/', views.box_costing_matrix_view, name='box_costing_matrix_req_view'),
+    path('box_costing_matrix/', views.box_costing_matrix_view, name='box_costing_matrix_default'),
     path('pk_quotation_list/', views.pk_quotation_list, name='pk_quotation_list'),  # List quotation
     path('pk_quotation_insert/', views.pk_quotation_add, name='pk_quotation_insert'),  # Add quotation
     path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),
@@ -748,6 +754,8 @@ urlpatterns = [
     # delete quotation
     path('pk_quotation_cancel/', views.pK_quotation_cancel, name='pk_quotation_cancel'),  # cancel quotation
     path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),
+    path('pk_quotationsummary_revise/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_revise,
+         name='pk_quotationsummary_revise'),
     path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone,
          name='pk_quotationsummary_clone'),
     path('pk_quotationsummary_clone_po/<int:purchaseorder_id>/', views.pk_quotationsummary_clone_po,
@@ -758,12 +766,13 @@ urlpatterns = [
          name='pk_quotationsummary_update'),  # update pk_quotationsummary
     path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete,
          name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
+    path('pk_quotation_job_delete/<int:pk_quotationsummary_id>/<int:req_id>/', views.pk_quotation_job_delete,
+         name='pk_quotation_job_delete'),
     path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field,
          name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
     path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges,
          name='transport_calculate_trip_charges'),  # transport_calculate_trip_charges
-    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),
-    path('iou_get_staff_by_business/', views.get_staff_by_business_iou, name='iou_get_staff_by_business'),  # iou_get_full_name
+    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),  # iou_get_full_name
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
@@ -978,6 +987,7 @@ urlpatterns = [
     path("trans_fastag_export_excel/", views.trans_fastag_export_excel, name="trans_fastag_export_excel"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
+    path("get_trip_playback_data/", views.get_trip_playback_data, name="get_trip_playback_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
     path('get_vehicle_type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
@@ -1177,6 +1187,7 @@ urlpatterns = [
     path('SMS/customer_enquiry_edit/<int:enquiry_id>/', views.customer_enquiry_edit, name='customer_enquiry_edit'),
     path('SMS/customer_enquiry_list/', views.customer_enquiry_list, name='customer_enquiry_list'),
     path('SMS/customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle'),
+    path('customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle_direct'),
     path('ajax/search-customers/', views.ajax_search_customers, name='ajax_search_customers'),
     path('ajax/search-customers-select2/', views.ajax_search_customers_select2, name='ajax_search_customers_select2'),
     path('ajax/search-places-select2/', views.ajax_search_places_select2, name='ajax_search_places_select2'),

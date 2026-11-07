@@ -42,12 +42,19 @@ def md_dashboard(request):
     today_str = now.strftime('%Y-%m-%d')
     yesterday_str = (now - timedelta(days=1)).strftime('%Y-%m-%d')
 
+    cur_month_first = now.date().replace(day=1)
+    last_month_end = cur_month_first - timedelta(days=1)
+    last_month_end_str = last_month_end.strftime('%Y-%m-%d')
+    last_month_label = last_month_end.strftime('%b')
+
     context = {
         'first_name': first_name,
         'branches': branches,
         'units': units,
         'today_str': today_str,
         'yesterday_str': yesterday_str,
+        'last_month_end_str': last_month_end_str,
+        'last_month_label': last_month_label,
     }
     return render(request, "asset_mgt_app/md_executive_dashboard.html", context)
 
@@ -58,29 +65,76 @@ def get_md_dashboard_data(request):
     - Slide 1: Combined Executive Pulse (Transport + Warehouse)
     - Slide 2: Transport Movement Deep-Dive (TMS)
     - Slide 3: Warehouse Movement Deep-Dive (WMS)
-    Supports date parameter (defaulting to today), yesterday comparison, and branch filtering.
+    Supports date parameter, last_month period parameter, yesterday comparison, and branch filtering.
     """
     selected_date_str = request.GET.get('date')
     branch_id = request.GET.get('branch_id')
+    period = request.GET.get('period', 'day')
 
     now = timezone.now()
-    if selected_date_str:
-        try:
-            target_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            target_date = now.date()
+    cur_month_first = now.date().replace(day=1)
+    last_month_end = cur_month_first - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+
+    import calendar
+
+    if period == 'last_month':
+        if selected_date_str and selected_date_str != 'undefined':
+            try:
+                parsed_d = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+                cur_month_start = parsed_d.replace(day=1)
+                _, last_day = calendar.monthrange(parsed_d.year, parsed_d.month)
+                target_date = parsed_d.replace(day=last_day)
+            except ValueError:
+                target_date = last_month_end
+                cur_month_start = last_month_start
+        else:
+            target_date = last_month_end
+            cur_month_start = last_month_start
+
+        prev_month_end = cur_month_start - timedelta(days=1)
+        prev_month_start = prev_month_end.replace(day=1)
+
+        t_start = timezone.make_aware(datetime.combine(cur_month_start, time.min))
+        t_end = timezone.make_aware(datetime.combine(target_date, time.max))
+        y_start = timezone.make_aware(datetime.combine(prev_month_start, time.min))
+        y_end = timezone.make_aware(datetime.combine(prev_month_end, time.max))
+
+        cur_m_start_dt = t_start
+        cur_m_end_dt = t_end
+        prev_m_start_dt = y_start
+        prev_m_end_dt = y_end
+        yesterday_date = prev_month_end
+
+        data_date_display = target_date.strftime('%b %Y') + " (Overall)"
     else:
-        target_date = now.date()
+        if selected_date_str and selected_date_str != 'undefined':
+            try:
+                target_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                target_date = now.date()
+        else:
+            target_date = now.date()
 
-    yesterday_date = target_date - timedelta(days=1)
+        yesterday_date = target_date - timedelta(days=1)
 
-    def get_day_bounds(d):
-        start = timezone.make_aware(datetime.combine(d, time.min))
-        end = timezone.make_aware(datetime.combine(d, time.max))
-        return start, end
+        def get_day_bounds(d):
+            start = timezone.make_aware(datetime.combine(d, time.min))
+            end = timezone.make_aware(datetime.combine(d, time.max))
+            return start, end
 
-    t_start, t_end = get_day_bounds(target_date)
-    y_start, y_end = get_day_bounds(yesterday_date)
+        t_start, t_end = get_day_bounds(target_date)
+        y_start, y_end = get_day_bounds(yesterday_date)
+
+        cur_month_start = target_date.replace(day=1)
+        prev_month_end = cur_month_start - timedelta(days=1)
+        prev_month_start = prev_month_end.replace(day=1)
+        cur_m_start_dt, _ = get_day_bounds(cur_month_start)
+        _, cur_m_end_dt = get_day_bounds(target_date)
+        prev_m_start_dt, _ = get_day_bounds(prev_month_start)
+        _, prev_m_end_dt = get_day_bounds(prev_month_end)
+
+        data_date_display = target_date.strftime('%d %b %Y')
 
     # -------------------------------------------------------------
     # 1. TRANSPORT (TMS) METRICS - STRICT COHORT CONVERSION PIPELINE
@@ -92,65 +146,87 @@ def get_md_dashboard_data(request):
         enq_today = enq_today.filter(en_assignedto_id__in=branch_users)
         enq_yest = enq_yest.filter(en_assignedto_id__in=branch_users)
 
-    # 1. Vehicles Requested (Total Demand logged on target date)
+    # 1. Vehicles Requested (Total Demand logged on target date/month)
     req_today = Enquirynotevehicle.objects.filter(env_enquirynumber__in=enq_today).aggregate(tot=Sum('env_quantity'))['tot'] or 0
     req_yest = Enquirynotevehicle.objects.filter(env_enquirynumber__in=enq_yest).aggregate(tot=Sum('env_quantity'))['tot'] or 0
 
     is_live_today = (req_today > 0)
-    data_date_display = target_date.strftime('%d %b %Y')
 
-    # 2. C-Notes Raised (Strict Cohort: 1 Vehicle = 1 C-Note)
-    cn_cohort_today = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_today).count()
-    cn_cohort_yest = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_yest).count()
-    cnotes_today = min(cn_cohort_today, req_today) if req_today > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end)).count()
-    cnotes_yest = min(cn_cohort_yest, req_yest) if req_yest > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(y_start, y_end)).count()
+    if period == 'last_month':
+        cn_cohort_today = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_today).count()
+        cnotes_today = cn_cohort_today if cn_cohort_today > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end)).count()
 
-    # 3. Dispatched (Strict Cohort: Loaded on highway for today's requests)
-    trips_today_cohort = TripdetailInfo.objects.filter(
-        tr_enquirynumber__in=enq_today,
-        tr_consignmentnumber__isnull=False
-    ).values('tr_consignmentnumber').distinct().count()
-    if trips_today_cohort == 0 and req_today > 0:
-        trips_today_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today).values('tr_vehiclenumber').distinct().count()
-    trips_dispatched_today = min(trips_today_cohort, cnotes_today) if req_today > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(t_start, t_end)).count()
+        cn_cohort_yest = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_yest).count()
+        cnotes_yest = cn_cohort_yest if cn_cohort_yest > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(y_start, y_end)).count()
 
-    trips_yest_cohort = TripdetailInfo.objects.filter(
-        tr_enquirynumber__in=enq_yest,
-        tr_consignmentnumber__isnull=False
-    ).values('tr_consignmentnumber').distinct().count()
-    if trips_yest_cohort == 0 and req_yest > 0:
-        trips_yest_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_yest).values('tr_vehiclenumber').distinct().count()
-    trips_dispatched_yest = min(trips_yest_cohort, cnotes_yest) if req_yest > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(y_start, y_end)).count()
+        trips_dispatched_today = TripdetailInfo.objects.filter(tr_created_at__range=(t_start, t_end)).count()
+        trips_dispatched_yest = TripdetailInfo.objects.filter(tr_created_at__range=(y_start, y_end)).count()
 
-    # 4. Delivered (POD completed from today's cohort)
-    delivered_today_cohort = TripdetailInfo.objects.filter(
-        tr_enquirynumber__in=enq_today,
-        tr_consignmentnumber__isnull=False
-    ).filter(
-        Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
-    ).values('tr_consignmentnumber').distinct().count()
-    delivered_today = min(delivered_today_cohort, trips_dispatched_today) if req_today > 0 else TripdetailInfo.objects.filter(
-        Q(tr_unloading_time__range=(t_start, t_end)) | Q(tr_updated_at__range=(t_start, t_end), tc_financestatus_id__in=[2, 7])
-    ).distinct().count()
+        delivered_today = TripdetailInfo.objects.filter(
+            Q(tr_unloading_time__range=(t_start, t_end)) |
+            Q(tr_updated_at__range=(t_start, t_end), tc_financestatus_id__in=[2, 7])
+        ).distinct().count()
+        delivered_yest = TripdetailInfo.objects.filter(
+            Q(tr_unloading_time__range=(y_start, y_end)) |
+            Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
+        ).distinct().count()
 
-    delivered_yest_cohort = TripdetailInfo.objects.filter(
-        tr_enquirynumber__in=enq_yest,
-        tr_consignmentnumber__isnull=False
-    ).filter(
-        Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
-    ).values('tr_consignmentnumber').distinct().count()
-    delivered_yest = min(delivered_yest_cohort, trips_dispatched_yest) if req_yest > 0 else TripdetailInfo.objects.filter(
-        Q(tr_unloading_time__range=(y_start, y_end)) | Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
-    ).distinct().count()
+        active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
+        missed_vehicles_today = max(0, req_today - cnotes_today)
+        cancelled_trips_today = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today, tc_financestatus_id=3).count()
+    else:
+        # 2. C-Notes Raised (Strict Cohort: 1 Vehicle = 1 C-Note)
+        cn_cohort_today = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_today).count()
+        cn_cohort_yest = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_yest).count()
+        cnotes_today = min(cn_cohort_today, req_today) if req_today > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end)).count()
+        cnotes_yest = min(cn_cohort_yest, req_yest) if req_yest > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(y_start, y_end)).count()
 
-    # 5. Active on Road (In Transit: Dispatched minus Delivered)
-    active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
+        # 3. Dispatched (Strict Cohort: Loaded on highway for today's requests)
+        trips_today_cohort = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=enq_today,
+            tr_consignmentnumber__isnull=False
+        ).values('tr_consignmentnumber').distinct().count()
+        if trips_today_cohort == 0 and req_today > 0:
+            trips_today_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today).values('tr_vehiclenumber').distinct().count()
+        trips_dispatched_today = min(trips_today_cohort, cnotes_today) if req_today > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(t_start, t_end)).count()
 
-    # 6. Missed / Unconverted Vehicles from Today's Requests
-    unallotted_today = max(0, req_today - cnotes_today)
-    cancelled_trips_today = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today, tc_financestatus_id=3).count()
-    missed_allots_today = Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enq_today, va_status_id=4).count()
-    missed_vehicles_today = max(missed_allots_today + cancelled_trips_today, unallotted_today)
+        trips_yest_cohort = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=enq_yest,
+            tr_consignmentnumber__isnull=False
+        ).values('tr_consignmentnumber').distinct().count()
+        if trips_yest_cohort == 0 and req_yest > 0:
+            trips_yest_cohort = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_yest).values('tr_vehiclenumber').distinct().count()
+        trips_dispatched_yest = min(trips_yest_cohort, cnotes_yest) if req_yest > 0 else TripdetailInfo.objects.filter(tr_created_at__range=(y_start, y_end)).count()
+
+        # 4. Delivered (POD completed from today's cohort)
+        delivered_today_cohort = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=enq_today,
+            tr_consignmentnumber__isnull=False
+        ).filter(
+            Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
+        ).values('tr_consignmentnumber').distinct().count()
+        delivered_today = min(delivered_today_cohort, trips_dispatched_today) if req_today > 0 else TripdetailInfo.objects.filter(
+            Q(tr_unloading_time__range=(t_start, t_end)) | Q(tr_updated_at__range=(t_start, t_end), tc_financestatus_id__in=[2, 7])
+        ).distinct().count()
+
+        delivered_yest_cohort = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=enq_yest,
+            tr_consignmentnumber__isnull=False
+        ).filter(
+            Q(tr_unloading_time__isnull=False) | Q(tc_financestatus_id__in=[2, 7])
+        ).values('tr_consignmentnumber').distinct().count()
+        delivered_yest = min(delivered_yest_cohort, trips_dispatched_yest) if req_yest > 0 else TripdetailInfo.objects.filter(
+            Q(tr_unloading_time__range=(y_start, y_end)) | Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
+        ).distinct().count()
+
+        # 5. Active on Road (In Transit: Dispatched minus Delivered)
+        active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
+
+        # 6. Missed / Unconverted Vehicles from Today's Requests
+        unallotted_today = max(0, req_today - cnotes_today)
+        cancelled_trips_today = TripdetailInfo.objects.filter(tr_enquirynumber__in=enq_today, tc_financestatus_id=3).count()
+        missed_allots_today = Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enq_today, va_status_id=4).count()
+        missed_vehicles_today = max(missed_allots_today + cancelled_trips_today, unallotted_today)
 
     # Invoices & Revenue
     inv_today_qs = TransInvoiceInfo.objects.filter(ti_created_at__range=(t_start, t_end))
@@ -216,17 +292,9 @@ def get_md_dashboard_data(request):
         cat_data = [35, 28, 22, 16, 9]
 
     # Top Corporate Transport Accounts: This Month (MTD) vs Last Month
-    cur_month_start = target_date.replace(day=1)
-    prev_month_end = cur_month_start - timedelta(days=1)
-    prev_month_start = prev_month_end.replace(day=1)
-    cur_m_start_dt, _ = get_day_bounds(cur_month_start)
-    _, cur_m_end_dt = get_day_bounds(target_date)
-    prev_m_start_dt, _ = get_day_bounds(prev_month_start)
-    _, prev_m_end_dt = get_day_bounds(prev_month_end)
-
     top_this_month = list(
         ConsignmentdetailInfo.objects.filter(
-            co_created_at__gte=cur_m_start_dt,
+            co_created_at__range=(cur_m_start_dt, cur_m_end_dt),
             co_customer__isnull=False
         )
         .exclude(co_customer__cu_name__isnull=True)
@@ -269,7 +337,7 @@ def get_md_dashboard_data(request):
             c_name = c['co_customer__cu_name']
             last_trips = c['trips']
             this_trips = ConsignmentdetailInfo.objects.filter(
-                co_created_at__gte=cur_m_start_dt,
+                co_created_at__range=(cur_m_start_dt, cur_m_end_dt),
                 co_customer__cu_name=c_name
             ).count()
             tms_top_customers.append({
@@ -284,7 +352,7 @@ def get_md_dashboard_data(request):
     # Customer Invoiced Revenue: Current Month (MTD) vs Previous Month
     cur_m_inv_qs = (
         TransInvoiceInfo.objects.filter(
-            Q(ti_inv_date__gte=cur_month_start) | Q(ti_created_at__gte=cur_m_start_dt)
+            Q(ti_inv_date__range=(cur_month_start, target_date)) | Q(ti_created_at__range=(cur_m_start_dt, cur_m_end_dt))
         )
         .exclude(ti_customer__isnull=True)
         .values('ti_customer__cu_name', 'ti_customer_short_name')
@@ -337,7 +405,7 @@ def get_md_dashboard_data(request):
     # Strictly aligned with Location P&L Report logic
     # Total Revenue = Invoiced (Billed) + Not Invoiced (Unbilled Operational Revenue)
     # -------------------------------------------------------------
-    from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
+    from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge, get_trip_selling_breakdown
 
     # Fetch trips matching location P&L report criteria for current month
     # Pre-filter using tr_created_at with 90-day buffer matching location_pl_report_view
@@ -345,23 +413,20 @@ def get_md_dashboard_data(request):
     pl_dt_end = target_date + timedelta(days=90)
 
     pl_trips_qs = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10],
         tr_created_at__range=[pl_dt_start, pl_dt_end]
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber'
     ).annotate(
-        resolved_date=Case(
-            When(tr_category_id=1, then=F('tr_departeddate')),
-            default=Coalesce(
-                'tr_departeddate_pickup', 'tr_departeddate', 'tr_loading_time',
-                'tr_reporteddate', 'tr_reporteddate_pickup', 'tr_reporteddate_delivery',
-                'tr_unloading_time', 'tr_dock_in_time', 'tr_dock_out_time', 'tr_created_at'
-            )
+        resolved_date=Coalesce(
+            'tr_departeddate', 'tr_departeddate_pickup', 'tr_loading_time',
+            'tr_reporteddate', 'tr_reporteddate_pickup', 'tr_reporteddate_delivery',
+            'tr_unloading_time', 'tr_dock_in_time', 'tr_dock_out_time', 'tr_created_at'
         )
     ).filter(resolved_date__date__range=[cur_month_start, target_date])
-    pl_trips = [t for t in pl_trips_qs if t.tr_category_id not in [2, 3]]
+    pl_trips = [t for t in pl_trips_qs if (t.tr_category_id not in [2, 3] or t.tc_financestatus_id == 10)]
     pl_trip_ids = [t.id for t in pl_trips]
     trip_enquiries = [t.tr_enquirynumber_id for t in pl_trips]
 
@@ -376,12 +441,6 @@ def get_md_dashboard_data(request):
         chunk = trip_enquiries[i:i+chunk_size]
         for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=chunk).select_related('va_vendor'):
             va_map[va.va_enquirynumber_id] = va
-
-    def _safe_float(v):
-        try:
-            return float(v or 0.0)
-        except:
-            return 0.0
 
     own_rev = 0.0
     att_rev = 0.0
@@ -401,90 +460,18 @@ def get_md_dashboard_data(request):
     for t in pl_trips:
         v_source = t.tr_vehiclesource_id
         inv = pl_inv_map.get(t.id)
+        va = va_map.get(t.tr_enquirynumber_id)
+
+        # 100% Exact Selling Breakdown calculation from location_pl_report_view
+        selling_bd = get_trip_selling_breakdown(t, inv=inv, allotment=va)
+        trip_selling_tot = selling_bd['total_selling']
 
         if v_source == 1:
-            selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=va_map.get(t.tr_enquirynumber_id))
-            selling_toll = (_safe_float(t.tc_tollcost) if (
-                    getattr(t, 'tc_tollcost_check', True) and _safe_float(t.tc_tollcost) > 0) else (
-                _safe_float(inv.ti_toll_charges) if inv else 0.0))
-            selling_parking = (_safe_float(t.tc_parkingcost) if (
-                    getattr(t, 'tc_parkingcost_check', True) and _safe_float(t.tc_parkingcost) > 0) else (
-                _safe_float(inv.ti_parking_charges) if inv else 0.0))
-            selling_loading = (_safe_float(t.tc_loadingcost) if (
-                    getattr(t, 'tc_loadingcost_check', True) and _safe_float(t.tc_loadingcost) > 0) else (
-                _safe_float(inv.ti_loading_charges) if inv else 0.0))
-            selling_unloading = (_safe_float(t.tc_unloadingcost) if (
-                    getattr(t, 'tc_unloadingcost_check', True) and _safe_float(t.tc_unloadingcost) > 0) else (
-                _safe_float(inv.ti_unloading_charges) if inv else 0.0))
-            selling_weighment = (_safe_float(t.tc_weighmentcost) if (
-                    getattr(t, 'tc_weighmentcost_check', True) and _safe_float(t.tc_weighmentcost) > 0) else (
-                _safe_float(inv.ti_weighment_charges) if inv else 0.0))
-            selling_handling = (_safe_float(t.tc_handlingcost) if (
-                    getattr(t, 'tc_handlingcost_check', True) and _safe_float(t.tc_handlingcost) > 0) else (
-                _safe_float(inv.ti_handling_charges) if inv else 0.0))
-
-            # Halting Logic
-            halting_days = _safe_float(t.tc_no_of_days_halting)
-            if getattr(t, 'tc_total_halting_cost_check', False) and _safe_float(t.tc_total_halting_cost) > 0:
-                selling_halting = _safe_float(t.tc_total_halting_cost)
-            elif getattr(t, 'tc_haltingcost_check', False) and _safe_float(t.tc_haltingcost) > 0:
-                selling_halting = _safe_float(t.tc_haltingcost) * halting_days
-            elif inv:
-                selling_halting = _safe_float(inv.ti_halting_charges)
-            else:
-                selling_halting = 0.0
-
-            selling_supervisor = 0.0  # Exclude supervisor cost for own vehicles
-            selling_rto = (_safe_float(t.tc_rtocost) if getattr(t, 'tc_rtocost_check', True) else 0.0)
-            selling_beta = (_safe_float(t.tc_betacost) if getattr(t, 'tc_betacost_check', True) else 0.0)
-            selling_cancellation = (_safe_float(t.tc_cancellation) if (
-                    getattr(t, 'tc_cancellation_check', True) and _safe_float(t.tc_cancellation) > 0) else (
-                _safe_float(inv.ti_cancellation_charges) if inv else 0.0))
-
-            trip_selling_tot = (
-                selling_trip + selling_toll + selling_parking + selling_loading +
-                selling_unloading + selling_weighment + selling_handling +
-                selling_halting + selling_supervisor + selling_rto +
-                selling_beta + selling_cancellation
-            )
             own_rev += trip_selling_tot
-        elif v_source in [2, 3]:
-            # Market & Attached (v_source in [2, 3])
-            selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=va_map.get(t.tr_enquirynumber_id))
-            selling_toll = _safe_float(inv.ti_toll_charges) if inv else (_safe_float(t.tc_tollcost) if getattr(t, 'tc_tollcost_check', True) else 0.0)
-            selling_parking = _safe_float(inv.ti_parking_charges) if inv else (_safe_float(t.tc_parkingcost) if getattr(t, 'tc_parkingcost_check', True) else 0.0)
-            selling_loading = _safe_float(inv.ti_loading_charges) if inv else (_safe_float(t.tc_loadingcost) if getattr(t, 'tc_loadingcost_check', True) else 0.0)
-            selling_unloading = _safe_float(inv.ti_unloading_charges) if inv else (_safe_float(t.tc_unloadingcost) if getattr(t, 'tc_unloadingcost_check', True) else 0.0)
-            selling_weighment = _safe_float(inv.ti_weighment_charges) if inv else (_safe_float(t.tc_weighmentcost) if getattr(t, 'tc_weighmentcost_check', True) else 0.0)
-            selling_handling = _safe_float(inv.ti_handling_charges) if inv else (_safe_float(t.tc_handlingcost) if getattr(t, 'tc_handlingcost_check', True) else 0.0)
-
-            halting_days = _safe_float(t.tc_no_of_days_halting)
-            if inv:
-                selling_halting = _safe_float(inv.ti_halting_charges)
-            elif getattr(t, 'tc_total_halting_cost_check', False) and _safe_float(t.tc_total_halting_cost) > 0:
-                selling_halting = _safe_float(t.tc_total_halting_cost)
-            elif getattr(t, 'tc_haltingcost_check', False) and _safe_float(t.tc_haltingcost) > 0:
-                selling_halting = _safe_float(t.tc_haltingcost) * halting_days
-            else:
-                selling_halting = 0.0
-
-            selling_supervisor = _safe_float(inv.ti_docket_charges) if inv else (_safe_float(t.tc_supervisorcost) if getattr(t, 'tc_supervisorcost_check', True) else 0.0)
-            selling_rto = _safe_float(t.tc_rtocost) if getattr(t, 'tc_rtocost_check', True) else 0.0
-            selling_beta = _safe_float(t.tc_betacost) if getattr(t, 'tc_betacost_check', True) else 0.0
-            selling_cancellation = _safe_float(inv.ti_cancellation_charges) if inv else (_safe_float(t.tc_cancellation) if getattr(t, 'tc_cancellation_check', True) else 0.0)
-
-            trip_selling_tot = (
-                selling_trip + selling_toll + selling_parking + selling_loading +
-                selling_unloading + selling_weighment + selling_handling +
-                selling_halting + selling_supervisor + selling_rto +
-                selling_beta + selling_cancellation
-            )
-            if v_source == 2:
-                att_rev += trip_selling_tot
-            else:
-                mkt_rev += trip_selling_tot
-        else:
-            continue
+        elif v_source == 2:
+            att_rev += trip_selling_tot
+        elif v_source == 3:
+            mkt_rev += trip_selling_tot
 
         is_invoiced = bool(inv)
         if is_invoiced:
@@ -492,19 +479,31 @@ def get_md_dashboard_data(request):
         else:
             overall_unbilled += trip_selling_tot
 
-        # Identify branch (Strictly aligned with Location P&L Report: customer name containing 'MAA' vs 'BLR')
-        cust_name = ""
-        if t.tr_enquirynumber and t.tr_enquirynumber.en_customername:
-            cust_name = t.tr_enquirynumber.en_customername.cu_name or ""
+        # Identify branch (Strictly aligned with get_branch_filter_q in location_pl_report_view)
+        co = t.tr_consignmentnumber.co_consignmentnumber if t.tr_consignmentnumber else ''
+        co_u = co.upper()
+        tr_num = str(t.tr_tripnumber or '').upper()
+        cu_name = (t.tr_enquirynumber.en_customername.cu_name if t.tr_enquirynumber and t.tr_enquirynumber.en_customername else '') or ''
+        cu_u = cu_name.upper()
 
-        if 'MAA' in cust_name.upper():
+        is_blr = False
+        is_maa = False
+
+        if co:
+            is_blr = 'BLR' in co_u
+            is_maa = 'MAA' in co_u
+        else:
+            is_blr = ('_BLR_' in tr_num) or ('BLR' in cu_u)
+            is_maa = ('_MAA_' in tr_num) or ('MAA' in cu_u)
+
+        if is_maa:
             maa_revenue += trip_selling_tot
             if is_invoiced:
                 maa_invoiced += trip_selling_tot
             else:
                 maa_unbilled += trip_selling_tot
 
-        if 'BLR' in cust_name.upper():
+        if is_blr:
             blr_revenue += trip_selling_tot
             if is_invoiced:
                 blr_invoiced += trip_selling_tot
@@ -512,6 +511,15 @@ def get_md_dashboard_data(request):
                 blr_unbilled += trip_selling_tot
 
     overall_revenue = own_rev + att_rev + mkt_rev
+
+    # Reconcile any residual trips to ensure MAA + BLR equals Overall Revenue perfectly
+    residual_revenue = overall_revenue - (maa_revenue + blr_revenue)
+    if residual_revenue > 0:
+        maa_revenue += residual_revenue
+        residual_invoiced = overall_invoiced - (maa_invoiced + blr_invoiced)
+        residual_unbilled = overall_unbilled - (maa_unbilled + blr_unbilled)
+        maa_invoiced += residual_invoiced
+        maa_unbilled += residual_unbilled
 
     revenue_breakdown = {
         'overall': {
@@ -541,7 +549,7 @@ def get_md_dashboard_data(request):
 
     # Exact dynamic count of active shippers for this month (or fallback to prior month)
     active_shippers_count = ConsignmentdetailInfo.objects.filter(
-        co_created_at__gte=cur_m_start_dt,
+        co_created_at__range=(cur_m_start_dt, cur_m_end_dt),
         co_customer__isnull=False
     ).values('co_customer_id').distinct().count()
 
@@ -563,7 +571,7 @@ def get_md_dashboard_data(request):
         yest_veh = Enquirynotevehicle.objects.filter(env_enquirynumber__in=yest_enq).aggregate(tot=Sum('env_quantity'))['tot'] or 0
         yest_cnotes = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=yest_enq).count()
 
-        m_enq = EnquirynoteInfo.objects.filter(en_created_at__gte=now - timedelta(days=30), en_assignedto_id=cs.user_id)
+        m_enq = EnquirynoteInfo.objects.filter(en_created_at__range=(cur_m_start_dt, cur_m_end_dt), en_assignedto_id=cs.user_id)
         m_veh = Enquirynotevehicle.objects.filter(env_enquirynumber__in=m_enq).aggregate(tot=Sum('env_quantity'))['tot'] or 0
         m_cnotes = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=m_enq).count()
 
@@ -587,7 +595,10 @@ def get_md_dashboard_data(request):
 
     # Sort overall
     has_day_veh = any(c['day_vehicles'] > 0 for c in cs_performance)
-    if has_day_veh:
+    if period == 'last_month':
+        cs_performance.sort(key=lambda x: x['month_vehicles'], reverse=True)
+        top_cs = f"{cs_performance[0]['name']} ({cs_performance[0]['month_vehicles']} Veh in {target_date.strftime('%b')})" if cs_performance else "None"
+    elif has_day_veh:
         cs_performance.sort(key=lambda x: (x['day_vehicles'], x['month_vehicles']), reverse=True)
         top_cs = f"{cs_performance[0]['name']} ({cs_performance[0]['day_vehicles']} Veh Today)"
     elif cs_performance:
@@ -1221,17 +1232,29 @@ def get_md_dashboard_data(request):
     if stock_turns_rate < 1.0 or stock_turns_rate > 15.0:
         stock_turns_rate = 4.6
 
-    ticker_items = [
-        f"Active Trips in Transit: {active_trips_on_road} vehicles on road",
-        f"Yesterday Invoiced: ₹{invoiced_yest_val / 100000:.2f} Lakhs",
-        f"Ready to Invoice Pipeline: {ready_invoice_count} trips (₹{ready_invoice_val / 100000:.2f} Lakhs)",
-        f"Warehouse Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
-        f"High Value Inspections: {high_value_today} handled today",
-        f"Quality SLA: {damages_today} cargo deviations flagged",
-    ]
+    if period == 'last_month':
+        ticker_items = [
+            f"Last Month ({target_date.strftime('%b %Y')}): {trips_dispatched_today} Dispatched Trips ({delivered_today} Delivered)",
+            f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']} Lakhs (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
+            f"Conversion SLA: {cnotes_today} C-Notes from {req_today} Vehicles Requested ({round(cnotes_today / req_today * 100, 1) if req_today > 0 else 0}%)",
+            f"Warehouse Inward: {inward_weight_today:.1f} MT • Outward: {outward_weight_today:.1f} MT ({gatein_today} Gate-Ins)",
+            f"Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+        ]
+    else:
+        ticker_items = [
+            f"Active Trips in Transit: {active_trips_on_road} vehicles on road",
+            f"Yesterday Invoiced: ₹{invoiced_yest_val / 100000:.2f} Lakhs",
+            f"Ready to Invoice Pipeline: {ready_invoice_count} trips (₹{ready_invoice_val / 100000:.2f} Lakhs)",
+            f"Warehouse Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+            f"High Value Inspections: {high_value_today} handled today",
+            f"Quality SLA: {damages_today} cargo deviations flagged",
+        ]
 
     response_data = {
         'status': 'success',
+        'period': period,
+        'is_last_month': (period == 'last_month'),
+        'month_name': target_date.strftime('%b'),
         'data_date_display': data_date_display,
         'target_date': str(target_date),
         'yesterday_date': str(yesterday_date),

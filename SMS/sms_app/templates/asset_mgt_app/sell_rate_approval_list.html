@@ -37,8 +37,8 @@
                         <td>{{ va.va_enquirynumber.en_enquirynumber }}</td>
                         <td>{% if va.va_vehiclenumber %}{{ va.va_vehiclenumber.vm_registrationnumber }}{% else %}{{ va.va_vehiclenumber_mkt }}{% endif %}</td>
                         <td>{{ va.va_enquirynumber.en_customername.cu_name|default:"-" }}</td>
-                        <td>₹{{ va.va_sale|default:"0.00" }}</td>
-                        <td>₹{{ va.va_special_sale|default:"0.00" }}</td>
+                        <td>₹{{ va.va_sale|floatformat:2|default:"0.00" }}</td>
+                        <td>₹{{ va.va_special_sale|floatformat:2|default:"0.00" }}</td>
                         <td>{{ va.va_enquirynumber.en_fromlocaion.place_name|default:"-" }}</td>
                         <td>{{ va.va_enquirynumber.en_tolocation.place_name|default:"-" }}</td>
 

@@ -1252,7 +1252,7 @@
             <div style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 4px;">
                 <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Today</button>
                 <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Yesterday</button>
-                <button id="btn-date-active" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;" title="View last major operational day (08 Oct 2026)">08 Oct</button>
+                <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
                 <input type="date" id="date-picker-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.72rem; border-radius: 4px; padding: 2px 5px; outline: none; cursor: pointer; color-scheme: dark;">
             </div>
 
@@ -1299,7 +1299,7 @@
                             <i class="fas fa-truck-fast"></i>
                         </div>
                         <div class="dash-card card-bg-revenue">
-                            <div class="dash-kpi-label">Total Revenue (MTD)</div>
+                            <div class="dash-kpi-label" id="macro-rev-label">Total Revenue (MTD)</div>
                             <div class="dash-kpi-value" id="macro-revenue-val">₹0.0 L</div>
                             <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="macro-revenue-sub">Billed: ₹0.0L • Unbilled: ₹0.0L</div>
                             <i class="fas fa-sack-dollar"></i>
@@ -1315,7 +1315,7 @@
                     <!-- Right: 3 Warehouse Macro Cards (Directly Above WMS Column) -->
                     <div class="dash-kpi-row" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
                         <div class="dash-card card-bg-demand">
-                            <div class="dash-kpi-label">Freight Moved Today</div>
+                            <div class="dash-kpi-label" id="macro-freight-label">Freight Moved Today</div>
                             <div class="dash-kpi-value" id="macro-freight-mt">0.0 MT</div>
                             <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);"><i class="fas fa-arrow-up"></i> Throughput (In + Out)</div>
                             <i class="fas fa-dolly"></i>
@@ -1539,7 +1539,7 @@
                             <!-- Mini KPI Row for Warehouse (dashboard.css colors) -->
                             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px;">
                                 <div class="dash-card card-cnote" style="min-height:54px; padding:4px 8px;">
-                                    <div class="dash-kpi-label">Gate-In</div>
+                                    <div class="dash-kpi-label" id="s1-wh-gatein-lbl">Gate-In</div>
                                     <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-gatein">0</div>
                                     <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-gatein-yest">Y'day: 0</div>
                                 </div>
@@ -3075,34 +3075,40 @@
 
             // Date mode controls
             let activeDateValue = todayStr;
+            let activePeriod = 'day';
+            const lastMonthEndStr = '{{ last_month_end_str|default:"2026-10-31" }}';
 
             $('#btn-date-today').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
                 $(this).addClass('active');
                 activeDateValue = todayStr;
+                activePeriod = 'day';
                 $('#date-picker-input').val(todayStr);
                 loadDashboardData();
             });
 
             $('#btn-date-yest').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
                 $(this).addClass('active');
                 activeDateValue = yesterdayStr;
+                activePeriod = 'day';
                 $('#date-picker-input').val(yesterdayStr);
                 loadDashboardData();
             });
 
-            $('#btn-date-active').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+            $('#btn-date-lastmonth, #btn-date-active').on('click', function() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
                 $(this).addClass('active');
-                activeDateValue = '2026-10-08';
-                $('#date-picker-input').val('2026-10-08');
+                activeDateValue = lastMonthEndStr;
+                activePeriod = 'last_month';
+                $('#date-picker-input').val(lastMonthEndStr);
                 loadDashboardData();
             });
 
             $('#date-picker-input').on('change', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-active').removeClass('active');
+                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
                 activeDateValue = $(this).val();
+                activePeriod = 'day';
                 loadDashboardData();
             });
 
@@ -3126,6 +3132,7 @@
                     type: "GET",
                     data: {
                         date: selectedDate,
+                        period: activePeriod,
                         branch_id: 'all'
                     },
                     success: function(res) {
@@ -3144,8 +3151,21 @@
                 const tms = data.transport;
                 const wms = data.warehouse;
 
-                // Update live status badge
-                $('#live-status-text').text('LIVE (' + data.data_date_display + ')');
+                // Update live status badge & labels
+                if (data.is_last_month) {
+                    $('#live-status-text').html('<i class="fas fa-calendar-check" style="color:#36d1ff;"></i> LAST MONTH (' + data.data_date_display + ')');
+                    $('#macro-rev-label').text('Total Revenue (' + (data.month_name || 'Last Month') + ')');
+                    $('#macro-freight-label').text('Freight Moved (' + (data.month_name || 'Last Month') + ')');
+                    $('#s1-wh-gatein-lbl').text('Gate-In (' + (data.month_name || 'Last Month') + ')');
+                    if (wms.gatein_yest !== undefined) {
+                        $('#s1-wh-gatein-yest').text("Prev Mo: " + wms.gatein_yest);
+                    }
+                } else {
+                    $('#live-status-text').text('LIVE (' + data.data_date_display + ')');
+                    $('#macro-rev-label').text('Total Revenue (MTD)');
+                    $('#macro-freight-label').text('Freight Moved Today');
+                    $('#s1-wh-gatein-lbl').text('Gate-In');
+                }
 
                 // 1. Ticker
                 if (macro.ticker_text) {
