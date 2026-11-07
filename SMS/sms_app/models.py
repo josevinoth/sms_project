@@ -51,7 +51,7 @@ from .sub_models.product_info_mod import Product_info
 from .sub_models.my_user_mod import MyUser
 from .sub_models.comments_mod import commentsInfo
 from .sub_models.pk_stock_purchase_type_mod import Pkstockpurchasetype
-from .sub_models.vendor_info_mod import Vendor_info
+from .sub_models.vendor_info_mod import Vendor_info, VendorAttachmentInfo
 from .sub_models.insurance_info_mod import Insurance_Info
 from .sub_models.asset_info_mod import AssetInfo
 from .sub_models.service_info_mod import Service_Info

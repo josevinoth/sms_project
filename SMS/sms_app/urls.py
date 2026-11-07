@@ -77,6 +77,7 @@ urlpatterns = [
     path('vendor_insert', views.vendor_add, name='vendor_insert'),  # Add vendor
     path('vendor_update/<int:vendor_id>/', views.vendor_add, name='vendor_update'),  # Update Vendor
     path('vendor_delete/<int:vendor_id>/', views.vendor_delete, name='vendor_delete'),  # Delete Vendor
+    path('vendor_attachment_delete/<int:attachment_id>/', views.vendor_attachment_delete, name='vendor_attachment_delete'),  # Delete Vendor Attachment
     path('location_list/', views.location_list, name='location_list'),  # List location,
     path('location_insert', views.location_add, name='location_insert'),  # Add location
     path('location_update/<int:location_id>/', views.location_add, name='location_update'),  # Update location

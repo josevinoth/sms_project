@@ -26,6 +26,8 @@ class AttachedBillInfo(models.Model):
     ab_non_movement_days = models.IntegerField(default=0, verbose_name="Non Movement Days")
     ab_trips_not_allotted = models.IntegerField(default=0)
     ab_leave_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    ab_sunday_leave = models.IntegerField(default=0, null=True, blank=True, verbose_name="No. of Sunday Leave")
+    ab_sunday_leave_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Sunday Leave Amount")
     ab_toll_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_agreed_km = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_total_km_run = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)

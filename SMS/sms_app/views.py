@@ -25,7 +25,7 @@ from .sub_views.stock_add_view import stock_add,stock_list,stock_delete
 from .sub_views.user_add_view import user_add,user_list,user_delete
 from .sub_views.user_approval_view import user_approval_list, user_approve, user_reject
 from .sub_views.user_control_view import (user_control_view,user_control_get_user_pages,user_control_toggle_page,user_control_bulk_save,user_control_save_permissions,user_control_copy_access,)
-from .sub_views.vendor_add_view import vendor_add,vendor_list,vendor_delete
+from .sub_views.vendor_add_view import vendor_add,vendor_list,vendor_delete,vendor_attachment_delete
 from .sub_views.country_add_view import country_list,country_delete,country_add
 from .sub_views.state_add_view import state_list,state_delete,state_add
 from .sub_views.city_add_view import city_add,city_list,city_delete

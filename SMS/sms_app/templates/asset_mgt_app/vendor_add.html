@@ -1,194 +1,443 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
 
-<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
+<form method="POST" id="vendor_add" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="container-fluid">
+        <!-- Modern Header (Matching WMS Petty Cash / TMS) -->
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+                <i class="fas fa-truck-loading mr-2"></i> Add/Update Vendor
+            </h3>
+            <div>
+                <a href="{% url 'vendor_list' %}" class="btn btn-highlight" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> BACK
+                </a>
+            </div>
+        </div>
+        
+        <div class="modern-card" style="border-top:none; padding: 1rem !important;">
+            <div class="row">
 
-	<!--{{form.as_p}}-->
+                <!-- ========== COLUMN 1: GENERAL INFO ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
 
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Vendor</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" id="">Name</span>
-									</div>
-									{% render_field form.vend_name class="form-control" style="text-transform: uppercase;" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Description</span>
-									</div>
-									{% render_field form.vend_description class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Vendor Code</span>
-									</div>
-									{% render_field form.vend_code class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Contact Person</span>
-									</div>
-									{% render_field form.vend_contact_per class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Contact #</span>
-									</div>
-									{% render_field form.vend_contact class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Designation</span>
-									</div>
-									{% render_field form.vend_designation class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Email</span>
-									</div>
-									{% render_field form.vend_email class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GSTIN Number</span>
-									</div>
-									{% render_field form.vend_gstin class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">PAN Number</span>
-									</div>
-									{% render_field form.vend_pan class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Branch</span>
-									</div>
-									{% render_field form.vend_branch class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Service Type</span>
-									</div>
-									{% render_field form.vend_service_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Start Date</span>
-									</div>
-									{% render_field form.vend_start_date id="vend_start_date" type="date" onchange="remaining_days_calc()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Expiry Date</span>
-									</div>
-									{% render_field form.vend_expiry_date id="vend_expiry_date" type="date" onchange="remaining_days_calc()" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Days Remaining</span>
-									</div>
-									{% render_field form.vend_days_remaining id="vend_validity_remaining" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.vend_status class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Agreement</span>
-									</div>
-									{% render_field form.vend_attachment class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-						</div>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Address</span>
-							</div>
-							{% render_field form.vend_address class+="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Remarks</span>
-							</div>
-							{% render_field form.vend_remarks class+="form-control" %}
-						</div>
-						{% render_field form.vend_updated_by id="vend_updated_by" hidden="True" class="form-control" %}
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'vendor_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vendor Name</label>
+                            {% render_field form.vend_name class="form-control form-control-modern" style="text-transform: uppercase;" placeholder="Enter vendor name" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Description</label>
+                            {% render_field form.vend_description class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vendor Code</label>
+                            {% render_field form.vend_code class="form-control form-control-modern" placeholder="e.g. VND-001" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Contact Person</label>
+                            {% render_field form.vend_contact_per class="form-control form-control-modern" placeholder="Contact person name" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Contact #</label>
+                            {% render_field form.vend_contact class="form-control form-control-modern" placeholder="10-digit phone" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 2: CONTACT & TAX INFO ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-address-card"></i> CONTACT & TAX INFO</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Designation</label>
+                            {% render_field form.vend_designation class="form-control form-control-modern" placeholder="e.g. Manager / Director" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Email</label>
+                            {% render_field form.vend_email class="form-control form-control-modern" placeholder="vendor@example.com" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GSTIN Number</label>
+                            {% render_field form.vend_gstin class="form-control form-control-modern" placeholder="15-digit GSTIN" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PAN Number</label>
+                            {% render_field form.vend_pan class="form-control form-control-modern" placeholder="10-digit PAN" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Branch</label>
+                            {% render_field form.vend_branch class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3: SERVICE & CONTRACT ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-handshake"></i> SERVICE & CONTRACT</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Service Type</label>
+                            {% render_field form.vend_service_type class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Start Date</label>
+                            {% render_field form.vend_start_date id="vend_start_date" type="date" onchange="remaining_days_calc()" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expiry Date</label>
+                            {% render_field form.vend_expiry_date id="vend_expiry_date" type="date" onchange="remaining_days_calc()" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Days Remaining</label>
+                            {% render_field form.vend_days_remaining id="vend_validity_remaining" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.vend_status class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 4: BILL & ATTACHMENT DETAILS (EXACT TRIPDETAIL STYLE) ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice"></i> BILL & ATTACHMENT DETAILS</div>
+
+                        <!-- 1. PAN Attachment Field -->
+                        <div class="form-group-modern mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern small mb-0 font-weight-bold">PAN Attachment(s)</label>
+                                {% if pan_attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapsePanAttachments" aria-expanded="false" aria-controls="collapsePanAttachments" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-paperclip mr-1"></i> Attachments ({{ pan_attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <input type="file" name="vend_pan_attachment" id="vend_pan_attachment" class="form-control form-control-modern form-control-sm file-input-multi" multiple accept="*" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;">
+                            <div id="preview_vend_pan_attachment" class="d-flex flex-wrap gap-1 mt-1"></div>
+
+                            {% if pan_attachments %}
+                            <div id="collapsePanAttachments" class="collapse mt-2">
+                                <div class="card p-2 shadow-sm" style="border: 1px solid var(--border-light, #cbd5e1); border-radius: 8px; background: var(--bg-card, #ffffff);">
+                                    <div class="table-responsive" style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size:0.75rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="py-1">File Name</th>
+                                                    <th class="py-1">Date</th>
+                                                    <th class="text-center py-1" style="width:65px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for att in pan_attachments %}
+                                                <tr id="att-row-{{ att.id }}">
+                                                    <td class="py-1 text-truncate" style="max-width: 130px;" title="{{ att.filename|default:att.file.name }}">
+                                                        <i class="far fa-file-alt text-primary mr-1"></i>
+                                                        <strong>{{ att.filename|default:att.file.name }}</strong>
+                                                    </td>
+                                                    <td class="py-1" style="white-space: nowrap;">{{ att.uploaded_at|date:"d-m-Y H:i" }}</td>
+                                                    <td class="text-center py-1">
+                                                        <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View Attachment">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a role="button" class="text-danger" onclick="deleteVendorAttachment({{ att.id }})" title="Delete Attachment" style="cursor:pointer;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 2. GST Attachment Field -->
+                        <div class="form-group-modern mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern small mb-0 font-weight-bold">GST Attachment(s)</label>
+                                {% if gst_attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapseGstAttachments" aria-expanded="false" aria-controls="collapseGstAttachments" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-paperclip mr-1"></i> Attachments ({{ gst_attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <input type="file" name="vend_gst_attachment" id="vend_gst_attachment" class="form-control form-control-modern form-control-sm file-input-multi" multiple accept="*" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;">
+                            <div id="preview_vend_gst_attachment" class="d-flex flex-wrap gap-1 mt-1"></div>
+
+                            {% if gst_attachments %}
+                            <div id="collapseGstAttachments" class="collapse mt-2">
+                                <div class="card p-2 shadow-sm" style="border: 1px solid var(--border-light, #cbd5e1); border-radius: 8px; background: var(--bg-card, #ffffff);">
+                                    <div class="table-responsive" style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size:0.75rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="py-1">File Name</th>
+                                                    <th class="py-1">Date</th>
+                                                    <th class="text-center py-1" style="width:65px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for att in gst_attachments %}
+                                                <tr id="att-row-{{ att.id }}">
+                                                    <td class="py-1 text-truncate" style="max-width: 130px;" title="{{ att.filename|default:att.file.name }}">
+                                                        <i class="far fa-file-alt text-primary mr-1"></i>
+                                                        <strong>{{ att.filename|default:att.file.name }}</strong>
+                                                    </td>
+                                                    <td class="py-1" style="white-space: nowrap;">{{ att.uploaded_at|date:"d-m-Y H:i" }}</td>
+                                                    <td class="text-center py-1">
+                                                        <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View Attachment">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a role="button" class="text-danger" onclick="deleteVendorAttachment({{ att.id }})" title="Delete Attachment" style="cursor:pointer;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 3. KYC Attachment Field -->
+                        <div class="form-group-modern mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern small mb-0 font-weight-bold">KYC Attachment(s)</label>
+                                {% if kyc_attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapseKycAttachments" aria-expanded="false" aria-controls="collapseKycAttachments" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-paperclip mr-1"></i> Attachments ({{ kyc_attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <input type="file" name="vend_kyc_attachment" id="vend_kyc_attachment" class="form-control form-control-modern form-control-sm file-input-multi" multiple accept="*" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;">
+                            <div id="preview_vend_kyc_attachment" class="d-flex flex-wrap gap-1 mt-1"></div>
+
+                            {% if kyc_attachments %}
+                            <div id="collapseKycAttachments" class="collapse mt-2">
+                                <div class="card p-2 shadow-sm" style="border: 1px solid var(--border-light, #cbd5e1); border-radius: 8px; background: var(--bg-card, #ffffff);">
+                                    <div class="table-responsive" style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size:0.75rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="py-1">File Name</th>
+                                                    <th class="py-1">Date</th>
+                                                    <th class="text-center py-1" style="width:65px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for att in kyc_attachments %}
+                                                <tr id="att-row-{{ att.id }}">
+                                                    <td class="py-1 text-truncate" style="max-width: 130px;" title="{{ att.filename|default:att.file.name }}">
+                                                        <i class="far fa-file-alt text-primary mr-1"></i>
+                                                        <strong>{{ att.filename|default:att.file.name }}</strong>
+                                                    </td>
+                                                    <td class="py-1" style="white-space: nowrap;">{{ att.uploaded_at|date:"d-m-Y H:i" }}</td>
+                                                    <td class="text-center py-1">
+                                                        <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View Attachment">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a role="button" class="text-danger" onclick="deleteVendorAttachment({{ att.id }})" title="Delete Attachment" style="cursor:pointer;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 4. Bank Details Attachment Field -->
+                        <div class="form-group-modern mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern small mb-0 font-weight-bold">Bank Details Att.</label>
+                                {% if bank_attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapseBankAttachments" aria-expanded="false" aria-controls="collapseBankAttachments" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-paperclip mr-1"></i> Attachments ({{ bank_attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <input type="file" name="vend_bank_attachment" id="vend_bank_attachment" class="form-control form-control-modern form-control-sm file-input-multi" multiple accept="*" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;">
+                            <div id="preview_vend_bank_attachment" class="d-flex flex-wrap gap-1 mt-1"></div>
+
+                            {% if bank_attachments %}
+                            <div id="collapseBankAttachments" class="collapse mt-2">
+                                <div class="card p-2 shadow-sm" style="border: 1px solid var(--border-light, #cbd5e1); border-radius: 8px; background: var(--bg-card, #ffffff);">
+                                    <div class="table-responsive" style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size:0.75rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="py-1">File Name</th>
+                                                    <th class="py-1">Date</th>
+                                                    <th class="text-center py-1" style="width:65px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for att in bank_attachments %}
+                                                <tr id="att-row-{{ att.id }}">
+                                                    <td class="py-1 text-truncate" style="max-width: 130px;" title="{{ att.filename|default:att.file.name }}">
+                                                        <i class="far fa-file-alt text-primary mr-1"></i>
+                                                        <strong>{{ att.filename|default:att.file.name }}</strong>
+                                                    </td>
+                                                    <td class="py-1" style="white-space: nowrap;">{{ att.uploaded_at|date:"d-m-Y H:i" }}</td>
+                                                    <td class="text-center py-1">
+                                                        <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View Attachment">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a role="button" class="text-danger" onclick="deleteVendorAttachment({{ att.id }})" title="Delete Attachment" style="cursor:pointer;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 5. Agreement Field -->
+                        <div class="form-group-modern mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern small mb-0 font-weight-bold">Agreement</label>
+                                {% if agreement_attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapseAgreementAttachments" aria-expanded="false" aria-controls="collapseAgreementAttachments" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-paperclip mr-1"></i> Attachments ({{ agreement_attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <input type="file" name="vend_attachment" id="vend_attachment" class="form-control form-control-modern form-control-sm file-input-multi" multiple accept="*" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;">
+                            <div id="preview_vend_attachment" class="d-flex flex-wrap gap-1 mt-1"></div>
+
+                            {% if agreement_attachments %}
+                            <div id="collapseAgreementAttachments" class="collapse mt-2">
+                                <div class="card p-2 shadow-sm" style="border: 1px solid var(--border-light, #cbd5e1); border-radius: 8px; background: var(--bg-card, #ffffff);">
+                                    <div class="table-responsive" style="max-height: 150px; overflow-y: auto;">
+                                        <table class="table table-sm table-bordered mb-0 align-middle" style="font-size:0.75rem;">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="py-1">File Name</th>
+                                                    <th class="py-1">Date</th>
+                                                    <th class="text-center py-1" style="width:65px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for att in agreement_attachments %}
+                                                <tr id="att-row-{{ att.id }}">
+                                                    <td class="py-1 text-truncate" style="max-width: 130px;" title="{{ att.filename|default:att.file.name }}">
+                                                        <i class="far fa-file-alt text-primary mr-1"></i>
+                                                        <strong>{{ att.filename|default:att.file.name }}</strong>
+                                                    </td>
+                                                    <td class="py-1" style="white-space: nowrap;">{{ att.uploaded_at|date:"d-m-Y H:i" }}</td>
+                                                    <td class="text-center py-1">
+                                                        <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View Attachment">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a role="button" class="text-danger" onclick="deleteVendorAttachment({{ att.id }})" title="Delete Attachment" style="cursor:pointer;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Address and Remarks Row -->
+            <div class="row mt-3">
+                <div class="col-12 col-md-6">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> ADDRESS</div>
+                        {% render_field form.vend_address class="form-control form-control-modern" rows="2" style="height: auto !important; min-height: 54px;" placeholder="Full vendor address" %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-comment-dots"></i> REMARKS</div>
+                        {% render_field form.vend_remarks class="form-control form-control-modern" rows="2" style="height: auto !important; min-height: 54px;" placeholder="Additional remarks or notes" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Fields -->
+            {% render_field form.vend_updated_by id="vend_updated_by" hidden="True" class="form-control" %}
+
+            <!-- ================= ACTION BUTTONS (Matching WMS Petty Cash) ================= -->
+            <div class="action-row mt-4 d-flex justify-content-between">
+                <button type="submit" class="btn-modern btn-highlight">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+                <a href="{% url 'vendor_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+
+        </div>
+    </div>
 </form>
+
 <script>
-	$(document).ready(function() {
-        document.getElementById("vend_updated_by").value ='{{user_id}}';
+    $(document).ready(function() {
+        document.getElementById("vend_updated_by").value = '{{user_id}}';
         remaining_days_calc();
 
-        // Vendor name validation/formatting
+        // Vendor name validation/formatting (uppercase and space cleaning)
         var $vendName = $('input[name="vend_name"]');
         if ($vendName.length) {
             $vendName.on('input', function() {
                 var start = this.selectionStart;
                 var end = this.selectionEnd;
-                var val = this.value;
+                var val = this.value.toUpperCase();
 
-                // Force uppercase
-                val = val.toUpperCase();
-
-                // Prevent leading space(s) as the user types
                 if (val.startsWith(' ')) {
                     val = val.trimStart();
-                    if (start > 0) {
-                        start--;
-                        end--;
-                    }
+                    if (start > 0) { start--; end--; }
                 }
 
-                // Prevent multiple consecutive spaces
                 var processedVal = val.replace(/\s{2,}/g, ' ');
                 if (val !== processedVal) {
                     val = processedVal;
-                    // adjust cursor if it was inside the collapsed space
-                    if (start > 0) {
-                        start--;
-                        end--;
-                    }
+                    if (start > 0) { start--; end--; }
                 }
 
                 if (this.value !== val) {
@@ -197,30 +446,68 @@
                 }
             });
 
-            // Trim leading/trailing spaces and collapse multiple internal spaces on blur
             $vendName.on('blur', function() {
-                var val = this.value;
-                val = val.trim().replace(/\s+/g, ' ').toUpperCase();
-                this.value = val;
+                this.value = this.value.trim().replace(/\s+/g, ' ').toUpperCase();
             });
 
-            // Also ensure it is cleaned before submission
             $vendName.closest('form').on('submit', function() {
                 var val = $vendName.val();
-                val = val.trim().replace(/\s+/g, ' ').toUpperCase();
-                $vendName.val(val);
+                if (val) {
+                    $vendName.val(val.trim().replace(/\s+/g, ' ').toUpperCase());
+                }
             });
         }
-      });
-</script>
 
-<script>
-	function remaining_days_calc() {
-        var start_date=new Date(document.getElementById("vend_start_date").value)
-        var expiry_date=new Date(document.getElementById("vend_expiry_date").value)
-        var date_diff=(new Date(expiry_date-start_date))/1000/60/60/24;
-        document.getElementById("vend_validity_remaining").value=date_diff
+        // Exact tripdetail multi-file picker preview
+        $('.file-input-multi').on('change', function(e) {
+            var inputId = $(this).attr('id');
+            var previewContainer = $("#preview_" + inputId);
+            previewContainer.empty();
+            if (e.target.files && e.target.files.length > 0) {
+                $.each(e.target.files, function(i, file) {
+                    var badge = '<span class="badge badge-light border text-dark p-1 small mr-1 mb-1" style="font-size:0.75rem;">' +
+                        '<i class="fas fa-paperclip mr-1 text-primary"></i>' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)</span>';
+                    previewContainer.append(badge);
+                });
+            }
+        });
+    });
+
+    function remaining_days_calc() {
+        var startDateEl = document.getElementById("vend_start_date");
+        var expiryDateEl = document.getElementById("vend_expiry_date");
+        var daysRemainingEl = document.getElementById("vend_validity_remaining");
+        if (startDateEl && expiryDateEl && daysRemainingEl && startDateEl.value && expiryDateEl.value) {
+            var start_date = new Date(startDateEl.value);
+            var expiry_date = new Date(expiryDateEl.value);
+            var date_diff = Math.round((expiry_date - start_date) / (1000 * 60 * 60 * 24));
+            daysRemainingEl.value = isNaN(date_diff) ? 0 : date_diff;
+        }
     }
-</script>
 
+    // AJAX Delete Attachment Function (matching tripdetail)
+    window.deleteVendorAttachment = function(attachmentId) {
+        if (!confirm('Are you sure you want to delete this attachment?')) return;
+        var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+        $.ajax({
+            url: '/SMS/vendor_attachment_delete/' + attachmentId + '/',
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            success: function(resp) {
+                if (resp && resp.status === 'success') {
+                    $('#att-row-' + attachmentId).fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                } else {
+                    alert('Error: ' + (resp && resp.message ? resp.message : 'Could not delete attachment'));
+                }
+            },
+            error: function(xhr) {
+                alert('Failed to delete attachment. Please try again.');
+            }
+        });
+    };
+</script>
 {% endblock content %}
