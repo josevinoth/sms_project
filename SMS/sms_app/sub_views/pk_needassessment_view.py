@@ -80,8 +80,9 @@ def get_tracker_flags(na_id):
 @login_required(login_url='login_page')
 def needassessment_add(request,needassessment_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
 
     if request.method == "GET":
         if needassessment_id == 0:
@@ -200,8 +201,9 @@ def delete_na_attachment(request, att_id):
 @login_required(login_url='login_page')
 def needassessment_list(request):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
     context = {
             'needassessment_list' : PkneedassessmentInfo.objects.all().order_by('-na_updated_at'),
             'first_name': first_name,
@@ -338,8 +340,10 @@ def na_dimension_cancel(request,needassessment_id=0):
 @login_required(login_url='login_page')
 def na_dimension_add(request, na_dimension_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
     na_assessment_num_id = request.session.get('na_assessment_id')
     # Retrieve related status from PkneedassessmentInfo
     na_status = None

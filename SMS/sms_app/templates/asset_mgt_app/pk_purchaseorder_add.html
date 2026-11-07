@@ -616,7 +616,16 @@
                         window.last_shortfall_items = resp.insufficient_stock_items;
                         let html = '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" id="shortfall_header_bar">';
                         html += '<div id="shortfall_header_title"><i class="fas fa-exclamation-circle text-warning mr-1"></i> <b>Insufficient Stock Alert!</b> Stock shortfall detected:</div>';
-                        html += '<div class="d-flex align-items-center"><button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
+                        html += '<div class="d-flex align-items-center flex-wrap">';
+                        let woodItems = (resp.insufficient_stock_items || []).filter(function(it) {
+                            let pc = (it.part_code || '').toUpperCase();
+                            let desc = (it.description || '').toUpperCase();
+                            return pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE');
+                        });
+                        if (woodItems.length >= 2) {
+                            html += '<button type="button" class="btn btn-sm btn-outline-primary mr-2 font-weight-bold" id="quick_select_wood_btn"><i class="fas fa-tree mr-1"></i> Select All (' + woodItems.length + ') Wood Part Codes</button>';
+                        }
+                        html += '<button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
                         html += '</div>';
 
                         html += '<table class="table table-sm table-bordered bg-white text-center small mb-3" id="shortfall_items_table"><thead><tr class="bg-light">';
@@ -656,6 +665,33 @@
                         
                         $('#modal_job_error_text').html(html);
                         $('#modal_job_error_alert').removeClass('d-none');
+
+                        // Quick select all wood lines listener
+                        $(document).off('click', '#quick_select_wood_btn').on('click', '#quick_select_wood_btn', function() {
+                            $('.stk-row-cb').each(function() {
+                                let pc = ($(this).data('current') || '').toUpperCase();
+                                let row = $(this).closest('tr');
+                                let desc = row.find('td:eq(2)').text().toUpperCase();
+                                if (pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE')) {
+                                    $(this).prop('checked', true);
+                                }
+                            });
+                            updateGroupPartCodesBtnState();
+                        });
+
+                        // Toggle absorbed details
+                        $(document).off('click', '.toggle-absorbed-details').on('click', '.toggle-absorbed-details', function(e) {
+                            e.preventDefault();
+                            let groupQid = $(this).data('target-group');
+                            let rows = $('tr[data-absorbed-into="' + groupQid + '"]');
+                            if (rows.is(':visible')) {
+                                rows.hide();
+                                $(this).text('(View Breakdown ▼)');
+                            } else {
+                                rows.show();
+                                $(this).text('(Hide Breakdown ▲)');
+                            }
+                        });
 
                         // Select all checkbox listener
                         $('#select_all_stk_cbs').off('change').on('change', function() {
@@ -1456,13 +1492,13 @@ function submitPartcodeChange(shouldProceedToJob) {
                 let primaryRow = $('#stk_row_' + qid);
                 if (primaryRow.length > 0) {
                     let groupedBadge = (absorbedIds && absorbedIds.length > 0) 
-                        ? '<div class="small text-success font-weight-bold mt-1"><i class="fas fa-object-group mr-1"></i> Grouped (' + (absorbedIds.length + 1) + ' Parts)</div>' 
+                        ? '<div class="mt-1"><span class="badge badge-success font-weight-bold px-2 py-1"><i class="fas fa-object-group mr-1"></i> Grouped (' + (absorbedIds.length + 1) + ' Part Codes)</span> <a href="javascript:void(0)" class="toggle-absorbed-details small text-primary ml-1 font-weight-bold" data-target-group="' + qid + '">(View Breakdown ▼)</a></div>' 
                         : '<div class="badge badge-success mt-1">For this Job</div>';
-                    primaryRow.find('td:eq(1)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold">' + newPcId + '</code>' + groupedBadge);
-                    primaryRow.find('td:eq(3)').html('<b>' + newBatchQty.toFixed(2) + '</b>');
+                    primaryRow.find('td:eq(1)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold" style="font-size:0.95rem;">' + newPcId + '</code>' + groupedBadge);
+                    primaryRow.find('td:eq(3)').html('<b class="text-primary font-weight-bold" style="font-size:1.05rem;">' + newBatchQty.toFixed(2) + '</b>');
                     primaryRow.find('td:eq(4)').html('<span class="text-success font-weight-bold">' + totalAlloc.toFixed(2) + '</span>');
                     if (totalAlloc >= newBatchQty) {
-                        primaryRow.find('td:eq(5)').html('<span class="text-success font-weight-bold"><i class="fas fa-check-circle"></i> Stock Ready</span>');
+                        primaryRow.find('td:eq(5)').html('<span class="badge badge-success px-2 py-1 font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Stock Ready</span>');
                     } else {
                         primaryRow.find('td:eq(5)').html('<span class="text-danger font-weight-bold">-' + (newBatchQty - totalAlloc).toFixed(2) + '</span>');
                     }
@@ -1474,11 +1510,13 @@ function submitPartcodeChange(shouldProceedToJob) {
                 absorbedIds.forEach(function(absId) {
                     let absRow = $('#stk_row_' + absId);
                     if (absRow.length > 0) {
+                        absRow.attr('data-absorbed-into', qid);
                         absRow.find('td:eq(3)').html('<span class="text-muted"><del>' + absRow.find('td:eq(3)').text() + '</del></span>');
                         absRow.find('td:eq(5)').html('<span class="badge badge-secondary py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped into ' + newPcId + '</span>');
                         absRow.find('td:eq(7)').html('<span class="text-muted small font-weight-bold"><i class="fas fa-ban mr-1"></i> Absorbed</span>');
                         absRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
                         absRow.addClass('table-secondary text-muted');
+                        absRow.hide();
                     }
                 });
 

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance, CustomerInfo, PkpartcodeInfo
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance, CustomerInfo, PkpartcodeInfo, Packingjobs
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .pk_needassessment_view import Pkcosting_delete, Pkcostingsummary_delete, Pkpurchaseorder_delete, Pkpurchaseorder_dim_delete, get_tracker_flags
@@ -14,9 +14,10 @@ from .general_utils import get_financial_year, generate_next_number, get_branch_
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = role.id
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
 
     if request.method == "GET":
         if purchaseorder_id == 0:
@@ -650,6 +651,17 @@ def pk_create_batch_job(request):
             cs_updated_by_id=request.session.get('ses_userID')
         )
 
+        Packingjobs.objects.get_or_create(
+            pj_job_no=job_no,
+            defaults={
+                'pj_customer': po.po_customer_name.cu_name if po.po_customer_name else po.po_customer_new_name or '',
+                'pj_pack_type': pack_type or 'In-House',
+                'pj_production_completed_flag': 'Started',
+                'pj_material_returned_flag': 'Pending',
+                'pj_qc_completed_flag': 'Pending',
+            }
+        )
+
         # 4. Get stock status (id=1)
         try:
             stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
@@ -760,7 +772,7 @@ def pk_create_batch_job(request):
                 ratio = job_qty / old_qty
 
                 # Calculate batch quantity
-                calculated_qty = round(qty_req_val * job_qty) if sub else round(float(q.pkqt_quantity or 0) * ratio)
+                calculated_qty = round(qty_req_val * job_qty) if (sub or qty_req_val > 0) else round(float(q.pkqt_quantity or 0) * ratio)
 
                 selected_batches = sub.get('selected_batches', []) if sub else []
                 valid_batches = [b for b in selected_batches if float(b.get('allocated_qty') or 0.0) > 0]

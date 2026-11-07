@@ -598,9 +598,18 @@
                     let resp = xhr.responseJSON;
                     if (resp && resp.stock_alert && resp.insufficient_stock_items) {
                         window.last_shortfall_items = resp.insufficient_stock_items;
-                        let html = '<div class="d-flex justify-content-between align-items-center mb-2" id="shortfall_header_bar">';
+                        let html = '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" id="shortfall_header_bar">';
                         html += '<div id="shortfall_header_title"><i class="fas fa-exclamation-circle text-warning mr-1"></i> <b>Insufficient Stock Alert!</b> Stock shortfall detected:</div>';
-                        html += '<button type="button" class="btn btn-sm btn-info font-weight-bold" id="multi_replace_partcode_btn"><i class="fas fa-layer-group mr-1"></i> Use One Part Code for Multiple (Bigger Piece)</button>';
+                        html += '<div class="d-flex align-items-center flex-wrap">';
+                        let woodItems = (resp.insufficient_stock_items || []).filter(function(it) {
+                            let pc = (it.part_code || '').toUpperCase();
+                            let desc = (it.description || '').toUpperCase();
+                            return pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE');
+                        });
+                        if (woodItems.length >= 2) {
+                            html += '<button type="button" class="btn btn-sm btn-outline-primary mr-2 font-weight-bold" id="quick_select_wood_btn"><i class="fas fa-tree mr-1"></i> Select All (' + woodItems.length + ') Wood Part Codes</button>';
+                        }
+                        html += '<button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
                         html += '</div>';
 
                         html += '<table class="table table-sm table-bordered bg-white text-center small mb-3" id="shortfall_items_table"><thead><tr class="bg-light">';
@@ -640,6 +649,33 @@
                         
                         $('#modal_job_error_text').html(html);
                         $('#modal_job_error_alert').removeClass('d-none');
+
+                        // Quick select all wood lines listener
+                        $(document).off('click', '#quick_select_wood_btn').on('click', '#quick_select_wood_btn', function() {
+                            $('.stk-row-cb').each(function() {
+                                let pc = ($(this).data('current') || '').toUpperCase();
+                                let row = $(this).closest('tr');
+                                let desc = row.find('td:eq(2)').text().toUpperCase();
+                                if (pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE')) {
+                                    $(this).prop('checked', true);
+                                }
+                            });
+                            if (typeof updateGroupPartCodesBtnState === 'function') updateGroupPartCodesBtnState();
+                        });
+
+                        // Toggle absorbed details
+                        $(document).off('click', '.toggle-absorbed-details').on('click', '.toggle-absorbed-details', function(e) {
+                            e.preventDefault();
+                            let groupQid = $(this).data('target-group');
+                            let rows = $('tr[data-absorbed-into="' + groupQid + '"]');
+                            if (rows.is(':visible')) {
+                                rows.hide();
+                                $(this).text('(View Breakdown ▼)');
+                            } else {
+                                rows.show();
+                                $(this).text('(Hide Breakdown ▲)');
+                            }
+                        });
 
                         // Select all checkbox listener
                         $('#select_all_stk_cbs').off('change').on('change', function() {
