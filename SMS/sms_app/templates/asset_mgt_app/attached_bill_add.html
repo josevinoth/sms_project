@@ -60,7 +60,7 @@
 
                 <div class="row">
                     <!-- ========== COLUMN 1 ========== -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="form-section h-100">
                             <div class="form-section-title"><i class="fas fa-file-invoice"></i> BILL DETAILS</div>
 
@@ -109,7 +109,7 @@
                     </div>
                     </div>
                     <!-- ========== COLUMN 2 ========== -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <div class="form-section h-100">
                             <div class="form-section-title"><i class="fas fa-calculator"></i> COST BREAKDOWN</div>
 
@@ -144,6 +144,23 @@
                             </div>
 
                         <div class="form-group-modern">
+                                <label class="form-label-modern">No. of Sunday Leave</label>
+                                {% render_field form.ab_sunday_leave class="form-control form-control-modern" min="0" %}
+                            </div>
+
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Sunday Leave Amount</label>
+                                {% render_field form.ab_sunday_leave_amount class="form-control form-control-modern" step="0.01" %}
+                            </div>
+
+                    </div>
+                    </div>
+                    <!-- ========== COLUMN 3 ========== -->
+                    <div class="col-12 col-md-3">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-tachometer-alt"></i> KM DETAILS</div>
+
+                        <div class="form-group-modern">
                                 <label class="form-label-modern">Agreed Km</label>
                                 {% render_field form.ab_agreed_km class="form-control form-control-modern" %}
                             </div>
@@ -165,8 +182,8 @@
 
                     </div>
                     </div>
-                    <!-- ========== COLUMN 3 ========== -->
-                    <div class="col-12 col-md-4">
+                    <!-- ========== COLUMN 4 ========== -->
+                    <div class="col-12 col-md-3">
                         <div class="form-section h-100">
                             <div class="form-section-title"><i class="fas fa-coins"></i> BILLING & TAXES</div>
 
@@ -497,6 +514,8 @@
             $('#id_ab_leave_days').val('0');
             $('#id_ab_holidays').val('0');
             $('#id_ab_non_movement_days').val('0');
+            $('#id_ab_sunday_leave').val('0');
+            $('#id_ab_sunday_leave_amount').val('0.00');
             window.isLeaveDaysManuallyChanged = false;
             window.isHolidaysManuallyChanged = false;
             calculateAmounts();
@@ -546,7 +565,7 @@
     });
 
     // Handle Manual Input Changes
-    $(document).on('input change', '#id_ab_buy_cost, #id_ab_toll_cost, #id_ab_total_km_run, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date, #id_ab_tds_percent', function () {
+    $(document).on('input change', '#id_ab_buy_cost, #id_ab_toll_cost, #id_ab_total_km_run, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_sunday_leave, #id_ab_sunday_leave_amount, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date, #id_ab_tds_percent', function () {
         calculateAmounts();
     });
 
@@ -593,11 +612,15 @@
         if (isNaN(extra_km_amount)) extra_km_amount = 0;
         $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
 
-        // 4. Calculate Total Bill Amount (Buy Cost + Toll Cost + Extra KM Amount - Leave Amount)
+        var sunday_leave_amount = parseFloat($('#id_ab_sunday_leave_amount').val()) || 0;
+
+        // 4. Calculate Total Bill Amount (Buy Cost + Toll Cost + Extra KM Amount - Leave Amount + Sunday Leave Amount)
+        var total_bill = buy_cost + toll_cost + extra_km_amount - leave_amount + sunday_leave_amount;
+        if (isNaN(total_bill)) total_bill = 0;
         if (!$('#id_ab_bill_amount').is(':focus')) {
-            var total_bill = buy_cost + toll_cost + extra_km_amount - leave_amount;
-            if (isNaN(total_bill)) total_bill = 0;
             $('#id_ab_bill_amount').val(total_bill.toFixed(2));
+        } else {
+            total_bill = parseFloat($('#id_ab_bill_amount').val()) || 0;
         }
 
         // 5. Update table: Buy Cost = ((Bill Amount - Toll) / Total KM Run) * Trip KM

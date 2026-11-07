@@ -1337,14 +1337,10 @@ def vehicle_log_report_ajax_view(request):
     for idx, trip in enumerate(all_matching_trips, start=start + 1):
         cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
 
-        display_date = trip.tr_loading_time or trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_reporteddate or trip.tr_reporteddate_pickup or trip.tr_created_at
-
-        start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
-        closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
-        used_km = vehicle_log_used_km(trip)
-
         cat_id = trip.tr_category_id
         cat_name = safe_str(trip.tr_category).strip()
+
+        is_empty_or_biz_empty = (cat_id in [2, 3]) or ('empty' in cat_name.lower())
 
         if cat_id == 2 or cat_name.lower() == 'empty':
             cnote_val = "Empty"
@@ -1353,12 +1349,23 @@ def vehicle_log_report_ajax_view(request):
         else:
             cnote_val = get_trip_cnote_or_fallback(trip, default=cat_name)
 
+        if is_empty_or_biz_empty:
+            display_date = trip.tr_departeddate or trip.tr_reporteddate or trip.tr_created_at
+            reported_loading = ""
+        else:
+            display_date = trip.tr_loading_time or trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_reporteddate or trip.tr_reporteddate_pickup or trip.tr_created_at
+            reported_loading = _fmt_dt(trip.tr_departeddate_pickup)
+
+        start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
+        closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
+        used_km = vehicle_log_used_km(trip)
+
         data_rows.append([
             idx,
             _fmt_dt(display_date, date_only=True),
             safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_vehiclenumber),
-            _fmt_dt(trip.tr_departeddate_pickup),  # Reported Loading
+            reported_loading,                      # Reported Loading (not shown for Empty & Business Empty)
             _fmt_dt(trip.tr_departeddate),         # Started Loading
             _fmt_dt(trip.tr_reporteddate),         # Reported Unloading
             _fmt_dt(trip.tr_reporteddate_pickup),  # Started Unloading
