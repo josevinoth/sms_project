@@ -8478,32 +8478,113 @@ def transport_mis(request):
         tc_financestatus_id__in=[1, 2, 4, 5, 6, 7, 9, 10]
     )
 
-    all_income_trips = list(income_trips.select_related('tr_enquirynumber', 'tr_consignmentnumber', 'tr_vehiclesource'))
+    fields_to_fetch = [
+        'id', 'tr_enquirynumber_id', 'tr_consignmentnumber_id', 'resolved_date',
+        'tr_category_id', 'tc_financestatus_id', 'tc_tripcost', 'tc_special_sell',
+        'tc_tripcost_check', 'tc_special_sell_check', 'tc_haltingcost', 'tc_no_of_days_halting',
+        'tc_loadingcost', 'tc_loadingcost_check', 'tc_unloadingcost', 'tc_unloadingcost_check',
+        'tc_parkingcost', 'tc_parkingcost_check', 'tc_tollcost', 'tc_tollcost_check',
+        'tc_handlingcost', 'tc_handlingcost_check', 'tc_weighmentcost', 'tc_weighmentcost_check',
+        'tc_supervisorcost', 'tc_supervisorcost_check',
+        'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_cancellation', 'tc_cancellation_check',
+        'tr_vehicletype_placed_id', 'tr_vehicletype_id'
+    ]
 
-    trip_id_to_pk = {t.id: t.id for t in all_income_trips}
-    trip_invoices = TransInvoiceInfo.objects.filter(
-        Q(ti_trip_id__in=trip_id_to_pk.keys()) |
-        Q(ti_consignment_id__in=[t.tr_consignmentnumber_id for t in all_income_trips if t.tr_consignmentnumber_id])
-    ).select_related('ti_trip', 'ti_consignment')
+    all_income_trips = list(income_trips.values(*fields_to_fetch))
 
-    c_to_trip = {}
-    for t in all_income_trips:
-        if t.tr_consignmentnumber_id and t.tr_consignmentnumber_id not in c_to_trip:
-            c_to_trip[t.tr_consignmentnumber_id] = t.id
+    trip_ids = [t['id'] for t in all_income_trips]
+    c_ids = [t['tr_consignmentnumber_id'] for t in all_income_trips if t['tr_consignmentnumber_id']]
 
+    inv_qs = TransInvoiceInfo.objects.filter(
+        Q(ti_trip_id__in=trip_ids) | Q(ti_consignment_id__in=c_ids)
+    ).values(
+        'ti_trip_id', 'ti_consignment_id', 'ti_transportation_charges',
+        'ti_toll_charges', 'ti_docket_charges', 'ti_loading_charges',
+        'ti_unloading_charges', 'ti_weighment_charges', 'ti_halting_charges',
+        'ti_handling_charges', 'ti_parking_charges', 'ti_cancellation_charges'
+    )
+
+    c_to_trip = {t['tr_consignmentnumber_id']: t['id'] for t in all_income_trips if t['tr_consignmentnumber_id']}
     trip_invoice_map = {}
-    for inv in trip_invoices:
-        if inv.ti_trip_id:
-            trip_invoice_map[inv.ti_trip_id] = inv
-        elif inv.ti_consignment_id:
-            trip_id = c_to_trip.get(inv.ti_consignment_id)
+    for inv in inv_qs:
+        if inv['ti_trip_id']:
+            trip_invoice_map[inv['ti_trip_id']] = inv
+        elif inv['ti_consignment_id']:
+            trip_id = c_to_trip.get(inv['ti_consignment_id'])
             if trip_id and trip_id not in trip_invoice_map:
                 trip_invoice_map[trip_id] = inv
 
-    income_actual_dict = {cat: {i: 0 for i in display_months_indices} for cat in TRANSPORT_INCOME_CATEGORIES.keys()}
+    enq_ids = set(t['tr_enquirynumber_id'] for t in all_income_trips if t['tr_enquirynumber_id'])
+    from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+
+    env_qs = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enq_ids).values(
+        'env_enquirynumber_id', 'env_vehicletype_id', 'env_special_sale', 'env_sale'
+    )
+    env_map = {}
+    env_fallback_map = {}
+    for env in env_qs:
+        eid = env['env_enquirynumber_id']
+        vtid = env['env_vehicletype_id']
+        if vtid:
+            env_map[(eid, vtid)] = env
+        if eid not in env_fallback_map:
+            env_fallback_map[eid] = env
+
+    va_qs = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enq_ids).values(
+        'va_enquirynumber_id', 'va_sale', 'va_special_sale'
+    )
+    va_map = {va['va_enquirynumber_id']: va for va in va_qs}
+
+    income_actual_dict = {cat: {i: 0.0 for i in display_months_indices} for cat in TRANSPORT_INCOME_CATEGORIES.keys()}
+
+    def get_fast_transport_charge(t, inv):
+        if inv and inv.get('ti_transportation_charges') is not None and safe_num(inv['ti_transportation_charges']) > 0:
+            return safe_num(inv['ti_transportation_charges'])
+
+        is_settled = t.get('tc_financestatus_id') in [7, 9, 10]
+        is_special_sell_check = t.get('tc_special_sell_check', False)
+        is_tripcost_check = t.get('tc_tripcost_check', False)
+
+        eid = t.get('tr_enquirynumber_id')
+        vt_req = t.get('tr_vehicletype_id')
+        vt_placed = t.get('tr_vehicletype_placed_id')
+
+        def lookup_env():
+            if not eid:
+                return 0.0
+            env = env_map.get((eid, vt_placed)) or env_map.get((eid, vt_req)) or env_fallback_map.get(eid)
+            if env:
+                if env.get('env_special_sale') and safe_num(env['env_special_sale']) > 0:
+                    return safe_num(env['env_special_sale'])
+                if env.get('env_sale') and safe_num(env['env_sale']) > 0:
+                    return safe_num(env['env_sale'])
+            return 0.0
+
+        if is_settled:
+            if is_special_sell_check:
+                val = safe_num(t.get('tc_special_sell'))
+                return val if val > 0 else lookup_env()
+            elif is_tripcost_check:
+                val = safe_num(t.get('tc_tripcost'))
+                return val if val > 0 else lookup_env()
+            else:
+                return 0.0
+        else:
+            if is_special_sell_check:
+                val = safe_num(t.get('tc_special_sell'))
+                return val if val > 0 else lookup_env()
+            elif is_tripcost_check and safe_num(t.get('tc_tripcost')) > 0:
+                return safe_num(t.get('tc_tripcost'))
+            else:
+                val = lookup_env()
+                if val <= 0 and eid in va_map:
+                    va = va_map[eid]
+                    val = safe_num(va.get('va_special_sale')) or safe_num(va.get('va_sale'))
+                return val
 
     for trip in all_income_trips:
-        r_date = trip.resolved_date
+        r_date = trip.get('resolved_date')
         if not r_date:
             continue
         if timezone.is_aware(r_date):
@@ -8512,21 +8593,41 @@ def transport_mis(request):
         if m not in display_months_indices:
             continue
 
-        inv = trip_invoice_map.get(trip.id)
-        breakdown = get_trip_selling_breakdown(trip, inv=inv)
+        inv = trip_invoice_map.get(trip['id'])
+        is_cat_cancellation = (trip.get('tr_category_id') in [2, 3] and trip.get('tc_financestatus_id') == 10)
+        selling_trip = 0.0 if is_cat_cancellation else get_fast_transport_charge(trip, inv)
+
+        selling_toll = safe_num(inv['ti_toll_charges']) if inv else (safe_num(trip.get('tc_tollcost')) if trip.get('tc_tollcost_check', True) else 0.0)
+        selling_supervisor = safe_num(inv['ti_docket_charges']) if inv else (safe_num(trip.get('tc_supervisorcost')) if trip.get('tc_supervisorcost_check', True) else 0.0)
+        selling_loading = safe_num(inv['ti_loading_charges']) if inv else (safe_num(trip.get('tc_loadingcost')) if trip.get('tc_loadingcost_check', True) else 0.0)
+        selling_unloading = safe_num(inv['ti_unloading_charges']) if inv else (safe_num(trip.get('tc_unloadingcost')) if trip.get('tc_unloadingcost_check', True) else 0.0)
+        selling_weighment = safe_num(inv['ti_weighment_charges']) if inv else (safe_num(trip.get('tc_weighmentcost')) if trip.get('tc_weighmentcost_check', True) else 0.0)
+
+        halting_days = safe_num(trip.get('tc_no_of_days_halting'))
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_day_cost = safe_num(trip.get('tc_haltingcost'))
+        if (trip.get('tc_total_halting_cost_check', False) or trip.get('tc_haltingcost_check', False)) and tc_day_cost > 0:
+            selling_halting = tc_day_cost * halting_days
+        elif inv and safe_num(inv.get('ti_halting_charges')) > 0:
+            selling_halting = safe_num(inv.get('ti_halting_charges'))
+        else:
+            selling_halting = 0.0
+
+        selling_handling = safe_num(inv['ti_handling_charges']) if inv else (safe_num(trip.get('tc_handlingcost')) if trip.get('tc_handlingcost_check', True) else 0.0)
+        selling_parking = safe_num(inv['ti_parking_charges']) if inv else (safe_num(trip.get('tc_parkingcost')) if trip.get('tc_parkingcost_check', True) else 0.0)
+        selling_cancellation = safe_num(inv['ti_cancellation_charges']) if inv else (safe_num(trip.get('tc_cancellation')) if trip.get('tc_cancellation_check', True) else 0.0)
 
         income_actual_dict["Transportation Charges"][m] += (
-            breakdown.get("selling_trip", 0.0) +
-            breakdown.get("selling_supervisor", 0.0) +
-            breakdown.get("selling_cancellation", 0.0)
+            selling_trip + selling_supervisor + selling_cancellation
         )
-        income_actual_dict["Halting Charges"][m] += breakdown.get("selling_halting", 0.0)
-        income_actual_dict["Loading Charges"][m] += breakdown.get("selling_loading", 0.0)
-        income_actual_dict["Unloading Charges"][m] += breakdown.get("selling_unloading", 0.0)
-        income_actual_dict["Parking Charges"][m] += breakdown.get("selling_parking", 0.0)
-        income_actual_dict["Toll Charges"][m] += breakdown.get("selling_toll", 0.0)
-        income_actual_dict["Transportation Handling Charges"][m] += breakdown.get("selling_handling", 0.0)
-        income_actual_dict["Weighment Charges"][m] += breakdown.get("selling_weighment", 0.0)
+        income_actual_dict["Halting Charges"][m] += selling_halting
+        income_actual_dict["Loading Charges"][m] += selling_loading
+        income_actual_dict["Unloading Charges"][m] += selling_unloading
+        income_actual_dict["Parking Charges"][m] += selling_parking
+        income_actual_dict["Toll Charges"][m] += selling_toll
+        income_actual_dict["Transportation Handling Charges"][m] += selling_handling
+        income_actual_dict["Weighment Charges"][m] += selling_weighment
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
