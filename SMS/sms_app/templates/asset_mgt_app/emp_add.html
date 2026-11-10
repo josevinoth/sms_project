@@ -1,123 +1,175 @@
 {% extends "asset_mgt_app/base_modern.html" %}
-{% load widget_tweaks %}
+{% load static %}
 
-{% block title %}User Update | BVM Management System{% endblock %}
+{% block title %}
+  {% if is_create %}Create User Login | Administration{% else %}Update User Account | Administration{% endif %}
+{% endblock title %}
+
+{% block extra_css %}
+<style>
+    .form-card-section {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .form-section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .form-section-title i {
+        color: #0284c7;
+    }
+    .pw-input-wrapper {
+        position: relative;
+    }
+    .pw-toggle-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px 8px;
+        z-index: 5;
+    }
+    .pw-toggle-btn:hover {
+        color: #0f172a;
+    }
+    .strength-indicator {
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+    .strength-req {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 10px;
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    .strength-req.met {
+        color: #10b981;
+        font-weight: 600;
+    }
+    .switch-toggle input:checked + .slider-round {
+        background-color: #10b981 !important;
+    }
+    .slider-round:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .switch-toggle input:checked + .slider-round:before {
+        transform: translateX(24px);
+    }
+</style>
+{% endblock extra_css %}
 
 {% block content %}
 <div class="container-fluid py-4">
 
-    <!-- ══ Header ══ -->
-    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
-            <i class="fas fa-user-edit mr-2"></i> User Update
-        </h3>
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4 flex-wrap" style="gap: 12px;">
+        <div>
+            <h3 class="mb-1 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:0.5px;">
+                {% if is_create %}
+                    <i class="fas fa-user-plus mr-2"></i> Create User Login
+                {% else %}
+                    <i class="fas fa-user-edit mr-2"></i> Update User Account ({{ user_obj.username }})
+                {% endif %}
+            </h3>
+            <span class="text-white-50 small">
+                {% if is_create %}
+                    Administration Console: Provision and activate a secure login with assigned credentials and role.
+                {% else %}
+                    Administration Console: Manage user credentials, permissions, and employee records.
+                {% endif %}
+            </span>
+        </div>
         <div>
             <a href="{% url 'user_list' %}" class="btn btn-outline-light" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none; color:#ffffff !important;">
-                <i class="fas fa-arrow-left"></i> Back to User List
+                <i class="fas fa-users"></i> Back to User List
+            </a>
+            <a href="{% url 'home_page' %}" class="btn btn-outline-light" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none; margin-left:8px; color:#ffffff !important;">
+                <i class="fas fa-arrow-left"></i> Home
             </a>
         </div>
     </div>
 
-    <!-- ══ Form Container ══ -->
-    <div class="table-container-modern p-4">
-        <form method="POST" action="">
-            {% csrf_token %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px;">
+                <i class="fas fa-info-circle mr-2"></i>{{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
+    <!-- ══ Main Form Container ══ -->
+    <form method="POST" action="" id="userForm">
+        {% csrf_token %}
+
+        <!-- SECTION 1: Account Credentials & Security -->
+        <div class="form-card-section">
+            <div class="form-section-title">
+                <i class="fas fa-key"></i> Login Credentials &amp; Security Settings
+            </div>
             <div class="row">
-                <!-- Column 1: Basic Account Details -->
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Employee ID</label>
-                        {% render_field form.username class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">First Name <span class="text-danger">*</span></label>
-                        {% render_field form.first_name class="form-control form-control-modern" required="True" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Last Name <span class="text-danger">*</span></label>
-                        {% render_field form.last_name class="form-control form-control-modern" required="True" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Date of Birth (DOB)</label>
-                        {% render_field user_ext_edit_form.emp_DOB type="date" class="form-control form-control-modern" %}
+                        <label class="form-label-modern">Employee ID / Username <span class="text-danger">*</span></label>
+                        <input type="text" name="username" id="username" class="form-control form-control-modern"
+                               placeholder="e.g. EMP1002"
+                               value="{{ form_data.username|default:'' }}"
+                               {% if not is_create %}readonly style="background-color: #f1f5f9; cursor: not-allowed;"{% else %}required{% endif %}>
+                        <small class="text-muted">Used as the unique login User ID</small>
                     </div>
                 </div>
 
-                <!-- Column 2: Dates & Contact Details -->
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Date of Joining (DOJ)</label>
-                        {% render_field user_ext_edit_form.emp_DOJ type="date" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Email <span class="text-danger">*</span></label>
-                        {% render_field form.email class="form-control form-control-modern" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" required="True" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Contact Number</label>
-                        {% render_field user_ext_edit_form.emp_contact class="form-control form-control-modern" type="text" pattern="\d*" title="Enter Numbers Only" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Password</label>
-                        {% render_field form.password type="password" class="form-control form-control-modern" readonly="True" %}
+                        <label class="form-label-modern">Official Email Address <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="email" class="form-control form-control-modern"
+                               placeholder="user@thebvmgroup.com"
+                               value="{{ form_data.email|default:'' }}" required>
+                        <small class="text-muted">Account activation &amp; notifications are sent here</small>
                     </div>
                 </div>
 
-                <!-- Column 3: Organizational Details -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Organisation</label>
-                        {% render_field user_ext_edit_form.emp_organisation id="emp_organisation" class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Department</label>
-                        {% render_field user_ext_edit_form.department class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Designation</label>
-                        {% render_field user_ext_edit_form.emp_designation class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Branch</label>
-                        {% render_field user_ext_edit_form.emp_branch class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Role</label>
-                        {% render_field user_ext_edit_form.emp_role class="form-control form-control-modern select2" %}
-                    </div>
-                </div>
-
-                <!-- Column 4: Identification & Status -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">PAN Number</label>
-                        {% render_field user_ext_edit_form.emp_pan class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">UAN Number</label>
-                        {% render_field user_ext_edit_form.emp_uan class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">ESI Number</label>
-                        {% render_field user_ext_edit_form.emp_esi class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern mb-3">
-                        <label class="form-label-modern">Aadhaar Number</label>
-                        {% render_field user_ext_edit_form.emp_aadhar class="form-control form-control-modern" %}
-                    </div>
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-3">
                         <label class="form-label-modern d-block">Account Status</label>
-                        <div class="status-toggle-wrapper p-2 rounded d-flex align-items-center justify-content-between" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-light); border-radius: 10px;">
-                            <span id="status-badge" class="badge px-3 py-2" style="font-size: 0.85rem; border-radius: 8px;">
-                                {% if form.is_active.value %}
+                        <div class="p-2 rounded d-flex align-items-center justify-content-between" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; height: 42px;">
+                            <span id="status-badge" class="badge px-3 py-1" style="font-size: 0.85rem; border-radius: 8px;">
+                                {% if form_data.is_active %}
                                     <i class="fas fa-check-circle mr-1"></i> Active
                                 {% else %}
                                     <i class="fas fa-ban mr-1"></i> Inactive
                                 {% endif %}
                             </span>
                             <label class="switch-toggle mb-0" style="position: relative; display: inline-block; width: 50px; height: 26px;">
-                                {% render_field form.is_active id="status-checkbox" style="opacity: 0; width: 0; height: 0;" %}
+                                <input type="checkbox" name="is_active" id="status-checkbox" style="opacity: 0; width: 0; height: 0;" {% if form_data.is_active %}checked{% endif %}>
                                 <span class="slider-round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                             </label>
                         </div>
@@ -125,68 +177,367 @@
                 </div>
             </div>
 
-            <style>
-                .switch-toggle input:checked + .slider-round {
-                    background-color: #10b981 !important;
-                }
-                .slider-round:before {
-                    position: absolute;
-                    content: "";
-                    height: 20px;
-                    width: 20px;
-                    left: 3px;
-                    bottom: 3px;
-                    background-color: white;
-                    transition: .3s;
-                    border-radius: 50%;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                }
-                .switch-toggle input:checked + .slider-round:before {
-                    transform: translateX(24px);
-                }
-            </style>
-
-            <script>
-                $(document).ready(function() {
-                    function updateStatusBadge() {
-                        let isChecked = $('#status-checkbox').is(':checked');
-                        let $badge = $('#status-badge');
-                        if (isChecked) {
-                            $badge.removeClass('bg-danger text-white').addClass('bg-success text-white').html('<i class="fas fa-check-circle mr-1"></i> Active');
-                        } else {
-                            $badge.removeClass('bg-success text-white').addClass('bg-danger text-white').html('<i class="fas fa-ban mr-1"></i> Inactive');
-                        }
-                    }
-                    updateStatusBadge();
-                    $('#status-checkbox').on('change', updateStatusBadge);
-                });
-            </script>
-
-            {% if messages %}
-                <div class="row mt-3">
-                    <div class="col-12 text-center">
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        {% endfor %}
+            <!-- Password Fields -->
+            <div class="row mt-2">
+                <div class="col-12 col-md-4">
+                    <div class="form-group-modern mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label-modern mb-0">
+                                {% if is_create %}Password <span class="text-danger">*</span>{% else %}Reset Password (Optional){% endif %}
+                            </label>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-primary" id="btn-generate-pw" style="font-size: 0.78rem; text-decoration: none;">
+                                <i class="fas fa-magic mr-1"></i> Generate Strong
+                            </button>
+                        </div>
+                        <div class="pw-input-wrapper">
+                            <input type="password" name="password" id="password" class="form-control form-control-modern"
+                                   placeholder="{% if is_create %}Enter secure password{% else %}Leave blank to keep unchanged{% endif %}"
+                                   {% if is_create %}required{% endif %}>
+                            <button type="button" class="pw-toggle-btn" data-target="#password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            {% endif %}
 
-            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <button type="submit" class="btn btn-submit" style="padding: 0.5rem 1.8rem; font-size: 0.9rem; border-radius: 10px;">
-                    <i class="fas fa-check mr-1"></i> Submit
-                </button>
-                <a href="{% url 'user_list' %}" class="btn btn-cancel" style="padding: 0.5rem 1.8rem; font-size: 0.9rem; border-radius: 10px; text-decoration:none;">
-                    <i class="fas fa-times mr-1"></i> Cancel
-                </a>
+                <div class="col-12 col-md-4">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern">
+                            {% if is_create %}Confirm Password <span class="text-danger">*</span>{% else %}Confirm New Password{% endif %}
+                        </label>
+                        <div class="pw-input-wrapper">
+                            <input type="password" name="confirm_password" id="confirm_password" class="form-control form-control-modern"
+                                   placeholder="Confirm password"
+                                   {% if is_create %}required{% endif %}>
+                            <button type="button" class="pw-toggle-btn" data-target="#confirm_password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small id="pw-match-msg" class="d-block mt-1 font-weight-bold" style="font-size: 0.78rem; display: none;"></small>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 d-flex align-items-center">
+                    {% if is_create %}
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" name="send_welcome_email" id="send_welcome_email" {% if form_data.send_welcome_email %}checked{% endif %}>
+                            <label class="form-check-label small" for="send_welcome_email" style="color: #334155; font-weight: 600;">
+                                <i class="fas fa-envelope text-primary mr-1"></i> Email login credentials &amp; welcome instructions to user
+                            </label>
+                        </div>
+                    {% else %}
+                        <small class="text-muted mt-3">
+                            <i class="fas fa-info-circle mr-1 text-info"></i> To change user's password, enter new password above. Otherwise leave blank.
+                        </small>
+                    {% endif %}
+                </div>
             </div>
-        </form>
-    </div>
 
+            <!-- Password Requirements Checklist -->
+            <div class="strength-indicator mt-1" id="pw-requirements" style="display: none;">
+                <span class="strength-req" id="req-len"><i class="fas fa-circle" style="font-size: 6px;"></i> 8+ Characters</span>
+                <span class="strength-req" id="req-upper"><i class="fas fa-circle" style="font-size: 6px;"></i> 1 Uppercase (A-Z)</span>
+                <span class="strength-req" id="req-lower"><i class="fas fa-circle" style="font-size: 6px;"></i> 1 Lowercase (a-z)</span>
+                <span class="strength-req" id="req-num"><i class="fas fa-circle" style="font-size: 6px;"></i> 1 Number (0-9)</span>
+                <span class="strength-req" id="req-spec"><i class="fas fa-circle" style="font-size: 6px;"></i> 1 Symbol (!@#$)</span>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Employee Profile -->
+        <div class="form-card-section">
+            <div class="form-section-title">
+                <i class="fas fa-id-card"></i> Employee Profile &amp; Personal Information
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">First Name <span class="text-danger">*</span></label>
+                        <input type="text" name="first_name" class="form-control form-control-modern"
+                               placeholder="First name" value="{{ form_data.first_name|default:'' }}" required>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" name="last_name" class="form-control form-control-modern"
+                               placeholder="Last name" value="{{ form_data.last_name|default:'' }}" required>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Contact Number</label>
+                        <input type="text" name="emp_contact" class="form-control form-control-modern"
+                               placeholder="10-digit Mobile" maxlength="10" pattern="\d*" title="Enter Numbers Only"
+                               value="{{ form_data.emp_contact|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Date of Birth (DOB)</label>
+                        <input type="date" name="emp_DOB" class="form-control form-control-modern"
+                               value="{{ form_data.emp_DOB|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Date of Joining (DOJ)</label>
+                        <input type="date" name="emp_DOJ" class="form-control form-control-modern"
+                               value="{{ form_data.emp_DOJ|default:'' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Organization & Role Placement -->
+        <div class="form-card-section">
+            <div class="form-section-title">
+                <i class="fas fa-sitemap"></i> Organization, Role &amp; Branch Assignment
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Organisation</label>
+                        <select name="emp_organisation" class="form-control form-control-modern select2">
+                            <option value="">-- Select Organisation --</option>
+                            {% for org in organisations %}
+                                <option value="{{ org.id }}" {% if form_data.emp_organisation == org.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ org.bvm_business }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Department</label>
+                        <select name="department" class="form-control form-control-modern select2">
+                            <option value="">-- Select Department --</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if form_data.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.dept_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Branch / Location</label>
+                        <select name="emp_branch" class="form-control form-control-modern select2">
+                            <option value="">-- Select Branch --</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}" {% if form_data.emp_branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ branch.loc_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Designation</label>
+                        <select name="emp_designation" class="form-control form-control-modern select2">
+                            <option value="">-- Select Designation --</option>
+                            {% for desig in designations %}
+                                <option value="{{ desig.id }}" {% if form_data.emp_designation == desig.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ desig.des_designation_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">System Role <span class="text-danger">*</span></label>
+                        <select name="emp_role" class="form-control form-control-modern select2" required>
+                            <option value="">-- Select Role --</option>
+                            {% for role in roles %}
+                                <option value="{{ role.id }}" {% if form_data.emp_role == role.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ role.role_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Statutory Records (Optional) -->
+        <div class="form-card-section">
+            <div class="form-section-title">
+                <i class="fas fa-file-invoice"></i> Statutory &amp; Compliance Details (Optional)
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">PAN Number</label>
+                        <input type="text" name="emp_pan" class="form-control form-control-modern"
+                               placeholder="e.g. ABCDE1234F" value="{{ form_data.emp_pan|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">UAN Number</label>
+                        <input type="text" name="emp_uan" class="form-control form-control-modern"
+                               placeholder="12-digit UAN" value="{{ form_data.emp_uan|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">ESI Number</label>
+                        <input type="text" name="emp_esi" class="form-control form-control-modern"
+                               placeholder="ESI Insurance No." value="{{ form_data.emp_esi|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Aadhaar Number</label>
+                        <input type="text" name="emp_aadhar" class="form-control form-control-modern"
+                               placeholder="12-digit Aadhaar No." value="{{ form_data.emp_aadhar|default:'' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Form Action Buttons ══ -->
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-submit" style="padding: 0.6rem 2rem; font-size: 0.95rem; border-radius: 10px;">
+                <i class="fas fa-check mr-1"></i>
+                {% if is_create %}Create User Login{% else %}Save Changes{% endif %}
+            </button>
+            <a href="{% url 'user_list' %}" class="btn btn-cancel" style="padding: 0.6rem 2rem; font-size: 0.95rem; border-radius: 10px; text-decoration:none;">
+                <i class="fas fa-times mr-1"></i> Cancel
+            </a>
+        </div>
+    </form>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Status switch badge toggler
+    function updateStatusBadge() {
+        let isChecked = $('#status-checkbox').is(':checked');
+        let $badge = $('#status-badge');
+        if (isChecked) {
+            $badge.removeClass('bg-danger text-white').addClass('bg-success text-white').html('<i class="fas fa-check-circle mr-1"></i> Active');
+        } else {
+            $badge.removeClass('bg-success text-white').addClass('bg-danger text-white').html('<i class="fas fa-ban mr-1"></i> Inactive');
+        }
+    }
+    updateStatusBadge();
+    $('#status-checkbox').on('change', updateStatusBadge);
+
+    // Password visibility toggle
+    $('.pw-toggle-btn').on('click', function() {
+        let targetSelector = $(this).data('target');
+        let $input = $(targetSelector);
+        let $icon = $(this).find('i');
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            $input.attr('type', 'password');
+            $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Generate strong password
+    $('#btn-generate-pw').on('click', function() {
+        let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+        let uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let lowers = "abcdefghijklmnopqrstuvwxyz";
+        let digits = "0123456789";
+        let specials = "!@#$%^&*";
+        
+        let pw = "";
+        pw += uppers[Math.floor(Math.random() * uppers.length)];
+        pw += lowers[Math.floor(Math.random() * lowers.length)];
+        pw += digits[Math.floor(Math.random() * digits.length)];
+        pw += specials[Math.floor(Math.random() * specials.length)];
+        for (let i = 4; i < 12; i++) {
+            pw += chars[Math.floor(Math.random() * chars.length)];
+        }
+        // Shuffle
+        pw = pw.split('').sort(function() { return 0.5 - Math.random() }).join('');
+
+        $('#password').attr('type', 'text').val(pw);
+        $('#confirm_password').attr('type', 'text').val(pw);
+        $('.pw-toggle-btn i').removeClass('fa-eye').addClass('fa-eye-slash');
+        
+        checkPasswordRules();
+        
+        // Copy to clipboard
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(pw);
+            alert("Strong password generated and copied to clipboard: " + pw);
+        } else {
+            alert("Strong password generated: " + pw);
+        }
+    });
+
+    // Real-time password rule validation
+    function checkPasswordRules() {
+        let p1 = $('#password').val();
+        let p2 = $('#confirm_password').val();
+
+        if (p1.length > 0) {
+            $('#pw-requirements').show();
+            $('#req-len').toggleClass('met', p1.length >= 8);
+            $('#req-upper').toggleClass('met', /[A-Z]/.test(p1));
+            $('#req-lower').toggleClass('met', /[a-z]/.test(p1));
+            $('#req-num').toggleClass('met', /[0-9]/.test(p1));
+            $('#req-spec').toggleClass('met', /[!@#$%^&*(),.?":{}|<>\_\-+=\[\]\\\/]/.test(p1));
+        } else {
+            $('#pw-requirements').hide();
+        }
+
+        let $matchMsg = $('#pw-match-msg');
+        if (p2.length > 0) {
+            $matchMsg.show();
+            if (p1 === p2) {
+                $matchMsg.css('color', '#10b981').html('<i class="fas fa-check-circle mr-1"></i> Passwords match');
+            } else {
+                $matchMsg.css('color', '#ef4444').html('<i class="fas fa-exclamation-triangle mr-1"></i> Passwords do not match');
+            }
+        } else {
+            $matchMsg.hide();
+        }
+    }
+
+    $('#password, #confirm_password').on('keyup input change', checkPasswordRules);
+
+    // Form submit validation
+    $('#userForm').on('submit', function(e) {
+        let p1 = $('#password').val();
+        let p2 = $('#confirm_password').val();
+        let isCreate = {% if is_create %}true{% else %}false{% endif %};
+
+        if (isCreate || p1.length > 0 || p2.length > 0) {
+            if (p1 !== p2) {
+                e.preventDefault();
+                alert("Passwords do not match. Please verify both password fields.");
+                $('#confirm_password').focus();
+                return false;
+            }
+            if (p1.length < 8) {
+                e.preventDefault();
+                alert("Password must be at least 8 characters long.");
+                $('#password').focus();
+                return false;
+            }
+        }
+    });
+});
+</script>
 {% endblock content %}
