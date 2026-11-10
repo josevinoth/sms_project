@@ -1644,6 +1644,23 @@ def trip_send_email(request):
             file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx",
             cc_list=cc_list
         )
+        # Log DMR send in DmrInfo table
+        try:
+            from ..sub_models.DmrInfo_report import DmrInfo
+            DmrInfo.objects.create(
+                dmr_customer=customer_obj,
+                dmr_department=department if isinstance(department, CustomerdepartmentInfo) else None,
+                dmr_month=int(month) if (month and str(month).isdigit()) else None,
+                dmr_year=int(year) if (year and str(year).isdigit()) else None,
+                dmr_recipient=", ".join(recipient_list),
+                dmr_cc=", ".join(cc_list),
+                dmr_subject=subject,
+                dmr_trip_count=len(trips),
+                dmr_sent_by=request.user if (request.user and request.user.is_authenticated) else None
+            )
+        except Exception as log_err:
+            print(f"Error logging DMR send: {log_err}")
+
         messages.success(request, "DMR Report sent successfully.")
     except Exception as e:
         messages.error(request, f"Failed to send email. Please check server configuration. Error: {str(e)}")

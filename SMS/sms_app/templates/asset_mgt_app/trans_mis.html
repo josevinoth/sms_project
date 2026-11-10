@@ -4,6 +4,7 @@
 {% block content %}
 {% load crispy_forms_tags %}
 {% load currency_format %}
+{% load static %}
 
 <div class="container-fluid py-3 px-3">
     <!-- ══ Page Header ══ -->
@@ -77,25 +78,7 @@
             </div>
         </div>
     </div>
-<!-- Show Entries + Export Buttons (DataTables style) -->
-<div class="px-3 pb-2 d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center" style="gap: 6px;">
-        <label style="font-size:13px; margin-bottom:0;">Show</label>
-        <select id="page-size-select" onchange="changePageSize()" style="padding:3px 6px; border:1px solid #ccc; border-radius:3px; font-size:13px;">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="all">All</option>
-        </select>
-        <label style="font-size:13px; margin-bottom:0;">entries</label>
-        &nbsp;
-        <button onclick="copyTable()" class="dt-export-btn">Copy</button>
-        <button onclick="printTable()" class="dt-export-btn">Print</button>
-        <button onclick="exportCSV()" class="dt-export-btn">CSV</button>
-        <button onclick="exportExcel()" class="dt-export-btn">Excel</button>
-    </div>
-</div>
+
 
 <style>
     .dt-export-btn {
@@ -126,42 +109,63 @@
         font-size: 0.85rem !important;
     }
 
+
+    .warehouse-variance-header { background-color: #343a40 !important; color: white !important; }
+    #mis-table {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+    #mis-table th, #mis-table td {
+        white-space: nowrap;
+        font-size: 0.82rem;
+        padding: 6px 10px;
+    }
+    .dataTables_scrollHeadInner {
+        width: 100% !important;
+    }
+    .dataTables_scrollHeadInner table {
+        width: 100% !important;
+    }
+
+    #mis-table_wrapper, .dataTables_wrapper {
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+    }
+    .table-container-modern {
+        overflow-y: visible !important;
+    }
+
 </style>
 
-<div class="table-responsive p-3" style="overflow-x: auto;">
-<table id="mis-table" class="table table-bordered" style="min-width: max-content;">
-    <thead>
+<div class="table-container-modern p-3">
+<table id="mis-table" class="table table-striped table-bordered">
+    <thead class="thead-dark">
     <tr style="text-align:center;">
-        <th colspan="2" style="background-color: #343a40 !important;">Transport</th>
-        <th class="warehouse-budget-header" colspan="{{ months|length|add:1 }}">Budget</th>
-        <th class="warehouse-actuals-header" colspan="{{ months|length|add:1 }}">Actuals</th>
-        <th class="warehouse-budget-header" colspan="{{ months|length|add:1 }}">Variance</th>
+        <th rowspan="2" style="text-align:center; vertical-align:middle;">Transport Category</th>
+        <th class="warehouse-budget-header text-center" colspan="{{ months|length|add:1 }}">Budget</th>
+        <th class="warehouse-actuals-header text-center" colspan="{{ months|length|add:1 }}">Actuals</th>
+        <th class="warehouse-variance-header text-center" colspan="{{ months|length|add:1 }}">Variance</th>
     </tr>
     <tr>
-        <th colspan="2">Category</th>
-        {% for m_idx in months %}
-        <th>{{ month_names_display|get_item:m_idx }}</th>
-        {% endfor %}
+        {% for m_idx in months %}<th>{{ month_names_display|get_item:m_idx }}</th>{% endfor %}
         <th>Total Budget</th>
-        {% for m_idx in months %}
-        <th>{{ month_names_display|get_item:m_idx }}</th>
-        {% endfor %}
+        {% for m_idx in months %}<th>{{ month_names_display|get_item:m_idx }}</th>{% endfor %}
         <th>Total Actuals</th>
-        {% for m_idx in months %}
-        <th>{{ month_names_display|get_item:m_idx }}</th>
-        {% endfor %}
+        {% for m_idx in months %}<th>{{ month_names_display|get_item:m_idx }}</th>{% endfor %}
         <th>Total Variance</th>
     </tr>
-</thead>
+    </thead>
     <tbody>
 
     <!-- INCOME SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INCOME</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">INCOME</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in income_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -179,11 +183,12 @@
 
     <!-- OPERATIONAL FIXED SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - FIXED</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">OPERATIONAL EXPENSES - FIXED</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in op_fixed_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -201,11 +206,12 @@
 
     <!-- OPERATIONAL VARIABLE SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - VARIABLE</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">OPERATIONAL EXPENSES - VARIABLE</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in op_variable_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -223,11 +229,12 @@
 
     <!-- NON-OPERATIONAL FIXED SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - FIXED</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">NON-OPERATIONAL EXPENSES - FIXED</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in non_op_fixed_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -245,11 +252,12 @@
 
     <!-- NON-OPERATIONAL VARIABLE SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - VARIABLE</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">NON-OPERATIONAL EXPENSES - VARIABLE</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in non_op_variable_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -267,11 +275,12 @@
 
     <!-- EMPLOYEE BENEFITS SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">EMPLOYEE BENEFITS</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">EMPLOYEE BENEFITS</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in employee_benefits_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -289,11 +298,12 @@
 
     <!-- DEPARTMENT EXPENSES SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">DEPARTMENT EXPENSES</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">DEPARTMENT EXPENSES</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in dept_expenses_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -311,11 +321,12 @@
 
     <!-- INTEREST EXPENSES SECTION -->
     <tr class="category-row">
-        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INTEREST EXPENSES</td>
+        <td style="text-align: left; padding-left: 10px; font-weight: bold;">INTEREST EXPENSES</td>
+        {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in interest_summary %}
     <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td colspan="2">{{ summary.expense_type }}</td>
+        <td>{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
@@ -333,7 +344,7 @@
 
     <!-- TOTAL EXPENSES -->
     <tr class="total-expense-row">
-        <td colspan="2"><strong>TOTAL EXPENSES</strong></td>
+        <td><strong>TOTAL EXPENSES</strong></td>
         {% for m_idx in months %}
         <td><strong>{{ total_expense_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
@@ -350,7 +361,7 @@
 
     <!-- NET PROFIT SUMMARY -->
     <tr class="net-profit-row">
-        <td colspan="2"><strong>NET PROFIT/LOSS</strong></td>
+        <td><strong>NET PROFIT/LOSS</strong></td>
         {% for m_idx in months %}
         <td><strong>{{ net_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
@@ -366,25 +377,81 @@
     </tr>
     <!-- PROFIT % ROW -->
     <tr class="profit-percent-row">
-        <td colspan="2"><strong>PROFIT %</strong></td>
-        <td colspan="{{ months|length|multiply:2|add:2 }}">&nbsp;</td> <!-- Skip Budget and Actual sections -->
+        <td><strong>PROFIT %</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        <td><strong>{{ net_summary.budget_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.pl_percentage|floatformat:1 }}%</strong></td>
+        <td><strong>{{ net_summary.budget_total_pl_percentage|floatformat:1 }}%</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.actual_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.actual_total_pl_percentage|floatformat:1 }}%</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.variance_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.variance_total_pl_percentage|floatformat:1 }}%</strong></td>
     </tr>
 
     </tbody>
 </table>
 </div>
 
-<!-- Pagination Footer -->
-<div class="px-3 pt-2 pb-3 d-flex align-items-center justify-content-between" style="font-size:13px;">
-    <div id="page-info" style="color:#555;">Showing 0 to 0 of 0 entries</div>
-    <div id="pagination-container" class="d-flex align-items-center" style="gap:3px;"></div>
-</div>
+
 
 <script>
+    $(document).ready(function () {
+        $('#mis-table').DataTable({
+            scrollY: "600px",
+            scrollX: true,
+            scrollCollapse: true,
+            ordering: false,
+            pageLength: -1,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy',
+                'print',
+                {
+                    extend: 'csvHtml5',
+                    text: 'CSV',
+                    exportOptions: { columns: ':visible' },
+                    customize: function (csv) {
+                        const monthCount = {{ months|length }};
+                        const topHeader = [
+                            'Transport Category',
+                            ...Array(monthCount).fill('Budget'),
+                            'Total Budget',
+                            ...Array(monthCount).fill('Actuals'),
+                            'Total Actuals',
+                            ...Array(monthCount).fill('Variance'),
+                            'Total Variance'
+                        ];
+                        return topHeader.join(',') + '\n' + csv;
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    exportOptions: { columns: ':visible' },
+                    customizeData: function (data) {
+                        const monthCount = {{ months|length }};
+                        const topHeader = [
+                            'Transport Category',
+                            ...Array(monthCount).fill('Budget'),
+                            'Total Budget',
+                            ...Array(monthCount).fill('Actuals'),
+                            'Total Actuals',
+                            ...Array(monthCount).fill('Variance'),
+                            'Total Variance'
+                        ];
+                        data.body.unshift(data.header);
+                        data.header = topHeader;
+                    }
+                }
+            ]
+        });
+    });
+
     // ---- Export Functions ----
     function copyTable() {
         const el = document.getElementById('mis-table');
@@ -477,150 +544,17 @@
 
     function exportExcel() {
         const table = document.getElementById('mis-table');
-        const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">' +
-                     '<head><meta charset="UTF-8"></head><body>' + table.outerHTML + '</body></html>';
-        const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'transport_mis.xls';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => document.body.removeChild(a), 100);
-    }
+        if (!table) return;
 
-    // ---- Pagination Logic ----
-    let currentPage = 1;
-    let pageSize = 10;
-
-    function getDataRows() {
-        // All tbody rows that are NOT category/section headers
-        return Array.from(document.querySelectorAll('#mis-table tbody tr')).filter(
-            r => !r.classList.contains('category-row') && 
-                 !r.classList.contains('total-expense-row') && 
-                 !r.classList.contains('net-profit-row') && 
-                 !r.classList.contains('profit-percent-row')
-        );
-    }
-
-    function getAllTbodyRows() {
-        return Array.from(document.querySelectorAll('#mis-table tbody tr'));
-    }
-
-    function renderPage() {
-        const dataRows = getDataRows();
-        const allRows = getAllTbodyRows();
-        const total = dataRows.length;
-
-        const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-        const end   = pageSize === 'all' ? total : Math.min(start + pageSize, total);
-
-        // Hide all data rows
-        dataRows.forEach(r => r.style.display = 'none');
-        // Show rows in current page range
-        dataRows.slice(start, end).forEach(r => r.style.display = '');
-
-        // Show section header (category-row) only if at least one sibling data row is visible
-        let categoryRow = null;
-        let hasVisible = false;
-        allRows.forEach(row => {
-            if (row.classList.contains('category-row')) {
-                if (categoryRow) categoryRow.style.display = hasVisible ? '' : 'none';
-                categoryRow = row;
-                hasVisible = false;
-            } else {
-                if (row.style.display !== 'none') hasVisible = true;
-            }
-        });
-        // Handle last category
-        if (categoryRow) categoryRow.style.display = hasVisible ? '' : 'none';
-
-        // Always show summary rows (total expenses, profit/loss and profit %)
-        allRows.forEach(row => {
-            if (row.classList.contains('total-expense-row') ||
-                row.classList.contains('net-profit-row') ||
-                row.classList.contains('profit-percent-row')) {
-                row.style.display = '';
-            }
-        });
-
-        // Update info text
-        const actualEnd = Math.min(end, total);
-        document.getElementById('page-info').textContent =
-            total === 0
-            ? 'No entries found'
-            : `Showing ${start + 1} to ${actualEnd} of ${total} entries`;
-
-        renderPagination(total);
-    }
-
-    function renderPagination(total) {
-        const totalPages = pageSize === 'all' ? 1 : Math.ceil(total / pageSize);
-        const container = document.getElementById('pagination-container');
-        container.innerHTML = '';
-        if (totalPages <= 1) return;
-
-        // Previous
-        const prev = document.createElement('button');
-        prev.textContent = 'Previous';
-        prev.className = 'dt-export-btn';
-        prev.style.opacity = currentPage === 1 ? '0.5' : '1';
-        prev.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } };
-        container.appendChild(prev);
-
-        // Page numbers (show max 7 pages with ellipsis)
-        const maxButtons = 7;
-        let pages = [];
-        if (totalPages <= maxButtons) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        if (typeof XLSX !== 'undefined') {
+            const clonedTable = table.cloneNode(true);
+            clonedTable.querySelectorAll('.d-none, .no-export').forEach(el => el.remove());
+            const wb = XLSX.utils.table_to_book(clonedTable, { sheet: "Transport MIS", raw: false });
+            XLSX.writeFile(wb, 'transport_mis.xlsx');
         } else {
-            pages = [1];
-            if (currentPage > 3) pages.push('...');
-            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
-            if (currentPage < totalPages - 2) pages.push('...');
-            pages.push(totalPages);
+            exportCSV();
         }
-
-        pages.forEach(p => {
-            if (p === '...') {
-                const span = document.createElement('span');
-                span.textContent = '...';
-                span.style.padding = '5px 8px';
-                container.appendChild(span);
-            } else {
-                const btn = document.createElement('button');
-                btn.textContent = p;
-                btn.className = 'dt-export-btn';
-                if (p === currentPage) {
-                    btn.style.background = '#343a40';
-                    btn.style.color = 'white';
-                    btn.style.borderColor = '#343a40';
-                }
-                btn.onclick = () => { currentPage = p; renderPage(); };
-                container.appendChild(btn);
-            }
-        });
-
-        // Next
-        const next = document.createElement('button');
-        next.textContent = 'Next';
-        next.className = 'dt-export-btn';
-        next.style.opacity = currentPage === totalPages ? '0.5' : '1';
-        next.onclick = () => { if (currentPage < totalPages) { currentPage++; renderPage(); } };
-        container.appendChild(next);
     }
-
-    function changePageSize() {
-        const sel = document.getElementById('page-size-select');
-        pageSize = sel.value === 'all' ? 'all' : parseInt(sel.value);
-        currentPage = 1;
-        renderPage();
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        renderPage();
-    });
 
     // ---- Filter Functions ----
     function updateFilters() {

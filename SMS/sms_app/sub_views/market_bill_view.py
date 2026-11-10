@@ -416,11 +416,11 @@ def market_bill_list(request):
         # Use departed date when available, otherwise created_at as a fallback
         if from_date:
             trip_filter = trip_filter.filter(
-                Q(tr_departeddate__gte=from_date) | Q(tr_departeddate__isnull=True, tr_created_at__gte=from_date)
+                Q(tr_departeddate__date__gte=from_date) | Q(tr_departeddate__isnull=True, tr_created_at__date__gte=from_date)
             )
         if to_date:
             trip_filter = trip_filter.filter(
-                Q(tr_departeddate__lte=to_date) | Q(tr_departeddate__isnull=True, tr_created_at__lte=to_date)
+                Q(tr_departeddate__date__lte=to_date) | Q(tr_departeddate__isnull=True, tr_created_at__date__lte=to_date)
             )
 
         trip_ids = set(trip_filter.values_list('id', flat=True))
