@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: a5 landscape;
+        margin: 6mm 8mm 5mm 8mm;
+    }
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color: #222;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+    }
+    table.outer-table {
+        width: 100%;
+        border: 2px solid #555 !important;
+        border-collapse: collapse;
+    }
+    td.outer-cell {
+        border: none !important;
+        padding: 12px 20px 10px 20px;
+        vertical-align: top;
+    }
+    table.inner-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table.inner-table td {
+        border: none;
+        padding: 0 0 2px 0;
+        vertical-align: bottom;
+    }
+    table.inner-table td.val-line {
+        border-bottom: 1.5px dotted #444 !important;
+        font-size: 11.5px;
+        color: #111;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    hr.header-divider {
+        border: 0;
+        border-top: 2px solid #333;
+        margin: 8px 0 10px 0;
+    }
+    .company-title {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 18px;
+        font-weight: bold;
+        color: #222;
+        text-align: center;
+        margin: 0;
+    }
+    .company-address {
+        font-size: 9.5px;
+        font-weight: bold;
+        color: #222;
+        text-align: center;
+        margin-top: 3px;
+        line-height: 1.25;
+    }
+    .voucher-title {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        margin: 4px 0 14px 0;
+        text-decoration: underline;
+    }
+    .row-table {
+        margin-bottom: 10px;
+    }
+    .lbl {
+        font-weight: bold;
+        font-size: 11.5px;
+        color: #222;
+        white-space: nowrap;
+        padding-right: 4px;
+    }
+    .sig-table {
+        margin-top: 20px;
+    }
+    .sig-table td {
+        width: 20%;
+        text-align: center;
+        vertical-align: bottom;
+        padding: 0 6px;
+    }
+    .sig-name {
+        font-size: 11px;
+        color: #222;
+        text-align: center;
+        height: 24px;
+        vertical-align: bottom;
+        margin-bottom: 3px;
+    }
+    .sig-label {
+        font-size: 11.5px;
+        font-weight: bold;
+        color: #222;
+        margin-top: 2px;
+    }
+    .sig-line {
+        border-bottom: 1.5px dotted #444 !important;
+        height: 24px;
+        margin-bottom: 3px;
+    }
+</style>
+</head>
+<body>
+<table class="outer-table">
+    <tr>
+        <td class="outer-cell">
+            <!-- Header -->
+            <table class="inner-table">
+                <tr>
+                    <td style="width: 20%; text-align: left; vertical-align: middle;">
+                        {% if logo_base64 %}
+                        <img src="data:image/png;base64,{{ logo_base64 }}" style="width: 95px; height: auto;" alt="Logo" />
+                        {% endif %}
+                    </td>
+                    <td style="width: 80%; text-align: center; vertical-align: middle;">
+                        <div class="company-title">{{ company_name }}</div>
+                        <div class="company-address">{{ company_address|safe }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <hr class="header-divider" />
+
+            <!-- Voucher Title -->
+            <div class="voucher-title">PAYMENT VOUCHER</div>
+
+            <!-- Row 1: No / Date -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 25px;">No.</td>
+                    <td class="val-line" style="width: 48%;">{{ voucher_no|default_if_none:"" }}</td>
+                    <td style="width: 4%;"></td>
+                    <td class="lbl" style="width: 45px;">Date :</td>
+                    <td class="val-line">{{ voucher_date|date:"d-m-Y"|default:"-" }}</td>
+                </tr>
+            </table>
+
+            <!-- Row 2: Amount / (In Words) -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 80px;">Amount Rs.</td>
+                    <td class="val-line" style="width: 18%;">{{ amount|default_if_none:"0.0" }}</td>
+                    <td class="lbl" style="width: 38px; text-align: center; padding-left: 8px;">(Rs.&nbsp;</td>
+                    <td class="val-line">{{ amount_in_words }}</td>
+                    <td class="lbl" style="width: 8px;">)</td>
+                </tr>
+            </table>
+
+            <!-- Row 3: Head of Accounts -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 120px;">Head of Accounts</td>
+                    <td class="val-line">{{ expense_type|default_if_none:"" }}</td>
+                </tr>
+            </table>
+
+            <!-- Row 4: Payment to -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 80px;">Payment to</td>
+                    <td class="val-line">{{ payment_to }}</td>
+                </tr>
+            </table>
+
+            <!-- Row 5: for Job No / (Vehicle No or Unit) -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 75px;">for Job No</td>
+                    <td class="val-line" style="width: 42%;">{{ job_no|default:"N/A" }}</td>
+                    <td style="width: 4%;"></td>
+                    {% if pc_type == 'TMS' %}
+                    <td class="lbl" style="width: 75px;">Vehicle No</td>
+                    <td class="val-line">{{ vehicle_no|default:"N/A" }}</td>
+                    {% else %}
+                    <td class="lbl" style="width: 40px;">Unit</td>
+                    <td class="val-line">{{ unit|default:"N/A" }}</td>
+                    {% endif %}
+                </tr>
+            </table>
+
+            <!-- Row 6: Job Date / Customer -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 65px;">Job Date</td>
+                    <td class="val-line" style="width: 43%;">{{ trip_date|date:"d-m-Y"|default:"N/A" }}</td>
+                    <td style="width: 4%;"></td>
+                    <td class="lbl" style="width: 65px;">Customer</td>
+                    <td class="val-line">{{ customer|default:"N/A" }}</td>
+                </tr>
+            </table>
+
+            {% if pc_type == 'PMS' and vehicle_no %}
+            <!-- PMS Optional Vehicle No -->
+            <table class="inner-table row-table">
+                <tr>
+                    <td class="lbl" style="width: 75px;">Vehicle No</td>
+                    <td class="val-line">{{ vehicle_no }}</td>
+                </tr>
+            </table>
+            {% endif %}
+
+            <!-- Row 7: Narration -->
+            <table class="inner-table row-table" style="margin-bottom: 6px;">
+                <tr>
+                    <td class="lbl" style="width: 65px;">Narration</td>
+                    <td class="val-line">&nbsp;{{ clean_remarks }}</td>
+                </tr>
+            </table>
+
+            <!-- Signatures -->
+            <table class="inner-table sig-table">
+                <tr>
+                    <td>
+                        <div class="sig-name">{{ created_by|default:"-" }}</div>
+                        <div class="sig-label">Prepared</div>
+                    </td>
+                    <td>
+                        <div class="sig-name">
+                            {% if is_checked %}
+                            {{ checked_by|default:"-" }}
+                            {% endif %}
+                        </div>
+                        <div class="sig-label">Checked</div>
+                    </td>
+                    <td>
+                        <div class="sig-name">
+                            {% if is_verified %}
+                            {{ verified_by|default:"-" }}
+                            {% endif %}
+                        </div>
+                        <div class="sig-label">Verified</div>
+                    </td>
+                    <td>
+                        <div class="sig-name">
+                            {% if is_approved %}
+                            {{ approved_by|default:"-" }}
+                            {% endif %}
+                        </div>
+                        <div class="sig-label">Approved</div>
+                    </td>
+                    <td>
+                        <div class="sig-line">
+                            {% if receiver_signature %}
+                            <img src="{{ receiver_signature }}" style="max-height: 22px; max-width: 80px;" alt="Signature" />
+                            {% else %}
+                            &nbsp;
+                            {% endif %}
+                        </div>
+                        <div class="sig-label">Receiver's Signature</div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

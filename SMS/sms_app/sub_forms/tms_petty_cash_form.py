@@ -9,6 +9,7 @@ class TMSPettyCashForm(forms.ModelForm):
         widgets = {
             'tpc_transaction_date': forms.DateInput(attrs={'type': 'date'}),
             'tpc_trip_date': forms.DateInput(attrs={'type': 'date'}),
+            'tpc_bill_attachment': forms.FileInput(attrs={'class': 'form-control form-control-modern', 'style': 'height: 34px; padding: 3px 6px; font-size: 0.85rem;'}),
         }
 
     def __init__(self, *args, **kwargs):

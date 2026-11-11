@@ -15,7 +15,7 @@ class DmrInfo(models.Model):
     dmr_cc = models.TextField(blank=True, null=True)
     dmr_subject = models.CharField(max_length=255, blank=True, null=True)
     dmr_trip_count = models.IntegerField(default=0)
-    dmr_sent_at = models.DateTimeField(auto_now_add=True)
+    dmr_sent_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     dmr_sent_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):

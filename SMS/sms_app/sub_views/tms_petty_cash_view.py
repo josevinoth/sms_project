@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from datetime import datetime
 from django.utils import timezone
 from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
@@ -239,10 +239,10 @@ def tms_petty_cash_add(request, tpc_id=0):
             post_data['tpc_to_manual'] = ''
 
         if tpc_id == 0:
-            form = TMSPettyCashForm(post_data, request=request)
+            form = TMSPettyCashForm(post_data, request.FILES, request=request)
         else:
             tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
-            form = TMSPettyCashForm(post_data, instance=tpc, request=request)
+            form = TMSPettyCashForm(post_data, request.FILES, instance=tpc, request=request)
             
         from_location = ""
         to_location = ""
@@ -256,15 +256,23 @@ def tms_petty_cash_add(request, tpc_id=0):
                 from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
                 to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
 
+        import os
+        bill_filename = ""
+        if form.instance and form.instance.tpc_bill_attachment:
+            bill_filename = os.path.basename(form.instance.tpc_bill_attachment.name)
+
         context = {
             'form': form,
             'tpc_id': tpc_id,
             'from_location': from_location,
             'to_location': to_location,
+            'bill_filename': bill_filename,
         }
 
         if form.is_valid():
             saved_tpc = form.save(commit=False)
+            if post_data.get('tpc_bill_attachment-clear') in ['on', '1', 'true']:
+                saved_tpc.tpc_bill_attachment = None
             voucher_date = saved_tpc.tpc_transaction_date
             if not voucher_date:
                 messages.error(request, "Voucher Date is strictly required to generate voucher number.")
@@ -315,11 +323,17 @@ def tms_petty_cash_add(request, tpc_id=0):
                 from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
                 to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
 
+        import os
+        bill_filename = ""
+        if form.instance and form.instance.tpc_bill_attachment:
+            bill_filename = os.path.basename(form.instance.tpc_bill_attachment.name)
+
         context = {
             'form': form,
             'tpc_id': tpc_id,
             'from_location': from_location,
             'to_location': to_location,
+            'bill_filename': bill_filename,
         }
     return render(request, "asset_mgt_app/tms_petty_cash_add.html", context)
 
@@ -486,6 +500,16 @@ def tms_petty_cash_list(request):
                 except ValueError:
                     pass
 
+            attachment_btn = ""
+            if tpc.tpc_bill_attachment:
+                attachment_btn = f'''<a href="{tpc.tpc_bill_attachment.url}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #6c757d; color: white; border-color: #6c757d;" title="View Attachment">
+                    <i class="fas fa-paperclip"></i>
+                </a>'''
+
+            combined_pdf_btn = f'''<a href="/SMS/tms_petty_cash_combined_pdf/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #dc3545; color: white; border-color: #dc3545;" title="Combined Voucher & Bill PDF">
+                <i class="fas fa-file-pdf"></i>
+            </a>'''
+
             row = [
                 start + i + 1,
                 tpc.tpc_number or "",
@@ -503,6 +527,8 @@ def tms_petty_cash_list(request):
                     <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
                         <i class="fas fa-print"></i>
                     </a>
+                    {combined_pdf_btn}
+                    {attachment_btn}
                     <a href="{edit_url}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;">
                         <i class="far fa-edit"></i>
                     </a>
@@ -857,4 +883,57 @@ def add_tms_expense_type(request):
             "name": new_obj.tms_exp_type_name
         })
     return JsonResponse({"success": False, "error": "Invalid request method."})
+
+
+def tms_petty_cash_combined_pdf(request, tpc_id):
+    tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
+    from ..utils.petty_cash_pdf_utils import generate_petty_cash_combined_pdf
+    pdf_bytes = generate_petty_cash_combined_pdf(tpc, pc_type='TMS')
+    safe_name = re.sub(r'[\\/*?:"<>|]', '_', tpc.tpc_number or f'TMS_{tpc.id}')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{safe_name}_combined.pdf"'
+    return response
+
+
+def tms_petty_cash_export_zip(request):
+    tpc_number = request.GET.get('tpc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_vehicle = request.GET.get('search_vehicle', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
+
+    filters = Q()
+    if tpc_number:
+        filters &= Q(tpc_number__icontains=tpc_number)
+    if search_date:
+        filters &= Q(tpc_trip_date=search_date)
+    if from_date:
+        filters &= Q(tpc_transaction_date__gte=from_date)
+    if to_date:
+        filters &= Q(tpc_transaction_date__lte=to_date)
+    if search_vehicle:
+        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    if not is_admin_or_supervisor:
+        user_branch = get_user_branch_code(request)
+        if user_branch:
+            filters &= (Q(tpc_branch__loc_name__icontains=user_branch) | Q(tpc_number__startswith=f"{user_branch[:1].upper()}_T_"))
+    else:
+        if search_branch:
+            filters &= (Q(tpc_branch__loc_name__icontains=search_branch) | Q(tpc_number__startswith=f"{search_branch[:1].upper()}_T_"))
+
+    if search_user:
+        filters &= (Q(tpc_created_by__id=search_user) | Q(tpc_created_by__username__icontains=search_user))
+
+    tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
+        'tpc_business', 'tpc_branch', 'tpc_category', 'tpc_expense_type',
+        'tpc_credit_ledger', 'tpc_to', 'tpc_customer', 'tpc_vehicle_source',
+        'tpc_vehicle_number', 'tpc_driver_name', 'tpc_created_by', 'tpc_updated_by'
+    )
+    from ..utils.petty_cash_pdf_utils import export_petty_cash_zip
+    return export_petty_cash_zip(tpc_list, pc_type='TMS', zip_filename='TMS_Petty_Cash_Attachments.zip')
+
 

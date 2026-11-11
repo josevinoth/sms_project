@@ -30,6 +30,9 @@
             <i class="fas fa-list-alt mr-2"></i> TMS Petty Cash List
         </h3>
         <div class="d-flex" style="gap:10px;">
+            <a href="{% url 'tms_petty_cash_export_zip' %}?tpc_number={{ search_tpc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_vehicle={{ search_vehicle }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-file-archive"></i> Download ZIP
+            </a>
             <a href="{% url 'tms_petty_cash_export_tally' %}?tpc_number={{ search_tpc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_vehicle={{ search_vehicle }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #10b981, #059669); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
                 <i class="fas fa-file-excel"></i> Export Tally
             </a>

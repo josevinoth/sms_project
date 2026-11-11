@@ -337,7 +337,8 @@ def budgetform_list(request):
                 (budget.bf_interest_on_vehicle_loan or 0)
         ), 2)
 
-        row_total = round(row_income + row_dept + row_emp + row_interest + row_ops + row_non_ops, 2)
+        # Overall total represents total expenses (excluding income)
+        row_total = round(row_dept + row_emp + row_interest + row_ops + row_non_ops, 2)
 
         # Attach per-row subtotals as dynamic attributes
         budget.row_income_subtotal = row_income
@@ -356,9 +357,9 @@ def budgetform_list(request):
         operational_expenses_total += row_ops
         non_operational_expenses_total += row_non_ops
 
-    # Calculate the overall grand total
+    # Calculate the overall grand total (Total Expenses excluding Income)
     overall_total = round(
-        income_total + department_expenses_total + employee_benefits_total +
+        department_expenses_total + employee_benefits_total +
         interest_total + operational_expenses_total + non_operational_expenses_total, 2
     )
     income_total = round(income_total, 2)

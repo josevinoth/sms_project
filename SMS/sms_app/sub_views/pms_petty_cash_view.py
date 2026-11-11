@@ -727,3 +727,52 @@ def add_pms_expense_type(request):
         })
     return JsonResponse({"success": False, "error": "Invalid request method."})
 
+
+def pms_petty_cash_combined_pdf(request, ppc_id):
+    ppc = get_object_or_404(PMSPettyCashInfo, pk=ppc_id)
+    from ..utils.petty_cash_pdf_utils import generate_petty_cash_combined_pdf
+    pdf_bytes = generate_petty_cash_combined_pdf(ppc, pc_type='PMS')
+    safe_name = re.sub(r'[\\/*?:"<>|]', '_', ppc.ppc_number or f'PMS_{ppc.id}')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{safe_name}_combined.pdf"'
+    return response
+
+
+def pms_petty_cash_export_zip(request):
+    ppc_number = request.GET.get('ppc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_unit = request.GET.get('search_unit', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
+
+    filters = Q()
+    if ppc_number:
+        filters &= Q(ppc_number__icontains=ppc_number)
+    if search_date:
+        filters &= Q(ppc_transaction_date=search_date)
+    if from_date:
+        filters &= Q(ppc_date__gte=from_date)
+    if to_date:
+        filters &= Q(ppc_date__lte=to_date)
+    if search_unit:
+        filters &= Q(ppc_unit__icontains=search_unit)
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    if not is_admin_or_supervisor:
+        user_branch = get_user_branch_code(request)
+        if user_branch:
+            filters &= (Q(ppc_branch__loc_name__icontains=user_branch) | Q(ppc_number__istartswith=f"{user_branch}-"))
+    else:
+        if search_branch:
+            filters &= (Q(ppc_branch__loc_name__icontains=search_branch) | Q(ppc_number__istartswith=f"{search_branch}-"))
+
+    ppc_list = PMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
+        'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',
+        'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 'ppc_vehicle_number',
+        'ppc_created_by', 'ppc_updated_by'
+    )
+    from ..utils.petty_cash_pdf_utils import export_petty_cash_zip
+    return export_petty_cash_zip(ppc_list, pc_type='PMS', zip_filename='PMS_Petty_Cash_Attachments.zip')
+
+

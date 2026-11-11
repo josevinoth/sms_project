@@ -714,3 +714,51 @@ def add_wms_expense_type(request):
         })
     return JsonResponse({"success": False, "error": "Invalid request method."})
 
+
+def wms_petty_cash_combined_pdf(request, wpc_id):
+    wpc = get_object_or_404(WMSPettyCashInfo, pk=wpc_id)
+    from ..utils.petty_cash_pdf_utils import generate_petty_cash_combined_pdf
+    pdf_bytes = generate_petty_cash_combined_pdf(wpc, pc_type='WMS')
+    safe_name = re.sub(r'[\\/*?:"<>|]', '_', wpc.wpc_number or f'WMS_{wpc.id}')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{safe_name}_combined.pdf"'
+    return response
+
+
+def wms_petty_cash_export_zip(request):
+    wpc_number = request.GET.get('wpc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_unit = request.GET.get('search_unit', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
+
+    filters = Q()
+    if wpc_number:
+        filters &= Q(wpc_number__icontains=wpc_number)
+    if search_date:
+        filters &= Q(wpc_transaction_date=search_date)
+    if from_date:
+        filters &= Q(wpc_date__gte=from_date)
+    if to_date:
+        filters &= Q(wpc_date__lte=to_date)
+    if search_unit:
+        filters &= Q(wpc_unit__icontains=search_unit)
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    if not is_admin_or_supervisor:
+        user_branch = get_user_branch_code(request)
+        if user_branch:
+            filters &= (Q(wpc_branch__loc_name__icontains=user_branch) | Q(wpc_number__istartswith=f"{user_branch}-"))
+    else:
+        if search_branch:
+            filters &= (Q(wpc_branch__loc_name__icontains=search_branch) | Q(wpc_number__istartswith=f"{search_branch}-"))
+
+    wpc_list = WMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
+        'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',
+        'wpc_credit_ledger', 'wpc_to', 'wpc_customer', 'wpc_created_by', 'wpc_updated_by'
+    )
+    from ..utils.petty_cash_pdf_utils import export_petty_cash_zip
+    return export_petty_cash_zip(wpc_list, pc_type='WMS', zip_filename='WMS_Petty_Cash_Attachments.zip')
+
+

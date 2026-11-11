@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<form method="POST" id="tms_petty_cash_add" action="">
+<form method="POST" id="tms_petty_cash_add" action="" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.tpc_receiver_signature.as_hidden }}
     
@@ -89,6 +89,32 @@
                         <div class="form-group-modern">
                             <label class="form-label-modern">To Person</label>
                             {% render_field form.tpc_to id="tpc_to" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Attachment</label>
+                            <div class="custom-file-upload-wrapper">
+                                <input type="file" name="tpc_bill_attachment" id="tpc_bill_attachment" class="form-control form-control-modern" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;" accept="image/*,.pdf">
+                            </div>
+                            {% if form.instance.tpc_bill_attachment %}
+                            <div id="tpc_attachment_preview" class="border rounded p-2 mt-2" style="background:#f8fafc; border-color:#e2e8f0 !important;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="text-truncate small font-weight-bold d-flex align-items-center" style="max-width:75%; font-size:0.8rem; color:#334155;" title="{{ bill_filename|default:form.instance.tpc_bill_attachment.name }}">
+                                        <i class="far fa-file-alt text-primary mr-1" style="font-size: 0.95rem;"></i>
+                                        <span class="text-truncate">{{ bill_filename|default:form.instance.tpc_bill_attachment.name }}</span>
+                                    </span>
+                                    <span class="d-flex align-items-center" style="gap: 10px;">
+                                        <a href="{{ form.instance.tpc_bill_attachment.url }}" target="_blank" class="text-primary" title="View attachment" style="font-size:0.9rem; text-decoration:none;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a role="button" class="text-danger" id="delete_tpc_attachment_btn" title="Remove attachment" style="cursor:pointer; font-size:0.9rem;">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                <input type="hidden" name="tpc_bill_attachment-clear" id="tpc_bill_attachment-clear" value="">
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -584,6 +610,19 @@
         $('#addTmsExpenseTypeModal').on('shown.bs.modal', function () {
             $('#modal_tms_expense_type_name').focus();
             $('#addTmsExpenseTypeError').hide();
+        });
+
+        // Attachment remove / change handlers matching WMS petty cash
+        $('#delete_tpc_attachment_btn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to remove this attachment?')) {
+                $('#tpc_bill_attachment-clear').val('on');
+                $('#tpc_attachment_preview').slideUp(200);
+            }
+        });
+
+        $('#tpc_bill_attachment').on('change', function() {
+            $('#tpc_bill_attachment-clear').val('');
         });
     });
 </script>
