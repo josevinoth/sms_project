@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+from ..sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
 from ..sub_models.pms_vehicle_mod import PMSVehicleInfo
 from django.views.decorators.csrf import csrf_exempt
 from ..sub_models.gatein_mod import Gatein_info
@@ -364,7 +365,8 @@ def pms_petty_cash_list(request):
         user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
 
     context = {
-        'ppc_list': page_obj,
+        'ppc_list': ppc_list,
+        'page_obj': page_obj,
         'search_ppc_number': ppc_number,
         'search_date': search_date,
         'from_date': from_date,
@@ -666,7 +668,7 @@ def add_pms_vehicle(request):
         existing = PMSVehicleInfo.objects.filter(pc_vehicle_no__iexact=vehicle_num).first()
         if existing:
             if not existing.pc_is_active:
-                existing.is_active = True
+                existing.pc_is_active = True
                 existing.save()
             return JsonResponse({
                 "success": True,
@@ -684,3 +686,44 @@ def add_pms_vehicle(request):
             "pc_vehicle_no": new_veh.pc_vehicle_no
         })
     return JsonResponse({"success": False, "error": "Invalid request method."})
+
+
+@csrf_exempt
+def add_pms_expense_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            return JsonResponse({"success": False, "error": "Expense type name cannot be empty."})
+
+        existing = PMSExpenseTypeInfo.objects.filter(pms_exp_type_name__iexact=name).first()
+        if existing:
+            if not existing.pms_exp_type_status:
+                existing.pms_exp_type_status = True
+                existing.save()
+            return JsonResponse({
+                "success": True,
+                "id": existing.id,
+                "name": existing.pms_exp_type_name,
+                "message": "Expense type already exists."
+            })
+
+        from django.db.models import Max
+        from django.db import connection
+        try:
+            new_obj = PMSExpenseTypeInfo.objects.create(pms_exp_type_name=name, pms_exp_type_status=True)
+        except Exception:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT setval(pg_get_serial_sequence('sms_app_pmsexpensetypeinfo', 'id'), (SELECT COALESCE(MAX(id), 1) FROM sms_app_pmsexpensetypeinfo));")
+                new_obj = PMSExpenseTypeInfo.objects.create(pms_exp_type_name=name, pms_exp_type_status=True)
+            except Exception:
+                max_id = PMSExpenseTypeInfo.objects.aggregate(Max('id'))['id__max'] or 0
+                new_obj = PMSExpenseTypeInfo.objects.create(id=max_id + 1, pms_exp_type_name=name, pms_exp_type_status=True)
+
+        return JsonResponse({
+            "success": True,
+            "id": new_obj.id,
+            "name": new_obj.pms_exp_type_name
+        })
+    return JsonResponse({"success": False, "error": "Invalid request method."})
+

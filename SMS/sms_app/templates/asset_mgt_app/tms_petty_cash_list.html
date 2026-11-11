@@ -18,6 +18,13 @@
             top: 0 !important;
             z-index: 10 !important;
         }
+        .filter-input {
+            min-width: 90px;
+            height: 30px !important;
+            font-size: 0.8rem !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+        }
     </style>    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
             <i class="fas fa-list-alt mr-2"></i> TMS Petty Cash List
@@ -102,27 +109,44 @@
         </div>
         {% endif %}
 
-        <table id="petty_cash_table" class="table table-striped table-bordered modern-table w-100">
-            <thead>
-                <tr>
-                    <th>S.No</th>
-                    <th>Voucher No</th>
-                    <th>Voucher Date</th>
-                    <th>Business</th>
-                    <th>Branch</th>
-                    <th>Amount</th>
-                    <th>From - To</th>
-                    <th>Vehicle No</th>
-                    <th>Created On</th>
-                    <th>Created By</th>
-                    <th>Updated By</th>
-                    <th>Updated On</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table id="petty_cash_table" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr class="filter-row">
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search S.No" disabled style="visibility:hidden; width:40px; min-width:40px;"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Voucher No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Voucher Date"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Business"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Branch"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Amount"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search From - To"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Vehicle No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Created On"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Created By"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Updated By"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Updated On"></th>
+                        <th></th>
+                    </tr>
+                    <tr style="white-space: nowrap;">
+                        <th>S.No</th>
+                        <th>Voucher No</th>
+                        <th>Voucher Date</th>
+                        <th>Business</th>
+                        <th>Branch</th>
+                        <th>Amount</th>
+                        <th>From - To</th>
+                        <th>Vehicle No</th>
+                        <th>Created On</th>
+                        <th>Created By</th>
+                        <th>Updated By</th>
+                        <th>Updated On</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
         
         <!-- Django Pagination removed -->
     </div>
@@ -154,7 +178,7 @@
             return cookieValue;
         }
 
-        $('#petty_cash_table').DataTable({
+        var table = $('#petty_cash_table').DataTable({
             scrollX: false,
             scrollY: false, // Ensure no vertical scroll is applied by DataTables
             scrollCollapse: false,
@@ -164,10 +188,7 @@
             serverSide: true,
             ajax: {
                 url: window.location.href, // This will include the GET query string (filters)
-                type: 'GET',
-                data: function(d) {
-                    // d already contains draw, start, length
-                }
+                type: 'GET'
             },
             lengthMenu: [
                 [10, 25, 50, 100, -1],
@@ -175,6 +196,17 @@
             ],
             dom: '<"d-flex justify-content-between align-items-center mb-2"l f><"d-flex justify-content-between align-items-center mb-2"B>rtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
+            initComplete: function () {
+                var searchTimeout = null;
+                $('.filter-row input').on('keyup change', function () {
+                    var input = this;
+                    var colIndex = $(input).closest('th').index();
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(function() {
+                        table.column(colIndex).search(input.value).draw();
+                    }, 400);
+                });
+            },
             drawCallback: function(settings) {
                 // We need to inject CSRF token into any dynamically generated forms
                 const csrfToken = getCookie('csrftoken');
@@ -186,6 +218,11 @@
                     });
                 }
             }
+        });
+
+        // Prevent column ordering when clicking input inside filter row
+        $('.filter-row input').on('click', function(e) {
+            e.stopPropagation();
         });
     });
 </script>

@@ -325,7 +325,16 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
             tc_status = getattr(trip, 'tc_financestatus_id', None)
             op_status = getattr(trip, 'tr_operational_status_id', None)
             cancel_check = getattr(trip, 'tc_cancellation_check', False)
-            if tc_status == 10 or op_status == 10 or cancel_check:
+            cancel_charges = getattr(trip, 'tc_cancellation', 0)
+            enquiry = getattr(trip, 'tr_enquirynumber', None)
+            en_status = getattr(enquiry, 'en_status_id', None) if enquiry else None
+            if (
+                tc_status in (3, 10, 11) or
+                op_status in (3, 10, 11) or
+                cancel_check or
+                (cancel_charges and cancel_charges > 0) or
+                en_status in (8, 10)
+            ):
                 val = getattr(trip, 'tr_tripnumber', '')
         return _safe_str(val or "")
     if fk in ("cg_consignerinvoice", "consigner_invoice", "invoice_no"):
@@ -397,16 +406,28 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
     if fk == "tr_departedlocation":
         return _safe_str(trip.tr_departedlocation)
     if fk in ("pickup_date", "en_pickup_date"):
-        val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None)
+        if getattr(trip, 'tr_category_id', None) in (2, 3):
+            val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None) or trip.tr_created_at
+        else:
+            val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None) or trip.tr_created_at
         return _safe_fmt(val, df or "%d-%m-%Y") if val else ""
     if fk in ("pickup_time", "en_pickup_time"):
-        val = trip.tr_departeddate_pickup or trip.tr_loading_time or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None)
+        if getattr(trip, 'tr_category_id', None) in (2, 3):
+            val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None)
+        else:
+            val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or getattr(trip.tr_enquirynumber, "en_pickupdatetime", None)
         return _safe_fmt(val, df or "%H:%M") if val else ""
     if fk == "pickup_in_date":
-        val = trip.tr_departeddate_pickup or trip.tr_loading_time
+        if getattr(trip, 'tr_category_id', None) in (2, 3):
+            val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_created_at
+        else:
+            val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
         return _safe_fmt(val, df or "%d-%m-%Y") if val else ""
     if fk == "pickup_in_time":
-        val = trip.tr_departeddate_pickup or trip.tr_loading_time
+        if getattr(trip, 'tr_category_id', None) in (2, 3):
+            val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time
+        else:
+            val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate
         return _safe_fmt(val, df or "%H:%M") if val else ""
     if fk == "pickup_out_date":
         val = trip.tr_dock_out_time or trip.tr_departeddate or trip.tr_dock_in_time or trip.tr_loading_time
@@ -415,10 +436,13 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         val = trip.tr_dock_out_time or trip.tr_departeddate or trip.tr_dock_in_time or trip.tr_loading_time
         return _safe_fmt(val, df or "%H:%M") if val else ""
     if fk == "loading_reported_datetime":
-        val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
+        if getattr(trip, 'tr_category_id', None) in (2, 3):
+            val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_created_at
+        else:
+            val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
         return _safe_fmt(val, df or "%d-%m-%Y %H:%M") if val else ""
     if fk == "loading_started_datetime":
-        val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup
+        val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_created_at
         return _safe_fmt(val, df or "%d-%m-%Y %H:%M") if val else ""
     if fk == "starting_km":
         return _safe_str(trip.tr_reportedkm_pickup)

@@ -103,14 +103,14 @@
                     </select>
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 120px;">
-                    <label class="form-label-modern">Month</label>
-                    {% render_field form.month class="form-control form-control-modern" value=selected_month %}
+                <div class="form-group-modern mb-0" style="flex: 1 1 140px;">
+                    <label class="form-label-modern">From Date</label>
+                    <input type="date" name="from_date" id="id_from_date" class="form-control form-control-modern" value="{{ from_date }}">
                 </div>
 
-                <div class="form-group-modern mb-0" style="flex: 1 1 120px;">
-                    <label class="form-label-modern">Year</label>
-                    {% render_field form.year class="form-control form-control-modern" value=selected_year %}
+                <div class="form-group-modern mb-0" style="flex: 1 1 140px;">
+                    <label class="form-label-modern">To Date</label>
+                    <input type="date" name="to_date" id="id_to_date" class="form-control form-control-modern" value="{{ to_date }}">
                 </div>
 
                 <div class="form-group-modern mb-0" style="flex: 1 1 180px;">
@@ -153,6 +153,8 @@
                         <input type="hidden" name="customer_id" value="{{ customer_id }}">
                         <input type="hidden" name="customer_department" value="{{ dept_id }}">
                         <input type="hidden" name="dmr_template" id="modal_dmr_template" value="{{ selected_template_id }}">
+                        <input type="hidden" name="from_date" value="{{ from_date }}">
+                        <input type="hidden" name="to_date" value="{{ to_date }}">
                         <input type="hidden" name="month" value="{{ selected_month }}">
                         <input type="hidden" name="year" value="{{ selected_year }}">
                         <input type="hidden" name="from_location" value="{{ from_location }}">
@@ -236,8 +238,10 @@ function initTripTable() {
                 d.dmr_customer = $('#id_dmr_customer').val();
                 d.customer_department = $('#id_customer_department').val();
                 d.dmr_template = $('#id_dmr_template').val();
-                d.month = $('#id_month').val();
-                d.year = $('#id_year').val();
+                d.from_date = $('#id_from_date').val();
+                d.to_date = $('#id_to_date').val();
+                d.month = $('#id_month').val() || '';
+                d.year = $('#id_year').val() || '';
                 d.from_location = $('#id_from_location').val();
                 d.to_location = $('#id_to_location').val();
             },
@@ -294,6 +298,8 @@ function downloadDmrExcel() {
         customer_id: custId,
         customer_department: $('#id_customer_department').val() || "{{ dept_id }}",
         dmr_template: $('#id_dmr_template').val() || "{{ selected_template_id }}",
+        from_date: $('#id_from_date').val() || "{{ from_date }}",
+        to_date: $('#id_to_date').val() || "{{ to_date }}",
         month: $('#id_month').val() || "{{ selected_month }}",
         year: $('#id_year').val() || "{{ selected_year }}",
         from_location: $('#id_from_location').val() || "{{ from_location }}",
@@ -338,8 +344,10 @@ $(document).ready(function () {
             dmr_customer: $('#id_dmr_customer').val(),
             customer_department: $('#id_customer_department').val(),
             dmr_template: $('#id_dmr_template').val(),
-            month: $('#id_month').val(),
-            year: $('#id_year').val(),
+            from_date: $('#id_from_date').val(),
+            to_date: $('#id_to_date').val(),
+            month: $('#id_month').val() || '',
+            year: $('#id_year').val() || '',
             from_location: $('#id_from_location').val(),
             to_location: $('#id_to_location').val()
         };
@@ -464,8 +472,10 @@ $(document).ready(function () {
             } catch(e) {}
         }
         const templateId = $("#id_dmr_template").val();
-        const month = $("#id_month").val();
-        const year = $("#id_year").val();
+        const fromDate = $("#id_from_date").val();
+        const toDate = $("#id_to_date").val();
+        const month = $("#id_month").val() || "";
+        const year = $("#id_year").val() || "";
         const fromLoc = $("#id_from_location").val();
         const toLoc = $("#id_to_location").val();
 
@@ -481,6 +491,8 @@ $(document).ready(function () {
         $("#sendDmrEmailModal input[name='customer_id']").val(customerId);
         $("#sendDmrEmailModal input[name='customer_department']").val(departmentId);
         $("#sendDmrEmailModal input[name='dmr_template']").val(templateId);
+        $("#sendDmrEmailModal input[name='from_date']").val(fromDate);
+        $("#sendDmrEmailModal input[name='to_date']").val(toDate);
         $("#sendDmrEmailModal input[name='month']").val(month);
         $("#sendDmrEmailModal input[name='year']").val(year);
         $("#sendDmrEmailModal input[name='from_location']").val(fromLoc);

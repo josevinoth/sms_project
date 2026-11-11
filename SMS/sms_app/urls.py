@@ -124,7 +124,7 @@ urlpatterns = [
     path('service_update/<int:service_id>/', views.service_add, name='service_update'),  # Update service
     path('service_delete/<int:service_id>/', views.service_delete, name='service_delete'),  # Delete service
     path('goods_list/', views.goods_list, name='goods_list'),
-    # path('goods_list_ajax/', views.goods_list_ajax, name='goods_list_ajax'),  # List goods,
+    path('goods_list_ajax/', views.goods_list_ajax, name='goods_list_ajax'),  # List goods,
     path('goods_insert', views.goods_add, name='goods_insert'),  # Add goods
     path('goods_update/<int:goods_id>/', views.goods_add, name='goods_update'),  # Update goods
     path('goods_delete/<int:goods_id>/', views.goods_delete, name='goods_delete'),  # Delete goods
@@ -472,6 +472,10 @@ urlpatterns = [
     path('pms_petty_cash_update/<int:ppc_id>/', views.pms_petty_cash_add, name='pms_petty_cash_update'),
     path('pms_petty_cash_delete/<int:ppc_id>/', views.pms_petty_cash_delete, name='pms_petty_cash_delete'),
     path('pms_petty_cash_export_tally/', views.pms_petty_cash_export_tally, name='pms_petty_cash_export_tally'),
+    path('add_pms_vehicle/', views.add_pms_vehicle, name='add_pms_vehicle'),
+    path('add_pms_expense_type/', views.add_pms_expense_type, name='add_pms_expense_type'),
+    path('add_wms_expense_type/', views.add_wms_expense_type, name='add_wms_expense_type'),
+    path('add_tms_expense_type/', views.add_tms_expense_type, name='add_tms_expense_type'),
     path('get_wms_job_details/', views.get_wms_job_details, name='get_wms_job_details'),
     path('get_wms_customers_by_unit/', views.get_wms_customers_by_unit, name='get_wms_customers_by_unit'),
     path('get_wms_jobs_by_customer/', views.get_wms_jobs_by_customer, name='get_wms_jobs_by_customer'),
@@ -669,6 +673,7 @@ urlpatterns = [
     # List prime enquiry vehicles
     path('prime_enquiry_list/', views.prime_enquiry_booking_list, name='prime_enquiry_list'),
     path('prime_enquiry_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_insert'),
+    path('prime_enquiry_vehicle_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_vehicle_insert'),
     path('prime_enquiry_vehicle_update/<int:pev_id>', views.prime_enquiry_vehicle_add,
          name='prime_enquiry_vehicle_update'),  # update prime enquiry vehicle
     path('prime_enquiry_vehicle_delete/<int:pev_id>', views.prime_enquiry_vehicle_delete,
@@ -773,6 +778,7 @@ urlpatterns = [
     path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges,
          name='transport_calculate_trip_charges'),  # transport_calculate_trip_charges
     path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),  # iou_get_full_name
+    path('iou_get_staff_by_business/', views.get_staff_by_business_iou, name='iou_get_staff_by_business'),  # iou_get_staff_by_business
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU

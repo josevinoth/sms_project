@@ -824,7 +824,6 @@ TRANSPORT_NON_OPERATIONAL_EXPENSES_VARIABLE = {
 }
 
 TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
-    "Corp Staff": "bf_corp_staff",
     "Bonus-Corp Staff": "bf_bonus_corp_staff",
     "EDLI Contribution-Corp Staff": "bf_EDLI_contribution_corp_staff",
     "Employer Contribution to ESI-Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
@@ -837,7 +836,6 @@ TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
     "LWF-Corp Staff": "bf_lwf_corp_staff",
     "Salaries & Wages-Corp Staff": "bf_salaries_wages_corp_staff",
 
-    "Dept Staff": "bf_dept_staff",
     "Bonus-Staff": "bf_bonus_staff",
     "EDLI Contribution-Staff": "bf_EDLI_contribution_staff",
     "Employer Contribution to ESI-Staff": "bf_employer_contribution_to_ESI_staff",
@@ -850,7 +848,6 @@ TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
     "LWF-Staff": "bf_lwf_dept_staff",
     "Salaries & Wages-Staff": "bf_salaries_wages_staff",
 
-    "Drivers": "bf_driver_staff",
     "Bonus-Drivers": "bf_bonus_drivers",
     "EDLI Contribution-Drivers": "bf_EDLI_contribution_drivers",
     "Employer Contribution to ESI-Drivers": "bf_employer_contribution_to_ESI_drivers",
@@ -8370,7 +8367,7 @@ def transport_mis(request):
             expense_dict[handling_exp_cat][month] += float(item["total_handling"] or 0)
             expense_dict[toll_cat][month] += float(item["total_toll_trip_closure"] or 0)
 
-    # --- Add Driver Salary actuals to "Driver Betta" ---
+    # --- Add Driver Salary actuals to "Salaries & Wages-Drivers" ---
     from ..sub_models.driver_salary_mod import DriverSalaryInfo
     salary_filter = {}
     if selected_year:
@@ -8391,10 +8388,14 @@ def transport_mis(request):
             .annotate(total_salary=Sum('ds_monthly_salary'))
         )
 
+    driver_salary_cat = "Salaries & Wages-Drivers"
+    if driver_salary_cat not in expense_dict:
+        expense_dict[driver_salary_cat] = {i: 0 for i in display_months_indices}
+
     for item in salary_summary:
         month = item["ds_month__month"]
         if month in display_months_indices:
-            expense_dict[betta_cat][month] += float(item["total_salary"] or 0)
+            expense_dict[driver_salary_cat][month] += float(item["total_salary"] or 0)
 
     # --- Add Market Bill charges to Actuals ---
     from ..sub_models.market_bill_mod import MarketBillInfo

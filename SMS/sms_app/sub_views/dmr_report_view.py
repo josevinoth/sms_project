@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When
+from django.db.models.functions import Coalesce
 from io import BytesIO
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
@@ -21,20 +22,87 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn
 from .dmr_field_catalog import extract_dmr_cell_value, is_dmr_column_mergeable
 
-# Q expression to exclude trips cancelled without billing across all DMR report views
-CANCELLATION_WITHOUT_BILLING_Q = (
-    Q(tc_financestatus_id=11) |
-    Q(tc_financestatus__status__icontains='without billing') |
-    Q(tr_enquirynumber__en_status_id=10) |
-    Q(tr_enquirynumber__en_status__status_title__icontains='without billing')
+# Q expression defining cancelled trips (with or without billing)
+IS_CANCELLATION_Q = (
+    Q(tc_financestatus_id__in=[3, 10, 11]) |
+    Q(tr_operational_status_id__in=[3, 10, 11]) |
+    Q(tc_cancellation_check=True) |
+    Q(tc_cancellation__gt=0) |
+    Q(tr_enquirynumber__en_status_id__in=[8, 10]) |
+    Q(tc_financestatus__status__icontains='cancel') |
+    Q(tr_operational_status__status__icontains='cancel') |
+    Q(tr_enquirynumber__en_status__status_title__icontains='cancel')
 )
+
+# DMR base filter:
+# 1. Normal Business trips (category 1, not cancelled, vehicle got reported date/time at loading point)
+# 2. Cancellation trips (with or without billing) across Business (1), Empty (2), and Business Empty (3)
+NORMAL_BUSINESS_Q = Q(tr_category_id=1, tr_departeddate_pickup__isnull=False) & ~IS_CANCELLATION_Q
+CANCELLATION_TRIPS_Q = IS_CANCELLATION_Q & Q(tr_category_id__in=[1, 2, 3])
+BASE_DMR_Q = NORMAL_BUSINESS_Q | CANCELLATION_TRIPS_Q
+
+# Effective loading point date expression:
+# For Empty (2) and Business Empty (3) cancelled trips: take departed date in loading point (tr_departeddate),
+# falling back to tr_departeddate_pickup, tr_loading_time, or tr_created_at.
+# For Business (1) trips: take loading reported date (tr_departeddate_pickup),
+# falling back to tr_departeddate, tr_loading_time, or tr_created_at.
+DMR_EFFECTIVE_DATE_EXPR = Case(
+    When(tr_category_id__in=[2, 3], then=Coalesce('tr_departeddate', 'tr_departeddate_pickup', 'tr_loading_time', 'tr_created_at')),
+    default=Coalesce('tr_departeddate_pickup', 'tr_departeddate', 'tr_loading_time', 'tr_created_at')
+)
+
+
+def apply_dmr_date_filter(qs, from_date_str=None, to_date_str=None, month=None, year=None):
+    """
+    Filters TripdetailInfo queryset by date range or month/year.
+    Evaluates against effective loading date:
+    - Normal business trips: reported date in loading point (tr_departeddate_pickup)
+    - Empty & Business Empty cancelled trips: departed/starting date in loading point (tr_departeddate)
+    """
+    qs = qs.annotate(effective_dmr_date=DMR_EFFECTIVE_DATE_EXPR)
+
+    valid_from = None
+    if from_date_str:
+        try:
+            valid_from = datetime.strptime(str(from_date_str).strip(), '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            valid_from = None
+
+    valid_to = None
+    if to_date_str:
+        try:
+            valid_to = datetime.strptime(str(to_date_str).strip(), '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            valid_to = None
+
+    if valid_from and valid_to:
+        return qs.filter(
+            effective_dmr_date__date__gte=valid_from,
+            effective_dmr_date__date__lte=valid_to
+        )
+    elif valid_from:
+        return qs.filter(effective_dmr_date__date__gte=valid_from)
+    elif valid_to:
+        return qs.filter(effective_dmr_date__date__lte=valid_to)
+    elif month and year:
+        try:
+            m, y = int(month), int(year)
+            if 1 <= m <= 12:
+                first_day = date(y, m, 1)
+                last_day = date(y, m, calendar.monthrange(y, m)[1])
+                return qs.filter(
+                    effective_dmr_date__date__gte=first_day,
+                    effective_dmr_date__date__lte=last_day
+                )
+        except (ValueError, TypeError):
+            pass
+    return qs
 
 
 def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
     """
     Returns consignment number if available; if not available and the trip
-    is 'Cancellation with Billing' (tc_financestatus_id=10 or tr_operational_status_id=10
-    or tc_cancellation_check=True), falls back to trip number (tr_tripnumber).
+    is cancellation with or without billing, falls back to trip number (tr_tripnumber).
     """
     if cons_detail and getattr(cons_detail, 'co_consignmentnumber', None):
         val = str(cons_detail.co_consignmentnumber).strip()
@@ -49,7 +117,16 @@ def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
         tc_status = getattr(trip, 'tc_financestatus_id', None)
         op_status = getattr(trip, 'tr_operational_status_id', None)
         cancel_check = getattr(trip, 'tc_cancellation_check', False)
-        if tc_status == 10 or op_status == 10 or cancel_check:
+        cancel_charges = getattr(trip, 'tc_cancellation', 0)
+        enquiry = getattr(trip, 'tr_enquirynumber', None)
+        en_status = getattr(enquiry, 'en_status_id', None) if enquiry else None
+        if (
+            tc_status in (3, 10, 11) or
+            op_status in (3, 10, 11) or
+            cancel_check or
+            (cancel_charges and cancel_charges > 0) or
+            en_status in (8, 10)
+        ):
             val = getattr(trip, 'tr_tripnumber', None)
             if val:
                 return str(val).strip()
@@ -710,8 +787,13 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                 goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
                 va = va_map.get(trip.tr_enquirynumber_id)
                 cancellation_val = safe_num(trip.tc_cancellation)
+                is_cancel_without_billing = (
+                    getattr(trip, 'tc_financestatus_id', None) == 11 or
+                    getattr(trip, 'tr_operational_status_id', None) == 11 or
+                    getattr(getattr(trip, 'tr_enquirynumber', None), 'en_status_id', None) == 10
+                )
                 from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
-                effective_tripcost = 0.0 if cancellation_val > 0 else get_tms_report_transport_charge(trip, allotment=va)
+                effective_tripcost = 0.0 if (cancellation_val > 0 or is_cancel_without_billing) else get_tms_report_transport_charge(trip, allotment=va)
 
                 g_len = len(goods_list)
                 studio_trip_groups.append((cur_idx, cur_idx + g_len - 1))
@@ -754,7 +836,12 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
         # If cancellation charges are applicable for a trip, trip charges should be 0
         from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
         cancellation_val = safe_num(trip.tc_cancellation)
-        effective_tripcost = 0.0 if cancellation_val > 0 else get_tms_report_transport_charge(trip, allotment=va)
+        is_cancel_without_billing = (
+            getattr(trip, 'tc_financestatus_id', None) == 11 or
+            getattr(trip, 'tr_operational_status_id', None) == 11 or
+            getattr(getattr(trip, 'tr_enquirynumber', None), 'en_status_id', None) == 10
+        )
+        effective_tripcost = 0.0 if (cancellation_val > 0 or is_cancel_without_billing) else get_tms_report_transport_charge(trip, allotment=va)
 
         for cons_goods in goods_list:
             row = []
@@ -766,24 +853,32 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
 
                 # 2. Pickup Point (Arrival at Shipper - IN) OR Generic Pickup/Loading Date
                 if hh in ("pickup date", "pickup point in date", "in date", "airport/bvm gate in date"):
-                    # Strict: For specific "IN" labels
-                    val = trip.tr_departeddate_pickup or trip.tr_loading_time
+                    if getattr(trip, 'tr_category_id', None) in (2, 3):
+                        val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_created_at
+                    else:
+                        val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
                     row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                     continue
                 if hh in ("loading date",):
-                    # Broader fallback for generic "loading date"
-                    val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate or trip.tr_created_at
+                    if getattr(trip, 'tr_category_id', None) in (2, 3):
+                        val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_created_at
+                    else:
+                        val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate or trip.tr_created_at
                     row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                     continue
                 if hh in ("pickup point in time", "in time", "airport/bvm gate in time"):
-                    # Strict: For specific "IN" labels
-                    val = trip.tr_departeddate_pickup or trip.tr_loading_time
+                    if getattr(trip, 'tr_category_id', None) in (2, 3):
+                        val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time
+                    else:
+                        val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate
                     row.append(_safe_fmt(val, "%H:%M") if val else "");
                     continue
                 if hh in ("loading time", "veh reported time @ loading point",
                           "vehicle reported date &time at loading point"):
-                    # Broader fallback for generic "loading time"
-                    val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
+                    if getattr(trip, 'tr_category_id', None) in (2, 3):
+                        val = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_created_at
+                    else:
+                        val = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
                     if hh == "vehicle reported date &time at loading point":
                         row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
                         continue
@@ -1172,12 +1267,14 @@ def trip_report(request):
     # -------------------------
     # GET FILTER VALUES FROM FORM
     # -------------------------
-    customer_id = request.POST.get('dmr_customer')  # Correct field name from DmrForm
-    dept_id = request.POST.get('customer_department')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    from_loc = request.POST.get('from_location')
-    to_loc = request.POST.get('to_location')
+    customer_id = request.POST.get('dmr_customer') or request.GET.get('dmr_customer')
+    dept_id = request.POST.get('customer_department') or request.GET.get('customer_department')
+    from_date = (request.POST.get('from_date') or request.GET.get('from_date') or '').strip()
+    to_date = (request.POST.get('to_date') or request.GET.get('to_date') or '').strip()
+    selected_month = request.POST.get('month') or request.GET.get('month')
+    selected_year = request.POST.get('year') or request.GET.get('year')
+    from_loc = request.POST.get('from_location') or request.GET.get('from_location')
+    to_loc = request.POST.get('to_location') or request.GET.get('to_location')
 
     # -------------------------
     # GET CUSTOMER + DEPT NAMES
@@ -1204,8 +1301,8 @@ def trip_report(request):
     # BASE QUERY
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
-    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+        BASE_DMR_Q
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1215,27 +1312,16 @@ def trip_report(request):
         'tr_departedlocation',
         'tr_reportedlocation',
         'tc_financestatus'
-    ).order_by('-tr_tripnumber')
+    ).order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
 
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
-    if selected_month and selected_year:
-        try:
-            selected_month = int(selected_month)
-            selected_year = int(selected_year)
-            # Validate month is in valid range
-            if 1 <= selected_month <= 12:
-                first_day = date(selected_year, selected_month, 1)
-                last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
-                trips = trips.filter(
-                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
-                    Q(tr_departeddate__date__range=[first_day, last_day])
-                )
-        except (ValueError, TypeError):
-            # Invalid month/year values, skip date filtering
-            pass
+
+    # Filter based on reported date in loading point (tr_departeddate_pickup, fallback to tr_departeddate)
+    trips = apply_dmr_date_filter(trips, from_date_str=from_date, to_date_str=to_date, month=selected_month, year=selected_year)
+
     if from_loc:
         trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc:
@@ -1312,8 +1398,10 @@ def trip_report(request):
         'dept_id': dept_id or '',
         'selected_template_id': str(template_id or ''),
         'customer_templates': customer_templates,
-        'selected_month': int(selected_month) if selected_month else current_month,
-        'selected_year': int(selected_year) if selected_year else current_year,
+        'from_date': from_date,
+        'to_date': to_date,
+        'selected_month': int(selected_month) if (selected_month and str(selected_month).isdigit()) else current_month,
+        'selected_year': int(selected_year) if (selected_year and str(selected_year).isdigit()) else current_year,
         'years': range(current_year - 5, current_year + 1),
         'from_location': int(from_loc) if from_loc else '',
         'to_location': int(to_loc) if to_loc else '',
@@ -1418,6 +1506,8 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
 def export_dmr_excel(request):
     customer_id = request.GET.get('customer_id') or request.GET.get('dmr_customer')
     dept_id = request.GET.get('customer_department') or request.GET.get('dept_id')
+    from_date = (request.GET.get('from_date') or '').strip()
+    to_date = (request.GET.get('to_date') or '').strip()
     month = request.GET.get('month')
     year = request.GET.get('year')
     from_loc = request.GET.get('from_location')
@@ -1434,9 +1524,9 @@ def export_dmr_excel(request):
         return redirect('trip_report')
 
     qs = TripdetailInfo.objects.filter(
-        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10),
-        tr_enquirynumber__en_customername_id=customer_id
-    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+        BASE_DMR_Q,
+        tr_enquirynumber__en_customername_id=customer_id,
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1446,7 +1536,7 @@ def export_dmr_excel(request):
         'tr_departedlocation',
         'tr_reportedlocation',
         'tc_financestatus'
-    ).order_by('tr_departeddate')
+    )
 
     if dept_id:
         try:
@@ -1454,18 +1544,8 @@ def export_dmr_excel(request):
         except:
             qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
 
-    if month and year:
-        try:
-            m, y = int(month), int(year)
-            if 1 <= m <= 12:
-                first_day = date(y, m, 1)
-                last_day = date(y, m, calendar.monthrange(y, m)[1])
-                qs = qs.filter(
-                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
-                    Q(tr_departeddate__date__range=[first_day, last_day])
-                )
-        except (ValueError, TypeError):
-            pass
+    # Filter based on reported date in loading point (tr_departeddate_pickup, fallback to tr_departeddate)
+    qs = apply_dmr_date_filter(qs, from_date_str=from_date, to_date_str=to_date, month=month, year=year)
 
     if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
@@ -1497,7 +1577,7 @@ def export_dmr_excel(request):
         order_col_idx, order_dir = 1, 'desc'
 
     order_map = {
-        1: 'tr_departeddate',
+        1: 'tr_departeddate_pickup',
         2: 'tr_consignmentnumber__co_consignmentnumber',
         3: 'tr_enquirynumber__en_customername__cu_name',
         4: 'tr_departedlocation__place_name',
@@ -1506,7 +1586,12 @@ def export_dmr_excel(request):
         7: 'tr_vehiclenumber',
     }
     sort_field = order_map.get(order_col_idx)
-    if order_col_idx == 2:
+    if order_col_idx == 1:
+        if order_dir == 'desc':
+            qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        else:
+            qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
+    elif order_col_idx == 2:
         from django.db.models.functions import Coalesce
         order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
         if order_dir == 'desc':
@@ -1519,7 +1604,7 @@ def export_dmr_excel(request):
         else:
             qs = qs.order_by(sort_field)
     else:
-        qs = qs.order_by('-tr_tripnumber')
+        qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
 
     if length != -1:
         trips = list(qs[start : start + length])
@@ -1555,6 +1640,8 @@ def trip_send_email(request):
 
     customer_id = request.POST.get('customer_id')
     dept_id = request.POST.get('customer_department') or request.POST.get('dept_id')
+    from_date = (request.POST.get('from_date') or '').strip()
+    to_date = (request.POST.get('to_date') or '').strip()
     month = request.POST.get('month')
     year = request.POST.get('year')
     from_loc = request.POST.get('from_location')
@@ -1576,9 +1663,9 @@ def trip_send_email(request):
 
     # Query Trips
     qs = TripdetailInfo.objects.filter(
-        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10),
-        tr_enquirynumber__en_customername_id=customer_id
-    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+        BASE_DMR_Q,
+        tr_enquirynumber__en_customername_id=customer_id,
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1588,7 +1675,7 @@ def trip_send_email(request):
         'tr_departedlocation',
         'tr_reportedlocation',
         'tc_financestatus'
-    ).order_by('tr_departeddate')  # Date sort
+    ).order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
 
     if dept_id:
         try:
@@ -1596,19 +1683,8 @@ def trip_send_email(request):
         except:
             qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
 
-    if month and year:
-        try:
-            m, y = int(month), int(year)
-            # Validate month is in valid range
-            if 1 <= m <= 12:
-                first_day = date(y, m, 1)
-                last_day = date(y, m, calendar.monthrange(y, m)[1])
-                qs = qs.filter(
-                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
-                    Q(tr_departeddate__date__range=[first_day, last_day])
-                )
-        except (ValueError, TypeError):
-            pass
+    # Filter based on reported date in loading point (tr_departeddate_pickup, fallback to tr_departeddate)
+    qs = apply_dmr_date_filter(qs, from_date_str=from_date, to_date_str=to_date, month=month, year=year)
 
     if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)
@@ -1646,12 +1722,21 @@ def trip_send_email(request):
         )
         # Log DMR send in DmrInfo table
         try:
+            log_month = int(month) if (month and str(month).isdigit() and int(month) > 0) else None
+            log_year = int(year) if (year and str(year).isdigit() and int(year) > 0) else None
+            if not log_month and from_date:
+                try:
+                    parsed_dt = datetime.strptime(from_date, "%Y-%m-%d").date()
+                    log_month = parsed_dt.month
+                    log_year = parsed_dt.year
+                except Exception:
+                    pass
             from ..sub_models.DmrInfo_report import DmrInfo
             DmrInfo.objects.create(
                 dmr_customer=customer_obj,
                 dmr_department=department if isinstance(department, CustomerdepartmentInfo) else None,
-                dmr_month=int(month) if (month and str(month).isdigit()) else None,
-                dmr_year=int(year) if (year and str(year).isdigit()) else None,
+                dmr_month=log_month,
+                dmr_year=log_year,
                 dmr_recipient=", ".join(recipient_list),
                 dmr_cc=", ".join(cc_list),
                 dmr_subject=subject,
@@ -1737,6 +1822,8 @@ def trip_report_ajax(request):
     # Filters (same names as used in trip_report form)
     customer_id = request.GET.get('dmr_customer')
     dept_id = request.GET.get('customer_department')
+    from_date = (request.GET.get('from_date') or '').strip()
+    to_date = (request.GET.get('to_date') or '').strip()
     selected_month = request.GET.get('month')
     selected_year = request.GET.get('year')
     from_loc = request.GET.get('from_location')
@@ -1745,8 +1832,8 @@ def trip_report_ajax(request):
 
     # Base queryset
     trips = TripdetailInfo.objects.filter(
-        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
-    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).select_related(
+        BASE_DMR_Q
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -1763,19 +1850,8 @@ def trip_report_ajax(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
-    if selected_month and selected_year:
-        try:
-            sm = int(selected_month);
-            sy = int(selected_year)
-            if 1 <= sm <= 12:
-                first_day = date(sy, sm, 1)
-                last_day = date(sy, sm, calendar.monthrange(sy, sm)[1])
-                trips = trips.filter(
-                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
-                    Q(tr_departeddate__date__range=[first_day, last_day])
-                )
-        except Exception:
-            pass
+    # Filter based on reported date in loading point (tr_departeddate_pickup, fallback to tr_departeddate)
+    trips = apply_dmr_date_filter(trips, from_date_str=from_date, to_date_str=to_date, month=selected_month, year=selected_year)
 
     if from_loc:
         trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
@@ -1790,7 +1866,7 @@ def trip_report_ajax(request):
         order_col_idx, order_dir = 0, 'desc'
 
     order_map = {
-        1: 'tr_departeddate',
+        1: 'tr_departeddate_pickup',
         2: 'tr_consignmentnumber__co_consignmentnumber',
         3: 'tr_enquirynumber__en_customername__cu_name',
         4: 'tr_departedlocation__place_name',
@@ -1799,7 +1875,12 @@ def trip_report_ajax(request):
         7: 'tr_vehiclenumber',
     }
     sort_field = order_map.get(order_col_idx)
-    if order_col_idx == 2:
+    if order_col_idx == 1:
+        if order_dir == 'desc':
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        else:
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
+    elif order_col_idx == 2:
         from django.db.models.functions import Coalesce
         order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
         if order_dir == 'desc':
@@ -1823,9 +1904,7 @@ def trip_report_ajax(request):
             Q(tr_vehiclenumber__icontains=search_value)
         )
 
-    records_total = TripdetailInfo.objects.filter(
-        Q(tr_category_id=1) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10)
-    ).exclude(CANCELLATION_WITHOUT_BILLING_Q).count()
+    records_total = TripdetailInfo.objects.filter(BASE_DMR_Q).count()
     records_filtered = trips.order_by().values('id').count()
 
     # Pagination
