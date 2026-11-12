@@ -141,12 +141,22 @@
                 {
                     targets: 11,
                     render: function (data, type, row) {
-                        if (data) {
-                            return '<a href="' + data + '" target="_blank" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem;"><i class="fas fa-map-marker-alt"></i> Track</a>';
-                        } else if (row[4]) {
-                            return '<a href="{% url "track_vehicle_position" %}?vehicle=' + row[4] + '" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem;" target="_blank"><i class="fas fa-satellite-dish"></i> Live Track</a>';
+                        const statusStr = (row[12] || '').toLowerCase();
+                        const isClosed = statusStr.includes('closed') || statusStr.includes('settled') || statusStr.includes('cancel') || statusStr.includes('invoice') || statusStr.includes('approved') || statusStr.includes('clarification') || statusStr.includes('awaiting trip settlement');
+                        const veh = (row[4] && row[4] !== '-' && row[4] !== 'None') ? encodeURIComponent(row[4]) : '';
+                        const tripId = row[16] || '';
+                        
+                        if (isClosed) {
+                            if (veh) {
+                                return '<a href="{% url "track_vehicle_position" %}?vehicle=' + veh + (tripId ? '&trip_id=' + tripId : '') + '" target="_blank" class="badge py-1 px-2" style="text-decoration:none; font-size:0.75rem; background: rgba(99, 102, 241, 0.18); border: 1px solid #6366f1; color: #818cf8; font-weight:600; display:inline-flex; align-items:center; gap:4px;" title="Review Closed Trip History"><i class="fas fa-history"></i> Review</a>';
+                            }
+                            return '<span class="badge py-1 px-2" style="font-size:0.75rem; background: rgba(148, 163, 184, 0.15); border: 1px solid #94a3b8; color: #64748b; font-weight:600;"><i class="fas fa-flag-checkered text-secondary mr-1"></i> Trip Closed</span>';
+                        } else if (veh) {
+                            return '<a href="{% url "track_vehicle_position" %}?vehicle=' + veh + (tripId ? '&trip_id=' + tripId : '') + '" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-color: #10b981;" target="_blank"><i class="fas fa-satellite-dish"></i> Track</a>';
+                        } else if (data) {
+                            return '<a href="' + data + '" target="_blank" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-color: #10b981;"><i class="fas fa-satellite-dish"></i> Track</a>';
                         }
-                        return '';
+                        return '<span class="text-muted small">-</span>';
                     }
                 },
                 {

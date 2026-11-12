@@ -253,10 +253,10 @@
 </div>
 
 <!-- Job Creation Modal (Preserved & Styled) -->
-<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div class="modal-header bg-white py-4" style="border-bottom: 2px solid var(--border-light) !important;">
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true" style="overflow-y: auto;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 92vh;">
+            <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
                 <h5 class="modal-title font-weight-bold text-dark" id="jobCreationModalLabel">
                     <i class="fas fa-industry mr-2 text-primary"></i> Create Production Batch Job
                 </h5>
@@ -264,7 +264,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 bg-light" style="overflow-y: auto; max-height: calc(92vh - 160px);">
                 <div id="modal_job_error_alert" class="alert alert-danger shadow-sm mb-3 d-none" style="border-radius: 12px; border-left: 5px solid #ef4444 !important; font-weight: 600;">
                     <i class="fas fa-exclamation-triangle mr-2"></i> <span id="modal_job_error_text"></span>
                 </div>
@@ -447,16 +447,16 @@
                     </div>
                 </div>
 
-                <!-- Section 4: Provision for Bigger Piece Replacing Multiple Partcodes -->
-                <div class="p-3 bg-white rounded shadow-sm border border-warning mt-3" id="modal_absorbed_parts_section" style="display: none;">
+                <!-- Section 4: Grouped Part Codes (One Part Code for Multiple Parts) -->
+                <div class="p-3 bg-white rounded shadow-sm border border-primary mt-3" id="modal_absorbed_parts_section" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">
-                            <i class="fas fa-layer-group text-warning mr-1"></i> Provision: One Bigger Part Code for Multiple Parts
+                            <i class="fas fa-object-group text-primary mr-1"></i> Group Part Codes into this Part Code
                         </span>
-                        <span class="badge badge-warning text-dark font-weight-bold">Multi-Part Coverage</span>
+                        <span class="badge badge-primary font-weight-bold">Multi-Part Grouping</span>
                     </div>
                     <p class="small text-muted mb-2">
-                        If this partcode is bigger and will be used to fulfill other parts, check them below. Their required qty will be set to 0 so they are <b>not used in production</b> and will <b>not appear in Indent</b>.
+                        Select other part codes below to group them into this part code. Their requirement will be absorbed and covered by this single part code, so they will not appear as shortfalls or in Indents.
                     </p>
                     <div id="modal_absorbed_checkboxes" class="row no-gutters">
                         <!-- Checkboxes populated dynamically -->
@@ -614,36 +614,114 @@
                     let resp = xhr.responseJSON;
                     if (resp && resp.stock_alert && resp.insufficient_stock_items) {
                         window.last_shortfall_items = resp.insufficient_stock_items;
-                        let html = '<div class="d-flex justify-content-between align-items-center mb-2" id="shortfall_header_bar">';
+                        let html = '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" id="shortfall_header_bar">';
                         html += '<div id="shortfall_header_title"><i class="fas fa-exclamation-circle text-warning mr-1"></i> <b>Insufficient Stock Alert!</b> Stock shortfall detected:</div>';
-                        html += '<button type="button" class="btn btn-sm btn-info font-weight-bold" id="multi_replace_partcode_btn"><i class="fas fa-layer-group mr-1"></i> Use One Part Code for Multiple (Bigger Piece)</button>';
+                        html += '<div class="d-flex align-items-center flex-wrap">';
+                        let woodItems = (resp.insufficient_stock_items || []).filter(function(it) {
+                            let pc = (it.part_code || '').toUpperCase();
+                            let desc = (it.description || '').toUpperCase();
+                            return pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE');
+                        });
+                        if (woodItems.length >= 2) {
+                            html += '<button type="button" class="btn btn-sm btn-outline-primary mr-2 font-weight-bold" id="quick_select_wood_btn"><i class="fas fa-tree mr-1"></i> Select All (' + woodItems.length + ') Wood Part Codes</button>';
+                        }
+                        html += '<button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
                         html += '</div>';
 
-                        html += '<table class="table table-sm table-bordered bg-white text-center small mb-3" id="shortfall_items_table"><thead><tr class="bg-light">';
+                        html += '<div class="table-responsive rounded shadow-sm mb-3" style="max-height: 380px; overflow-y: auto;"><table class="table table-sm table-bordered bg-white text-center small mb-0" id="shortfall_items_table"><thead class="bg-light" style="position: sticky; top: 0; z-index: 3;"><tr class="bg-light">';
                         html += '<th style="width: 35px;"><input type="checkbox" id="select_all_stk_cbs" title="Select All"></th>';
-                        html += '<th>Item</th><th>Part Code</th><th>Needed</th><th>Available</th><th>Shortfall</th><th>Action</th></tr></thead><tbody>';
+                        html += '<th style="min-width: 90px;">Part Code</th>';
+                        html += '<th class="text-left" style="min-width: 140px;">Description</th>';
+                        html += '<th>Needed</th><th>Available</th><th>Shortfall</th>';
+                        html += '<th class="text-left" style="min-width: 160px;">Used in Items / Boxes</th>';
+                        html += '<th>Action</th></tr></thead><tbody>';
                         resp.insufficient_stock_items.forEach(function(stk) {
-                            html += '<tr id="stk_row_' + stk.quotation_id + '">';
-                            html += '<td><input type="checkbox" class="stk-row-cb" value="' + stk.quotation_id + '" data-qid="' + stk.quotation_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-pod="' + stk.pod_id + '" data-job-qty="' + (stk.job_qty || 1) + '" data-per-unit="' + (stk.per_unit_req || 1) + '"></td>';
-                            html += '<td><b>' + stk.item_name + '</b></td>';
-                            html += '<td><code class="bg-light px-2 py-1 text-danger font-weight-bold">' + stk.part_code + '</code></td>';
-                            html += '<td>' + stk.needed_qty + '</td>';
-                            html += '<td class="text-danger font-weight-bold">' + stk.available_qty + '</td>';
-                            html += '<td class="text-danger font-weight-bold">-' + stk.shortfall + '</td>';
-                            html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-edit"></i> Change</button></td>';
+                            let qids = stk.quotation_ids || [stk.quotation_id];
+                            let qidsStr = qids.join(',');
+                            html += '<tr id="stk_row_' + stk.quotation_id + '" data-partcode="' + stk.part_code + '" data-qids="' + qidsStr + '">';
+                            html += '<td><input type="checkbox" class="stk-row-cb" value="' + stk.quotation_id + '" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-pod="' + stk.pod_id + '" data-job-qty="' + (stk.job_qty || 1) + '" data-per-unit="' + (stk.per_unit_req || 1) + '"></td>';
+                            html += '<td class="partcode-badge-col"><code class="bg-light px-2 py-1 text-danger font-weight-bold" style="font-size:0.95rem;">' + stk.part_code + '</code></td>';
+                            html += '<td class="text-left font-weight-bold">' + (stk.description || '-') + '</td>';
+                            html += '<td class="font-weight-bold needed-col">' + stk.needed_qty + '</td>';
+                            html += '<td class="' + (stk.available_qty > 0 ? 'text-warning' : 'text-danger') + ' font-weight-bold avail-col">' + stk.available_qty + '</td>';
+                            html += '<td class="text-danger font-weight-bold shortfall-col">-' + stk.shortfall + '</td>';
+                            
+                            // Item breakdown display
+                            let itemsHtml = '<span class="text-dark font-weight-bold">' + stk.item_name + '</span>';
+                            if (stk.items_breakdown && stk.items_breakdown.length > 1) {
+                                itemsHtml = '<div class="text-left">';
+                                stk.items_breakdown.forEach(function(ib) {
+                                    itemsHtml += '<div class="small"><span class="badge badge-light border text-primary">' + ib.needed_qty + '</span> ' + ib.item_name + '</div>';
+                                });
+                                itemsHtml += '</div>';
+                            }
+                            html += '<td class="text-left">' + itemsHtml + '</td>';
+                            html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-edit mr-1"></i> Change</button></td>';
                             html += '</tr>';
                         });
-                        html += '</tbody></table>';
+                        html += '</tbody></table></div>';
                         html += '<div class="d-flex justify-content-between align-items-center" id="shortfall_footer_bar"><span class="small text-muted"><i class="fas fa-paper-plane mr-1"></i> Stock Team has been notified.</span>';
                         html += '<button type="button" class="btn btn-sm btn-warning font-weight-bold" id="force_release_job_btn"><i class="fas fa-arrow-right"></i> Proceed with Available Stock &amp; Generate Indent</button></div>';
                         
                         $('#modal_job_error_text').html(html);
                         $('#modal_job_error_alert').removeClass('d-none');
 
+
+        // Prevent Bootstrap multi-modal backdrop & scrolling freeze
+        $(document).on('hidden.bs.modal', function () {
+            if ($('.modal.show').length > 0 || $('.modal:visible').length > 0) {
+                $('body').addClass('modal-open');
+                $('.modal.show, .modal:visible').css('overflow-y', 'auto');
+            }
+        });
+
+                        // Quick select all wood lines listener
+                        $(document).off('click', '#quick_select_wood_btn').on('click', '#quick_select_wood_btn', function() {
+                            $('.stk-row-cb').each(function() {
+                                let pc = ($(this).data('current') || '').toUpperCase();
+                                let row = $(this).closest('tr');
+                                let desc = row.find('td:eq(2)').text().toUpperCase();
+                                if (pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE')) {
+                                    $(this).prop('checked', true);
+                                }
+                            });
+                            updateGroupPartCodesBtnState();
+                        });
+
+                        // Toggle absorbed details
+                        $(document).off('click', '.toggle-absorbed-details').on('click', '.toggle-absorbed-details', function(e) {
+                            e.preventDefault();
+                            let groupQid = $(this).data('target-group');
+                            let rows = $('tr[data-absorbed-into="' + groupQid + '"]');
+                            if (rows.is(':visible')) {
+                                rows.hide();
+                                $(this).text('(View Breakdown ▼)');
+                            } else {
+                                rows.show();
+                                $(this).text('(Hide Breakdown ▲)');
+                            }
+                        });
+
                         // Select all checkbox listener
                         $('#select_all_stk_cbs').off('change').on('change', function() {
-                            $('.stk-row-cb').prop('checked', $(this).prop('checked'));
+                            $('.stk-row-cb:not(:disabled)').prop('checked', $(this).prop('checked'));
+                            updateGroupPartCodesBtnState();
                         });
+
+                        $(document).off('change', '.stk-row-cb').on('change', '.stk-row-cb', function() {
+                            updateGroupPartCodesBtnState();
+                        });
+
+                        function updateGroupPartCodesBtnState() {
+                            let checkedCount = $('.stk-row-cb:checked').length;
+                            let btn = $('#multi_replace_partcode_btn');
+                            if (checkedCount >= 2) {
+                                btn.removeClass('btn-info').addClass('btn-primary shadow')
+                                   .html('<i class="fas fa-object-group mr-1"></i> Group (' + checkedCount + ') Selected Part Codes into One');
+                            } else {
+                                btn.removeClass('shadow').html('<i class="fas fa-object-group mr-1"></i> Group Part Codes into One');
+                            }
+                        }
 
                         // Force release button listener
                         $('#force_release_job_btn').off('click').on('click', function() {
@@ -671,8 +749,9 @@
                         $('#modal_job_error_alert').removeClass('d-none');
                     }
                     
-                    // Helper to open Partcode Modal with full state
-                    window.openPartcodeSearchModal = function(qid, currentPc, neededQty, perUnitReq, jobQty, podId, preAbsorbedQids) {
+                    // Helper to open Partcode Modal with full state (supports grouped part codes)
+                    window.openPartcodeSearchModal = function(qid, currentPc, neededQty, perUnitReq, jobQty, podId, preAbsorbedQids, allQids, groupedPartCodes) {
+                        window.currentTargetQuotationIds = (allQids && allQids.length) ? allQids : [qid];
                         $('#modal_target_quotation_id').val(qid);
                         $('#modal_target_needed_qty').val(neededQty);
                         $('#modal_target_job_qty').val(jobQty);
@@ -681,32 +760,41 @@
                         $('#modal_qty_req').val(perUnitReq);
                         $('#modal_batch_qty_req').val(neededQty);
 
-                        if (neededQty > 0) {
-                            $('#modal_needed_qty_display').html('<i class="fas fa-boxes mr-1"></i> Required Batch Qty: <b>' + neededQty + '</b>').show();
+                        if (groupedPartCodes && groupedPartCodes.length > 1) {
+                            $('#modal_needed_qty_display').html(
+                                '<div class="alert alert-primary py-2 px-3 mb-2 small font-weight-bold text-left">' +
+                                '<i class="fas fa-object-group mr-1"></i> Grouping <b>' + groupedPartCodes.length + ' Part Codes</b>: <code>' + groupedPartCodes.join(', ') + '</code><br>' +
+                                '<i class="fas fa-boxes mr-1"></i> Total Combined Needed Qty: <b>' + neededQty.toFixed(2) + '</b></div>'
+                            ).show();
+                        } else if (neededQty > 0) {
+                            $('#modal_needed_qty_display').html('<i class="fas fa-boxes mr-1"></i> Required Batch Qty: <b>' + neededQty.toFixed(2) + '</b>').show();
                         } else {
                             $('#modal_needed_qty_display').hide();
                         }
 
-                        // Populate Section 4: Provision to replace multiple partcodes with this one
+                        // Populate Section 4: Provision to replace multiple partcodes with this one (Grouped by Partcode)
                         let absorbedContainer = $('#modal_absorbed_checkboxes');
                         absorbedContainer.empty();
                         let otherItems = (window.last_shortfall_items || []).filter(function(stk) {
-                            return String(stk.quotation_id) !== String(qid);
+                            return String(stk.part_code).trim().toUpperCase() !== String(currentPc).trim().toUpperCase();
                         });
 
                         if (otherItems.length > 0) {
                             otherItems.forEach(function(item) {
-                                let isChecked = (preAbsorbedQids && preAbsorbedQids.includes(String(item.quotation_id)));
+                                let itemQids = item.quotation_ids || [item.quotation_id];
+                                let itemQidsStr = itemQids.join(',');
+                                let isChecked = (preAbsorbedQids && (preAbsorbedQids.includes(String(item.quotation_id)) || itemQids.some(id => preAbsorbedQids.includes(String(id)))));
                                 let col = $('<div class="col-12 col-md-6 mb-2">');
                                 let customCheck = $('<div class="custom-control custom-checkbox p-2 bg-light rounded border">');
                                 let input = $('<input type="checkbox" class="custom-control-input modal-absorbed-cb">')
                                     .attr('id', 'abs_pc_' + item.quotation_id)
                                     .val(item.quotation_id)
+                                    .data('qids', itemQidsStr)
                                     .data('needed', item.needed_qty)
                                     .prop('checked', isChecked);
                                 let label = $('<label class="custom-control-label small font-weight-bold cursor-pointer w-100">')
                                     .attr('for', 'abs_pc_' + item.quotation_id)
-                                    .html('<span class="text-primary">' + item.part_code + '</span> (Needed: <b>' + item.needed_qty + '</b>)<br><span class="text-muted font-weight-normal">' + (item.description || item.item_name) + '</span>');
+                                    .html('<span class="text-primary font-weight-bold">' + item.part_code + '</span> (Needed: <b>' + item.needed_qty + '</b>)<br><span class="text-muted font-weight-normal">' + (item.description || item.item_name) + '</span>');
                                 customCheck.append(input).append(label);
                                 col.append(customCheck);
                                 absorbedContainer.append(col);
@@ -759,37 +847,57 @@
                     // Change partcode button listener - opens rich Part Code & Stock modal
                     $(document).off('click', '.change-partcode-btn').on('click', '.change-partcode-btn', function() {
                         let qid = $(this).data('qid');
+                        let qidsData = $(this).data('qids');
+                        let allQids = qidsData ? String(qidsData).split(',') : [qid];
                         let currentPc = $(this).data('current');
                         let neededQty = parseFloat($(this).data('needed')) || 0;
                         let perUnitReq = parseFloat($(this).data('per-unit')) || 1;
                         let jobQty = parseFloat($(this).data('job-qty')) || 1;
                         let podId = $(this).data('pod');
-                        window.openPartcodeSearchModal(qid, currentPc, neededQty, perUnitReq, jobQty, podId, []);
+                        window.openPartcodeSearchModal(qid, currentPc, neededQty, perUnitReq, jobQty, podId, [], allQids);
                     });
 
-                    // Multi-replace button listener: combine multiple into one bigger partcode
+                    // Multi-replace / Group Part Codes button listener: combine multiple into one partcode
                     $(document).off('click', '#multi_replace_partcode_btn').on('click', '#multi_replace_partcode_btn', function() {
                         let selectedCbs = $('.stk-row-cb:checked');
                         if (selectedCbs.length < 2) {
-                            alert('Please select at least 2 part codes using the checkboxes to replace with one bigger piece.');
+                            alert('Please select at least 2 part codes using the checkboxes to group them into one.');
                             return;
                         }
                         let primaryCb = selectedCbs.first();
                         let qid = primaryCb.val();
+                        let qidsData = primaryCb.data('qids');
+                        let allQids = qidsData ? String(qidsData).split(',') : [qid];
                         let currentPc = primaryCb.data('current');
-                        let neededQty = parseFloat(primaryCb.data('needed')) || 0;
-                        let perUnitReq = parseFloat(primaryCb.data('per-unit')) || 1;
                         let jobQty = parseFloat(primaryCb.data('job-qty')) || 1;
                         let podId = primaryCb.data('pod');
 
+                        let totalNeeded = 0;
+                        let totalPerUnit = 0;
+                        let selectedPartCodes = [];
                         let otherQids = [];
+
                         selectedCbs.each(function() {
-                            if ($(this).val() !== String(qid)) {
-                                otherQids.push($(this).val());
+                            let rowQid = $(this).val();
+                            let rowNeeded = parseFloat($(this).data('needed')) || 0;
+                            let rowPerUnit = parseFloat($(this).data('per-unit')) || 0;
+                            let pc = $(this).data('current');
+                            if (pc && !selectedPartCodes.includes(pc)) selectedPartCodes.push(pc);
+
+                            totalNeeded += rowNeeded;
+                            totalPerUnit += rowPerUnit;
+
+                            if (String(rowQid) !== String(qid)) {
+                                let otherQidsData = $(this).data('qids');
+                                if (otherQidsData) {
+                                    String(otherQidsData).split(',').forEach(id => { if (id && !otherQids.includes(id)) otherQids.push(id); });
+                                } else {
+                                    otherQids.push(rowQid);
+                                }
                             }
                         });
 
-                        window.openPartcodeSearchModal(qid, currentPc, neededQty, perUnitReq, jobQty, podId, otherQids);
+                        window.openPartcodeSearchModal(qid, currentPc, totalNeeded, totalPerUnit, jobQty, podId, otherQids, allQids, selectedPartCodes);
                     });
                 }
             });
@@ -890,7 +998,7 @@ function openJobModal() {
                 errorMsg = xhr.status + ': ' + error;
             }
             console.error('AJAX Error:', errorMsg);
-            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">' + errorMsg.replace(/\n/g, '<br>') + '</td></tr>');
+            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">' + errorMsg.replace(/\n/g, '<br>') + '<br><button type="button" class="btn btn-sm btn-outline-danger mt-2 font-weight-bold" onclick="openJobModal()"><i class="fas fa-redo mr-1"></i> Retry Loading Items</button></td></tr>');
         }
     });
 }
@@ -1153,7 +1261,14 @@ function recalcAllocations() {
 }
 
 $(document).on('click', '#modal_search_stock_btn', function() {
-    searchStockBatches(false);
+    searchStockBatches(true); // Automatically run FIFO allocation on refresh!
+});
+
+// Click entire batch row to toggle allocation
+$(document).on('click', '.modal-batch-row', function(e) {
+    if ($(e.target).is('input, button, a, label')) return;
+    let cb = $(this).find('.modal-batch-cb');
+    cb.prop('checked', !cb.is(':checked')).trigger('change');
 });
 
 $(document).on('click', '#modal_auto_fifo_btn', function() {
@@ -1338,11 +1453,19 @@ function submitPartcodeChange(shouldProceedToJob) {
 
     let absorbedIds = [];
     $('.modal-absorbed-cb:checked').each(function() {
-        absorbedIds.push($(this).val());
+        let qidsData = $(this).data('qids');
+        if (qidsData) {
+            String(qidsData).split(',').forEach(id => { if (id && !absorbedIds.includes(id)) absorbedIds.push(id); });
+        } else {
+            absorbedIds.push($(this).val());
+        }
     });
+
+    let targetQids = window.currentTargetQuotationIds || [qid];
 
     let payload = {
         'quotation_id': qid,
+        'quotation_ids': targetQids,
         'new_part_code_id': newPcId,
         'new_qty_req': newQtyReq,
         'new_batch_qty': newBatchQty,
@@ -1357,7 +1480,9 @@ function submitPartcodeChange(shouldProceedToJob) {
     };
 
     window.pendingJobSubstitutions = window.pendingJobSubstitutions || {};
-    window.pendingJobSubstitutions[qid] = payload;
+    targetQids.forEach(function(tQid) {
+        window.pendingJobSubstitutions[String(tQid)] = payload;
+    });
 
     $('#modal_confirm_update_pc_btn, #modal_apply_and_proceed_btn').prop('disabled', true);
 
@@ -1375,10 +1500,18 @@ function submitPartcodeChange(shouldProceedToJob) {
                 // Visually update the shortfall alert table for this job
                 let primaryRow = $('#stk_row_' + qid);
                 if (primaryRow.length > 0) {
-                    primaryRow.find('td:eq(2)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold">' + newPcId + '</code> <span class="badge badge-success ml-1">For this Job</span>');
-                    primaryRow.find('td:eq(3)').html('<b>' + newBatchQty + '</b>');
+                    let groupedBadge = (absorbedIds && absorbedIds.length > 0) 
+                        ? '<div class="mt-1"><span class="badge badge-success font-weight-bold px-2 py-1"><i class="fas fa-object-group mr-1"></i> Grouped (' + (absorbedIds.length + 1) + ' Part Codes)</span> <a href="javascript:void(0)" class="toggle-absorbed-details small text-primary ml-1 font-weight-bold" data-target-group="' + qid + '">(View Breakdown ▼)</a></div>' 
+                        : '<div class="badge badge-success mt-1">For this Job</div>';
+                    primaryRow.find('td:eq(1)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold" style="font-size:0.95rem;">' + newPcId + '</code>' + groupedBadge);
+                    primaryRow.find('td:eq(3)').html('<b class="text-primary font-weight-bold" style="font-size:1.05rem;">' + newBatchQty.toFixed(2) + '</b>');
                     primaryRow.find('td:eq(4)').html('<span class="text-success font-weight-bold">' + totalAlloc.toFixed(2) + '</span>');
-                    primaryRow.find('td:eq(5)').html('<span class="text-success font-weight-bold"><i class="fas fa-check"></i> ' + (totalAlloc >= newBatchQty ? 'Allocated' : 'Substituted') + '</span>');
+                    if (totalAlloc >= newBatchQty) {
+                        primaryRow.find('td:eq(5)').html('<span class="badge badge-success px-2 py-1 font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Stock Ready</span>');
+                    } else {
+                        primaryRow.find('td:eq(5)').html('<span class="text-danger font-weight-bold">-' + (newBatchQty - totalAlloc).toFixed(2) + '</span>');
+                    }
+                    primaryRow.find('td:eq(7)').html('<span class="badge badge-success py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped</span>');
                     primaryRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
                     primaryRow.addClass('table-success');
                 }
@@ -1386,9 +1519,13 @@ function submitPartcodeChange(shouldProceedToJob) {
                 absorbedIds.forEach(function(absId) {
                     let absRow = $('#stk_row_' + absId);
                     if (absRow.length > 0) {
-                        absRow.find('td:eq(5)').html('<span class="badge badge-secondary"><i class="fas fa-ban"></i> Absorbed</span>');
+                        absRow.attr('data-absorbed-into', qid);
+                        absRow.find('td:eq(3)').html('<span class="text-muted"><del>' + absRow.find('td:eq(3)').text() + '</del></span>');
+                        absRow.find('td:eq(5)').html('<span class="badge badge-secondary py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped into ' + newPcId + '</span>');
+                        absRow.find('td:eq(7)').html('<span class="text-muted small font-weight-bold"><i class="fas fa-ban mr-1"></i> Absorbed</span>');
                         absRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
-                        absRow.addClass('table-secondary');
+                        absRow.addClass('table-secondary text-muted');
+                        absRow.hide();
                     }
                 });
 

@@ -1,5 +1,5 @@
 from django import forms
-from ..models import TMSPettyCashInfo, MyUser
+from ..models import TMSPettyCashInfo, TMSExpenseTypeInfo, MyUser
 
 class TMSPettyCashForm(forms.ModelForm):
     class Meta:
@@ -9,6 +9,7 @@ class TMSPettyCashForm(forms.ModelForm):
         widgets = {
             'tpc_transaction_date': forms.DateInput(attrs={'type': 'date'}),
             'tpc_trip_date': forms.DateInput(attrs={'type': 'date'}),
+            'tpc_bill_attachment': forms.FileInput(attrs={'class': 'form-control form-control-modern', 'style': 'height: 34px; padding: 3px 6px; font-size: 0.85rem;'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -26,6 +27,9 @@ class TMSPettyCashForm(forms.ModelForm):
             
         if 'tpc_category' in self.fields:
             self.fields['tpc_category'].queryset = self.fields['tpc_category'].queryset.filter(exp_category_name__icontains='Cash')
+
+        if 'tpc_expense_type' in self.fields:
+            self.fields['tpc_expense_type'].queryset = TMSExpenseTypeInfo.objects.filter(tms_exp_type_status=True)
 
         if 'tpc_to' in self.fields:
             self.fields['tpc_to'].queryset = self.fields['tpc_to'].queryset.filter(drivermasterinfo__isnull=False)

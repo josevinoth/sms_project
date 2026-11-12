@@ -10,6 +10,7 @@ class AttachedBillForm(forms.ModelForm):
             'ab_vendor', 'ab_vehicle_number', 'ab_vehicle_type', 'ab_bill_no', 'ab_voucher_no',
             'ab_bill_date', 'ab_from_date', 'ab_to_date', 'ab_buy_cost', 'ab_toll_cost',
             'ab_leave_days', 'ab_holidays', 'ab_non_movement_days', 'ab_leave_amount',
+            'ab_sunday_leave', 'ab_sunday_leave_amount',
             'ab_agreed_km', 'ab_total_km_run', 'ab_extra_km_run',
             'ab_extra_km_amount', 'ab_bill_amount', 'ab_bill_upload', 'ab_selected_trips'
         ]
@@ -66,3 +67,11 @@ class AttachedBillForm(forms.ModelForm):
              self.fields['ab_vehicle_number'].queryset = VehiclemasterInfo.objects.filter(
                  vm_ownership_id=2
              ).order_by('vm_registrationnumber')
+
+    def clean_ab_sunday_leave(self):
+        val = self.cleaned_data.get('ab_sunday_leave')
+        return val if val is not None else 0
+
+    def clean_ab_sunday_leave_amount(self):
+        val = self.cleaned_data.get('ab_sunday_leave_amount')
+        return val if val is not None else 0.0

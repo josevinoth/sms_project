@@ -148,9 +148,22 @@
 
                 {% if data.vehicles %}
                 {% for vehicle in data.vehicles %}
-                <a class="badge p-2 mb-1 d-inline-block" href="{% url 'vehicle_allotment_update' vehicle.id %}" style="text-decoration: none; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <i class="fas fa-truck text-info"></i> {{ vehicle.number }}
-                </a><br>
+                <div class="d-inline-flex align-items-center mb-1">
+                    <a class="badge p-2 d-inline-block" href="{% url 'vehicle_allotment_update' vehicle.id %}" style="text-decoration: none; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <i class="fas fa-truck text-info"></i> {{ vehicle.number }}
+                    </a>
+                    {% if vehicle.raw_number and vehicle.raw_number != 'None' %}
+                        {% if vehicle.trip_status == 'closed' %}
+                            <a href="{% url 'track_vehicle_position' %}?vehicle={{ vehicle.raw_number }}{% if vehicle.trip_id %}&trip_id={{ vehicle.trip_id }}{% endif %}" target="_blank" class="badge py-1 px-2 ml-1" style="text-decoration: none; font-size: 0.72rem; background: rgba(99, 102, 241, 0.18); border: 1px solid #6366f1; color: #818cf8; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" title="Review Closed Trip History">
+                                <i class="fas fa-history"></i> Review
+                            </a>
+                        {% else %}
+                            <a href="{% url 'track_vehicle_position' %}?vehicle={{ vehicle.raw_number }}{% if vehicle.trip_id %}&trip_id={{ vehicle.trip_id }}{% endif %}" target="_blank" class="badge py-1 px-2 ml-1" style="text-decoration: none; font-size: 0.72rem; background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" title="Live Track Vehicle">
+                                <i class="fas fa-satellite-dish"></i> Track
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div><br>
                 {% endfor %}
                 {% endif %}
                 {% else %}

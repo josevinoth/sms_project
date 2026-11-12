@@ -1,729 +1,773 @@
-from datetime import datetime
-import openpyxl
-from django.contrib.auth.decorators import login_required
-from django.template.loader import get_template
-from xhtml2pdf import pisa
-from ..forms import PkcostingsummaryForm
-from ..models import User_extInfo,PkpurchaseorderInfo,POdimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo,CustomerInfo
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models.aggregates import Sum
-from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.db.models import Sum, F
-from ..sub_models.na_dimension_mod import Nadimension
-from ..views import Pkcosting_delete,Pkcostingsummary_delete,get_tracker_flags
-from ..sub_models.packing_jobs_mod import Packingjobs
-
-@login_required(login_url='login_page')
-def costingsummary_add(request,costingsummary_id=0):
-    first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
-    if request.method == "GET":
-        if costingsummary_id == 0:
-            print('Inside costing summary Get add')
-            form = PkcostingsummaryForm()
-            context = {
-                'form': form,
-                'first_name': first_name,
-                'user_id': user_id,
-                'role': role,
-                'role_id': role_id,
-            }
-        else:
-            print('Inside costing summary Get edit')
-            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
-            needassessment_num = costingsummary.cs_assessment_num
-            needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
-            customer_name_id = costingsummary.cs_customer_name.id if costingsummary.cs_customer_name else None
-            customer_po_id = costingsummary.cs_customer_po.id if costingsummary.cs_customer_po else None
-            request.session['na_assessment_id'] = needassessment_id
-            request.session['na_customer_name_id'] = customer_name_id
-            request.session['ses_customer_po_id'] = customer_po_id
-            request.session['ses_costing_summary_id'] = costingsummary_id
-            form = PkcostingsummaryForm(instance=costingsummary)
-            # Filtering Logic: prioritize Job Number if available
-            job_no = costingsummary.cs_job_no
-            
-            if job_no:
-                # Job-based summary (Group multiple NAs by Job No)
-                costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id).order_by('-id')
-                base_filter = {'ct_job_no': job_no, 'ct_customer_po': customer_po_id}
-            else:
-                # Legacy / Manual summary (Single NA)
-                costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_customer_po=customer_po_id).order_by('-id')
-                base_filter = {'ct_assessment_num': needassessment_id, 'ct_customer_po': customer_po_id}
-
-            Invoice = PkcostingInfo.objects.filter(ct_cost_type=8, **base_filter).values_list('ct_stock_status', flat=True)
-            if all(status in [4] for status in Invoice) and len(Invoice) > 0:
-                output = 1
-            else:
-                output = 0
-
-            # Combined Wood Cost (Wood=1, Hardwood=5)
-            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 5], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            wood_cost = round(wood_cost, 2)
-
-            # Combined Plywood Cost (Plywood=4, Marine Ply=6)
-            plywood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[4, 6], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            plywood_cost = round(plywood_cost, 2)
-
-            # Combined Total CFT (Wood=1, Hardwood=5; excluding reused wood weight in Kg)
-            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).exclude(
-                ct_part_code__pc_code__icontains='RE'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='RE - Used'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='RE-Used'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='Reused'
-            ).aggregate(
-                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
-            )['total'] or 0.0
-            total_cft = round(total_cft, 2)
-
-            # Combined Total SQFT (Plywood=4, Marine Ply=6; excluding reused plywood weight in Kg)
-            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).exclude(
-                ct_part_code__pc_code__icontains='RE'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='RE - Used'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='RE-Used'
-            ).exclude(
-                ct_stock_description__stock_description__icontains='Reused'
-            ).aggregate(
-                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
-            )['total'] or 0.0
-            total_sqft = round(total_sqft, 2)
-
-            # Combined Engineer Cost
-            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            engineer_cost = round(engineer_cost, 2)
-
-            # Combined Labour Cost (In-house=3, On-site=9)
-            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type__in=[3, 9], **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            labour_cost = round(packing_labour_cost, 2)
-
-            # Combined Crane Cost
-            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            crane_cost = round(crane_cost, 2)
-
-            # Combined HT Cost
-            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            ht_cost = round(ht_cost, 2)
-
-            # Combined Management Cost
-            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            management_cost = round(management_cost, 2)
-
-            # Combined Material Cost (Consumables)
-            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            material_cost = round(material_cost, 2)
-
-            # Combined Transport Cost
-            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
-            transport_cost = round(transport_cost, 2)
-
-            # Others Cost (from existing model record)
-            others_cost = costingsummary.cs_others_cost or 0.0
-
-            # Calculate Total (W/O Margin)
-            total_cost_wom = (
-                wood_cost + plywood_cost + engineer_cost + labour_cost + crane_cost + 
-                ht_cost + management_cost + material_cost + transport_cost + others_cost
-            )
-            total_cost_wom = round(total_cost_wom, 2)
-
-            # Calculate Total (W/ Margin)
-            margin = costingsummary.cs_margin or 0.0
-            total_cost_wm = total_cost_wom + (total_cost_wom * margin / 100)
-            total_cost_wm = round(total_cost_wm, 2)
-
-            # Rate per CFT & Rate per SQFT
-            rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
-            rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
-
-            # Final Cost (with GST)
-            gst_percent = costingsummary.cs_gst or 0.0
-            gst_amount = total_cost_wm * gst_percent / 100
-            final_cost = round(total_cost_wm + gst_amount, 2)
-
-            # UPDATE DATABASE
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(
-                cs_wood_cost=wood_cost,
-                cs_plywood_cost=plywood_cost,
-                cs_total_cft=total_cft,
-                cs_total_sqft=total_sqft,
-                cs_engineer_cost=engineer_cost,
-                cs_labour_cost=labour_cost,
-                cs_crane_cost=crane_cost,
-                cs_ht_cost=ht_cost,
-                cs_management_cost=management_cost,
-                cs_material_cost=material_cost,
-                cs_transport_cost=transport_cost,
-                cs_others_cost=others_cost,
-                cs_total_cost_wom=total_cost_wom,
-                cs_total_cost_wm=total_cost_wm,
-                cs_rate_per_cft=rate_per_cft,
-                cs_final_cost=final_cost
-            )
-
-            # Re-fetch instance to ensure form has latest database values
-            costingsummary.refresh_from_db()
-            form = PkcostingsummaryForm(instance=costingsummary)
-
-            # Calculate Job Type wise totals
-            job_type_dict = {}
-            for item in costing_list:
-                job_type = str(item.ct_requirement) if item.ct_requirement else "None"
-                cost = float(item.ct_totalbox_cost or 0)
-                
-                # Use linked PO dimension line if present for exact PO info
-                po_dim = item.ct_po_dimension
-                key = (job_type, po_dim.id if po_dim else None)
-                
-                if key not in job_type_dict:
-                    po_num = "—"
-                    po_value = "—"
-                    if po_dim:
-                        if po_dim.pod_po_num:
-                            po_num = po_dim.pod_po_num.po_num
-                        if po_dim.pod_value:
-                            po_value = po_dim.pod_value
-                    elif item.ct_requirement:
-                        found_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
-                        if found_dim:
-                            if found_dim.pod_po_num:
-                                po_num = found_dim.pod_po_num.po_num
-                            if found_dim.pod_value:
-                                po_value = found_dim.pod_value
-                    
-                    job_type_dict[key] = {
-                        'job_type': job_type,
-                        'total': 0.0, 
-                        'po_num': po_num, 
-                        'po_value': po_value
-                    }
-                job_type_dict[key]['total'] += cost
-                
-            job_type_totals = [
-                {
-                    'job_type': data['job_type'], 
-                    'total': round(data['total'], 2), 
-                    'po_num': data['po_num'], 
-                    'po_value': data['po_value']
-                } 
-                for key, data in job_type_dict.items() if data['job_type'] != "None"
-            ]
-
-            retrival_queryset = costing_list.filter(ct_cost_type=8)
-            grouped_indent = {}
-            for item in retrival_queryset:
-                part_code = item.ct_part_code
-                if not part_code:
-                    continue
-                part_code_id = part_code.id
-                key = f"{part_code_id}"
-                
-                req_qty = float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
-                if req_qty <= 0:
-                    continue  # Skip absorbed / zero-quantity parts from Indent
-
-                if key not in grouped_indent:
-                    grouped_indent[key] = {
-                        'ids': [item.id],
-                        'ct_part_code': part_code.pc_code,
-                        'ct_part_code_name': part_code.pc_stock_description.stock_description if part_code.pc_stock_description else '',
-                        'ct_uom': part_code.pc_uom.unit_of_measure if part_code.pc_uom else '',
-                        'total_quantity_req': round(req_qty, 2),
-                        'ct_stock_status': item.ct_stock_status.status_name if item.ct_stock_status else '',
-                        'status_id': item.ct_stock_status.id if item.ct_stock_status else 1,
-                    }
-                else:
-                    grouped_indent[key]['ids'].append(item.id)
-                    grouped_indent[key]['total_quantity_req'] = round(grouped_indent[key]['total_quantity_req'] + req_qty, 2)
-            
-            indent_summary_list = list(grouped_indent.values())
-
-            context={
-                    'form': form,
-                    'first_name': first_name,
-                    'user_id': user_id,
-                    'costing_list': costing_list,
-                    'wood_cost': wood_cost,
-                    'plywood_cost': plywood_cost,
-                    'engineer_cost': engineer_cost,
-                    'labour_cost': labour_cost,
-                    'crane_cost': crane_cost,
-                    'ht_cost': ht_cost,
-                    'management_cost': management_cost,
-                    'material_cost': material_cost,
-                    'transport_cost': transport_cost,
-                    'others_cost': others_cost,
-                    'total_cost_wom': total_cost_wom,
-                    'total_cft': total_cft,
-                    'rate_per_cft': rate_per_cft,
-                    'total_sqft': total_sqft,
-                    'rate_per_sqft': rate_per_sqft,
-                    'role_id': role_id,
-                    'output': output,
-                    'current_step': 'costing',
-                    'indent_summary_list': indent_summary_list,
-                    'tracker_flags': get_tracker_flags(needassessment_id),
-                    'job_type_totals': job_type_totals,
-                    }
-        return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
-    else:
-        print('costingsummary_id',costingsummary_id)
-        if costingsummary_id == 0:
-            print("Inside pk_costing_summary post add")
-            form = PkcostingsummaryForm(request.POST)
-            if form.is_valid():
-                summary = form.save()
-                print("PkcostingsummaryInfo Form is Valid")
-                
-                # Set session variables immediately after creation so they are available in costing_add
-                request.session['na_assessment_id'] = summary.cs_assessment_num.id if summary.cs_assessment_num else None
-                request.session['na_customer_name_id'] = summary.cs_customer_name.id if summary.cs_customer_name else None
-                request.session['ses_customer_po_id'] = summary.cs_customer_po.id if summary.cs_customer_po else None
-                request.session['ses_costing_summary_id'] = summary.id
-                
-                messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/costingsummary_update/' + str(summary.id))
-            else:
-                print("PkcostingsummaryInfo Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
-        else:
-            print("Inside pk_costing_summary post edit")
-            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
-            form = PkcostingsummaryForm(request.POST,instance=costingsummary)
-            if form.is_valid():
-                summary = form.save()
-                print("PkcostingsummaryForm Form is Valid")
-                
-                # RECALCULATE ITEM COSTS BASED ON NEW MARGIN
-                # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
-                # to prevent data corruption where all items show the same unit cost.
-
-                messages.success(request, 'Record Updated Successfully')
-            else:
-                print("PkcostingsummaryForm Errors:", form.errors)
-                messages.error(request, f'Record Not Updated Successfully: {form.errors.as_text()}')
-            return redirect(request.META['HTTP_REFERER'])
-        # return redirect('/SMS/costingsummary_list')
-
-@login_required(login_url='login_page')
-def costingsummary_list(request):
-    first_name = request.session.get('first_name')
-    summaries = PkcostingsummaryInfo.objects.all().order_by('-id')
-    
-    combined_list = []
-    for s in summaries:
-        # Fetch any one item from PkcostingInfo to show status and excess status
-        # Match by assessment and customer PO
-        costing_item = PkcostingInfo.objects.filter(
-            ct_assessment_num=s.cs_assessment_num,
-            ct_customer_po=s.cs_customer_po
-        ).first()
-        combined_list.append((s, costing_item))
-
-    context = {
-        'combined_list': combined_list,
-        'first_name': first_name,
-    }
-    return render(request, "asset_mgt_app/pk_costingsummary_list.html", context)
-
-
-#Delete costingsummary
-@login_required(login_url='login_page')
-def costingsummary_delete(request, costingsummary_id):
-    costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
-    assessment_num = costingsummary.cs_assessment_num
-    job_no = costingsummary.cs_job_no
-
-    # Deleting PkcostingInfo objects (Job-aware)
-    Pkcosting_delete(assessment_num, job_no=job_no)
-
-    # Deleting Pkcosting summary objects (Job-aware)
-    Pkcostingsummary_delete(assessment_num, job_no=job_no)
-
-    return redirect('/SMS/costingsummary_list')
-
-@login_required(login_url='login_page')
-def pk_costing_get_customer(request):
-    cs_assessment_num = request.GET.get('cs_assessment_num')
-    cs_id = request.GET.get('cs_id')  # Might be passed
-    
-    customer_name_id = PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
-    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
-    
-    customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
-    customer_po_id = list(customer_po_qs.values_list('id', flat=True))
-    
-    # Check if there is an existing PO for this costing summary that should be included
-    if cs_id and cs_id != 'None':
-        try:
-            summary = PkcostingsummaryInfo.objects.get(id=cs_id)
-            if summary.cs_customer_po and summary.cs_customer_po.id not in customer_po_id:
-                customer_po_id.append(summary.cs_customer_po.id)
-                customer_po_name.append(summary.cs_customer_po.po_num)
-        except PkcostingsummaryInfo.DoesNotExist:
-            pass
-
-    customer = CustomerInfo.objects.get(id=customer_name_id)
-    job_no_qs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).values_list('cs_job_no', flat=True).distinct()
-    job_no_list = list(job_no_qs)
-
-    return JsonResponse(
-        {
-            'customer_name_id':customer_name_id,
-            'customer_po_id':customer_po_id,
-            'customer_po_name':customer_po_name,
-            'customer_address': customer.cu_address,
-            'customer_gstin': customer.cu_gst,
-            'job_no_list': job_no_list,
-        }
-    )
-
-@login_required(login_url='login_page')
-def pk_costing_summary_check_unique_field(request):
-    cs_assessment_num = request.GET.get('cs_assessment_num')
-    cs_po_num = request.GET.get('cs_customer_po_num')
-    exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num,cs_customer_po=cs_po_num).exists()
-    return JsonResponse(
-        {
-            'exists': exists,
-        }
-    )
-
-@login_required(login_url='login_page')
-def pk_bvm_invoice_pdf(request, invoice_id=0):
-    if invoice_id == 0:
-        costing_summary_id = request.session.get('ses_costing_summary_id')
-    else:
-        costing_summary_id = invoice_id
-    
-    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
-    job_no = summary.cs_job_no
-    cs_po_num = summary.cs_customer_po
-    
-    # Get base filter
-    if job_no:
-        base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
-    else:
-        base_filter = {'ct_assessment_num': summary.cs_assessment_num, 'ct_customer_po': cs_po_num}
-
-    invoices = PkcostingInfo.objects.filter(**base_filter)
-    
-    # Block invoice if job has Return Needed pending
-    job_no = summary.cs_job_no
-    if job_no and Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
-        messages.error(request, 'Cannot generate invoice. This job has a pending material return that must be processed first. Go to Production Dashboard → Process Return.')
-        return redirect(request.META.get('HTTP_REFERER', '/'))
-    
-    na_req = invoices.values('ct_requirement').distinct()
-    margin = summary.cs_margin
-    totalbox_cost = 0
-
-    # Calculate and store for this job specifically
-    for req in na_req:
-        k = req['ct_requirement']
-        if not k: continue
-        
-        # Aggregate base costs for this specific requirement WITHIN THIS JOB
-        total_cost_wom = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
-        total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
-        
-        # Get one representative line to find na_quantity for this item
-        rep_line = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).first()
-        qty = rep_line.ct_na_quantity if rep_line else 1
-        
-        # Update lines only for this specific job to prevent affecting other jobs
-        # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
-        # to prevent data corruption.
-        
-        totalbox_cost += (total_cost_with_margin * qty)
-
-    gst_val = summary.cs_gst
-    gst = round(totalbox_cost * gst_val / 100, 2)
-    final_cost = round((totalbox_cost + gst), 2)
-    
-    today = datetime.now()
-    formatted_date = today.strftime("%d-%b-%Y")
-    
-    context = {
-        'address': summary.cs_address,
-        'cost_includes': summary.cs_cost_includes,
-        'notes': summary.cs_notes,
-        'terms_condition': summary.cs_terms_condition,
-        'client_scope': summary.cs_client_scope,
-        'bvm_scope': summary.cs_bvm_scope,
-        'invoices': invoices,
-        'total_sum': round(totalbox_cost, 2),
-        'gst_val': gst_val,
-        'gst': gst,
-        'final_cost': final_cost,
-        'po_number': cs_po_num,
-        'today_date': formatted_date,
-    }
-    
-    file_name = f"Invoice_{summary.cs_job_no or summary.cs_assessment_num}_{cs_po_num}.pdf"
-    template_path = 'asset_mgt_app/bvm_pk_invoice_pdf.html'
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-
-    template = get_template(template_path)
-    html = template.render(context)
-
-    # Create PDF
-    pisa_status = pisa.CreatePDF(html, dest=response)
-
-    if pisa_status.err:
-        return HttpResponse('We has some error <pre>' + html + '</pre>')
-    return response
-
-def pk_bvm_invoice_excel(request, invoice_id=0):
-    if invoice_id == 0:
-        costing_summary_id = request.session.get('ses_costing_summary_id')
-    else:
-        costing_summary_id = invoice_id
-        
-    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
-    job_no = summary.cs_job_no
-    cs_po_num = summary.cs_customer_po
-    
-    if job_no:
-        base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
-        
-        # Block invoice if job has Return Needed pending
-        if Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
-            messages.error(request, 'Cannot generate invoice. This job has a pending material return. Go to Production Dashboard → Process Return.')
-            return redirect(request.META.get('HTTP_REFERER', '/'))
-            
-        # For Excel, we also show the PO Dimensions specifically assigned to this job
-        job_dimensions = POdimension.objects.filter(ct_po_id=cs_po_num.id)
-        pod_ids = PkcostingInfo.objects.filter(**base_filter).values_list('ct_po_dimension_id', flat=True).distinct()
-        invoices = POdimension.objects.filter(id__in=pod_ids)
-    else:
-        # Block invoice if assessment has Return Needed pending
-        if Packingjobs.objects.filter(pj_material_returned_flag='Yes').exists():
-            # check if any job for this summary is pending
-            pass  # summary may not have job_no; skip check
-            
-        invoices = POdimension.objects.filter(pod_assess_num=summary.cs_assessment_num, pod_po_num=cs_po_num)
-
-    margin = summary.cs_margin
-    totalbox_cost = 0
-
-    # Sync and sum costs
-    for i in invoices:
-        k = i.id
-        total_cost_wom = PkcostingInfo.objects.filter(ct_po_dimension=i, **base_filter).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
-        total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
-        
-        # Update dimension record for display
-        POdimension.objects.filter(pk=k).update(
-            pod_cost_unit=round(total_cost_with_margin, 2),
-            pod_cost_total=round(total_cost_with_margin * i.pod_quantity, 2)
-        )
-        totalbox_cost += (total_cost_with_margin * i.pod_quantity)
-
-    gst_val = summary.cs_gst
-    gst = round(totalbox_cost * gst_val / 100, 2)
-    final_cost = round((totalbox_cost + gst), 2)
-    today = datetime.now().strftime("%d-%b-%Y")
-
-    # Create an Excel workbook and add a worksheet.
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Invoice"
-
-    # Write the header
-    ws.append([
-        "Address", "Cost Includes", "Notes", "Terms & Conditions",
-        "Client Scope", "BVM Scope", "Others Description", "PO Number", "Others Cost", "Total Sum",
-        "GST Value", "GST", "Final Cost", "Date"
-    ])
-    # Write the summary info
-    ws.append([
-        summary.cs_address, summary.cs_cost_includes, summary.cs_notes, summary.cs_terms_condition,
-        summary.cs_client_scope, summary.cs_bvm_scope, summary.cs_others_description,
-        summary.cs_customer_po.po_num if summary.cs_customer_po else '', 
-        summary.cs_others_cost,
-        round(totalbox_cost, 2),
-        gst_val, gst, final_cost, today
-    ])
-
-    # Write the invoice items header
-    ws.append([
-        "Item", "Type of Requirement", "Length", "Width",
-        "Height", "Quantity", "Total Cost", "Unit Cost"
-    ])
-    # Write the invoice items
-    for invoice in invoices:
-        ws.append([
-            invoice.pod_item, invoice.pod_type_of_req, invoice.pod_length, invoice.pod_width,
-            invoice.pod_height, invoice.pod_quantity, invoice.pod_cost_total, invoice.pod_cost_unit
-        ])
-
-    # Create an HttpResponse with the appropriate Excel content type
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    file_name = f"Invoice_{needassessment_num}.xlsx"
-    response['Content-Disposition'] = f'attachment; filename={file_name}'
-
-    # Save the workbook to the response
-    wb.save(response)
-    return response
-
-@login_required(login_url='login_page')
-def pk_store_na_dimension_id(request):
-    na_dimension_box_val = []
-    ct_requirement_id = request.GET.get('ct_requirement_id')
-    print('ct_requirement_id', ct_requirement_id)
-
-    empty_response = {
-        'na_dimension_box_val': [],
-        'na_dimension_type': '', 'na_dimension_type_id': '',
-        'na_uom': '', 'na_uom_id': '',
-        'na_length': 0, 'na_width': 0, 'na_height': 0,
-    }
-
-    if not ct_requirement_id or not str(ct_requirement_id).strip().isdigit():
-        return JsonResponse(empty_response)
-
-    try:
-        a = Nadimension.objects.get(pk=ct_requirement_id)
-    except Nadimension.DoesNotExist:
-        return JsonResponse(empty_response)
-
-    na_dimension_box_val.append(
-        str(a.nad_type_of_req) + ' (' + str(a.nad_length) + 'x' + str(a.nad_width) + 'x' + str(a.nad_height) + ')'
-    )
-    data = {
-        'na_dimension_box_val': na_dimension_box_val,
-        'na_dimension_type': str(a.nad_dimension_type),
-        'na_dimension_type_id': str(a.nad_dimension_type.id),
-        'na_uom': str(a.nad_uom),
-        'na_uom_id': str(a.nad_uom.id),
-        'na_length': str(a.nad_length),
-        'na_width': str(a.nad_width),
-        'na_height': str(a.nad_height),
-    }
-    return JsonResponse(data)
-
-
-@login_required(login_url='login_page')
-def export_cost_assessment_to_excel(request):
-    costing_summary_id = request.session.get('ses_costing_summary_id')
-    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
-    job_no = summary.cs_job_no
-    customer_po_id = summary.cs_customer_po.id
-
-    if job_no:
-        costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id, ct_cost_type=8)
-    else:
-        assessment_number = request.session.get('na_assessment_id')
-        costing_list = PkcostingInfo.objects.filter(ct_assessment_num=assessment_number, ct_customer_po=customer_po_id, ct_cost_type=8)
-
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Cost Assessment Report"
-
-    # Define headers for the columns in the report
-    headers = [
-        'ID', 'Created On', 'Stock Purchase Number', 'Assessment Number', 'Customer Name',
-        'Customer PO', 'Job Type', 'Cost Type', 'Stock Type', 'Stock Description',
-        'Width (in)', 'Height (in)', 'Length (ft)', 'Job Type Quantity', 'Size', 'UOM',
-        'Total CFT', 'Rate/QTY (CFT)', 'Days', 'Unit Cost',
-        'Total Cost', 'Stock Status', 'Updated at', 'Updated By'
-    ]
-    ws.append(headers)
-
-    # Populate the worksheet with data from the filtered queryset
-    for costinginfo in costing_list:
-        ws.append([
-            costinginfo.id,
-            costinginfo.ct_created_at.strftime('%Y-%m-%d') if costinginfo.ct_created_at else '',
-            str(costinginfo.ct_stock_purchase_number) if costinginfo.ct_stock_purchase_number else '',
-            str(costinginfo.ct_assessment_num) if costinginfo.ct_customer_name else '',
-            str(costinginfo.ct_customer_name) if costinginfo.ct_customer_name else '',
-            str(costinginfo.ct_customer_po) if costinginfo.ct_customer_po else '',
-            str(costinginfo.ct_requirement) if costinginfo.ct_requirement else '',
-            str(costinginfo.ct_cost_type) if costinginfo.ct_cost_type else '',
-            str(costinginfo.ct_stock_type) if costinginfo.ct_stock_type else '',
-            str(costinginfo.ct_stock_description) if costinginfo.ct_stock_description else '',
-            costinginfo.ct_width_req,
-            costinginfo.ct_height_req,
-            costinginfo.ct_length_req,
-            costinginfo.ct_quantity,
-            costinginfo.ct_size,
-            str(costinginfo.ct_uom) if costinginfo.ct_uom else '',
-            costinginfo.ct_sqrt_req,
-            costinginfo.ct_rate,
-            costinginfo.ct_days,
-            costinginfo.ct_total_cost,
-            costinginfo.ct_totalbox_cost,
-            str(costinginfo.ct_stock_status) if costinginfo.ct_stock_status else '',
-            costinginfo.ct_updated_at.strftime('%Y-%m-%d') if costinginfo.ct_updated_at else '',
-            str(costinginfo.ct_updated_by) if costinginfo.ct_updated_by else ''
-        ])
-
-    # Set up the response for file download with appropriate headers
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=Cost_Assessment_Report_{}.xlsx'.format(
-        datetime.now().strftime('%Y%m%d_%H%M%S')
-    )
-
-    # Save the workbook directly to the response object
-    wb.save(response)
-
-    return response
-
-@login_required(login_url='login_page')
-def get_partcode_summary(request):
-    part_code_id = request.GET.get('part_code_id')
-    if not part_code_id:
-        return JsonResponse({'error': 'Missing part_code_id'}, status=400)
-    
-    # Get total purchased (Stock IN)
-    purchases = PkstockpurchasesInfo.objects.filter(sp_part_code_id=part_code_id)
-    total_in = purchases.aggregate(Sum('sp_cft'))['sp_cft__sum'] or 0.0
-    
-    # Get total retrieved across all assessments - status > 1 means retrieved
-    retrievals = PkcostingInfo.objects.filter(
-        ct_part_code_id=part_code_id, 
-        ct_cost_type=8, 
-        ct_stock_status__in=[2, 4]
-    )
-    total_retrieved = retrievals.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
-    
-    # Get returns (status 3)
-    returns = PkcostingInfo.objects.filter(
-        ct_part_code_id=part_code_id, 
-        ct_cost_type=8, 
-        ct_stock_status=3
-    )
-    total_returned = returns.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
-    
-    # Calculate available
-    current_available = total_in - total_retrieved + total_returned
-
-    # Build assessment breakdown
-    assessment_breakdown = []
-    for r in retrievals.order_by('-ct_updated_at'):
-        assessment_breakdown.append({
-            'assessment_num': r.ct_assessment_num,
-            'qty_cft': round(r.ct_cft, 2),
-            'date': r.ct_updated_at.strftime('%Y-%m-%d %H:%M') if r.ct_updated_at else ''
-        })
-
-    data = {
-        'total_in': round(total_in, 2),
-        'total_retrieved': round(total_retrieved, 2),
-        'total_returned': round(total_returned, 2),
-        'current_available': round(current_available, 2),
-        'breakdown': assessment_breakdown
-    }
+from datetime import datetime
+import openpyxl
+from django.contrib.auth.decorators import login_required
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from ..forms import PkcostingsummaryForm
+from ..models import User_extInfo,PkpurchaseorderInfo,POdimension,PkcostingsummaryInfo,PkneedassessmentInfo,PkcostingInfo,CustomerInfo
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models.aggregates import Sum
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.db.models import Sum, F
+from ..sub_models.na_dimension_mod import Nadimension
+from ..views import Pkcosting_delete,Pkcostingsummary_delete,get_tracker_flags
+from ..sub_models.packing_jobs_mod import Packingjobs
+
+@login_required(login_url='login_page')
+def costingsummary_add(request,costingsummary_id=0):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
+    if request.method == "GET":
+        if costingsummary_id == 0:
+            print('Inside costing summary Get add')
+            form = PkcostingsummaryForm()
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'role': role,
+                'role_id': role_id,
+            }
+        else:
+            print('Inside costing summary Get edit')
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
+            needassessment_num = costingsummary.cs_assessment_num
+            needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
+            customer_name_id = costingsummary.cs_customer_name.id if costingsummary.cs_customer_name else None
+            customer_po_id = costingsummary.cs_customer_po.id if costingsummary.cs_customer_po else None
+            request.session['na_assessment_id'] = needassessment_id
+            request.session['na_customer_name_id'] = customer_name_id
+            request.session['ses_customer_po_id'] = customer_po_id
+            request.session['ses_costing_summary_id'] = costingsummary_id
+            form = PkcostingsummaryForm(instance=costingsummary)
+            # Filtering Logic: prioritize Job Number if available
+            job_no = costingsummary.cs_job_no
+            
+            if job_no:
+                # Job-based summary (Group multiple NAs by Job No)
+                costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id).order_by('-id')
+                base_filter = {'ct_job_no': job_no, 'ct_customer_po': customer_po_id}
+            else:
+                # Legacy / Manual summary (Single NA)
+                costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_customer_po=customer_po_id).order_by('-id')
+                base_filter = {'ct_assessment_num': needassessment_id, 'ct_customer_po': customer_po_id}
+
+            Invoice = PkcostingInfo.objects.filter(ct_cost_type=8, **base_filter).values_list('ct_stock_status', flat=True)
+            if all(status in [4] for status in Invoice) and len(Invoice) > 0:
+                output = 1
+            else:
+                output = 0
+
+            # Combined Wood Cost (Wood=1, Hardwood=5)
+            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 5], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            wood_cost = round(wood_cost, 2)
+
+            # Combined Plywood Cost (Plywood=4, Marine Ply=6)
+            plywood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[4, 6], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            plywood_cost = round(plywood_cost, 2)
+
+            # Combined Total CFT (Wood=1, Hardwood=5; excluding reused wood weight in Kg)
+            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
+                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
+            )['total'] or 0.0
+            total_cft = round(total_cft, 2)
+
+            # Combined Total SQFT (Plywood=4, Marine Ply=6; excluding reused plywood weight in Kg)
+            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).exclude(
+                ct_part_code__pc_code__icontains='RE'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE - Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='RE-Used'
+            ).exclude(
+                ct_stock_description__stock_description__icontains='Reused'
+            ).aggregate(
+                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
+            )['total'] or 0.0
+            total_sqft = round(total_sqft, 2)
+
+            # Combined Engineer Cost
+            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            engineer_cost = round(engineer_cost, 2)
+
+            # Combined Labour Cost (In-house=3, On-site=9)
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type__in=[3, 9], **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            labour_cost = round(packing_labour_cost, 2)
+
+            # Combined Crane Cost
+            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            crane_cost = round(crane_cost, 2)
+
+            # Combined HT Cost
+            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            ht_cost = round(ht_cost, 2)
+
+            # Combined Management Cost
+            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            management_cost = round(management_cost, 2)
+
+            # Combined Material Cost (Consumables)
+            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            material_cost = round(material_cost, 2)
+
+            # Combined Transport Cost
+            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            transport_cost = round(transport_cost, 2)
+
+            # Others Cost (from existing model record)
+            others_cost = costingsummary.cs_others_cost or 0.0
+
+            # Calculate Total (W/O Margin)
+            total_cost_wom = (
+                wood_cost + plywood_cost + engineer_cost + labour_cost + crane_cost + 
+                ht_cost + management_cost + material_cost + transport_cost + others_cost
+            )
+            total_cost_wom = round(total_cost_wom, 2)
+
+            # Calculate Total (W/ Margin)
+            margin = costingsummary.cs_margin or 0.0
+            total_cost_wm = total_cost_wom + (total_cost_wom * margin / 100)
+            total_cost_wm = round(total_cost_wm, 2)
+
+            # Rate per CFT & Rate per SQFT
+            rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
+            rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
+
+            # Final Cost (with GST)
+            gst_percent = costingsummary.cs_gst or 0.0
+            gst_amount = total_cost_wm * gst_percent / 100
+            final_cost = round(total_cost_wm + gst_amount, 2)
+
+            # UPDATE DATABASE
+            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(
+                cs_wood_cost=wood_cost,
+                cs_plywood_cost=plywood_cost,
+                cs_total_cft=total_cft,
+                cs_total_sqft=total_sqft,
+                cs_engineer_cost=engineer_cost,
+                cs_labour_cost=labour_cost,
+                cs_crane_cost=crane_cost,
+                cs_ht_cost=ht_cost,
+                cs_management_cost=management_cost,
+                cs_material_cost=material_cost,
+                cs_transport_cost=transport_cost,
+                cs_others_cost=others_cost,
+                cs_total_cost_wom=total_cost_wom,
+                cs_total_cost_wm=total_cost_wm,
+                cs_rate_per_cft=rate_per_cft,
+                cs_final_cost=final_cost
+            )
+
+            # Re-fetch instance to ensure form has latest database values
+            costingsummary.refresh_from_db()
+            form = PkcostingsummaryForm(instance=costingsummary)
+
+            # Calculate Job Type wise totals
+            job_type_dict = {}
+            for item in costing_list:
+                job_type = str(item.ct_requirement) if item.ct_requirement else "None"
+                cost = float(item.ct_totalbox_cost or 0)
+                
+                # Use linked PO dimension line if present for exact PO info
+                po_dim = item.ct_po_dimension
+                key = (job_type, po_dim.id if po_dim else None)
+                
+                if key not in job_type_dict:
+                    po_num = "—"
+                    po_value = "—"
+                    if po_dim:
+                        if po_dim.pod_po_num:
+                            po_num = po_dim.pod_po_num.po_num
+                        if po_dim.pod_value:
+                            po_value = po_dim.pod_value
+                    elif item.ct_requirement:
+                        found_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
+                        if found_dim:
+                            if found_dim.pod_po_num:
+                                po_num = found_dim.pod_po_num.po_num
+                            if found_dim.pod_value:
+                                po_value = found_dim.pod_value
+                    
+                    job_type_dict[key] = {
+                        'job_type': job_type,
+                        'total': 0.0, 
+                        'po_num': po_num, 
+                        'po_value': po_value
+                    }
+                job_type_dict[key]['total'] += cost
+                
+            job_type_totals = [
+                {
+                    'job_type': data['job_type'], 
+                    'total': round(data['total'], 2), 
+                    'po_num': data['po_num'], 
+                    'po_value': data['po_value']
+                } 
+                for key, data in job_type_dict.items() if data['job_type'] != "None"
+            ]
+
+            def get_category_info(pc_obj, sd_str, st_id):
+                pc_code = (pc_obj.pc_code if pc_obj else '').upper()
+                sd_lower = (sd_str or '').lower()
+                st = st_id or 0
+
+                # 4. Nails
+                if pc_code.startswith('N') or 'nail' in sd_lower:
+                    return (4, 'Nails')
+
+                # 1. Wood
+                if st in [1, 5] or pc_code.startswith('K') or pc_code.startswith('W') or 'wood' in sd_lower or 'rubber' in sd_lower or 'pine' in sd_lower:
+                    if not any(w in sd_lower for w in ['bolt', 'bold', 'screw', 'handle', 'tape', 'strap', 'paint', 'foam']):
+                        return (1, 'Wood')
+
+                # 2. Plywood
+                if st in [4, 6] or pc_code.startswith('MPY') or pc_code.startswith('PY') or 'ply' in sd_lower:
+                    return (2, 'Plywood')
+
+                # 3. Consumables
+                return (3, 'Consumables')
+
+            retrival_queryset = costing_list.filter(ct_cost_type=8)
+            grouped_indent = {}
+            for item in retrival_queryset:
+                part_code = item.ct_part_code
+                if not part_code:
+                    continue
+                part_code_id = part_code.id
+                key = f"{part_code_id}"
+                
+                req_qty = float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+                if req_qty <= 0:
+                    continue  # Skip absorbed / zero-quantity parts from Indent
+
+                sd_name = part_code.pc_stock_description.stock_description if part_code.pc_stock_description else ''
+                rank, cat_name = get_category_info(part_code, sd_name, item.ct_stock_type_id or (part_code.pc_stock_type_id if part_code.pc_stock_type else 0))
+
+                if key not in grouped_indent:
+                    grouped_indent[key] = {
+                        'ids': [item.id],
+                        'ct_part_code': part_code.pc_code,
+                        'ct_part_code_name': sd_name,
+                        'ct_uom': part_code.pc_uom.unit_of_measure if part_code.pc_uom else '',
+                        'total_quantity_req': round(req_qty, 2),
+                        'ct_stock_status': item.ct_stock_status.status_name if item.ct_stock_status else '',
+                        'status_id': item.ct_stock_status.id if item.ct_stock_status else 1,
+                        'category_rank': rank,
+                        'category_name': cat_name,
+                    }
+                else:
+                    grouped_indent[key]['ids'].append(item.id)
+                    grouped_indent[key]['total_quantity_req'] = round(grouped_indent[key]['total_quantity_req'] + req_qty, 2)
+            
+            indent_summary_list = sorted(grouped_indent.values(), key=lambda x: (x.get('category_rank', 99), x.get('ct_part_code', '')))
+
+            context={
+                    'form': form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'costing_list': costing_list,
+                    'wood_cost': wood_cost,
+                    'plywood_cost': plywood_cost,
+                    'engineer_cost': engineer_cost,
+                    'labour_cost': labour_cost,
+                    'crane_cost': crane_cost,
+                    'ht_cost': ht_cost,
+                    'management_cost': management_cost,
+                    'material_cost': material_cost,
+                    'transport_cost': transport_cost,
+                    'others_cost': others_cost,
+                    'total_cost_wom': total_cost_wom,
+                    'total_cft': total_cft,
+                    'rate_per_cft': rate_per_cft,
+                    'total_sqft': total_sqft,
+                    'rate_per_sqft': rate_per_sqft,
+                    'role_id': role_id,
+                    'output': output,
+                    'current_step': 'costing',
+                    'indent_summary_list': indent_summary_list,
+                    'tracker_flags': get_tracker_flags(needassessment_id),
+                    'job_type_totals': job_type_totals,
+                    }
+        return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
+    else:
+        print('costingsummary_id',costingsummary_id)
+        if costingsummary_id == 0:
+            print("Inside pk_costing_summary post add")
+            form = PkcostingsummaryForm(request.POST)
+            if form.is_valid():
+                summary = form.save()
+                print("PkcostingsummaryInfo Form is Valid")
+                
+                # Set session variables immediately after creation so they are available in costing_add
+                request.session['na_assessment_id'] = summary.cs_assessment_num.id if summary.cs_assessment_num else None
+                request.session['na_customer_name_id'] = summary.cs_customer_name.id if summary.cs_customer_name else None
+                request.session['ses_customer_po_id'] = summary.cs_customer_po.id if summary.cs_customer_po else None
+                request.session['ses_costing_summary_id'] = summary.id
+                
+                messages.success(request, 'Record Updated Successfully')
+                return redirect('/SMS/costingsummary_update/' + str(summary.id))
+            else:
+                print("PkcostingsummaryInfo Form is Not Valid")
+                messages.error(request, 'Record Not Updated Successfully')
+                return redirect(request.META['HTTP_REFERER'])
+        else:
+            print("Inside pk_costing_summary post edit")
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
+            form = PkcostingsummaryForm(request.POST,instance=costingsummary)
+            if form.is_valid():
+                summary = form.save()
+                print("PkcostingsummaryForm Form is Valid")
+                
+                # RECALCULATE ITEM COSTS BASED ON NEW MARGIN
+                # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
+                # to prevent data corruption where all items show the same unit cost.
+
+                messages.success(request, 'Record Updated Successfully')
+            else:
+                print("PkcostingsummaryForm Errors:", form.errors)
+                messages.error(request, f'Record Not Updated Successfully: {form.errors.as_text()}')
+            return redirect(request.META['HTTP_REFERER'])
+        # return redirect('/SMS/costingsummary_list')
+
+@login_required(login_url='login_page')
+def costingsummary_list(request):
+    first_name = request.session.get('first_name')
+    summaries = PkcostingsummaryInfo.objects.all().order_by('-id')
+    
+    combined_list = []
+    for s in summaries:
+        # Fetch any one item from PkcostingInfo to show status and excess status
+        # Match by assessment and customer PO
+        costing_item = PkcostingInfo.objects.filter(
+            ct_assessment_num=s.cs_assessment_num,
+            ct_customer_po=s.cs_customer_po
+        ).first()
+        combined_list.append((s, costing_item))
+
+    context = {
+        'combined_list': combined_list,
+        'first_name': first_name,
+    }
+    return render(request, "asset_mgt_app/pk_costingsummary_list.html", context)
+
+
+#Delete costingsummary
+@login_required(login_url='login_page')
+def costingsummary_delete(request, costingsummary_id):
+    costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
+    assessment_num = costingsummary.cs_assessment_num
+    job_no = costingsummary.cs_job_no
+
+    # Deleting PkcostingInfo objects (Job-aware)
+    Pkcosting_delete(assessment_num, job_no=job_no)
+
+    # Deleting Pkcosting summary objects (Job-aware)
+    Pkcostingsummary_delete(assessment_num, job_no=job_no)
+
+    return redirect('/SMS/costingsummary_list')
+
+@login_required(login_url='login_page')
+def pk_costing_get_customer(request):
+    cs_assessment_num = request.GET.get('cs_assessment_num')
+    cs_id = request.GET.get('cs_id')  # Might be passed
+    
+    customer_name_id = PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
+    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
+    
+    customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
+    customer_po_id = list(customer_po_qs.values_list('id', flat=True))
+    
+    # Check if there is an existing PO for this costing summary that should be included
+    if cs_id and cs_id != 'None':
+        try:
+            summary = PkcostingsummaryInfo.objects.get(id=cs_id)
+            if summary.cs_customer_po and summary.cs_customer_po.id not in customer_po_id:
+                customer_po_id.append(summary.cs_customer_po.id)
+                customer_po_name.append(summary.cs_customer_po.po_num)
+        except PkcostingsummaryInfo.DoesNotExist:
+            pass
+
+    customer = CustomerInfo.objects.get(id=customer_name_id)
+    job_no_qs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).values_list('cs_job_no', flat=True).distinct()
+    job_no_list = list(job_no_qs)
+
+    return JsonResponse(
+        {
+            'customer_name_id':customer_name_id,
+            'customer_po_id':customer_po_id,
+            'customer_po_name':customer_po_name,
+            'customer_address': customer.cu_address,
+            'customer_gstin': customer.cu_gst,
+            'job_no_list': job_no_list,
+        }
+    )
+
+@login_required(login_url='login_page')
+def pk_costing_summary_check_unique_field(request):
+    cs_assessment_num = request.GET.get('cs_assessment_num')
+    cs_po_num = request.GET.get('cs_customer_po_num')
+    exists = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num,cs_customer_po=cs_po_num).exists()
+    return JsonResponse(
+        {
+            'exists': exists,
+        }
+    )
+
+@login_required(login_url='login_page')
+def pk_bvm_invoice_pdf(request, invoice_id=0):
+    if invoice_id == 0:
+        costing_summary_id = request.session.get('ses_costing_summary_id')
+    else:
+        costing_summary_id = invoice_id
+    
+    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
+    job_no = summary.cs_job_no
+    cs_po_num = summary.cs_customer_po
+    
+    # Get base filter
+    if job_no:
+        base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
+    else:
+        base_filter = {'ct_assessment_num': summary.cs_assessment_num, 'ct_customer_po': cs_po_num}
+
+    invoices = PkcostingInfo.objects.filter(**base_filter)
+    
+    # Block invoice if job has Return Needed pending
+    job_no = summary.cs_job_no
+    if job_no and Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
+        messages.error(request, 'Cannot generate invoice. This job has a pending material return that must be processed first. Go to Production Dashboard → Process Return.')
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    
+    na_req = invoices.values('ct_requirement').distinct()
+    margin = summary.cs_margin
+    totalbox_cost = 0
+
+    # Calculate and store for this job specifically
+    for req in na_req:
+        k = req['ct_requirement']
+        if not k: continue
+        
+        # Aggregate base costs for this specific requirement WITHIN THIS JOB
+        total_cost_wom = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
+        
+        # Get one representative line to find na_quantity for this item
+        rep_line = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).first()
+        qty = rep_line.ct_na_quantity if rep_line else 1
+        
+        # Update lines only for this specific job to prevent affecting other jobs
+        # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
+        # to prevent data corruption.
+        
+        totalbox_cost += (total_cost_with_margin * qty)
+
+    gst_val = summary.cs_gst
+    gst = round(totalbox_cost * gst_val / 100, 2)
+    final_cost = round((totalbox_cost + gst), 2)
+    
+    today = datetime.now()
+    formatted_date = today.strftime("%d-%b-%Y")
+    
+    context = {
+        'address': summary.cs_address,
+        'cost_includes': summary.cs_cost_includes,
+        'notes': summary.cs_notes,
+        'terms_condition': summary.cs_terms_condition,
+        'client_scope': summary.cs_client_scope,
+        'bvm_scope': summary.cs_bvm_scope,
+        'invoices': invoices,
+        'total_sum': round(totalbox_cost, 2),
+        'gst_val': gst_val,
+        'gst': gst,
+        'final_cost': final_cost,
+        'po_number': cs_po_num,
+        'today_date': formatted_date,
+    }
+    
+    file_name = f"Invoice_{summary.cs_job_no or summary.cs_assessment_num}_{cs_po_num}.pdf"
+    template_path = 'asset_mgt_app/bvm_pk_invoice_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # Create PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('We has some error <pre>' + html + '</pre>')
+    return response
+
+def pk_bvm_invoice_excel(request, invoice_id=0):
+    if invoice_id == 0:
+        costing_summary_id = request.session.get('ses_costing_summary_id')
+    else:
+        costing_summary_id = invoice_id
+        
+    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
+    job_no = summary.cs_job_no
+    cs_po_num = summary.cs_customer_po
+    
+    if job_no:
+        base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
+        
+        # Block invoice if job has Return Needed pending
+        if Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
+            messages.error(request, 'Cannot generate invoice. This job has a pending material return. Go to Production Dashboard → Process Return.')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+            
+        # For Excel, we also show the PO Dimensions specifically assigned to this job
+        job_dimensions = POdimension.objects.filter(ct_po_id=cs_po_num.id)
+        pod_ids = PkcostingInfo.objects.filter(**base_filter).values_list('ct_po_dimension_id', flat=True).distinct()
+        invoices = POdimension.objects.filter(id__in=pod_ids)
+    else:
+        # Block invoice if assessment has Return Needed pending
+        if Packingjobs.objects.filter(pj_material_returned_flag='Yes').exists():
+            # check if any job for this summary is pending
+            pass  # summary may not have job_no; skip check
+            
+        invoices = POdimension.objects.filter(pod_assess_num=summary.cs_assessment_num, pod_po_num=cs_po_num)
+
+    margin = summary.cs_margin
+    totalbox_cost = 0
+
+    # Sync and sum costs
+    for i in invoices:
+        k = i.id
+        total_cost_wom = PkcostingInfo.objects.filter(ct_po_dimension=i, **base_filter).aggregate(total_cost=Sum('ct_total_cost'))['total_cost'] or 0
+        total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
+        
+        # Update dimension record for display
+        POdimension.objects.filter(pk=k).update(
+            pod_cost_unit=round(total_cost_with_margin, 2),
+            pod_cost_total=round(total_cost_with_margin * i.pod_quantity, 2)
+        )
+        totalbox_cost += (total_cost_with_margin * i.pod_quantity)
+
+    gst_val = summary.cs_gst
+    gst = round(totalbox_cost * gst_val / 100, 2)
+    final_cost = round((totalbox_cost + gst), 2)
+    today = datetime.now().strftime("%d-%b-%Y")
+
+    # Create an Excel workbook and add a worksheet.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Invoice"
+
+    # Write the header
+    ws.append([
+        "Address", "Cost Includes", "Notes", "Terms & Conditions",
+        "Client Scope", "BVM Scope", "Others Description", "PO Number", "Others Cost", "Total Sum",
+        "GST Value", "GST", "Final Cost", "Date"
+    ])
+    # Write the summary info
+    ws.append([
+        summary.cs_address, summary.cs_cost_includes, summary.cs_notes, summary.cs_terms_condition,
+        summary.cs_client_scope, summary.cs_bvm_scope, summary.cs_others_description,
+        summary.cs_customer_po.po_num if summary.cs_customer_po else '', 
+        summary.cs_others_cost,
+        round(totalbox_cost, 2),
+        gst_val, gst, final_cost, today
+    ])
+
+    # Write the invoice items header
+    ws.append([
+        "Item", "Type of Requirement", "Length", "Width",
+        "Height", "Quantity", "Total Cost", "Unit Cost"
+    ])
+    # Write the invoice items
+    for invoice in invoices:
+        ws.append([
+            invoice.pod_item, invoice.pod_type_of_req, invoice.pod_length, invoice.pod_width,
+            invoice.pod_height, invoice.pod_quantity, invoice.pod_cost_total, invoice.pod_cost_unit
+        ])
+
+    # Create an HttpResponse with the appropriate Excel content type
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    file_name = f"Invoice_{needassessment_num}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+    # Save the workbook to the response
+    wb.save(response)
+    return response
+
+@login_required(login_url='login_page')
+def pk_store_na_dimension_id(request):
+    na_dimension_box_val = []
+    ct_requirement_id = request.GET.get('ct_requirement_id')
+    print('ct_requirement_id', ct_requirement_id)
+
+    empty_response = {
+        'na_dimension_box_val': [],
+        'na_dimension_type': '', 'na_dimension_type_id': '',
+        'na_uom': '', 'na_uom_id': '',
+        'na_length': 0, 'na_width': 0, 'na_height': 0,
+    }
+
+    if not ct_requirement_id or not str(ct_requirement_id).strip().isdigit():
+        return JsonResponse(empty_response)
+
+    try:
+        a = Nadimension.objects.get(pk=ct_requirement_id)
+    except Nadimension.DoesNotExist:
+        return JsonResponse(empty_response)
+
+    na_dimension_box_val.append(
+        str(a.nad_type_of_req) + ' (' + str(a.nad_length) + 'x' + str(a.nad_width) + 'x' + str(a.nad_height) + ')'
+    )
+    data = {
+        'na_dimension_box_val': na_dimension_box_val,
+        'na_dimension_type': str(a.nad_dimension_type),
+        'na_dimension_type_id': str(a.nad_dimension_type.id),
+        'na_uom': str(a.nad_uom),
+        'na_uom_id': str(a.nad_uom.id),
+        'na_length': str(a.nad_length),
+        'na_width': str(a.nad_width),
+        'na_height': str(a.nad_height),
+    }
+    return JsonResponse(data)
+
+
+@login_required(login_url='login_page')
+def export_cost_assessment_to_excel(request):
+    costing_summary_id = request.session.get('ses_costing_summary_id')
+    summary = get_object_or_404(PkcostingsummaryInfo, pk=costing_summary_id)
+    job_no = summary.cs_job_no
+    customer_po_id = summary.cs_customer_po.id
+
+    if job_no:
+        costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id, ct_cost_type=8)
+    else:
+        assessment_number = request.session.get('na_assessment_id')
+        costing_list = PkcostingInfo.objects.filter(ct_assessment_num=assessment_number, ct_customer_po=customer_po_id, ct_cost_type=8)
+
+    def get_export_rank(item):
+        pc = item.ct_part_code
+        sd = pc.pc_stock_description.stock_description if (pc and pc.pc_stock_description) else (item.ct_stock_description.stock_description if item.ct_stock_description else '')
+        pc_str = (pc.pc_code if pc else '').upper()
+        sd_l = (sd or '').lower()
+        st = item.ct_stock_type_id or (pc.pc_stock_type_id if (pc and pc.pc_stock_type) else 0)
+        if pc_str.startswith('N') or 'nail' in sd_l:
+            return (4, pc_str)
+        if st in [1, 5] or pc_str.startswith('K') or pc_str.startswith('W') or 'wood' in sd_l or 'rubber' in sd_l or 'pine' in sd_l:
+            if not any(w in sd_l for w in ['bolt', 'bold', 'screw', 'handle', 'tape', 'strap', 'paint', 'foam']):
+                return (1, pc_str)
+        if st in [4, 6] or pc_str.startswith('MPY') or pc_str.startswith('PY') or 'ply' in sd_l:
+            return (2, pc_str)
+        return (3, pc_str)
+
+    costing_list = sorted(costing_list, key=get_export_rank)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Cost Assessment Report"
+
+    # Define headers for the columns in the report
+    headers = [
+        'ID', 'Created On', 'Stock Purchase Number', 'Assessment Number', 'Customer Name',
+        'Customer PO', 'Job Type', 'Cost Type', 'Stock Type', 'Stock Description',
+        'Width (in)', 'Height (in)', 'Length (ft)', 'Job Type Quantity', 'Size', 'UOM',
+        'Total CFT', 'Rate/QTY (CFT)', 'Days', 'Unit Cost',
+        'Total Cost', 'Stock Status', 'Updated at', 'Updated By'
+    ]
+    ws.append(headers)
+
+    # Populate the worksheet with data from the filtered queryset
+    for costinginfo in costing_list:
+        ws.append([
+            costinginfo.id,
+            costinginfo.ct_created_at.strftime('%Y-%m-%d') if costinginfo.ct_created_at else '',
+            str(costinginfo.ct_stock_purchase_number) if costinginfo.ct_stock_purchase_number else '',
+            str(costinginfo.ct_assessment_num) if costinginfo.ct_customer_name else '',
+            str(costinginfo.ct_customer_name) if costinginfo.ct_customer_name else '',
+            str(costinginfo.ct_customer_po) if costinginfo.ct_customer_po else '',
+            str(costinginfo.ct_requirement) if costinginfo.ct_requirement else '',
+            str(costinginfo.ct_cost_type) if costinginfo.ct_cost_type else '',
+            str(costinginfo.ct_stock_type) if costinginfo.ct_stock_type else '',
+            str(costinginfo.ct_stock_description) if costinginfo.ct_stock_description else '',
+            costinginfo.ct_width_req,
+            costinginfo.ct_height_req,
+            costinginfo.ct_length_req,
+            costinginfo.ct_quantity,
+            costinginfo.ct_size,
+            str(costinginfo.ct_uom) if costinginfo.ct_uom else '',
+            costinginfo.ct_sqrt_req,
+            costinginfo.ct_rate,
+            costinginfo.ct_days,
+            costinginfo.ct_total_cost,
+            costinginfo.ct_totalbox_cost,
+            str(costinginfo.ct_stock_status) if costinginfo.ct_stock_status else '',
+            costinginfo.ct_updated_at.strftime('%Y-%m-%d') if costinginfo.ct_updated_at else '',
+            str(costinginfo.ct_updated_by) if costinginfo.ct_updated_by else ''
+        ])
+
+    # Set up the response for file download with appropriate headers
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=Cost_Assessment_Report_{}.xlsx'.format(
+        datetime.now().strftime('%Y%m%d_%H%M%S')
+    )
+
+    # Save the workbook directly to the response object
+    wb.save(response)
+
+    return response
+
+@login_required(login_url='login_page')
+def get_partcode_summary(request):
+    part_code_id = request.GET.get('part_code_id')
+    if not part_code_id:
+        return JsonResponse({'error': 'Missing part_code_id'}, status=400)
+    
+    # Get total purchased (Stock IN)
+    purchases = PkstockpurchasesInfo.objects.filter(sp_part_code_id=part_code_id)
+    total_in = purchases.aggregate(Sum('sp_cft'))['sp_cft__sum'] or 0.0
+    
+    # Get total retrieved across all assessments - status > 1 means retrieved
+    retrievals = PkcostingInfo.objects.filter(
+        ct_part_code_id=part_code_id, 
+        ct_cost_type=8, 
+        ct_stock_status__in=[2, 4]
+    )
+    total_retrieved = retrievals.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
+    
+    # Get returns (status 3)
+    returns = PkcostingInfo.objects.filter(
+        ct_part_code_id=part_code_id, 
+        ct_cost_type=8, 
+        ct_stock_status=3
+    )
+    total_returned = returns.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
+    
+    # Calculate available
+    current_available = total_in - total_retrieved + total_returned
+
+    # Build assessment breakdown
+    assessment_breakdown = []
+    for r in retrievals.order_by('-ct_updated_at'):
+        assessment_breakdown.append({
+            'assessment_num': r.ct_assessment_num,
+            'qty_cft': round(r.ct_cft, 2),
+            'date': r.ct_updated_at.strftime('%Y-%m-%d %H:%M') if r.ct_updated_at else ''
+        })
+
+    data = {
+        'total_in': round(total_in, 2),
+        'total_retrieved': round(total_retrieved, 2),
+        'total_returned': round(total_returned, 2),
+        'current_available': round(current_available, 2),
+        'breakdown': assessment_breakdown
+    }
     return JsonResponse(data)

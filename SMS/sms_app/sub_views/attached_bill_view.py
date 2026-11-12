@@ -615,6 +615,8 @@ def attached_bill_summary(request, id):
     contract_amount = float(bill.ab_buy_cost or 0)
     leave_days = bill.ab_leave_days or 0
     leave_amount = float(bill.ab_leave_amount or 0)
+    sunday_leave = bill.ab_sunday_leave or 0
+    sunday_leave_amount = float(bill.ab_sunday_leave_amount or 0)
     agreed_km      = float(bill.ab_agreed_km or 0)
     total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
     extra_km       = float(bill.ab_extra_km_run or 0)
@@ -837,10 +839,12 @@ def attached_bill_summary(request, id):
         'holidays':      holiday_sundays,
         'leave_days':    leave_days,
         'non_movement_days': non_movement_days,
+        'sunday_leave':        sunday_leave,
         'contract_amount': round(contract_amount, 2),
         'toll_cost':       round(toll_cost, 2),
         'leave_per_day':   round(leave_per_day, 2),
         'leave_amount':    round(leave_amount, 2),
+        'sunday_leave_amount': round(sunday_leave_amount, 2),
         'extra_km':        round(extra_km, 2),
         'extra_km_amount': round(extra_km_amount, 2),
         'actual_amount':   round(actual_amount, 2),
@@ -926,27 +930,29 @@ def attached_bill_summary_excel(request, id):
         [5,  'NO. OF HOLIDAYS (SUNDAYS)',     data.get('holidays', 0)],
         [6,  'NO. OF LEAVE',                  data.get('leave_days', 0)],
         [7,  'NON MOVEMENT DAYS',             data.get('non_movement_days', 0)],
-        [8,  'CONTRACT AMOUNT',               format_num(data.get('contract_amount', 0))],
-        [9,  'LEAVE PER DAY',                 format_num(data.get('leave_per_day', 0))],
-        [10, 'LEAVE AMT',                     format_num(data.get('leave_amount', 0))],
-        [11, 'EXTRA KM',                      format_num(data.get('extra_km', 0))],
-        [12, 'EXTRA KM AMT',                  format_num(data.get('extra_km_amount', 0))],
-        [13, 'TOLL COST',                     format_num(data.get('toll_cost', 0))],
-        [14, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
-        [15, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
-        [16, 'TRIP INDEX',                    data.get('trip_index', '')],
-        [17, 'BUSINESS KM',                   format_num(data.get('business_km', 0))],
-        [18, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
-        [19, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
-        [20, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
-        [21, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
-        [22, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
-        [23, 'BUSINESS COST',                 format_num(data.get('buy_cost', 0))],
-        [24, 'SELLING',                       format_num(data.get('selling', 0))],
-        [25, 'BUYING',                        format_num(data.get('buying', 0))],
-        [26, 'PROFIT',                        format_num(data.get('profit', 0))],
-        [27, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
-        [28, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
+        [8,  'NO. OF SUNDAY LEAVE',           data.get('sunday_leave', 0)],
+        [9,  'CONTRACT AMOUNT',               format_num(data.get('contract_amount', 0))],
+        [10, 'LEAVE PER DAY',                 format_num(data.get('leave_per_day', 0))],
+        [11, 'LEAVE AMT',                     format_num(data.get('leave_amount', 0))],
+        [12, 'SUNDAY LEAVE AMT',              format_num(data.get('sunday_leave_amount', 0))],
+        [13, 'EXTRA KM',                      format_num(data.get('extra_km', 0))],
+        [14, 'EXTRA KM AMT',                  format_num(data.get('extra_km_amount', 0))],
+        [15, 'TOLL COST',                     format_num(data.get('toll_cost', 0))],
+        [16, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
+        [17, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
+        [18, 'TRIP INDEX',                    data.get('trip_index', '')],
+        [19, 'BUSINESS KM',                   format_num(data.get('business_km', 0))],
+        [20, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
+        [21, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
+        [22, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
+        [23, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
+        [24, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
+        [25, 'BUSINESS COST',                 format_num(data.get('buy_cost', 0))],
+        [26, 'SELLING',                       format_num(data.get('selling', 0))],
+        [27, 'BUYING',                        format_num(data.get('buying', 0))],
+        [28, 'PROFIT',                        format_num(data.get('profit', 0))],
+        [29, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
+        [30, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
     ]
 
     for row_data in rows:

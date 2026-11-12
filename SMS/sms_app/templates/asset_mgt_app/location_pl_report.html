@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="container-fluid py-3 px-3">
-    <!-- ══ Page Header ══ -->
+    <!-- ══ Page Header (Modern) ══ -->
     <div class="modern-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
         <div class="d-flex align-items-center" style="gap: 10px;">
             <i class="fas fa-map-pin text-white" style="font-size: 1.35rem;"></i>
@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <!-- ══ Filter Form ══ -->
+    <!-- ══ Filter Form (Modern) ══ -->
     <div class="modern-card p-3 mb-3">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-12 col-md-4 mb-2 mb-md-0">
@@ -51,78 +51,78 @@
         </form>
     </div>
 
-    <!-- ══ Summary Card Table ══ -->
+    <!-- ══ Table (Original / Old Design) ══ -->
     <div class="modern-card p-3 mb-3">
-        <div class="form-section-title mb-3">
-            <i class="fas fa-chart-pie text-primary mr-1"></i> Performance Summary: {{ branch_name|default:"All Branches" }}
-        </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-striped modern-table align-middle w-100" style="max-width: 900px; margin: 0 auto;">
+            <table class="table table-bordered table-striped text-center align-middle" style="width: 100%;">
                 <tbody>
+                    <tr class="bg-dark text-white">
+                        <td colspan="2"><h5 class="mb-0 font-weight-bold">Performance Summary: {{ branch_name|default:"All Branches" }}</h5></td>
+                    </tr>
                     <tr class="thead-dark text-white">
-                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-money-bill-wave mr-1"></i> Revenue (Vehicle Source wise)</td>
+                        <td colspan="2"><h6 class="mb-0">Revenue (Vehicle Source wise)</h6></td>
                     </tr>
                     <tr>
-                        <td class="font-weight-bold" style="width: 60%;">Own Vehicle Revenue</td>
-                        <td class="text-right text-primary font-weight-bold">{{ own_rev }}</td>
+                        <td class="font-weight-bold">Own Vehicle Revenue</td>
+                        <td class="text-primary font-weight-bold">{{ own_rev }}</td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Attached Vehicle Revenue</td>
-                        <td class="text-right text-primary font-weight-bold">{{ att_rev }}</td>
+                        <td class="text-primary font-weight-bold">{{ att_rev }}</td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Market Vehicle Revenue</td>
-                        <td class="text-right text-primary font-weight-bold">{{ mkt_rev }}</td>
+                        <td class="text-primary font-weight-bold">{{ mkt_rev }}</td>
                     </tr>
-                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                    <tr style="background-color: #e9ecef;">
                         <td class="font-weight-bold text-right">Total Revenue:</td>
-                        <td class="font-weight-bold text-right" style="font-size: 1.15rem; color: #0284c7;">{{ total_revenue }}</td>
+                        <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_revenue }}</td>
                     </tr>
 
                     <tr class="thead-dark text-white">
-                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-receipt mr-1"></i> Operational Expenses</td>
+                        <td colspan="2"><h6 class="mb-0">Operational Expenses</h6></td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Own Operational Expenses</td>
-                        <td class="text-right text-danger font-weight-bold">{{ own_op_exp }}</td>
+                        <td class="text-danger">{{ own_op_exp }}</td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Attached Operational Expenses</td>
-                        <td class="text-right text-danger font-weight-bold">{{ att_op_exp }}</td>
+                        <td class="text-danger">{{ att_op_exp }}</td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Market Operational Expenses</td>
-                        <td class="text-right text-danger font-weight-bold">{{ mkt_op_exp }}</td>
+                        <td class="text-danger">{{ mkt_op_exp }}</td>
                     </tr>
-                    <tr style="background-color: var(--bg-hover, #f8fafc);">
+                    <tr style="background-color: #e9ecef;">
                         <td class="font-weight-bold text-right">Total Operational Expenses:</td>
-                        <td class="font-weight-bold text-right text-danger" style="font-size: 1.15rem;">{{ total_op_exp }}</td>
+                        <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_op_exp }}</td>
                     </tr>
 
-                    <tr style="background-color: var(--bg-hover, #f8fafc);">
-                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">Gross Profit</td>
-                        <td class="text-right font-weight-bold text-success" style="font-size: 1.1rem;">{{ gross_profit }}</td>
+                    <tr class="bg-light">
+                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 1px;">Gross Profit</td>
+                        <td class="font-weight-bold text-success" style="font-size: 1.1rem;">{{ gross_profit }}</td>
                     </tr>
-                    <tr style="background-color: var(--bg-hover, #f8fafc);">
-                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 0.5px;">Gross Profit %</td>
-                        <td class="text-right font-weight-bold {% if gross_profit_pct > 0 %}text-success{% else %}text-danger{% endif %}">{{ gross_profit_pct|floatformat:2 }} %</td>
+                    <tr class="bg-light">
+                        <td class="font-weight-bold text-uppercase" style="letter-spacing: 1px;">Gross Profit %</td>
+                        <td class="font-weight-bold {% if gross_profit_pct > 0 %}text-success{% else %}text-danger{% endif %}">{{ gross_profit_pct|floatformat:2 }} %</td>
                     </tr>
 
                     <tr class="thead-dark text-white">
-                        <td colspan="2" class="font-weight-bold py-2"><i class="fas fa-tools mr-1"></i> Non-Operational Expenses (Own Vehicles)</td>
+                        <td colspan="2"><h6 class="mb-0">Non-Operational Expenses (Own Vehicles)</h6></td>
                     </tr>
                     <tr>
                         <td class="font-weight-bold">Total Non-Op Exp (Prorated)</td>
-                        <td class="text-right text-secondary font-weight-bold">{{ non_op_exp }}</td>
+                        <td class="text-secondary">{{ non_op_exp }}</td>
                     </tr>
 
-                    <tr style="background: linear-gradient(135deg, #1e293b, #334155); color: #ffffff;">
-                        <td class="font-weight-bold text-uppercase h6 mb-0 text-white py-2">Net Profit</td>
-                        <td class="text-right font-weight-bold h6 mb-0 text-white py-2">{{ net_profit }}</td>
+                    <tr class="bg-primary text-white">
+                        <td class="font-weight-bold text-uppercase h5 mb-0">Net Profit</td>
+                        <td class="font-weight-bold h5 mb-0">{{ net_profit }}</td>
                     </tr>
-                    <tr style="background: linear-gradient(135deg, #1e293b, #334155); color: #ffffff;">
-                        <td class="font-weight-bold text-uppercase text-white py-2">Net Profit %</td>
-                        <td class="text-right font-weight-bold text-white py-2">{{ net_profit_pct|floatformat:2 }} %</td>
+                    <tr class="bg-primary text-white">
+                        <td class="font-weight-bold text-uppercase h6 mb-0">Net Profit %</td>
+                        <td class="font-weight-bold h6 mb-0">{{ net_profit_pct|floatformat:2 }} %</td>
                     </tr>
                 </tbody>
             </table>

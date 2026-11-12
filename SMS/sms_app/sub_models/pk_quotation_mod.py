@@ -64,6 +64,7 @@ class PkquotationInfo(models.Model):
     pkqt_weight_received = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_received', db_column='pkqt_weight_received',null=True, blank=True)
     pkqt_weight_Consumption = models.ForeignKey(Unitofmeasure, on_delete=models.CASCADE,related_name='pkqt_weight_Consumption', db_column='pkqt_weight_Consumption',null=True, blank=True)
     pkqt_total_cft_display = models.FloatField(blank=True, null=True, default=0.0)
+    pkqt_quotation_summary = models.ForeignKey('sms_app.PkquotationsummaryInfo', on_delete=models.CASCADE, related_name='quotation_items', blank=True, null=True)
 
 
     class Meta:

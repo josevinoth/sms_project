@@ -77,6 +77,7 @@ urlpatterns = [
     path('vendor_insert', views.vendor_add, name='vendor_insert'),  # Add vendor
     path('vendor_update/<int:vendor_id>/', views.vendor_add, name='vendor_update'),  # Update Vendor
     path('vendor_delete/<int:vendor_id>/', views.vendor_delete, name='vendor_delete'),  # Delete Vendor
+    path('vendor_attachment_delete/<int:attachment_id>/', views.vendor_attachment_delete, name='vendor_attachment_delete'),  # Delete Vendor Attachment
     path('location_list/', views.location_list, name='location_list'),  # List location,
     path('location_insert', views.location_add, name='location_insert'),  # Add location
     path('location_update/<int:location_id>/', views.location_add, name='location_update'),  # Update location
@@ -123,7 +124,7 @@ urlpatterns = [
     path('service_update/<int:service_id>/', views.service_add, name='service_update'),  # Update service
     path('service_delete/<int:service_id>/', views.service_delete, name='service_delete'),  # Delete service
     path('goods_list/', views.goods_list, name='goods_list'),
-    # path('goods_list_ajax/', views.goods_list_ajax, name='goods_list_ajax'),  # List goods,
+    path('goods_list_ajax/', views.goods_list_ajax, name='goods_list_ajax'),  # List goods,
     path('goods_insert', views.goods_add, name='goods_insert'),  # Add goods
     path('goods_update/<int:goods_id>/', views.goods_add, name='goods_update'),  # Update goods
     path('goods_delete/<int:goods_id>/', views.goods_delete, name='goods_delete'),  # Delete goods
@@ -455,29 +456,38 @@ urlpatterns = [
     path('petty_cash_insert/<int:tpc_id>/', views.tms_petty_cash_add, name='tms_petty_cash_update'),
     path('tms_petty_cash_list/', views.tms_petty_cash_list, name='tms_petty_cash_list'),
     path('tms_petty_cash_voucher_print/<int:tpc_id>/', views.tms_petty_cash_voucher_print, name='tms_petty_cash_voucher_print'),
+    path('tms_petty_cash_combined_pdf/<int:tpc_id>/', views.tms_petty_cash_combined_pdf, name='tms_petty_cash_combined_pdf'),
     path('tms_petty_cash_delete/<int:tpc_id>/', views.tms_petty_cash_delete, name='tms_petty_cash_delete'),
     path('tms_petty_cash_export_tally/', views.tms_petty_cash_export_tally, name='tms_petty_cash_export_tally'),
+    path('tms_petty_cash_export_zip/', views.tms_petty_cash_export_zip, name='tms_petty_cash_export_zip'),
     path('get_tms_trips_by_date/', views.get_tms_trips_by_date, name='get_tms_trips_by_date'),
     path('get_ledger_balance/', views.get_ledger_balance, name='get_ledger_balance'),
     path('wms_petty_cash_list/', views.wms_petty_cash_list, name='wms_petty_cash_list'),
     path('wms_petty_cash_voucher_print/<int:wpc_id>/', views.wms_petty_cash_voucher_print, name='wms_petty_cash_voucher_print'),
+    path('wms_petty_cash_combined_pdf/<int:wpc_id>/', views.wms_petty_cash_combined_pdf, name='wms_petty_cash_combined_pdf'),
     path('wms_petty_cash_insert/', views.wms_petty_cash_add, name='wms_petty_cash_insert'),
     path('wms_petty_cash_update/<int:wpc_id>/', views.wms_petty_cash_add, name='wms_petty_cash_update'),
     path('wms_petty_cash_delete/<int:wpc_id>/', views.wms_petty_cash_delete, name='wms_petty_cash_delete'),
     path('wms_petty_cash_export_tally/', views.wms_petty_cash_export_tally, name='wms_petty_cash_export_tally'),
+    path('wms_petty_cash_export_zip/', views.wms_petty_cash_export_zip, name='wms_petty_cash_export_zip'),
     path('pms_petty_cash_list/', views.pms_petty_cash_list, name='pms_petty_cash_list'),
     path('pms_petty_cash_voucher_print/<int:ppc_id>/', views.pms_petty_cash_voucher_print, name='pms_petty_cash_voucher_print'),
+    path('pms_petty_cash_combined_pdf/<int:ppc_id>/', views.pms_petty_cash_combined_pdf, name='pms_petty_cash_combined_pdf'),
     path('pms_petty_cash_insert/', views.pms_petty_cash_add, name='pms_petty_cash_insert'),
     path('pms_petty_cash_update/<int:ppc_id>/', views.pms_petty_cash_add, name='pms_petty_cash_update'),
     path('pms_petty_cash_delete/<int:ppc_id>/', views.pms_petty_cash_delete, name='pms_petty_cash_delete'),
     path('pms_petty_cash_export_tally/', views.pms_petty_cash_export_tally, name='pms_petty_cash_export_tally'),
+    path('pms_petty_cash_export_zip/', views.pms_petty_cash_export_zip, name='pms_petty_cash_export_zip'),
+    path('add_pms_vehicle/', views.add_pms_vehicle, name='add_pms_vehicle'),
+    path('add_pms_expense_type/', views.add_pms_expense_type, name='add_pms_expense_type'),
+    path('add_wms_expense_type/', views.add_wms_expense_type, name='add_wms_expense_type'),
+    path('add_tms_expense_type/', views.add_tms_expense_type, name='add_tms_expense_type'),
     path('get_wms_job_details/', views.get_wms_job_details, name='get_wms_job_details'),
     path('get_wms_customers_by_unit/', views.get_wms_customers_by_unit, name='get_wms_customers_by_unit'),
     path('get_wms_jobs_by_customer/', views.get_wms_jobs_by_customer, name='get_wms_jobs_by_customer'),
     path('get_pms_job_details/', views.get_pms_job_details, name='get_pms_job_details'),
     path('get_pms_customers_by_unit/', views.get_pms_customers_by_unit, name='get_pms_customers_by_unit'),
     path('get_pms_jobs_by_customer/', views.get_pms_jobs_by_customer, name='get_pms_jobs_by_customer'),
-    path('add_pms_vehicle/', views.add_pms_vehicle, name='add_pms_vehicle'),
     path('expense_update/<int:expense_id>', views.expense_add, name='expense_update'),  # update expense
     path('expense_delete/<int:expense_id>', views.expense_delete, name='expense_delete'),  # delete expense
     path('expense_search/', views.expense_search, name='expense_search'),  # search expense
@@ -670,6 +680,7 @@ urlpatterns = [
     # List prime enquiry vehicles
     path('prime_enquiry_list/', views.prime_enquiry_booking_list, name='prime_enquiry_list'),
     path('prime_enquiry_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_insert'),
+    path('prime_enquiry_vehicle_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_vehicle_insert'),
     path('prime_enquiry_vehicle_update/<int:pev_id>', views.prime_enquiry_vehicle_add,
          name='prime_enquiry_vehicle_update'),  # update prime enquiry vehicle
     path('prime_enquiry_vehicle_delete/<int:pev_id>', views.prime_enquiry_vehicle_delete,
@@ -740,6 +751,13 @@ urlpatterns = [
     # delete pk_stock_vendor
     path('pk_process_vendor_return/<int:sm_id>', views.pk_process_vendor_return, name='pk_process_vendor_return'),
     # process vendor return from stock vendor screen
+    path('load_quotation_matrix/', views.load_quotation_matrix, name='load_quotation_matrix'),
+    path('save_quotation_matrix/', views.save_quotation_matrix, name='save_quotation_matrix'),
+    path('matrix_part_code_search/', views.matrix_part_code_search, name='matrix_part_code_search'),
+    path('matrix_create_box_item/', views.matrix_create_box_item, name='matrix_create_box_item'),
+    path('box_costing_matrix/<int:na_assessment_num_id>/', views.box_costing_matrix_view, name='box_costing_matrix_view'),
+    path('box_costing_matrix/<int:na_assessment_num_id>/<int:requirement_id>/', views.box_costing_matrix_view, name='box_costing_matrix_req_view'),
+    path('box_costing_matrix/', views.box_costing_matrix_view, name='box_costing_matrix_default'),
     path('pk_quotation_list/', views.pk_quotation_list, name='pk_quotation_list'),  # List quotation
     path('pk_quotation_insert/', views.pk_quotation_add, name='pk_quotation_insert'),  # Add quotation
     path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),
@@ -748,6 +766,8 @@ urlpatterns = [
     # delete quotation
     path('pk_quotation_cancel/', views.pK_quotation_cancel, name='pk_quotation_cancel'),  # cancel quotation
     path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),
+    path('pk_quotationsummary_revise/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_revise,
+         name='pk_quotationsummary_revise'),
     path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone,
          name='pk_quotationsummary_clone'),
     path('pk_quotationsummary_clone_po/<int:purchaseorder_id>/', views.pk_quotationsummary_clone_po,
@@ -758,12 +778,14 @@ urlpatterns = [
          name='pk_quotationsummary_update'),  # update pk_quotationsummary
     path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete,
          name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
+    path('pk_quotation_job_delete/<int:pk_quotationsummary_id>/<int:req_id>/', views.pk_quotation_job_delete,
+         name='pk_quotation_job_delete'),
     path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field,
          name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
     path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges,
          name='transport_calculate_trip_charges'),  # transport_calculate_trip_charges
-    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),
-    path('iou_get_staff_by_business/', views.get_staff_by_business_iou, name='iou_get_staff_by_business'),  # iou_get_full_name
+    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),  # iou_get_full_name
+    path('iou_get_staff_by_business/', views.get_staff_by_business_iou, name='iou_get_staff_by_business'),  # iou_get_staff_by_business
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
@@ -983,6 +1005,7 @@ urlpatterns = [
     path("trans_fastag_export_excel/", views.trans_fastag_export_excel, name="trans_fastag_export_excel"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
+    path("get_trip_playback_data/", views.get_trip_playback_data, name="get_trip_playback_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
          name='get_remaining_quantity'),
     path('get_vehicle_type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
@@ -1182,6 +1205,7 @@ urlpatterns = [
     path('SMS/customer_enquiry_edit/<int:enquiry_id>/', views.customer_enquiry_edit, name='customer_enquiry_edit'),
     path('SMS/customer_enquiry_list/', views.customer_enquiry_list, name='customer_enquiry_list'),
     path('SMS/customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle'),
+    path('customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle_direct'),
     path('ajax/search-customers/', views.ajax_search_customers, name='ajax_search_customers'),
     path('ajax/search-customers-select2/', views.ajax_search_customers_select2, name='ajax_search_customers_select2'),
     path('ajax/search-places-select2/', views.ajax_search_places_select2, name='ajax_search_places_select2'),
@@ -1240,6 +1264,8 @@ urlpatterns = [
     path('daily_trip_count_report_ajax/', views.daily_trip_count_report_ajax_view, name='daily_trip_count_report_ajax'),
     path('trip_status_count_report/', views.trip_status_count_report_view, name='trip_status_count_report'),
     path('trip_status_count_report_ajax/', views.trip_status_count_report_ajax_view, name='trip_status_count_report_ajax'),
+    path('vehicle_placed_dmr_report/', views.vehicle_placed_dmr_report_view, name='vehicle_placed_dmr_report'),
+    path('vehicle_placed_dmr_export_excel/', views.vehicle_placed_dmr_export_excel, name='vehicle_placed_dmr_export_excel'),
     path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
     path('location_pl_report/', views.location_pl_report_view, name='location_pl_report'),
     path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),

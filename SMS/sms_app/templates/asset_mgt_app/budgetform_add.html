@@ -536,7 +536,7 @@
                                                     <div class="summary-box mb-3">
                                                         <div class="summary-box-header">Fixed</div>
                                                         <div class="summary-box-body">
-                                                            <div class="summary-box-label">Fixed</div>
+                                                            <div class="summary-box-label">Total</div>
                                                             <div class="summary-box-value" id="summary-op-fixed">0.0</div>
                                                         </div>
                                                     </div>
@@ -588,7 +588,7 @@
                                                     <div class="summary-box mb-3">
                                                         <div class="summary-box-header">Variable</div>
                                                         <div class="summary-box-body">
-                                                            <div class="summary-box-label">Variable</div>
+                                                            <div class="summary-box-label">Total</div>
                                                             <div class="summary-box-value" id="summary-op-variable">0.0</div>
                                                         </div>
                                                     </div>
@@ -705,7 +705,7 @@
                                                     <div class="summary-box mb-3">
                                                         <div class="summary-box-header">Fixed</div>
                                                         <div class="summary-box-body">
-                                                            <div class="summary-box-label">Fixed</div>
+                                                            <div class="summary-box-label">Total</div>
                                                             <div class="summary-box-value" id="summary-nonop-fixed">0.0</div>
                                                         </div>
                                                     </div>
@@ -747,7 +747,7 @@
                                                     <div class="summary-box mb-3">
                                                         <div class="summary-box-header">Variable</div>
                                                         <div class="summary-box-body">
-                                                            <div class="summary-box-label">Variable</div>
+                                                            <div class="summary-box-label">Total</div>
                                                             <div class="summary-box-value" id="summary-nonop-variable">0.0</div>
                                                         </div>
                                                     </div>
@@ -1163,6 +1163,9 @@
         padding: 0 15px;
         justify-content: flex-start;
     }
+    .summary-container .summary-box {
+        max-width: 360px;
+    }
     .summary-box {
         display: flex;
         align-items: stretch;
@@ -1173,12 +1176,13 @@
         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         margin-bottom: 8px;
         height: 32px;
-        width: auto;
-        min-width: 320px;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
     .summary-box-header {
         background-color: var(--bg-section, #e2e8f0);
-        padding: 0 10px;
+        padding: 0 8px;
         font-weight: 700;
         font-size: 11px;
         color: var(--text-main, #333);
@@ -1186,7 +1190,8 @@
         align-items: center;
         border-right: 1px solid var(--border-light, #cbd5e1);
         white-space: nowrap;
-        min-width: 160px;
+        min-width: fit-content;
+        flex-shrink: 0;
     }
     [data-theme="dark"] .summary-box-header {
         background-color: rgba(255,255,255,0.08);
@@ -1195,10 +1200,11 @@
     .summary-box-body {
         display: flex;
         flex: 1;
+        min-width: 0;
     }
     .summary-box-label {
         background-color: var(--bg-section, #e2e8f0);
-        padding: 0 8px;
+        padding: 0 6px;
         font-weight: 700;
         font-size: 10px;
         border-right: 1px solid var(--border-light, #cbd5e1);
@@ -1207,6 +1213,8 @@
         align-items: center;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
     [data-theme="dark"] .summary-box-label {
         background-color: rgba(255,255,255,0.05);
@@ -1214,7 +1222,7 @@
     }
     .summary-box-value {
         background-color: var(--input-bg, #ffffff);
-        padding: 0 10px;
+        padding: 0 8px;
         font-size: 13px;
         font-weight: 700;
         flex: 1;
@@ -1222,6 +1230,8 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
+        white-space: nowrap;
+        min-width: 0;
     }
     [data-theme="dark"] .summary-box-value {
         background-color: rgba(255,255,255,0.02);

@@ -299,9 +299,9 @@ def businessmodel_PL(request):
     businessmodels = TrbusinesstypeInfo.objects.all()
 
     if from_date:
-        from_date = datetime.strptime(from_date, '%Y-%m-%d')
+        from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
     if to_date:
-        to_date = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1) - timedelta(seconds=1)
+        to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1) - timedelta(seconds=1))
 
     income_queryset = Warehouse_goods_info.objects.all()
     if branch_filter:

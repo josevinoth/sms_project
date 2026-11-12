@@ -7,6 +7,10 @@ from .driver_master_mod import DrivermasterInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, MyUser
 from .tms_expense_type_mod import TMSExpenseTypeInfo
 
+def tms_petty_cash_file_path(instance, filename):
+    voucher_no = instance.tpc_number if instance.tpc_number else "temp"
+    return f"tms_petty_cash_bills/{voucher_no}/{filename}"
+
 class TMSPettyCashInfo(models.Model):
     # Left Column Fields
     tpc_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
@@ -32,6 +36,7 @@ class TMSPettyCashInfo(models.Model):
     tpc_driver_name = models.ForeignKey(DrivermasterInfo, on_delete=models.CASCADE, blank=True, null=True)
     tpc_driver_name_manual = models.CharField(max_length=100, blank=True, null=True)
     tpc_remarks = models.TextField(max_length=300, blank=True, null=True)
+    tpc_bill_attachment = models.FileField(upload_to=tms_petty_cash_file_path, blank=True, null=True)
     tpc_receiver_signature = models.TextField(blank=True, null=True)
     tpc_source_driver_expense_id = models.IntegerField(null=True, blank=True)
 
