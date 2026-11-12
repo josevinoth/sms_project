@@ -99,7 +99,7 @@ from .sub_views.materialstock_view import materialstock_add,materialstock_list,m
 from .sub_views.packingjobs_view import packingjobs_add,packingjobs_list,packingjobs_delete
 from .sub_views.arinfo_view import (ar_add, ar_list, ar_delete, fetch_invoice_submission_details, ar_export_selected_excel, ar_submit_selected_invoices, ar_preview_combined_pdf)
 from .sub_views.ar_receipt_view import ar_receipt_list
-from .sub_views.sales_target_add_view import sales_target_add,sales_target_list,sales_target_delete
+from .sub_views.sales_target_add_view import sales_target_add, sales_target_list, sales_target_delete, check_sales_target_active
 from .sub_views.arcomments_add_view import arcomments_add,arcomments_list,arcomments_delete
 from .sub_views.Requirements_add_view import requirements_add,requirements_list,requirements_delete,requirements_search
 from .sub_views.pk_needassessment_view import needassessment_add,needassessment_list,needassessment_delete,na_dimension_add,na_dimension_list,na_dimension_delete,na_dimension_cancel,Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete,Pkneedassessment_dim_delete,need_assessment_print_pdf,get_tracker_flags,delete_na_attachment
@@ -217,4 +217,13 @@ from .sub_views.wms_kpi_dashboard_view import wms_kpi_dashboard, get_wms_kpi_das
 warehouse_dashboard = wms_kpi_dashboard
 from .sub_views.pk_consumption_report_view import export_consumption_excel, export_consumption_pdf
 from .sub_views.transport_reports_view import vendor_rate_report, customer_rate_report, vendor_rate_report_ajax, customer_rate_report_ajax
+from .sub_views.dmr_template_studio_view import (
+    dmr_template_list, dmr_template_create_or_edit, dmr_template_save_ajax,
+    dmr_template_delete, dmr_template_duplicate, dmr_template_preview_ajax
+)
+from .sub_views.sales_metrics_dashboard_view import (
+    sales_metrics_dashboard, get_sales_metrics_dashboard_data,
+    sales_metrics_report, sales_metrics_export_excel, sales_metrics_import_excel
+)
+
 from .sub_views.dmr_template_studio_view import dmr_template_list, dmr_template_create_or_edit, dmr_template_save_ajax,dmr_template_delete, dmr_template_duplicate, dmr_template_preview_ajax

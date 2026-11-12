@@ -18,63 +18,131 @@
 
 	<!-- ══ Form Card ══ -->
 	<div class="modern-card p-3 mb-0 w-100">
-		<form method="POST" action="">
+		<form method="POST" action="" id="sales_target_form">
 			{% csrf_token %}
 			<div class="form-section p-3 mb-3">
-				<div class="form-section-title mb-3">
-					<i class="fas fa-edit text-primary mr-1"></i> Target Information
+				<div class="form-section-title mb-3 d-flex justify-content-between align-items-center">
+					<span><i class="fas fa-edit text-primary mr-1"></i> TARGET INFORMATION</span>
 				</div>
-				<div class="row">
-					<div class="col-12 col-md-3">
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Sales Executive</label>
-							{% render_field sales_target_form.st_sales_person class="form-control form-control-modern" %}
-						</div>
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Start Date</label>
-							{% render_field sales_target_form.st_start_date type="Date" class="form-control form-control-modern" %}
-						</div>
-					</div>
-					<div class="col-12 col-md-3">
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target End Date</label>
-							{% render_field sales_target_form.st_end_date type="Date" class="form-control form-control-modern" %}
-						</div>
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Revenue (INR)</label>
-							{% render_field sales_target_form.st_target_revenue class="form-control form-control-modern" %}
-						</div>
-					</div>
-					<div class="col-12 col-md-3">
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Customer</label>
-							{% render_field sales_target_form.st_target_customer class="form-control form-control-modern" %}
-						</div>
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Calls (New)</label>
-							{% render_field sales_target_form.st_target_calls_new_customer id="st_target_calls_new_customer" class="form-control form-control-modern" %}
-						</div>
-					</div>
-					<div class="col-12 col-md-3">
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Calls (Existing)</label>
-							{% render_field sales_target_form.st_target_calls_existing_customer id="st_target_calls_existing_customer" class="form-control form-control-modern" %}
-						</div>
-						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Target Calls (Review)</label>
-							{% render_field sales_target_form.st_target_calls_review id="st_target_calls_review" class="form-control form-control-modern" %}
-						</div>
+
+				<!-- Warning Banner for Unexpired Target -->
+				<div id="active_target_warning" class="alert alert-danger d-none align-items-center mb-3 p-2 px-3 shadow-sm" role="alert" style="border-radius: 10px; border-left: 5px solid #dc3545; font-size: 0.88rem;">
+					<i class="fas fa-exclamation-triangle fa-lg mr-2 text-danger"></i>
+					<div class="flex-grow-1">
+						<strong id="active_target_warning_msg">The target which is previously given doesn't reached the end date.</strong>
 					</div>
 				</div>
+
+				<!-- 5-Column Grid matching requested layout and order -->
+				<div class="sales-target-grid mb-2">
+					<!-- Row 1, Col 1: SALES EXECUTIVE (Sales Department Users) -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">SALES EXECUTIVE</label>
+						{% render_field sales_target_form.st_sales_person id="st_sales_person" class="form-control form-control-modern" %}
+						{% if sales_target_form.st_sales_person.errors %}
+							<small class="text-danger font-weight-bold d-block mt-1">{{ sales_target_form.st_sales_person.errors.0 }}</small>
+						{% endif %}
+					</div>
+
+					<!-- Row 1, Col 2: TARGET START DATE -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET START DATE</label>
+						{% render_field sales_target_form.st_start_date id="st_start_date" type="Date" class="form-control form-control-modern" %}
+						{% if sales_target_form.st_start_date.errors %}
+							<small class="text-danger font-weight-bold d-block mt-1">{{ sales_target_form.st_start_date.errors.0 }}</small>
+						{% endif %}
+					</div>
+
+					<!-- Row 1, Col 3: TARGET END DATE -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET END DATE</label>
+						{% render_field sales_target_form.st_end_date id="st_end_date" type="Date" class="form-control form-control-modern" %}
+						{% if sales_target_form.st_end_date.errors %}
+							<small class="text-danger font-weight-bold d-block mt-1">{{ sales_target_form.st_end_date.errors.0 }}</small>
+						{% endif %}
+					</div>
+
+					<!-- Row 1, Col 4: TARGET CALLS -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET CALLS</label>
+						{% render_field sales_target_form.st_target_calls id="st_target_calls" type="number" min="0" class="form-control form-control-modern" placeholder="e.g. 25" %}
+					</div>
+
+					<!-- Row 1, Col 5: NEW CUSTOMER ON-BOARD -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">NEW CUSTOMER ON-BOARD</label>
+						{% render_field sales_target_form.st_target_customers_onboard id="st_target_customers_onboard" type="number" min="0" class="form-control form-control-modern" placeholder="e.g. 2" %}
+					</div>
+
+					<!-- Row 2, Col 1: TARGET CUSTOMERS (NEW) -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET CUSTOMERS (NEW)</label>
+						{% render_field sales_target_form.st_target_customers_new id="st_target_customers_new" type="number" min="0" class="form-control form-control-modern" placeholder="e.g. 10" %}
+					</div>
+
+					<!-- Row 2, Col 2: TARGET CUSTOMERS (EXISTING) -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET CUSTOMERS (EXISTING)</label>
+						{% render_field sales_target_form.st_target_customers_existing id="st_target_customers_existing" type="number" min="0" class="form-control form-control-modern" placeholder="e.g. 15" %}
+					</div>
+
+					<!-- Row 2, Col 3: TARGET CUSTOMERS REVENUE (NEW) -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET CUSTOMERS REVENUE (NEW)</label>
+						<div class="input-group input-group-sm">
+							{% render_field sales_target_form.st_target_revenue_new id="st_target_revenue_new" type="number" step="0.01" min="0" class="form-control form-control-modern" placeholder="e.g. 5" %}
+							<div class="input-group-append">
+								<span class="input-group-text font-weight-bold" style="background:#e2e8f0; font-size:0.75rem; border-top-right-radius:8px; border-bottom-right-radius:8px;">L</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Row 2, Col 4: TARGET CUSTOMERS REVENUE (EXISTING) -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">TARGET CUSTOMERS REVENUE (EXISTING)</label>
+						<div class="input-group input-group-sm">
+							{% render_field sales_target_form.st_target_revenue_existing id="st_target_revenue_existing" type="number" step="0.01" min="0" class="form-control form-control-modern" placeholder="e.g. 50" %}
+							<div class="input-group-append">
+								<span class="input-group-text font-weight-bold" style="background:#e2e8f0; font-size:0.75rem; border-top-right-radius:8px; border-bottom-right-radius:8px;">L</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Row 2, Col 5: COMPANY / DIVISION -->
+					<div class="form-group-modern">
+						<label class="form-label-modern font-weight-bold">COMPANY / DIVISION <small class="text-muted font-weight-normal">(Optional)</small></label>
+						{% render_field sales_target_form.st_company id="st_company" class="form-control form-control-modern" %}
+					</div>
+				</div>
+
+				<!-- Live Calculation Summary Strip -->
+				<div class="d-flex align-items-center justify-content-between p-2 px-3 mb-3 rounded" style="background: rgba(13, 148, 136, 0.08); border: 1px dashed rgba(13, 148, 136, 0.35); font-size: 0.83rem;">
+					<div>
+						<i class="fas fa-calculator text-primary mr-1"></i>
+						<strong>Calculated Totals:</strong>
+						<span class="text-muted ml-3">Total Customers:</span>
+						<span id="summary_customers" class="font-weight-bold text-dark ml-1">0</span>
+						<span class="text-muted ml-3">|</span>
+						<span class="text-muted ml-3">Total Revenue:</span>
+						<strong id="summary_revenue_lakhs" class="text-primary ml-1">0 L</strong>
+						<small id="summary_revenue_inr" class="text-muted ml-1">(₹ 0)</small>
+					</div>
+				</div>
+
+				<!-- Remarks Field -->
 				<div class="row">
 					<div class="col-12">
 						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">Remarks</label>
-							{% render_field sales_target_form.st_remarks class="form-control form-control-modern" rows="2" %}
+							<label class="form-label-modern font-weight-bold">REMARKS</label>
+							{% render_field sales_target_form.st_remarks id="st_remarks" class="form-control form-control-modern" rows="2" placeholder="Enter remarks (if any)" %}
 						</div>
 					</div>
 				</div>
-				{% render_field sales_target_form.st_updated_by id="st_updated_by" hidden="True" class="form-control" %}
+
+				<!-- Hidden auto-populated fields -->
+				{% render_field sales_target_form.st_target_revenue id="st_target_revenue" hidden="True" %}
+				{% render_field sales_target_form.st_target_customer id="st_target_customer" hidden="True" %}
+				{% render_field sales_target_form.st_updated_by id="st_updated_by" hidden="True" %}
 			</div>
 
 			<!-- Messages -->
@@ -95,11 +163,11 @@
 
 			<!-- Form Actions -->
 			<div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
-				<button type="submit" class="btn-modern btn-submit py-1 px-4">
-					<i class="fas fa-check mr-1"></i> Submit
+				<button type="submit" id="btn_submit" class="btn-modern btn-submit py-1 px-4">
+					<i class="fas fa-check mr-1"></i> SUBMIT
 				</button>
 				<a href="{% url 'sales_target_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
-					<i class="fas fa-times mr-1"></i> Cancel
+					<i class="fas fa-times mr-1"></i> CANCEL
 				</a>
 			</div>
 		</form>
@@ -107,13 +175,35 @@
 </div>
 
 <style>
+    .sales-target-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 14px;
+    }
+    @media (max-width: 1200px) {
+        .sales-target-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 768px) {
+        .sales-target-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 480px) {
+        .sales-target-grid {
+            grid-template-columns: 1fr;
+        }
+    }
     .compact-form .form-group-modern {
         margin-bottom: 0.55rem !important;
     }
     .compact-form .form-label-modern {
         font-size: 0.76rem !important;
-        margin-bottom: 3px !important;
+        margin-bottom: 4px !important;
         letter-spacing: 0.5px !important;
+        text-transform: uppercase;
+        color: #334155;
     }
     .compact-form .form-control-modern {
         height: 34px !important;
@@ -131,9 +221,11 @@
         border-radius: 16px !important;
     }
     .compact-form .form-section-title {
-        font-size: 0.84rem !important;
-        margin-bottom: 0.6rem !important;
+        font-size: 0.85rem !important;
+        margin-bottom: 0.75rem !important;
         letter-spacing: 1px !important;
+        font-weight: 700;
+        text-transform: uppercase;
     }
     .compact-form .btn-modern {
         height: 34px !important;
@@ -146,7 +238,79 @@
 
 <script>
 $(document).ready(function() {
-	document.getElementById("st_updated_by").value ='{{user_id}}';
+    var userId = '{{ user_id|default:"" }}';
+    if (userId) {
+        var updatedByEl = document.getElementById("st_updated_by");
+        if (updatedByEl) {
+            updatedByEl.value = userId;
+        }
+    }
+
+    function updateCalculations() {
+        var custNew = parseInt($('#st_target_customers_new').val()) || 0;
+        var custExist = parseInt($('#st_target_customers_existing').val()) || 0;
+        var totalCust = custNew + custExist;
+        $('#st_target_customer').val(totalCust);
+        $('#summary_customers').text(totalCust);
+
+        var revNew = parseFloat($('#st_target_revenue_new').val()) || 0.0;
+        var revExist = parseFloat($('#st_target_revenue_existing').val()) || 0.0;
+        var totalRevLakhs = Math.round((revNew + revExist) * 100) / 100;
+        var totalRevINR = Math.round(totalRevLakhs * 100000);
+        $('#st_target_revenue').val(totalRevINR);
+        $('#summary_revenue_lakhs').text(totalRevLakhs + ' L');
+        $('#summary_revenue_inr').text('(₹ ' + totalRevINR.toLocaleString('en-IN') + ')');
+    }
+
+    $('#st_target_customers_new, #st_target_customers_existing').on('input change', updateCalculations);
+    $('#st_target_revenue_new, #st_target_revenue_existing').on('input change', updateCalculations);
+
+    // Initial run to calculate totals on page load
+    updateCalculations();
+
+    // Check for unexpired target when sales executive or start date changes
+    function checkActiveTarget() {
+        var spId = $('#st_sales_person').val();
+        var startDate = $('#st_start_date').val();
+        var currentTargetId = '{{ sales_target_id|default:0 }}';
+
+        if (!spId) {
+            $('#active_target_warning').addClass('d-none').removeClass('d-flex');
+            $('#btn_submit').prop('disabled', false);
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "check_sales_target_active" %}',
+            type: 'GET',
+            data: {
+                'sales_person_id': spId,
+                'start_date': startDate,
+                'target_id': currentTargetId
+            },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp.status === 'ok' && resp.has_unexpired) {
+                    $('#active_target_warning_msg').text(resp.message);
+                    $('#active_target_warning').removeClass('d-none').addClass('d-flex');
+                    $('#btn_submit').prop('disabled', true);
+                } else {
+                    $('#active_target_warning').addClass('d-none').removeClass('d-flex');
+                    $('#btn_submit').prop('disabled', false);
+                }
+            },
+            error: function() {
+                // If network/AJAX fails, don't hard-block (backend form validation will handle it)
+            }
+        });
+    }
+
+    $('#st_sales_person, #st_start_date').on('change', checkActiveTarget);
+    
+    // Check on page load if salesperson is already selected
+    if ($('#st_sales_person').val()) {
+        checkActiveTarget();
+    }
 });
 </script>
 {% endblock content %}
