@@ -532,6 +532,7 @@ urlpatterns = [
     # update sales
     path('sales_target_delete/<int:sales_target_id>', views.sales_target_delete, name='sales_target_delete'),
     # delete sales
+    path('ajax/check_sales_target_active/', views.check_sales_target_active, name='check_sales_target_active'),
     path('ar_comments_list/', views.arcomments_list, name='ar_comments_list'),  # List ar_comments
     path('ar_comments_insert/', views.arcomments_add, name='ar_comments_insert'),  # Add ar_comments
     path('ar_comments_update/<int:arcomments_id>', views.arcomments_add, name='ar_comments_update'),
@@ -896,6 +897,11 @@ urlpatterns = [
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download,
          name='dispatch_gatepass_pdf_download'),
     path('sales_reports/', views.sales_reports, name='sales_reports'),
+    path('sales_metrics_dashboard/', views.sales_metrics_dashboard, name='sales_metrics_dashboard'),
+    path('get_sales_metrics_dashboard_data/', views.get_sales_metrics_dashboard_data, name='get_sales_metrics_dashboard_data'),
+    path('sales_metrics_report/', views.sales_metrics_report, name='sales_metrics_report'),
+    path('sales_metrics_export_excel/', views.sales_metrics_export_excel, name='sales_metrics_export_excel'),
+    path('sales_metrics_import_excel/', views.sales_metrics_import_excel, name='sales_metrics_import_excel'),
     path('sales_call_report/', views.sales_call_report, name='sales_call_report'),
     path('salesperson_chart/', views.salesperson_chart, name='salesperson_chart'),
     path('monthly_summary/', views.monthly_summary, name='monthly_summary'),
