@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <!-- extras JS (flatpickr + export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
-<link rel="stylesheet" href="{% static 'home_page.css' %}?v=20260727-01" />
+<link rel="stylesheet" href="{% static 'home_page.css' %}?v=20261113-0848" />
 <style>
     html, body {
         background-color: #09102b !important;
@@ -50,11 +50,11 @@
             width: 0 !important;
         }
         #main-content {
-            flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
-            max-width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
-            margin-left: var(--sidebar-collapsed-width, 88px) !important;
+            flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+            max-width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+            margin-left: var(--sidebar-collapsed-width, 60px) !important;
             padding: 0.4rem 0.75rem 0.4rem 0.4rem !important;
-            width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
+            width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
             transition: margin-left 0.22s ease, flex 0.22s ease, max-width 0.22s ease, width 0.22s ease !important;
         }
         #main-content:has(.wms-dashboard-root) {
@@ -95,12 +95,47 @@
     .sidenav:hover .nav-category-header {
         display: block;
     }
-    /* Reduce global padding by 25% for items in this page */
-    .sidenav a, .collapsible {
-        padding: 7.5px 15px !important; /* Original was 10px */
-        min-height: 30px !important; /* Original was 40px, reduced for density */
+    /* Reset collapsed sidebar items to centered flexbox tiles */
+    .sidenav:not(:hover) .collapsible,
+    .sidenav:not(:hover) button.collapsible,
+    .sidenav:not(:hover) a {
+        display: flex !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        padding: 0 !important;
+        margin: 2px 0 !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 0 !important;
+        letter-spacing: 0 !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    .sidenav:not(:hover) .collapsible i,
+    .sidenav:not(:hover) button.collapsible i,
+    .sidenav:not(:hover) a i {
+        width: 24px !important;
+        height: 24px !important;
+        flex: 0 0 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: center !important;
+        font-size: 18px !important;
+        line-height: 1 !important;
     }
     .sidenav:hover a, .sidenav:hover .collapsible {
+        padding: 7.5px 15px !important;
+        min-height: 30px !important;
         padding-left: 15px !important;
     }
     /* Blocked Navigation Items (Styling identical to blocked sidebar buttons) */
@@ -129,10 +164,12 @@
             </button>
             <div class="collapse d-md-block" id="sidebarMenu">
                 <div class="sidenav shadow-lg" style="overflow-y: auto;">
-<!--                    <a id="md_dashboard_btn" href="{% url 'md_dashboard' %}" target="_blank" style="background: linear-gradient(135deg, #091235, #1e3a8a); color: #38bdf8; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin: 8px 8px 12px 8px; border-radius: 6px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25); text-decoration: none;">-->
-<!--                        <span><i class="fas fa-tv" style="margin-right: 8px; color: #38bdf8;"></i> MD Executive Pulse</span>-->
-<!--                        <span class="badge" style="background: #0284c7; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px;">TV KIOSK</span>-->
-<!--                    </a>-->
+                    {% if 'Admin' in request.session.ses_role or 'Super' in request.session.ses_role or request.user.is_superuser or request.user.is_staff or role.role_name == 'Admin' or role.role_name == 'Super User' %}
+                        <a id="md_dashboard_btn" href="{% url 'md_dashboard' %}" target="_blank" style="background: linear-gradient(135deg, #091235, #1e3a8a); color: #38bdf8; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; margin: 8px 8px 12px 8px; border-radius: 6px; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25); text-decoration: none;">
+                            <span><i class="fas fa-tv" style="margin-right: 8px; color: #38bdf8;"></i> MD Executive Pulse</span>
+                        </a>
+                    {% endif %}
+
                     <button type="button" id='administration' class="collapsible"><i class="fas fa-users-cog"></i> Administration</button>
                     <div class="content">
                         <a href="{% url 'user_insert' %}"><i class="fas fa-user-plus"></i> Create User Login</a>
@@ -322,6 +359,8 @@
                         <!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
                         <!--        <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>-->
                         <a href="{% url 'pms_petty_cash_list' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
+                        <a href="{% url 'customer_box_master_list' %}"><i class="fa fa-boxes" aria-hidden="true"></i> Customer Box Master</a>
+                        <a href="{% url 'bom_rule_master_list' %}"><i class="fa fa-cogs" aria-hidden="true"></i> Master BOM (Size × Weight)</a>
                     </div>
                     <hr class="hr_style">
                     <button id="sales" type="button" class="collapsible "><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
@@ -460,7 +499,7 @@
                         <a href="{% url 'wms_petty_cash_list' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
                     </div>
                     <hr class="hr_style">
-                    <button id="supports" type="button" class="collapsible d-flex align-items-center"><i class="fas fa-phone-alt p-2"></i> Supports<a href="{% url 'open_requirements_list' %}"><span class="badge bg-danger p-2 blink">{{ open_requirements }}</span></a>
+                    <button id="supports" type="button" class="collapsible d-flex align-items-center"><i class="fas fa-phone-alt"></i> Supports<a href="{% url 'open_requirements_list' %}"><span class="badge bg-danger p-2 blink">{{ open_requirements }}</span></a>
                     </button>
                     <div class="content">
                         <a href="{% url 'requirements_search' %}"><i class="fas fa-wrench"></i> Requirements List</a>

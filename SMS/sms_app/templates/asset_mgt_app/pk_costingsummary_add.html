@@ -1,595 +1,1081 @@
-{% extends "asset_mgt_app/base_modern.html" %}
-{% load widget_tweaks %}
-{% block content %}
-
-<div class="container-fluid py-4">
-    <!-- Progress Tracker -->
-    <div class="pms-tracker-wrapper mb-4">
-        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
-    </div>
-
-    <!-- Page Header -->
-    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Indent Summary</h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; background: var(--accent-orange); text-decoration: none;" id="invoice_report_btn">
-                <i class="fas fa-file-pdf"></i> Invoice PDF
-            </a>
-            <a href="{% url 'pk_bvm_invoice_excel' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; background: #27ae60; text-decoration: none;" id="invoice_excel_btn">
-                <i class="fas fa-file-excel"></i> Excel
-            </a>
-            <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-        </div>
-    </div>
-
-    <form method="POST" action="" id="costingsummary_add">
-        {% csrf_token %}
-        <div class="modern-card" style="padding: 1rem !important;">
-            <div class="row row-compact">
-                <!-- Column 1: Core Details -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-id-card"></i> Costing Core</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Assessment Number</label>
-                            {% render_field form.cs_assessment_num id="cs_assessment_num" onchange="cs_assessment_num_change()" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Job Number</label>
-                            {% render_field form.cs_job_no id="cs_job_no" class="form-control form-control-modern font-weight-bold disable_a_href" style="background-color: #fff3cd; color: #856404;" readonly="True" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Customer PO</label>
-                            {% render_field form.cs_customer_po id="cs_customer_po" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 2: Customer Info -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-user"></i> Customer Info</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Customer Name</label>
-                            {% render_field form.cs_customer_name id="cs_customer_name" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Display Name</label>
-                            {% render_field form.cs_customer_new_name id="cs_customer_new_name" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Invoice #</label>
-                            {% render_field form.cs_invoice_num id="cs_invoice_num" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 3: Primary Costs -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-list-ul"></i> Primary Costs</div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Wood Cost">Wood Cost</label>
-                                    {% render_field form.cs_wood_cost id="cs_wood_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Plywood Cost">Plywood Cost</label>
-                                    {% render_field form.cs_plywood_cost id="cs_plywood_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern text-truncate" title="Labour Cost">Labour Cost</label>
-                            {% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Packing Type</label>
-                            {% render_field form.cs_pack_type id="cs_pack_type" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 4: Operational Costs -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Operational Costs</div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="HT Cost">HT Cost</label>
-                                    {% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Crane Cost">Crane Cost</label>
-                                    {% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Consumables">Consumables</label>
-                                    {% render_field form.cs_material_cost id="cs_material_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Transport">Transport</label>
-                                    {% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Calculation & Margin Section (4-column breakdown) -->
-            <div class="form-section mt-3" style="background: rgba(var(--primary-glow-rgb), 0.03); border: 1px solid var(--accent-orange) !important;">
-                <div class="form-section-title" style="color: var(--accent-orange); border-color: var(--accent-orange);"><i class="fas fa-calculator"></i> Calculation & Margin Analysis</div>
-                <div class="row row-compact">
-                    <div class="col-12 col-md-6 col-xl-3 col-compact">
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Total Cost (W/O Margin)</label>
-                            {% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Margin (%)</label>
-                            {% render_field form.cs_margin id="cs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-xl-3 col-compact">
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Total Cost (With Margin)</label>
-                            {% render_field form.cs_total_cost_wm id="cs_total_cost_wm" class="form-control form-control-modern disable_a_href font-weight-bold text-primary" readonly="readonly" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">GST (%)</label>
-                            {% render_field form.cs_gst id="cs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-xl-3 col-compact">
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Total CFT">Total CFT</label>
-                                    {% render_field form.cs_total_cft id="cs_total_cft" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Total SQFT">Total SQFT</label>
-                                    <input type="text" id="cs_total_sqft" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ total_sqft }}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Rate Per CFT">Rate / CFT</label>
-                                    {% render_field form.cs_rate_per_cft id="cs_rate_per_cft" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern text-truncate" title="Rate Per SQFT">Rate / SQFT</label>
-                                    <input type="text" id="cs_rate_per_sqft" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ rate_per_sqft }}">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-xl-3 col-compact">
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Others Cost</label>
-                            {% render_field form.cs_others_cost id="cs_others_cost" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Workflow Status</label>
-                            {% render_field form.cs_status id="cs_status" class="form-control form-control-modern font-weight-bold" %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Additional Detail Sections (Accordions) -->
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="form-group-modern mb-2">
-                        <label class="form-label-modern text-muted small">Address & Terms</label>
-                        <div id="accordion_left">
-                            <div class="card mb-1 border-0 shadow-none bg-transparent">
-                                <div class="card-header p-0" id="headingOne">
-                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseOne" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
-                                        <i class="fas fa-map-marker-alt mr-2 text-primary"></i> Address Details
-                                    </button>
-                                </div>
-                                <div id="collapseOne" class="collapse" data-parent="#accordion_left">
-                                    <div class="p-2 border border-top-0 rounded-bottom">
-                                        {% render_field form.cs_address id="cs_address" class="form-control form-control-modern" rows="2" %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card mb-1 border-0 shadow-none bg-transparent">
-                                <div class="card-header p-0" id="headingTwo">
-                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseTwo" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
-                                        <i class="fas fa-check-double mr-2 text-primary"></i> Cost Includes
-                                    </button>
-                                </div>
-                                <div id="collapseTwo" class="collapse" data-parent="#accordion_left">
-                                    <div class="p-2 border border-top-0 rounded-bottom">
-                                        {% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control form-control-modern" rows="2" %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group-modern mb-2">
-                        <label class="form-label-modern text-muted small">Scope & Conditions</label>
-                        <div id="accordion_right">
-                            <div class="card mb-1 border-0 shadow-none bg-transparent">
-                                <div class="card-header p-0" id="headingFour">
-                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseFour" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
-                                        <i class="fas fa-gavel mr-2 text-primary"></i> Terms & Conditions
-                                    </button>
-                                </div>
-                                <div id="collapseFour" class="collapse" data-parent="#accordion_right">
-                                    <div class="p-2 border border-top-0 rounded-bottom">
-                                        {% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control form-control-modern" rows="2" %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card mb-1 border-0 shadow-none bg-transparent">
-                                <div class="card-header p-0" id="headingSix">
-                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseSix" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
-                                        <i class="fas fa-shield-alt mr-2 text-primary"></i> Scope Analysis
-                                    </button>
-                                </div>
-                                <div id="collapseSix" class="collapse" data-parent="#accordion_right">
-                                    <div class="p-2 border border-top-0 rounded-bottom">
-                                        <label class="small text-muted">Client Scope</label>
-                                        {% render_field form.cs_client_scope id="cs_client_scope" class="form-control form-control-modern mb-2" rows="1" %}
-                                        <label class="small text-muted">Engg. Notes</label>
-                                        {% render_field form.cs_notes id="cs_notes" class="form-control form-control-modern mb-2" rows="1" %}
-                                        <label class="small text-muted">Misc Description</label>
-                                        {% render_field form.cs_others_description id="cs_others_description" class="form-control form-control-modern" rows="1" %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% render_field form.cs_updated_by id="cs_updated_by" hidden="True" %}
-            <div class="d-none">
-                {% render_field form.cs_final_cost id="cs_final_cost" %}
-            </div>
-
-            <!-- Messages & Error Logs -->
-            <div class="mt-2 px-3 text-center">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 mb-1">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-                <div id="unique_field_error" class="text-danger small font-weight-bold"></div>
-                <div id="unique_record" class="text-success small font-weight-bold"></div>
-            </div>
-
-            <!-- Action Buttons Parallel (Bottom Corners) -->
-            <div class="row mt-1">
-                <div class="col-12 col-xl-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button id="cs_submit_btn" type="submit" class="btn-modern btn-submit px-5">
-                            <i class="fas fa-save mr-2"></i> Save Summary
-                        </button>
-                        <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel px-5">
-                            <i class="fas fa-times mr-2"></i> Cancel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-
-    <!-- Sub-Section: Items Management -->
-    <div class="mt-2">
-        <div class="table-container-modern">
-            <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
-                <h4 class="mb-0 text-white"><i class="fas fa-tag mr-2"></i> Item Number &amp; Total Cost Summary</h4>
-                <div class="d-flex gap-2">
-                    <a href="{% url 'costing_insert' %}" id="add_costing" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;">
-                        <i class="fas fa-plus"></i> Add/Modify Items
-                    </a>
-                    <a id="EBOM" href="{% url 'export_costingreport' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: #f39c12; text-decoration: none;">
-                        <i class="fas fa-file-excel"></i> EBOM Export
-                    </a>
-                </div>
-            </div>
-
-            <div class="p-3 bg-white" style="border-radius: 0 0 8px 8px;">
-                <div class="table-responsive">
-                    <table class="table modern-table mb-0">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>#</th>
-                                <th>Item Number (Job Type)</th>
-                                <th>PO Number</th>
-                                <th class="text-right">PO Value (₹)</th>
-                                <th class="text-right">Unit Cost (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for jt in job_type_totals %}
-                            <tr class="modern-tr">
-                                <td class="text-muted">{{ forloop.counter }}</td>
-                                <td class="font-weight-bold">{{ jt.job_type }}</td>
-                                <td>{{ jt.po_num }}</td>
-                                <td class="text-right font-weight-bold text-primary">{% if jt.po_value != "—" %}₹{{ jt.po_value }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                                <td class="text-right font-weight-bold text-success" style="font-size: 1rem;">₹{{ jt.total }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-3">No items found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Nested Workflows (Retrieval & Acceptance) -->
-    
-    {% if indent_summary_list %}
-    <div class="mt-2">
-        <div class="table-container-modern" style="border-top: 5px solid var(--primary-glow);">
-            <div class="form-section-title text-primary d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-list-alt"></i> Indent Summary / BOM</span>
-                <span class="badge badge-pill badge-light border text-muted px-3 py-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                    <i class="fas fa-sort-amount-down mr-1 text-primary"></i> Sequence: Wood &bull; Plywood &bull; Consumables &bull; Nails
-                </span>
-            </div>
-            <div class="table-responsive">
-                <table class="table modern-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 140px;">Category</th>
-                            <th>Part Code</th>
-                            <th>Description</th>
-                            <th>UOM</th>
-                            <th>Total Qty</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in indent_summary_list %}
-                        {% ifchanged item.category_name %}
-                        <tr style="background: #f8fafc; border-top: 2px solid #cbd5e1; border-bottom: 1px solid #e2e8f0;">
-                            <td colspan="6" class="py-2 px-3 font-weight-bold">
-                                {% if item.category_rank == 1 %}
-                                <span class="badge badge-success px-2 py-1 mr-2" style="font-size: 0.85rem;"><i class="fas fa-tree mr-1"></i> Wood</span>
-                                <span class="text-muted small text-uppercase" style="letter-spacing: 0.5px;">Timber &amp; Wood Components</span>
-                                {% elif item.category_rank == 2 %}
-                                <span class="badge badge-info px-2 py-1 mr-2" style="font-size: 0.85rem;"><i class="fas fa-layer-group mr-1"></i> Plywood</span>
-                                <span class="text-muted small text-uppercase" style="letter-spacing: 0.5px;">Plywood &amp; Sheet Panels</span>
-                                {% elif item.category_rank == 3 %}
-                                <span class="badge badge-warning text-dark px-2 py-1 mr-2" style="font-size: 0.85rem;"><i class="fas fa-box-open mr-1"></i> Consumables</span>
-                                <span class="text-muted small text-uppercase" style="letter-spacing: 0.5px;">Packing Consumables, Hardware &amp; Chemicals</span>
-                                {% elif item.category_rank == 4 %}
-                                <span class="badge badge-secondary px-2 py-1 mr-2" style="font-size: 0.85rem;"><i class="fas fa-thumbtack mr-1"></i> Nails</span>
-                                <span class="text-muted small text-uppercase" style="letter-spacing: 0.5px;">Fasteners &amp; Nails</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endifchanged %}
-                        <tr class="modern-tr">
-                            <td>
-                                {% if item.category_rank == 1 %}
-                                <span class="badge badge-success"><i class="fas fa-tree mr-1"></i> Wood</span>
-                                {% elif item.category_rank == 2 %}
-                                <span class="badge badge-info"><i class="fas fa-layer-group mr-1"></i> Plywood</span>
-                                {% elif item.category_rank == 3 %}
-                                <span class="badge badge-warning text-dark"><i class="fas fa-box-open mr-1"></i> Consumables</span>
-                                {% elif item.category_rank == 4 %}
-                                <span class="badge badge-secondary"><i class="fas fa-thumbtack mr-1"></i> Nails</span>
-                                {% endif %}
-                            </td>
-                            <td class="font-weight-bold">{{ item.ct_part_code }}</td>
-                            <td>{{ item.ct_part_code_name }}</td>
-                            <td>{{ item.ct_uom }}</td>
-                            <td class="font-weight-bold text-success">{{ item.total_quantity_req }}</td>
-                            <td>
-                                {% if item.status_id == 1 %}
-                                <span class="badge badge-primary">{{ item.ct_stock_status }}</span>
-                                {% else %}
-                                <span class="badge badge-info">{{ item.ct_stock_status }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Job Creation Modal (Shared) -->
-<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div class="modal-header bg-primary text-white py-4" style="background: linear-gradient(135deg, var(--primary-emerald), var(--primary-glow)) !important;">
-                <h5 class="modal-title font-weight-bold" id="jobCreationModalLabel"><i class="fas fa-industry mr-2"></i> Create Production Batch Job</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-4 bg-light">
-                <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 12px; background: white; border-left: 5px solid #f39c12 !important;">
-                    <div class="row align-items-center">
-                        <div class="col-md-4"><strong><i class="fas fa-box-open"></i> Packing Type:</strong></div>
-                        <div class="col-md-8 text-right">
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="type_inhouse" name="modal_pack_type" class="custom-control-input" value="In-House" checked>
-                                <label class="custom-control-label font-weight-bold" for="type_inhouse">In-House</label>
-                            </div>
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="type_onsite" name="modal_pack_type" class="custom-control-input" value="On-Site">
-                                <label class="custom-control-label font-weight-bold" for="type_onsite">On-Site</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive rounded shadow-sm">
-                    <table class="table table-hover bg-white mb-0" id="modal_job_table">
-                        <thead style="background: #f1f5f9;">
-                            <tr><th>Item Name</th><th>Order Balance</th><th style="width: 160px;">Job Release Qty</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer bg-white border-top-0 py-4">
-                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-modern btn-submit" id="confirm_batch_job_btn"><i class="fas fa-check-circle"></i> Create Job</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    $(document).ready(function () {
-        document.getElementById("cs_updated_by").value = '{{user_id}}';
-        
-        var excess_stock_status = '{{output}}'
-        if (excess_stock_status == 1) { $('#invoice_report_btn').removeClass('disable_a_href'); }
-        else { $('#invoice_report_btn').addClass('disable_a_href'); }
-
-        var user_role = '{{role_id}}'
-        var status = document.getElementById("cs_status").value
-        if (status == 5 && user_role == 2) {
-            alert('Read-only access for completed records.');
-            $('#costing_summary').addClass('disable_a_href');
-            $('#cs_submit_btn').addClass('disable_a_href').prop('disabled', true);
-            $('#add_costing').addClass('disable_a_href');
-        }
-
-        if(document.getElementById("cs_assessment_num").value == "") { $('#add_costing').addClass('disable_a_href'); }
-
-
-        var initial_po_val = $("#cs_customer_po").val();
-        if (initial_po_val != '') { $("#cs_customer_po").attr("data-initial-val", initial_po_val); }
-
-        // Initialize calculations
-        change_charge_type();
-    });
-
-    function change_charge_type() {
-        var wood = parseFloat($("#cs_wood_cost").val()) || 0;
-        var plywood = parseFloat($("#cs_plywood_cost").val()) || 0;
-        var eng = parseFloat($("#cs_engineer_cost").val()) || 0;
-        var lab = parseFloat($("#cs_labour_cost").val()) || 0;
-        var cra = parseFloat($("#cs_crane_cost").val()) || 0;
-        var ht = parseFloat($("#cs_ht_cost").val()) || 0;
-        var mgt = parseFloat($("#cs_management_cost").val()) || 0;
-        var mat = parseFloat($("#cs_material_cost").val()) || 0;
-        var tra = parseFloat($("#cs_transport_cost").val()) || 0;
-        var others = parseFloat($("#cs_others_cost").val()) || 0;
-        var margin = parseFloat($("#cs_margin").val()) || 0;
-        var gst = parseFloat($("#cs_gst").val()) || 0;
-
-        var wom = wood + plywood + eng + lab + cra + ht + mgt + tra + others;
-        $("#cs_total_cost_wom").val(wom.toFixed(2));
-        var wm = wom + (wom * margin / 100);
-        $("#cs_total_cost_wm").val(wm.toFixed(2));
-        var final = wm + (wm * gst / 100);
-        $("#cs_final_cost").val(final.toFixed(2));
-
-        var cft = parseFloat($("#cs_total_cft").val()) || 0;
-        if (cft > 0) $("#cs_rate_per_cft").val((wood / cft).toFixed(2));
-
-        var sqft = parseFloat($("#cs_total_sqft").val()) || 0;
-        if (sqft > 0) $("#cs_rate_per_sqft").val((plywood / sqft).toFixed(2));
-    }
-
-    function cs_assessment_num_change() {
-        var assessment = $("#cs_assessment_num").val();
-        var initial_po = $("#cs_customer_po").attr("data-initial-val") || $("#cs_customer_po").val();
-        $.ajax({
-            url: '{% url "pk_costing_get_customer" %}',
-            data: { 'cs_assessment_num': assessment, 'cs_id': '{{ form.instance.id|default:"" }}' },
-            success: function (data) {
-                $("#cs_customer_name").val(data.customer_name_id);
-                $("#cs_customer_po").empty().append("<option value='0'>--Select--</option>");
-                for (var i = 0; i < data.customer_po_id.length; i++) {
-                    var selected = (data.customer_po_id[i] == initial_po) ? "selected" : "";
-                    $("#cs_customer_po").append("<option value='" + data.customer_po_id[i] + "' " + selected + ">" + data.customer_po_name[i] + "</option>");
-                }
-            }
-        });
-    }
-
-    $(document).ready(function() {
-        if($("#cs_assessment_num").val() != "") { cs_assessment_num_change(); }
-
-        $('#cs_customer_po').on('change', function () {
-            var po = $(this).val();
-            if(!po || po == '0') return;
-            $.ajax({
-                url: '{% url "pk_costing_summary_check_unique_field" %}',
-                data: { 'cs_assessment_num': $("#cs_assessment_num").val(), 'cs_customer_po_num': po },
-                success: function (data) {
-                    if (data.exists) { $('#unique_field_error').text('Record already exists.'); $('#unique_record').text(''); }
-                    else { $('#unique_record').text('Unique Record'); $('#unique_field_error').text(''); openJobModal(po); }
-                }
-            });
-        });
-
-        function openJobModal(po_id) {
-            var tbody = $('#modal_job_table tbody').empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
-            $('#jobCreationModal').modal('show');
-            $.ajax({
-                url: '/SMS/pk_get_po_items_for_job/', data: { 'po_id': po_id },
-                success: function(resp) {
-                    tbody.empty();
-                    if(resp.success && resp.items.length > 0) {
-                        resp.items.forEach(function(item) {
-                            if(item.remaining_qty > 0) {
-                                tbody.append('<tr><td>'+item.item_name+'</td><td>Rem: '+item.remaining_qty+'</td><td><input type="number" class="form-control modal-job-qty" data-id="'+item.id+'" data-max="'+item.remaining_qty+'" value="0"></td></tr>');
-                            }
-                        });
-                    } else { tbody.append('<tr><td colspan="3" class="text-center">No items available.</td></tr>'); }
-                }
-            });
-        }
-
-        $('#confirm_batch_job_btn').on('click', function () {
-            var items = [];
-            $('.modal-job-qty').each(function () {
-                var q = parseFloat($(this).val()) || 0;
-                if(q > 0) items.push({ 'id': $(this).data('id'), 'qty': q });
-            });
-            if(items.length == 0) return alert('Select items.');
-            $.ajax({
-                url: '/SMS/pk_create_batch_job/', method: 'POST',
-                data: JSON.stringify({ 'po_id': $("#cs_customer_po").val(), 'pack_type': $('input[name="modal_pack_type"]:checked').val(), 'items': items }),
-                contentType: 'application/json', headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                success: function (r) { if(r.success) window.location.href = r.redirect_url; else alert(r.message); }
-            });
-        });
-    });
-</script>
-{% endblock %}
+{% extends "asset_mgt_app/base_modern.html" %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+
+
+
+<div class="container-fluid py-4">
+
+    <!-- Progress Tracker -->
+
+    <div class="pms-tracker-wrapper mb-4">
+
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+
+    </div>
+
+
+
+    <!-- Page Header -->
+
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Indent Summary</h2>
+
+        <div class="d-flex gap-2">
+
+            <a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; background: var(--accent-orange); text-decoration: none;" id="invoice_report_btn">
+
+                <i class="fas fa-file-pdf"></i> Invoice PDF
+
+            </a>
+
+            <a href="{% url 'pk_bvm_invoice_excel' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; background: #27ae60; text-decoration: none;" id="invoice_excel_btn">
+
+                <i class="fas fa-file-excel"></i> Excel
+
+            </a>
+
+            <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+
+                <i class="fas fa-arrow-left"></i> Back
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <form method="POST" action="" id="costingsummary_add">
+
+        {% csrf_token %}
+
+        <div class="modern-card" style="padding: 1rem !important;">
+
+            <div class="row row-compact">
+
+                <!-- Column 1: Core Details -->
+
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                    <div class="form-section h-100">
+
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Costing Core</div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Assessment Number</label>
+
+                            {% render_field form.cs_assessment_num id="cs_assessment_num" onchange="cs_assessment_num_change()" class="form-control form-control-modern disable_a_href" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Job Number</label>
+
+                            {% render_field form.cs_job_no id="cs_job_no" class="form-control form-control-modern font-weight-bold disable_a_href" style="background-color: #fff3cd; color: #856404;" readonly="True" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Customer PO</label>
+
+                            {% render_field form.cs_customer_po id="cs_customer_po" class="form-control form-control-modern" %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Column 2: Customer Info -->
+
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                    <div class="form-section h-100">
+
+                        <div class="form-section-title"><i class="fas fa-user"></i> Customer Info</div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Customer Name</label>
+
+                            {% render_field form.cs_customer_name id="cs_customer_name" class="form-control form-control-modern disable_a_href" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Display Name</label>
+
+                            {% render_field form.cs_customer_new_name id="cs_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Invoice #</label>
+
+                            {% render_field form.cs_invoice_num id="cs_invoice_num" class="form-control form-control-modern" %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Column 3: Primary Costs -->
+
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                    <div class="form-section h-100">
+
+                        <div class="form-section-title"><i class="fas fa-list-ul"></i> Primary Costs</div>
+
+                        <div class="row no-gutters">
+
+                            <div class="col-6 pr-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Wood Cost">Wood Cost</label>
+
+                                    {% render_field form.cs_wood_cost id="cs_wood_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6 pl-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Plywood Cost">Plywood Cost</label>
+
+                                    {% render_field form.cs_plywood_cost id="cs_plywood_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern text-truncate" title="Labour Cost">Labour Cost</label>
+
+                            {% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control form-control-modern disable_a_href" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Packing Type</label>
+
+                            {% render_field form.cs_pack_type id="cs_pack_type" class="form-control form-control-modern" %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Column 4: Operational Costs -->
+
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                    <div class="form-section h-100">
+
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Operational Costs</div>
+
+                        <div class="row no-gutters">
+
+                            <div class="col-6 pr-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="HT Cost">HT Cost</label>
+
+                                    {% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6 pl-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Crane Cost">Crane Cost</label>
+
+                                    {% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="row no-gutters">
+
+                            <div class="col-6 pr-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Consumables">Consumables</label>
+
+                                    {% render_field form.cs_material_cost id="cs_material_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6 pl-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Transport">Transport</label>
+
+                                    {% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control form-control-modern disable_a_href" %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Calculation & Margin Section (4-column breakdown) -->
+
+            <div class="form-section mt-3" style="background: rgba(var(--primary-glow-rgb), 0.03); border: 1px solid var(--accent-orange) !important;">
+
+                <div class="form-section-title" style="color: var(--accent-orange); border-color: var(--accent-orange);"><i class="fas fa-calculator"></i> Calculation & Margin Analysis</div>
+
+                <div class="row row-compact">
+
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Total Cost (W/O Margin)</label>
+
+                            {% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Margin (%)</label>
+
+                            {% render_field form.cs_margin id="cs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Total Cost (With Margin)</label>
+
+                            {% render_field form.cs_total_cost_wm id="cs_total_cost_wm" class="form-control form-control-modern disable_a_href font-weight-bold text-primary" readonly="readonly" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">GST (%)</label>
+
+                            {% render_field form.cs_gst id="cs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                        <div class="row no-gutters">
+
+                            <div class="col-6 pr-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Total CFT">Total CFT</label>
+
+                                    {% render_field form.cs_total_cft id="cs_total_cft" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6 pl-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Total SQFT">Total SQFT</label>
+
+                                    <input type="text" id="cs_total_sqft" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ total_sqft }}">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="row no-gutters">
+
+                            <div class="col-6 pr-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Rate Per CFT">Rate / CFT</label>
+
+                                    {% render_field form.cs_rate_per_cft id="cs_rate_per_cft" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-6 pl-1">
+
+                                <div class="form-group-modern">
+
+                                    <label class="form-label-modern text-truncate" title="Rate Per SQFT">Rate / SQFT</label>
+
+                                    <input type="text" id="cs_rate_per_sqft" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ rate_per_sqft }}">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Others Cost</label>
+
+                            {% render_field form.cs_others_cost id="cs_others_cost" onchange="change_charge_type()" class="form-control form-control-modern" %}
+
+                        </div>
+
+                        <div class="form-group-modern">
+
+                            <label class="form-label-modern">Workflow Status</label>
+
+                            {% render_field form.cs_status id="cs_status" class="form-control form-control-modern font-weight-bold" %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Additional Detail Sections (Accordions) -->
+
+            <div class="row mt-3">
+
+                <div class="col-md-6">
+
+                    <div class="form-group-modern mb-2">
+
+                        <label class="form-label-modern text-muted small">Address & Terms</label>
+
+                        <div id="accordion_left">
+
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+
+                                <div class="card-header p-0" id="headingOne">
+
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseOne" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+
+                                        <i class="fas fa-map-marker-alt mr-2 text-primary"></i> Address Details
+
+                                    </button>
+
+                                </div>
+
+                                <div id="collapseOne" class="collapse" data-parent="#accordion_left">
+
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+
+                                        {% render_field form.cs_address id="cs_address" class="form-control form-control-modern" rows="2" %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+
+                                <div class="card-header p-0" id="headingTwo">
+
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseTwo" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+
+                                        <i class="fas fa-check-double mr-2 text-primary"></i> Cost Includes
+
+                                    </button>
+
+                                </div>
+
+                                <div id="collapseTwo" class="collapse" data-parent="#accordion_left">
+
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+
+                                        {% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control form-control-modern" rows="2" %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <div class="form-group-modern mb-2">
+
+                        <label class="form-label-modern text-muted small">Scope & Conditions</label>
+
+                        <div id="accordion_right">
+
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+
+                                <div class="card-header p-0" id="headingFour">
+
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseFour" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+
+                                        <i class="fas fa-gavel mr-2 text-primary"></i> Terms & Conditions
+
+                                    </button>
+
+                                </div>
+
+                                <div id="collapseFour" class="collapse" data-parent="#accordion_right">
+
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+
+                                        {% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control form-control-modern" rows="2" %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+
+                                <div class="card-header p-0" id="headingSix">
+
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseSix" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+
+                                        <i class="fas fa-shield-alt mr-2 text-primary"></i> Scope Analysis
+
+                                    </button>
+
+                                </div>
+
+                                <div id="collapseSix" class="collapse" data-parent="#accordion_right">
+
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+
+                                        <label class="small text-muted">Client Scope</label>
+
+                                        {% render_field form.cs_client_scope id="cs_client_scope" class="form-control form-control-modern mb-2" rows="1" %}
+
+                                        <label class="small text-muted">Engg. Notes</label>
+
+                                        {% render_field form.cs_notes id="cs_notes" class="form-control form-control-modern mb-2" rows="1" %}
+
+                                        <label class="small text-muted">Misc Description</label>
+
+                                        {% render_field form.cs_others_description id="cs_others_description" class="form-control form-control-modern" rows="1" %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            {% render_field form.cs_updated_by id="cs_updated_by" hidden="True" %}
+
+            <div class="d-none">
+
+                {% render_field form.cs_final_cost id="cs_final_cost" %}
+
+            </div>
+
+
+
+            <!-- Messages & Error Logs -->
+
+            <div class="mt-2 px-3 text-center">
+
+                {% if messages %}
+
+                    {% for message in messages %}
+
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 mb-1">{{ message }}</div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+                <div id="unique_field_error" class="text-danger small font-weight-bold"></div>
+
+                <div id="unique_record" class="text-success small font-weight-bold"></div>
+
+            </div>
+
+
+
+            <!-- Action Buttons Parallel (Bottom Corners) -->
+
+            <div class="row mt-1">
+
+                <div class="col-12 col-xl-12">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <button id="cs_submit_btn" type="submit" class="btn-modern btn-submit px-5">
+
+                            <i class="fas fa-save mr-2"></i> Save Summary
+
+                        </button>
+
+                        <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel px-5">
+
+                            <i class="fas fa-times mr-2"></i> Cancel
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+
+
+    <!-- Sub-Section: Items Management -->
+
+    <div class="mt-2">
+
+        <div class="table-container-modern">
+
+            <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
+
+                <h4 class="mb-0 text-white"><i class="fas fa-tag mr-2"></i> Item Number &amp; Total Cost Summary</h4>
+
+                <div class="d-flex gap-2">
+
+                    <a href="{% url 'costing_insert' %}" id="add_costing" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;">
+
+                        <i class="fas fa-plus"></i> Add/Modify Items
+
+                    </a>
+
+                    <a id="EBOM" href="{% url 'export_costingreport' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: #f39c12; text-decoration: none;">
+
+                        <i class="fas fa-file-excel"></i> EBOM Export
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="p-3 bg-white" style="border-radius: 0 0 8px 8px;">
+
+                <div class="table-responsive">
+
+                    <table class="table modern-table mb-0">
+
+                        <thead class="thead-dark">
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>Item Number (Job Type)</th>
+
+                                <th>PO Number</th>
+
+                                <th class="text-right">PO Value (₹)</th>
+
+                                <th class="text-right">Unit Cost (₹)</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for jt in job_type_totals %}
+
+                            <tr class="modern-tr">
+
+                                <td class="text-muted">{{ forloop.counter }}</td>
+
+                                <td class="font-weight-bold">{{ jt.job_type }}</td>
+
+                                <td>{{ jt.po_num }}</td>
+
+                                <td class="text-right font-weight-bold text-primary">{% if jt.po_value != "—" %}₹{{ jt.po_value }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+
+                                <td class="text-right font-weight-bold text-success" style="font-size: 1rem;">₹{{ jt.total }}</td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="5" class="text-center text-muted py-3">No items found.</td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- Nested Workflows (Retrieval & Acceptance) -->
+
+    
+
+    {% if indent_summary_list %}
+    <div class="mt-2">
+        <div class="table-container-modern" style="border-top: 5px solid var(--primary-glow);">
+            <div class="form-section-title text-primary"><i class="fas fa-list-alt"></i> Indent Summary / BOM</div>
+            <div class="table-responsive">
+                <table class="table modern-table">
+                    <thead>
+                        <tr>
+                            <th>Part Code</th>
+                            <th>Description</th>
+                            <th>UOM</th>
+                            <th>Total Qty</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in indent_summary_list %}
+                        <tr class="modern-tr">
+                            <td class="font-weight-bold">{{ item.ct_part_code }}</td>
+                            <td>{{ item.ct_part_code_name }}</td>
+                            <td>{{ item.ct_uom }}</td>
+                            <td class="font-weight-bold text-success">{{ item.total_quantity_req }}</td>
+                            <td>
+                                {% if item.status_id == 1 %}
+                                <span class="badge badge-primary">{{ item.ct_stock_status }}</span>
+                                {% else %}
+                                <span class="badge badge-info">{{ item.ct_stock_status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+
+<!-- Job Creation Modal (Shared) -->
+
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg" role="document">
+
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+
+            <div class="modal-header bg-primary text-white py-4" style="background: linear-gradient(135deg, var(--primary-emerald), var(--primary-glow)) !important;">
+
+                <h5 class="modal-title font-weight-bold" id="jobCreationModalLabel"><i class="fas fa-industry mr-2"></i> Create Production Batch Job</h5>
+
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+
+                    <span aria-hidden="true">&times;</span>
+
+                </button>
+
+            </div>
+
+            <div class="modal-body p-4 bg-light">
+
+                <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 12px; background: white; border-left: 5px solid #f39c12 !important;">
+
+                    <div class="row align-items-center">
+
+                        <div class="col-md-4"><strong><i class="fas fa-box-open"></i> Packing Type:</strong></div>
+
+                        <div class="col-md-8 text-right">
+
+                            <div class="custom-control custom-radio custom-control-inline">
+
+                                <input type="radio" id="type_inhouse" name="modal_pack_type" class="custom-control-input" value="In-House" checked>
+
+                                <label class="custom-control-label font-weight-bold" for="type_inhouse">In-House</label>
+
+                            </div>
+
+                            <div class="custom-control custom-radio custom-control-inline">
+
+                                <input type="radio" id="type_onsite" name="modal_pack_type" class="custom-control-input" value="On-Site">
+
+                                <label class="custom-control-label font-weight-bold" for="type_onsite">On-Site</label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="table-responsive rounded shadow-sm">
+
+                    <table class="table table-hover bg-white mb-0" id="modal_job_table">
+
+                        <thead style="background: #f1f5f9;">
+
+                            <tr><th>Item Name</th><th>Order Balance</th><th style="width: 160px;">Job Release Qty</th></tr>
+
+                        </thead>
+
+                        <tbody></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer bg-white border-top-0 py-4">
+
+                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+
+                <button type="button" class="btn-modern btn-submit" id="confirm_batch_job_btn"><i class="fas fa-check-circle"></i> Create Job</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    $(document).ready(function () {
+
+        document.getElementById("cs_updated_by").value = '{{user_id}}';
+
+        
+
+        var excess_stock_status = '{{output}}'
+
+        if (excess_stock_status == 1) { $('#invoice_report_btn').removeClass('disable_a_href'); }
+
+        else { $('#invoice_report_btn').addClass('disable_a_href'); }
+
+
+
+        var user_role = '{{role_id}}'
+
+        var status = document.getElementById("cs_status").value
+
+        if (status == 5 && user_role == 2) {
+
+            alert('Read-only access for completed records.');
+
+            $('#costing_summary').addClass('disable_a_href');
+
+            $('#cs_submit_btn').addClass('disable_a_href').prop('disabled', true);
+
+            $('#add_costing').addClass('disable_a_href');
+
+        }
+
+
+
+        if(document.getElementById("cs_assessment_num").value == "") { $('#add_costing').addClass('disable_a_href'); }
+
+
+
+
+
+        var initial_po_val = $("#cs_customer_po").val();
+
+        if (initial_po_val != '') { $("#cs_customer_po").attr("data-initial-val", initial_po_val); }
+
+
+
+        // Initialize calculations
+
+        change_charge_type();
+
+    });
+
+
+
+    function change_charge_type() {
+
+        var wood = parseFloat($("#cs_wood_cost").val()) || 0;
+
+        var plywood = parseFloat($("#cs_plywood_cost").val()) || 0;
+
+        var eng = parseFloat($("#cs_engineer_cost").val()) || 0;
+
+        var lab = parseFloat($("#cs_labour_cost").val()) || 0;
+
+        var cra = parseFloat($("#cs_crane_cost").val()) || 0;
+
+        var ht = parseFloat($("#cs_ht_cost").val()) || 0;
+
+        var mgt = parseFloat($("#cs_management_cost").val()) || 0;
+
+        var mat = parseFloat($("#cs_material_cost").val()) || 0;
+
+        var tra = parseFloat($("#cs_transport_cost").val()) || 0;
+
+        var others = parseFloat($("#cs_others_cost").val()) || 0;
+
+        var margin = parseFloat($("#cs_margin").val()) || 0;
+
+        var gst = parseFloat($("#cs_gst").val()) || 0;
+
+
+
+        var wom = wood + plywood + eng + lab + cra + ht + mgt + tra + others;
+
+        $("#cs_total_cost_wom").val(wom.toFixed(2));
+
+        var wm = wom + (wom * margin / 100);
+
+        $("#cs_total_cost_wm").val(wm.toFixed(2));
+
+        var final = wm + (wm * gst / 100);
+
+        $("#cs_final_cost").val(final.toFixed(2));
+
+
+
+        var cft = parseFloat($("#cs_total_cft").val()) || 0;
+
+        if (cft > 0) $("#cs_rate_per_cft").val((wood / cft).toFixed(2));
+
+
+
+        var sqft = parseFloat($("#cs_total_sqft").val()) || 0;
+
+        if (sqft > 0) $("#cs_rate_per_sqft").val((plywood / sqft).toFixed(2));
+
+    }
+
+
+
+    function cs_assessment_num_change() {
+
+        var assessment = $("#cs_assessment_num").val();
+
+        var initial_po = $("#cs_customer_po").attr("data-initial-val") || $("#cs_customer_po").val();
+
+        $.ajax({
+
+            url: '{% url "pk_costing_get_customer" %}',
+
+            data: { 'cs_assessment_num': assessment, 'cs_id': '{{ form.instance.id|default:"" }}' },
+
+            success: function (data) {
+
+                $("#cs_customer_name").val(data.customer_name_id);
+
+                $("#cs_customer_po").empty().append("<option value='0'>--Select--</option>");
+
+                for (var i = 0; i < data.customer_po_id.length; i++) {
+
+                    var selected = (data.customer_po_id[i] == initial_po) ? "selected" : "";
+
+                    $("#cs_customer_po").append("<option value='" + data.customer_po_id[i] + "' " + selected + ">" + data.customer_po_name[i] + "</option>");
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+
+    $(document).ready(function() {
+
+        if($("#cs_assessment_num").val() != "") { cs_assessment_num_change(); }
+
+
+
+        $('#cs_customer_po').on('change', function () {
+
+            var po = $(this).val();
+
+            if(!po || po == '0') return;
+
+            $.ajax({
+
+                url: '{% url "pk_costing_summary_check_unique_field" %}',
+
+                data: { 'cs_assessment_num': $("#cs_assessment_num").val(), 'cs_customer_po_num': po },
+
+                success: function (data) {
+
+                    if (data.exists) { $('#unique_field_error').text('Record already exists.'); $('#unique_record').text(''); }
+
+                    else { $('#unique_record').text('Unique Record'); $('#unique_field_error').text(''); openJobModal(po); }
+
+                }
+
+            });
+
+        });
+
+
+
+        function openJobModal(po_id) {
+
+            var tbody = $('#modal_job_table tbody').empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+
+            $('#jobCreationModal').modal('show');
+
+            $.ajax({
+
+                url: '/SMS/pk_get_po_items_for_job/', data: { 'po_id': po_id },
+
+                success: function(resp) {
+
+                    tbody.empty();
+
+                    if(resp.success && resp.items.length > 0) {
+
+                        resp.items.forEach(function(item) {
+
+                            if(item.remaining_qty > 0) {
+
+                                tbody.append('<tr><td>'+item.item_name+'</td><td>Rem: '+item.remaining_qty+'</td><td><input type="number" class="form-control modal-job-qty" data-id="'+item.id+'" data-max="'+item.remaining_qty+'" value="0"></td></tr>');
+
+                            }
+
+                        });
+
+                    } else { tbody.append('<tr><td colspan="3" class="text-center">No items available.</td></tr>'); }
+
+                }
+
+            });
+
+        }
+
+
+
+        $('#confirm_batch_job_btn').on('click', function () {
+
+            var items = [];
+
+            $('.modal-job-qty').each(function () {
+
+                var q = parseFloat($(this).val()) || 0;
+
+                if(q > 0) items.push({ 'id': $(this).data('id'), 'qty': q });
+
+            });
+
+            if(items.length == 0) return alert('Select items.');
+
+            $.ajax({
+
+                url: '/SMS/pk_create_batch_job/', method: 'POST',
+
+                data: JSON.stringify({ 'po_id': $("#cs_customer_po").val(), 'pack_type': $('input[name="modal_pack_type"]:checked').val(), 'items': items }),
+
+                contentType: 'application/json', headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+
+                success: function (r) { if(r.success) window.location.href = r.redirect_url; else alert(r.message); }
+
+            });
+
+        });
+
+    });
+
+</script>
+
+{% endblock %}
+

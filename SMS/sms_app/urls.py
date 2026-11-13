@@ -1339,4 +1339,24 @@ urlpatterns = [
     path('vendor_rate_report_ajax/', views.vendor_rate_report_ajax, name='vendor_rate_report_ajax'),
     path('customer_rate_report_ajax/', views.customer_rate_report_ajax, name='customer_rate_report_ajax'),
     path('customer_rate_report/', views.customer_rate_report, name='customer_rate_report'),
+
+    # Customer Box Item Master & NA Tagging
+    path('customer_box_master_list/', views.customer_box_master_list, name='customer_box_master_list'),
+    path('customer_box_master_form/', views.customer_box_master_form_view, name='customer_box_master_form_add'),
+    path('customer_box_master_form/<int:pk>/', views.customer_box_master_form_view, name='customer_box_master_form_edit'),
+    path('customer_box_master_save/', views.customer_box_master_save, name='customer_box_master_save'),
+    path('customer_box_master_save/<int:pk>/', views.customer_box_master_save, name='customer_box_master_update'),
+    path('customer_box_master_delete/<int:pk>/', views.customer_box_master_delete, name='customer_box_master_delete'),
+    path('api/customer_box_items/', views.api_customer_box_items, name='api_customer_box_items'),
+    path('api/na_tag_box_items/', views.api_na_tag_box_items, name='api_na_tag_box_items'),
+
+    # Auto-BOM Rule Master (Size x Weight kg)
+    path('bom_rule_master/', views.bom_rule_master_list, name='bom_rule_master_list'),
+    path('bom_rule_form/', views.bom_rule_form_view, name='bom_rule_form_add'),
+    path('bom_rule_form/<int:pk>/', views.bom_rule_form_view, name='bom_rule_form_edit'),
+    path('bom_rule_master_save/', views.bom_rule_master_save, name='bom_rule_master_save'),
+    path('bom_rule_master_save/<int:pk>/', views.bom_rule_master_save, name='bom_rule_master_update'),
+    path('bom_rule_master_delete/<int:pk>/', views.bom_rule_master_delete, name='bom_rule_master_delete'),
+    path('bom_rule_master_import_csv/', views.bom_rule_master_import_csv, name='bom_rule_master_import_csv'),
+    path('api/auto_generate_bom/', views.api_auto_generate_bom, name='api_auto_generate_bom'),
 ]

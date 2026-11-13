@@ -347,9 +347,10 @@ def na_dimension_add(request, na_dimension_id=0):
     na_assessment_num_id = request.session.get('na_assessment_id')
     # Retrieve related status from PkneedassessmentInfo
     na_status = None
+    assessment_instance = None
     if na_assessment_num_id:
         try:
-            assessment_instance = PkneedassessmentInfo.objects.get(id=na_assessment_num_id)
+            assessment_instance = PkneedassessmentInfo.objects.select_related('na_customer_name').get(id=na_assessment_num_id)
             na_status = assessment_instance.na_status.id if assessment_instance.na_status else None
         except PkneedassessmentInfo.DoesNotExist:
             na_status = None
@@ -393,6 +394,8 @@ def na_dimension_add(request, na_dimension_id=0):
             'role_id': role_id,
             'na_assessment_num_id': na_assessment_num_id,
             'na_status': na_status,  # Pass to template
+            'na_customer_id': assessment_instance.na_customer_name_id if assessment_instance else None,
+            'na_customer_name': str(assessment_instance.na_customer_name) if (assessment_instance and assessment_instance.na_customer_name) else '',
         }
 
         return render(request, "asset_mgt_app/na_dimension_add.html", context)
@@ -409,6 +412,45 @@ def na_dimension_add(request, na_dimension_id=0):
                 prefix = f"{fy}_{branch_code}_ITM_"
                 na_item_num_next = generate_next_number(Nadimension, 'nad_item', prefix, 6)
                 Nadimension.objects.filter(id=instance.id).update(nad_item=na_item_num_next)
+
+                # Optional: Save to Customer Box Item Master in the same click
+                if request.POST.get('save_to_master') == 'on':
+                    from ..models import CustomerBoxItemMaster
+                    master_code = (request.POST.get('master_item_code') or '').strip()
+                    master_name = (request.POST.get('master_item_name') or '').strip() or str(instance.nad_type_of_req)
+                    cust_obj = instance.nad_assess_num.na_customer_name if instance.nad_assess_num else None
+                    cbm_code = generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
+                    master_obj = CustomerBoxItemMaster.objects.create(
+                        cbm_customer=cust_obj,
+                        cbm_bvm_code=cbm_code,
+                        cbm_item_code=master_code or na_item_num_next,
+                        cbm_item_name=master_name,
+                        cbm_type_of_req=instance.nad_type_of_req,
+                        cbm_dimension_type=instance.nad_dimension_type,
+                        cbm_length=instance.nad_length,
+                        cbm_width=instance.nad_width,
+                        cbm_height=instance.nad_height,
+                        cbm_clearance=instance.nad_clearance or 0.0,
+                        cbm_plywood_thickness=instance.nad_plywood_thickness or 0.0,
+                        cbm_clr_length=instance.nad_clr_length,
+                        cbm_clr_width=instance.nad_clr_width,
+                        cbm_clr_top=instance.nad_clr_top,
+                        cbm_thk_length=instance.nad_thk_length,
+                        cbm_thk_width=instance.nad_thk_width,
+                        cbm_thk_height=instance.nad_thk_height,
+                        cbm_uom=instance.nad_uom,
+                        cbm_job_weight=instance.nad_job_weight,
+                        cbm_consumables=instance.nad_consumables,
+                        cbm_vechicle_type=instance.nad_vechicle_type,
+                        cbm_updated_by=instance.nad_updated_by,
+                    )
+                    master_obj.cbm_wood_type.set(instance.nad_wood_type.all())
+                    master_obj.cbm_wood_description.set(instance.nad_wood_description.all())
+                    part_label = f"{master_obj.cbm_item_code} - {master_obj.cbm_item_name}".strip(' -')
+                    Nadimension.objects.filter(id=instance.id).update(
+                        nad_master_item=master_obj,
+                        nad_customer_part_code=part_label[:120],
+                    )
 
                 # Store last submitted values in session
                 request.session['last_nad_type_of_req'] = form.cleaned_data['nad_type_of_req'].id if form.cleaned_data.get('nad_type_of_req') else None

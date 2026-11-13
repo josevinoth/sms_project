@@ -8,9 +8,19 @@
 <!--    </div>-->
 <!--</div>-->
 <div class="px-2 pt-2 pb-3">
-	<div class="d-flex justify-content-between align-items-center mb-3">
-		<a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit py-2 px-4 disable_a_href" style="text-decoration: none; font-size: 0.9rem; background: #f59e0b;">
-			<i class="fas fa-plus mr-1"></i> INSERT DIMENSION
+	<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+		<div class="d-flex flex-wrap gap-2 align-items-center">
+			<a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit py-2 px-4 disable_a_href" style="text-decoration: none; font-size: 0.9rem; background: #f59e0b;">
+				<i class="fas fa-plus mr-1"></i> INSERT DIMENSION
+			</a>
+			{% if request.session.na_assessment_id %}
+			<button type="button" id="btn_open_tag_box_modal" class="btn-modern py-2 px-4 text-white font-weight-bold border-0" style="font-size: 0.9rem; background: #0d9488; border-radius: 8px;" onclick="openTagBoxMasterModal()">
+				<i class="fas fa-tags mr-1"></i> TAG FROM CUSTOMER BOX MASTER
+			</button>
+			{% endif %}
+		</div>
+		<a href="{% url 'customer_box_master_list' %}" target="_blank" class="btn btn-sm btn-outline-primary font-weight-bold">
+			<i class="fas fa-boxes mr-1"></i> Manage Customer Box Master
 		</a>
 	</div>
 
@@ -38,7 +48,12 @@
 				<tr>
 					<td class="small">{{na_dimensioninfo.nad_created_at|date:"M. d, Y, g:i a."}}</td>
 					<td class="font-weight-bold">{{na_dimensioninfo.nad_assess_num}}</td>
-					<td>{{na_dimensioninfo.nad_item}}</td>
+					<td>
+						{{na_dimensioninfo.nad_item}}
+						{% if na_dimensioninfo.nad_customer_part_code %}
+							<br><span class="badge badge-light border text-primary small"><i class="fas fa-tag mr-1"></i>{{ na_dimensioninfo.nad_customer_part_code }}</span>
+						{% endif %}
+					</td>
 					<td><span class="badge badge-info px-2 py-1">{{na_dimensioninfo.nad_type_of_req}}</span></td>
 					<td>{{na_dimensioninfo.nad_uom}}</td>
 					<td>{{na_dimensioninfo.nad_length}}</td>
@@ -66,3 +81,114 @@
 		</table>
 	</div>
 </div>
+
+<!-- Tag from Customer Box Item Master Modal -->
+<div class="modal fade" id="tagBoxMasterModal" tabindex="-1">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header py-2 text-white" style="background: #0d9488;">
+				<h6 class="modal-title font-weight-bold mb-0"><i class="fas fa-tags mr-1"></i> Tag Saved Box Items from Customer Master</h6>
+				<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+					<input type="text" id="tag_box_search" class="form-control form-control-sm" placeholder="Search by Part Code, Machine / Box Name..." style="max-width: 320px;" oninput="loadCustomerMasterBoxes()">
+					<small class="text-muted">Select one or more customer boxes, adjust Quantity, and click <strong>Tag Selected Items</strong>.</small>
+				</div>
+				<div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+					<table class="table table-sm table-hover mb-0">
+						<thead class="thead-light">
+							<tr>
+								<th style="width: 36px;"><input type="checkbox" id="tag_select_all" onchange="$('.tag-item-chk').prop('checked', this.checked)"></th>
+								<th>Part Code / SKU</th>
+								<th>Box / Machine Name</th>
+								<th>Customer</th>
+								<th>Req. Type</th>
+								<th>L × W × H (UOM)</th>
+								<th>Weight (kg)</th>
+								<th style="width: 95px;">Qty</th>
+							</tr>
+						</thead>
+						<tbody id="tag_box_master_tbody">
+							<tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer py-2">
+				<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-sm text-white font-weight-bold" style="background: #0d9488;" onclick="submitTaggedBoxes()">
+					<i class="fas fa-check mr-1"></i> Tag Selected Items to Assessment
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+function openTagBoxMasterModal() {
+	$('#tagBoxMasterModal').modal('show');
+	loadCustomerMasterBoxes();
+}
+
+function loadCustomerMasterBoxes() {
+	const custId = $('#id_na_customer_name').val() || '';
+	const q = $('#tag_box_search').val() || '';
+	$.get("{% url 'api_customer_box_items' %}", { customer_id: custId, q: q }, function(resp) {
+		const tbody = $('#tag_box_master_tbody');
+		tbody.empty();
+		if (!resp.items || resp.items.length === 0) {
+			tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">No saved box items found for this customer. Add one via <strong>Manage Customer Box Master</strong> or tick <strong>Save to Customer Master</strong> when inserting a dimension.</td></tr>');
+			return;
+		}
+		resp.items.forEach(function(it) {
+			tbody.append(`
+				<tr>
+					<td><input type="checkbox" class="tag-item-chk" value="${it.id}"></td>
+					<td class="font-weight-bold text-primary">${it.item_code || it.bvm_code}</td>
+					<td>${it.item_name}</td>
+					<td class="small text-muted">${it.customer_name}</td>
+					<td><span class="badge badge-info">${it.type_of_req || '-'}</span></td>
+					<td class="font-weight-bold">${it.length} × ${it.width} × ${it.height} <small class="text-muted">${it.uom || ''}</small></td>
+					<td>${it.job_weight} kg</td>
+					<td><input type="number" class="form-control form-control-sm tag-item-qty" data-id="${it.id}" value="1" min="1"></td>
+				</tr>
+			`);
+		});
+	});
+}
+
+function submitTaggedBoxes() {
+	const selected = [];
+	$('.tag-item-chk:checked').each(function() {
+		const id = parseInt($(this).val());
+		const qty = parseInt($(`.tag-item-qty[data-id="${id}"]`).val()) || 1;
+		selected.push({ master_id: id, quantity: qty });
+	});
+	if (selected.length === 0) {
+		alert('Please select at least one box item to tag.');
+		return;
+	}
+	$.ajax({
+		url: "{% url 'api_na_tag_box_items' %}",
+		method: "POST",
+		contentType: "application/json",
+		headers: { "X-CSRFToken": "{{ csrf_token }}" },
+		data: JSON.stringify({
+			assessment_id: "{{ request.session.na_assessment_id|default:'' }}",
+			items: selected
+		}),
+		success: function(resp) {
+			if (resp.status === 'success') {
+				$('#tagBoxMasterModal').modal('hide');
+				window.location.reload();
+			} else {
+				alert(resp.message || 'Failed to tag items.');
+			}
+		},
+		error: function(xhr) {
+			alert('Error tagging items: ' + (xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : xhr.statusText));
+		}
+	});
+}
+</script>

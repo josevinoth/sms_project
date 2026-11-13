@@ -3,8 +3,8 @@
 
 :root {
   --sidebar-width: 390px;
-  --app-header-height: 69px;
-  --sidebar-collapsed-width: 88px;
+  --app-header-height: 85px;
+  --sidebar-collapsed-width: 60px;
   --sidebar-expanded-width: 410px;
 }
 
@@ -30,7 +30,8 @@ body {
   background-color: #0D2F3F;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-top: 12px;
+  box-sizing: border-box !important;
+  padding-top: 18px !important;
   padding-left: 12px;
   padding-right: 12px;
   /* Hide scrollbar but allow scrolling */
@@ -44,16 +45,19 @@ body {
 
 @media screen and (min-width: 992px) {
   .sidenav {
-    width: var(--sidebar-collapsed-width) !important;
-    padding-left: 6px;
-    padding-right: 6px;
-    transition: width 0.22s ease, padding-left 0.22s ease, padding-right 0.22s ease;
+    box-sizing: border-box !important;
+    width: var(--sidebar-collapsed-width, 60px) !important;
+    padding-top: 18px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    transition: width 0.22s ease, padding 0.22s ease;
   }
 
   .sidenav:hover {
-    width: var(--sidebar-expanded-width) !important;
-    padding-left: 12px;
-    padding-right: 12px;
+    width: var(--sidebar-expanded-width, 410px) !important;
+    padding-top: 18px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 
   .sidenav .nav_header_style {
@@ -64,37 +68,124 @@ body {
     display: block;
   }
 
-  .sidenav a,
-  .sidenav .collapsible {
+  /* Collapsed state styling */
+  .sidenav:not(:hover) .collapsible,
+  .sidenav:not(:hover) button.collapsible,
+  .sidenav:not(:hover) a {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 !important;
+    margin: 2px 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0 !important;
+    letter-spacing: 0 !important;
     font-size: 0 !important;
-    justify-content: center;
-    padding-left: 8px;
-    padding-right: 8px;
+    line-height: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 
-  .sidenav:hover a,
-  .sidenav:hover .collapsible {
+  .sidenav:not(:hover) .collapsible i,
+  .sidenav:not(:hover) button.collapsible i,
+  .sidenav:not(:hover) a i {
+    width: 24px !important;
+    height: 24px !important;
+    flex: 0 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+  }
+
+  .sidenav:not(:hover) #md_dashboard_btn {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin: 4px auto 10px auto !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .sidenav:not(:hover) #md_dashboard_btn span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .sidenav:not(:hover) #md_dashboard_btn i {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .sidenav:not(:hover) .hr_style {
+    width: 36px !important;
+    margin: 6px auto !important;
+    opacity: 0.6;
+  }
+
+  .sidenav:not(:hover) .badge,
+  .sidenav:not(:hover) a > .badge,
+  .sidenav:not(:hover) .collapsible > a {
+    display: none !important;
+  }
+
+  /* Expanded (hover) state styling */
+  .sidenav:hover .collapsible,
+  .sidenav:hover button.collapsible,
+  .sidenav:hover a {
     font-size: 0.95rem !important;
-    justify-content: flex-start;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .sidenav a i,
-  .sidenav .collapsible i {
-    width: 22px;
-    flex: 0 0 22px;
-    margin-right: 0;
-    font-size: 16px !important;
+    justify-content: flex-start !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    gap: 10px !important;
+    text-align: left !important;
   }
 
   .sidenav:hover a i,
-  .sidenav:hover .collapsible i {
-    margin-right: 8px;
+  .sidenav:hover .collapsible i,
+  .sidenav:hover button.collapsible i {
+    margin-right: 8px !important;
   }
 
-  .sidenav .badge {
-    display: none !important;
+  .sidenav:hover #md_dashboard_btn {
+    width: calc(100% - 16px) !important;
+    height: auto !important;
+    padding: 10px 14px !important;
+    margin: 8px 8px 12px 8px !important;
+    justify-content: space-between !important;
+  }
+
+  .sidenav:hover #md_dashboard_btn span {
+    font-size: 14px !important;
+  }
+
+  .sidenav:hover #md_dashboard_btn i {
+    margin-right: 8px !important;
+  }
+
+  .sidenav:hover .hr_style {
+    width: calc(100% - 16px) !important;
+    margin: 8px auto !important;
   }
 
   .sidenav:hover .badge {
@@ -102,12 +193,18 @@ body {
   }
 
   #main-content {
-    margin-left: calc(var(--sidebar-collapsed-width) + 24px) !important;
-    transition: margin-left 0.22s ease;
+    margin-left: var(--sidebar-collapsed-width, 60px) !important;
+    max-width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+    flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+    width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+    transition: margin-left 0.22s ease, width 0.22s ease !important;
   }
 
   body.sidenav-expanded #main-content {
-    margin-left: calc(var(--sidebar-expanded-width) + 24px) !important;
+    margin-left: var(--sidebar-expanded-width, 410px) !important;
+    max-width: calc(100% - var(--sidebar-expanded-width, 410px)) !important;
+    flex: 0 0 calc(100% - var(--sidebar-expanded-width, 410px)) !important;
+    width: calc(100% - var(--sidebar-expanded-width, 410px)) !important;
   }
 }
 
@@ -567,7 +664,9 @@ top: 0;
 left: 0;
 right: 0;
 width: 100%;
-min-height: var(--app-header-height);
+height: var(--app-header-height, 85px);
+max-height: var(--app-header-height, 85px);
+box-sizing: border-box !important;
 display: flex;
 align-items: center;
 z-index: 1200;
@@ -583,7 +682,8 @@ z-index: 1200;
 }
 
 .header-desktop-row {
-  min-height: var(--app-header-height);
+  min-height: 69px;
+  height: 69px;
 }
 
 .header-title-center {

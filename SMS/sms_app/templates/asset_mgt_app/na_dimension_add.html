@@ -1,4 +1,5 @@
 {% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
 {% load widget_tweaks %}
 {% block content %}
 
@@ -20,6 +21,21 @@
         {% csrf_token %}
 
         <div class="modern-card" style="padding: 1rem !important;">
+            <!-- Quick Fill from Customer Box Master -->
+            <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center py-2 px-3 mb-3" style="background: #f0fdfa; border-color: #99f6e4 !important;">
+                <div class="d-flex align-items-center gap-2 flex-grow-1 mr-2">
+                    <span class="font-weight-bold text-teal small text-nowrap mr-2" style="color: #0f766e;"><i class="fas fa-tags mr-1"></i> Quick Fill from Customer Box Master{% if na_customer_name %} ({{ na_customer_name }}){% endif %}:</span>
+                    <select id="cbm_quick_fill" class="form-control form-control-sm" style="max-width: 420px;">
+                        <option value="">-- Select Saved Customer Box Item (Optional) --</option>
+                    </select>
+                </div>
+                <a href="{% url 'customer_box_master_list' %}" target="_blank" class="btn btn-xs btn-outline-info font-weight-bold mt-1 mt-md-0">
+                    <i class="fas fa-boxes mr-1"></i> Manage Master
+                </a>
+            </div>
+            <input type="hidden" name="nad_master_item" id="nad_master_item_id" value="{{ form.instance.nad_master_item_id|default:'' }}">
+            <input type="hidden" name="nad_customer_part_code" id="nad_customer_part_code_val" value="{{ form.instance.nad_customer_part_code|default:'' }}">
+
             <div class="row row-compact">
                 <!-- Column 1: Identification -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
@@ -91,7 +107,72 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group-modern">
+
+                        <!-- Directional Clearance: Cargo OD only -->
+                        <div id="na_clearance_section">
+                            <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
+                                <label class="form-label-modern mb-0" style="color: #0369a1; font-weight: 700; font-size: 0.8rem;">
+                                    <i class="fas fa-arrows-alt-h mr-1"></i> Clearance (cm)
+                                </label>
+                                <small class="text-muted" style="font-size: 0.68rem;">Cargo OD &rarr; Box ID</small>
+                            </div>
+                            <div class="row no-gutters">
+                                <div class="col-4 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">L Clr</label>
+                                        {% render_field form.nad_clr_length id="nad_clr_length" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                                <div class="col-4 px-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">W Clr</label>
+                                        {% render_field form.nad_clr_width id="nad_clr_width" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                                <div class="col-4 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">Top Clr</label>
+                                        {% render_field form.nad_clr_top id="nad_clr_top" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Directional Thickness: Cargo OD and Box ID -->
+                        <div id="na_thickness_section">
+                            <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
+                                <label class="form-label-modern mb-0" style="color: #b45309; font-weight: 700; font-size: 0.8rem;">
+                                    <i class="fas fa-layer-group mr-1"></i> Thickness (cm)
+                                </label>
+                                <small class="text-muted" style="font-size: 0.68rem;">Box ID &rarr; Box OD</small>
+                            </div>
+                            <div class="row no-gutters">
+                                <div class="col-4 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">L Thk</label>
+                                        {% render_field form.nad_thk_length id="nad_thk_length" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                                <div class="col-4 px-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">W Thk</label>
+                                        {% render_field form.nad_thk_width id="nad_thk_width" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                                <div class="col-4 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" style="font-size: 0.7rem;">H Thk</label>
+                                        {% render_field form.nad_thk_height id="nad_thk_height" class="form-control form-control-modern" title="Base skids + Top lid" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="na_box_od_hint" class="alert alert-info py-2 px-2 mt-2 mb-0" style="display: none; font-size: 0.74rem;">
+                            <i class="fas fa-info-circle mr-1"></i> <strong>Box OD</strong>: Final outer dimensions. Clearance &amp; Thickness not needed.
+                        </div>
+
+                        <div class="form-group-modern" style="display: none;">
                             <label class="form-label-modern">Plywood Clearance / Thickness (cm)</label>
                             {% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control form-control-modern" %}
                         </div>
@@ -129,6 +210,35 @@
                 {% endfor %}
             </div>
 
+            <!-- Save to Customer Master Option -->
+            <div class="border rounded p-2 mb-3 bg-light">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="custom-control custom-checkbox mr-3">
+                        <input type="checkbox" class="custom-control-input" id="save_to_master" name="save_to_master" onchange="$('#save_master_fields').toggle(this.checked)">
+                        <label class="custom-control-label small font-weight-bold text-primary" for="save_to_master">
+                            <i class="fas fa-save mr-1"></i> Save this Box Specification to Customer Box Master for future orders
+                        </label>
+                    </div>
+                    <div id="save_master_fields" class="flex-grow-1" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-5 mb-1 mb-md-0">
+                                <input type="text" name="master_item_code" class="form-control form-control-sm" placeholder="Customer Part Code / SKU (e.g. TVS-101)">
+                            </div>
+                            <div class="col-md-7">
+                                <input type="text" name="master_item_name" class="form-control form-control-sm" placeholder="Machine / Box Name (e.g. CNC Spindle Crate)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive 3D & 2D Box Engineering Diagram -->
+            <div class="row mt-2 mb-3">
+                <div class="col-12">
+                    <div id="na_box_cad_container"></div>
+                </div>
+            </div>
+
             <!-- Form Actions -->
             <div class="row mt-2">
                 <div class="col-12 col-xl-12">
@@ -160,8 +270,29 @@
 {% endblock content %}
 
 {% block extra_js %}
+<script src="{% static 'bvm_box_cad_viewer.js' %}"></script>
 <script>
 	$(document).ready(function () {
+        // Initialize Interactive 3D & 2D CAD Box Viewer
+        if (window.BvmBoxCADViewer) {
+            BvmBoxCADViewer.init({
+                containerId: 'na_box_cad_container',
+                inputs: {
+                    length: '#nad_length',
+                    width: '#nad_width',
+                    height: '#nad_height',
+                    clr_l: '#nad_clr_length',
+                    clr_w: '#nad_clr_width',
+                    clr_top: '#nad_clr_top',
+                    thk_l: '#nad_thk_length',
+                    thk_w: '#nad_thk_width',
+                    thk_h: '#nad_thk_height',
+                    dim_type: '#nad_dimension_type',
+                    weight: '#nad_job_weight'
+                }
+            });
+        }
+
         $('#nad_updated_by').val('{{ user_id }}');
         $('#nad_assess_num').val('{{ na_assessment_num_id }}');
 
@@ -177,6 +308,71 @@
 
         plywood_thickness();
         requirement_type();
+
+        // Load Customer Box Master items for Quick Fill
+        $.get("{% url 'api_customer_box_items' %}", { customer_id: "{{ na_customer_id|default:'' }}" }, function(resp) {
+            window._cbmItems = {};
+            if (resp && resp.items) {
+                resp.items.forEach(function(it) {
+                    window._cbmItems[it.id] = it;
+                    const lbl = `${it.item_code || it.bvm_code} - ${it.item_name} (${it.length}x${it.width}x${it.height} ${it.uom || ''}, ${it.job_weight} kg)`;
+                    $('#cbm_quick_fill').append(`<option value="${it.id}">${lbl}</option>`);
+                });
+            }
+        });
+
+        $('#cbm_quick_fill').on('change', function() {
+            const it = window._cbmItems && window._cbmItems[$(this).val()];
+            if (!it) return;
+            $('#nad_master_item_id').val(it.id);
+            $('#nad_customer_part_code_val').val(`${it.item_code || it.bvm_code} - ${it.item_name}`.trim());
+            if (it.type_of_req_id) $('#nad_type_of_req').val(it.type_of_req_id).trigger('change');
+            if (it.dimension_type_id) $('#nad_dimension_type').val(it.dimension_type_id);
+            if (it.uom_id) $('#nad_uom').val(it.uom_id);
+            $('#nad_length').val(it.length);
+            $('#nad_width').val(it.width);
+            $('#nad_height').val(it.height);
+            $('#nad_clr_length').val(it.clr_length || 0);
+            $('#nad_clr_width').val(it.clr_width || 0);
+            $('#nad_clr_top').val(it.clr_top || 0);
+            $('#nad_thk_length').val(it.thk_length || 7);
+            $('#nad_thk_width').val(it.thk_width || 7);
+            $('#nad_thk_height').val(it.thk_height || 20);
+            $('#nad_plywood_thickness').val(it.plywood_thickness || it.clearance || 0);
+            $('#nad_job_weight').val(it.job_weight || 0);
+            if (it.consumables_id) $('#nad_consumables').val(it.consumables_id);
+            if (it.vechicle_type_id) $('#nad_vechicle_type').val(it.vechicle_type_id);
+            if (it.wood_type_ids && it.wood_type_ids.length) {
+                $('#nad_wood_type').val(it.wood_type_ids.map(String));
+                plywood_thickness();
+            }
+            updateNADimTypeVisibility();
+        });
+
+        // Directional Dimension Type visibility
+        function updateNADimTypeVisibility() {
+            var opt = $('#nad_dimension_type option:selected');
+            var txt = (opt.text() || '').trim();
+            if (txt === 'Cargo OD') {
+                $('#na_clearance_section').show();
+                $('#na_thickness_section').show();
+                $('#na_box_od_hint').hide();
+            } else if (txt === 'Box ID') {
+                $('#na_clearance_section').hide();
+                $('#na_thickness_section').show();
+                $('#na_box_od_hint').hide();
+            } else if (txt === 'Box OD') {
+                $('#na_clearance_section').hide();
+                $('#na_thickness_section').hide();
+                $('#na_box_od_hint').show();
+            } else {
+                $('#na_clearance_section').hide();
+                $('#na_thickness_section').hide();
+                $('#na_box_od_hint').hide();
+            }
+        }
+        $('#nad_dimension_type').on('change', updateNADimTypeVisibility);
+        updateNADimTypeVisibility();
     });
 </script>
 
