@@ -9082,7 +9082,7 @@ def transport_mis(request):
             continue
 
         if dt.month in display_months_indices:
-            expense_dict[vehicle_maintenance_cat][month := dt.month] += float(pc.tpc_amount or 0)
+            expense_dict[vehicle_maintenance_cat][dt.month] += float(pc.tpc_amount or 0)
 
     # Income calculation matching Customerwise P&L Report
     if selected_vehicle_source in ['M-Dept', 'B-Dept']:
