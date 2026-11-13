@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from ..sub_forms.customer_registration_form import CustomerRegistrationForm
 from .send_department_email import send_department_email
+from .user_add_view import check_is_admin
 from ..sub_models.customer_registration_mod import CustomerRegistrationInfo
 from ..sub_models.user_ext_mod import User_extInfo
 from ..models import Business_Sol_info, Department_info, CustomertypeInfo, CustomerInfo, RoleInfo, GstexcemptionInfo, GstmodelInfo, PaymenttypeInfo, CrcountfromInfo, TrbusinesstypeInfo
@@ -40,11 +41,15 @@ def ajax_check_customer_code(request):
     return JsonResponse({'found': False})
 
 
+@login_required(login_url='login_page')
 def customer_register(request, business_id):
     """
-    Public view for customer registration.
-    Handles form submission and creation of pending registration records.
+    Customer registration view - restricted exclusively to Administrators.
+    Public customer self-registration is disabled.
     """
+    if not check_is_admin(request):
+        messages.error(request, "Access restricted to administrators. Public customer self-registration is disabled.")
+        return redirect('home_page')
     if request.method == 'POST':
         form = CustomerRegistrationForm(request.POST)
         if form.is_valid():
@@ -75,6 +80,9 @@ def customer_registration_list(request):
     Management view to list pending customer registrations.
     Allows admins to approve or reject registrations.
     """
+    if not check_is_admin(request):
+        messages.error(request, "Access restricted to administrators.")
+        return redirect('home_page')
     # Filter for pending registrations
     pending_registrations = CustomerRegistrationInfo.objects.filter(approval_status='pending').order_by('-created_at')
     
@@ -87,12 +95,16 @@ def customer_registration_list(request):
     })
 
 
-@login_required
+@login_required(login_url='login_page')
 def customer_registration_approve(request, registration_id):
     """
     Approve a pending registration.
     Creates a User account and User_extInfo record.
     """
+    if not check_is_admin(request):
+        messages.error(request, "Access restricted to administrators.")
+        return redirect('home_page')
+
     registration = get_object_or_404(CustomerRegistrationInfo, id=registration_id)
     
     if registration.approval_status != 'pending':
@@ -220,11 +232,14 @@ def customer_registration_approve(request, registration_id):
     return redirect('customer_registration_list')
 
 
-@login_required
+@login_required(login_url='login_page')
 def customer_registration_reject(request, registration_id):
     """
     Reject a pending registration.
     """
+    if not check_is_admin(request):
+        messages.error(request, "Access restricted to administrators.")
+        return redirect('home_page')
     if request.method == 'POST':
         registration = get_object_or_404(CustomerRegistrationInfo, id=registration_id)
         

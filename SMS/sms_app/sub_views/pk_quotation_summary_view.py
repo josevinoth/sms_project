@@ -20,9 +20,10 @@ from ..sub_models.stock_maintenance_mod import StockMaintenance
 def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
     global financial_year, last_id
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
 
     if request.method == "GET":
         if pk_quotationsummary_id == 0:
@@ -73,8 +74,8 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             }
         else:
             quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
-            needassessment_num = quotationsummary.qs_assessment_num
-            needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
+            needassessment_id = quotationsummary.qs_assessment_num_id
+            needassessment_num = quotationsummary.qs_assessment_num.na_assessment_num if quotationsummary.qs_assessment_num else None
             customer_name_id = quotationsummary.qs_customer_name_2.id if quotationsummary.qs_customer_name_2 else None
             customer_new_name_id = quotationsummary.pkqt_customer_new_name if quotationsummary.pkqt_customer_new_name else ""
 
@@ -517,9 +518,10 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
 @login_required(login_url='login_page')
 def pk_quotationsummary_clone(request, pk_quotationsummary_id):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = User_extInfo.objects.get(user=user_id).emp_role.id
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
     quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
 
     if request.method == "GET":

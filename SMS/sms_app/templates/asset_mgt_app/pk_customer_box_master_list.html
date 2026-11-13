@@ -1,0 +1,295 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Customer Box Item Master</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'customer_box_master_form_add' %}" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> Add Box Item
+            </a>
+            <a href="{% url 'bom_rule_master_list' %}" class="btn-modern py-2 px-3" style="font-size: 0.9rem; background: rgba(255,255,255,0.18); color: white; text-decoration: none;">
+                <i class="fas fa-cogs"></i> Master BOM Rules
+            </a>
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2" role="alert">
+                {{ message }}
+                <button type="button" class="close py-2" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Filter Bar -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="form-inline d-flex flex-wrap gap-2 align-items-center">
+                <label class="small font-weight-bold mr-2">Customer:</label>
+                <select name="customer_id" class="form-control form-control-sm mr-2" style="min-width: 240px;">
+                    <option value="">All Customers</option>
+                    <option value="global" {% if selected_customer_id == 'global' %}selected{% endif %}>Global Standard Templates</option>
+                    {% for c in customers %}
+                        <option value="{{ c.id }}" {% if selected_customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.cu_name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm mr-2" placeholder="Search Part Code, Name, BVM Code..." style="min-width: 240px;">
+                <button type="submit" class="btn btn-sm btn-dark mr-2"><i class="fas fa-search mr-1"></i> Filter</button>
+                <a href="{% url 'customer_box_master_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Master Table -->
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table class="table modern-table text-nowrap">
+                <thead>
+                    <tr>
+                        <th>BVM Code</th>
+                        <th>Customer</th>
+                        <th>Part Code / SKU</th>
+                        <th>Box / Machine Name</th>
+                        <th>Req. Type</th>
+                        <th>Dim. Type</th>
+                        <th>L × W × H (UOM)</th>
+                        <th>Clearance / Thickness</th>
+                        <th>Weight (kg)</th>
+                        <th>Status</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><span class="badge badge-light border font-weight-bold">{{ item.cbm_bvm_code }}</span></td>
+                        <td class="font-weight-bold">{{ item.cbm_customer.cu_name|default:"Global Standard" }}</td>
+                        <td class="text-primary font-weight-bold">{{ item.cbm_item_code|default:"-" }}</td>
+                        <td>{{ item.cbm_item_name }}</td>
+                        <td>{{ item.cbm_type_of_req|default:"-" }}</td>
+                        <td><span class="badge badge-info">{{ item.cbm_dimension_type|default:"-" }}</span></td>
+                        <td class="font-weight-bold">{{ item.cbm_length }} × {{ item.cbm_width }} × {{ item.cbm_height }} <small class="text-muted">{{ item.cbm_uom|default:"" }}</small></td>
+                        <td>
+                            {% if item.cbm_dimension_type.dimension_type == 'Box OD' %}
+                                <span class="badge badge-light text-muted">Outer Dim (0)</span>
+                            {% elif item.cbm_dimension_type.dimension_type == 'Box ID' %}
+                                <span class="badge badge-warning text-dark" title="Thickness">Thk: {{ item.cbm_thk_length|default:7 }}/{{ item.cbm_thk_width|default:7 }}/{{ item.cbm_thk_height|default:20 }}</span>
+                            {% else %}
+                                <span class="badge badge-info" title="Clearance">Clr: {{ item.cbm_clr_length|default:0 }}/{{ item.cbm_clr_width|default:0 }}/{{ item.cbm_clr_top|default:0 }}</span><br>
+                                <span class="badge badge-warning text-dark" title="Thickness">Thk: {{ item.cbm_thk_length|default:7 }}/{{ item.cbm_thk_width|default:7 }}/{{ item.cbm_thk_height|default:20 }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="font-weight-bold">{{ item.cbm_job_weight }} kg</td>
+                        <td>
+                            {% if item.cbm_is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right text-nowrap">
+                            <a href="{% url 'customer_box_master_form_edit' item.id %}" class="btn-action btn-action-edit btn-modern btn-highlight p-2" title="Edit in Form">
+                                <i class="far fa-edit"></i>
+                            </a>
+                            <a href="{% url 'customer_box_master_delete' item.id %}" class="btn-action btn-action-delete btn-modern btn-cancel p-2" style="background: #ef4444; color: white !important;" title="Delete" onclick="return confirm('Delete this master box item?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            No Customer Box Master items found. Click <strong>Add Customer Box Item</strong> to create one.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="masterBoxModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" id="masterBoxForm" action="{% url 'customer_box_master_save' %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white py-2">
+                    <h6 class="modal-title font-weight-bold mb-0" id="masterModalTitle">Add Customer Box Item</h6>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Customer (Leave blank for Global)</label>
+                            <select name="cbm_customer" id="m_customer" class="form-control form-control-sm">
+                                <option value="">-- Global Standard --</option>
+                                {% for c in customers %}
+                                    <option value="{{ c.id }}">{{ c.cu_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Customer Part Code / SKU *</label>
+                            <input type="text" name="cbm_item_code" id="m_item_code" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Box / Machine Name *</label>
+                            <input type="text" name="cbm_item_name" id="m_item_name" class="form-control form-control-sm" required>
+                        </div>
+
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Requirement Type</label>
+                            <select name="cbm_type_of_req" id="m_type_of_req" class="form-control form-control-sm">
+                                <option value="">-- Select --</option>
+                                {% for r in req_types %}
+                                    <option value="{{ r.id }}">{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Dimension Type</label>
+                            <select name="cbm_dimension_type" id="m_dim_type" class="form-control form-control-sm">
+                                {% for d in dim_types %}
+                                    <option value="{{ d.id }}">{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">UOM</label>
+                            <select name="cbm_uom" id="m_uom" class="form-control form-control-sm">
+                                <option value="">-- Select --</option>
+                                {% for u in uoms %}
+                                    <option value="{{ u.id }}">{{ u }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Length</label>
+                            <input type="number" step="0.01" name="cbm_length" id="m_length" class="form-control form-control-sm" value="0" required>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Width</label>
+                            <input type="number" step="0.01" name="cbm_width" id="m_width" class="form-control form-control-sm" value="0" required>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Height</label>
+                            <input type="number" step="0.01" name="cbm_height" id="m_height" class="form-control form-control-sm" value="0" required>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Clearance</label>
+                            <input type="number" step="0.01" name="cbm_clearance" id="m_clearance" class="form-control form-control-sm" value="0">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Ply Clr/Thk</label>
+                            <input type="number" step="0.01" name="cbm_plywood_thickness" id="m_ply" class="form-control form-control-sm" value="0">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="small font-weight-bold">Weight (KG)</label>
+                            <input type="number" step="0.01" name="cbm_job_weight" id="m_weight" class="form-control form-control-sm" value="0">
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <label class="small font-weight-bold">Wood Type</label>
+                            <select name="cbm_wood_type" id="m_wood_type" class="form-control form-control-sm" multiple size="3">
+                                {% for wt in wood_types %}
+                                    <option value="{{ wt.id }}">{{ wt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="small font-weight-bold">Wood Description</label>
+                            <select name="cbm_wood_description" id="m_wood_desc" class="form-control form-control-sm" multiple size="3">
+                                {% for wd in wood_descs %}
+                                    <option value="{{ wd.id }}">{{ wd }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Consumables</label>
+                            <select name="cbm_consumables" id="m_consumables" class="form-control form-control-sm">
+                                <option value="">-- Select --</option>
+                                {% for con in consumables %}
+                                    <option value="{{ con.id }}">{{ con }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="small font-weight-bold">Vehicle Type</label>
+                            <select name="cbm_vechicle_type" id="m_vehicle" class="form-control form-control-sm">
+                                <option value="">-- Select --</option>
+                                {% for v in vehicles %}
+                                    <option value="{{ v.id }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2 d-flex align-items-end">
+                            <div class="custom-control custom-checkbox mb-1">
+                                <input type="checkbox" class="custom-control-input" id="m_active" name="cbm_is_active" checked>
+                                <label class="custom-control-label small font-weight-bold" for="m_active">Active Item</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-1">
+                            <label class="small font-weight-bold">Packing Notes / Reference Drawing Info</label>
+                            <textarea name="cbm_notes" id="m_notes" rows="2" class="form-control form-control-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary font-weight-bold">Save Box Master</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openMasterModal() {
+    $('#masterBoxForm').attr('action', "{% url 'customer_box_master_save' %}");
+    $('#masterModalTitle').text('Add Customer Box Item');
+    $('#masterBoxForm')[0].reset();
+    $('#m_active').prop('checked', true);
+    $('#masterBoxModal').modal('show');
+}
+
+function editMasterItem(data) {
+    $('#masterBoxForm').attr('action', "/SMS/customer_box_master_save/" + data.id + "/");
+    $('#masterModalTitle').text('Edit Customer Box Item');
+    $('#m_customer').val(data.customer);
+    $('#m_item_code').val(data.item_code);
+    $('#m_item_name').val(data.item_name);
+    $('#m_type_of_req').val(data.type_of_req);
+    $('#m_dim_type').val(data.dim_type);
+    $('#m_uom').val(data.uom);
+    $('#m_length').val(data.length);
+    $('#m_width').val(data.width);
+    $('#m_height').val(data.height);
+    $('#m_clearance').val(data.clearance);
+    $('#m_ply').val(data.ply);
+    $('#m_weight').val(data.weight);
+    $('#m_consumables').val(data.consumables);
+    $('#m_vehicle').val(data.vehicle);
+    $('#m_notes').val(data.notes);
+    $('#m_active').prop('checked', data.active);
+    $('#m_wood_type option').each(function() {
+        $(this).prop('selected', data.wood_types.includes(parseInt($(this).val())));
+    });
+    $('#m_wood_desc option').each(function() {
+        $(this).prop('selected', data.wood_descs.includes(parseInt($(this).val())));
+    });
+    $('#masterBoxModal').modal('show');
+}
+</script>
+{% endblock %}

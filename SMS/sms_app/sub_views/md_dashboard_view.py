@@ -1,7 +1,7 @@
 import json
 import re
 from datetime import datetime, timedelta, time
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.db.models import Count, Sum, Q, F, FloatField, Func, Case, When
 from django.db.models.functions import Coalesce
@@ -28,11 +28,33 @@ class Abs(Func):
     function = 'ABS'
 
 
+def is_admin_or_md(request):
+    """Checks whether the user has Admin / Super User access for MD Executive Pulse."""
+    ses_role = str(request.session.get('ses_role') or '').lower().strip()
+    if any(r in ses_role for r in ['admin', 'super user', 'superuser']):
+        return True
+    if getattr(request.user, 'is_superuser', False) or getattr(request.user, 'is_staff', False):
+        return True
+    try:
+        user_id = request.session.get('ses_userID') or getattr(request.user, 'id', None)
+        if user_id:
+            user_ext = User_extInfo.objects.select_related('emp_role').get(user=user_id)
+            role_name = (user_ext.emp_role.role_name if user_ext.emp_role else '').lower().strip()
+            if any(r in role_name for r in ['admin', 'super user', 'superuser']):
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def md_dashboard(request):
     """
     Renders the MD Executive Dashboard view.
     Designed for Kiosk / Office TV Wall auto-sliding (Slide 1: Overview, Slide 2: TMS, Slide 3: WMS).
     """
+    if not is_admin_or_md(request):
+        return redirect('home_page')
+
     first_name = request.session.get('first_name', 'MD')
     branches = Location_info.objects.all().order_by('loc_name')
     units = UnitInfo.objects.all().order_by('unit_name')
@@ -67,6 +89,9 @@ def get_md_dashboard_data(request):
     - Slide 3: Warehouse Movement Deep-Dive (WMS)
     Supports date parameter, last_month period parameter, yesterday comparison, and branch filtering.
     """
+    if not is_admin_or_md(request):
+        return JsonResponse({'status': 'error', 'message': 'Access restricted to Admin only.'}, status=403)
+
     selected_date_str = request.GET.get('date')
     branch_id = request.GET.get('branch_id')
     period = request.GET.get('period', 'day')

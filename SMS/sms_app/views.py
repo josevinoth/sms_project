@@ -227,3 +227,9 @@ from .sub_views.sales_metrics_dashboard_view import (
 )
 
 from .sub_views.dmr_template_studio_view import dmr_template_list, dmr_template_create_or_edit, dmr_template_save_ajax,dmr_template_delete, dmr_template_duplicate, dmr_template_preview_ajax
+from .sub_views.pk_customer_box_master_view import (
+    customer_box_master_list, customer_box_master_save, customer_box_master_delete,
+    customer_box_master_form_view, api_customer_box_items, api_na_tag_box_items,
+    bom_rule_master_list, bom_rule_master_save, bom_rule_master_delete,
+    bom_rule_master_import_csv, bom_rule_form_view, api_auto_generate_bom
+)

@@ -3,6 +3,7 @@ from django.db import models
 from .na_consumables_mod import Naconsumables
 from .pk_wood_description import Pkwooddescription
 from .vehicletype_mod import VehicletypeInfo
+from .pk_customer_box_master_mod import CustomerBoxItemMaster
 from ..models import Unitofmeasure,Natypeofreq,Pkstocktype,PkneedassessmentInfo,MyUser,Nadimensiontype
 
 class Nadimension(models.Model):
@@ -27,8 +28,18 @@ class Nadimension(models.Model):
     nad_item=models.CharField(max_length=100,null=True,blank=True)
     nad_dimension_type = models.ForeignKey(Nadimensiontype,on_delete=models.CASCADE,default='4')
     nad_clearance = models.FloatField(max_length=100,null=True,blank=True, default=2)
+    # Directional Clearance (cm): Length, Width, Top
+    nad_clr_length = models.FloatField(default=0.0)
+    nad_clr_width = models.FloatField(default=0.0)
+    nad_clr_top = models.FloatField(default=0.0)
+    # Directional Thickness (cm): Length walls, Width walls, Height (Base + Top)
+    nad_thk_length = models.FloatField(default=7.0)
+    nad_thk_width = models.FloatField(default=7.0)
+    nad_thk_height = models.FloatField(default=20.0)
     nad_consumables = models.ForeignKey(Naconsumables, on_delete=models.CASCADE, blank=True, null=True,default=None)
     nad_vechicle_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, blank=True, null=True,default=None)
+    nad_master_item = models.ForeignKey(CustomerBoxItemMaster, on_delete=models.SET_NULL, blank=True, null=True, default=None)
+    nad_customer_part_code = models.CharField(max_length=120, blank=True, null=True, default='')
 
     class Meta:
         ordering = ["nad_assess_num"]

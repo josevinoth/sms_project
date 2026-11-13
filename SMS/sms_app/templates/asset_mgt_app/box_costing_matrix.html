@@ -268,6 +268,15 @@
             <button type="button" class="btn btn-sm btn-outline-primary" id="btn_reload_template">
                 <i class="fas fa-sync-alt mr-1"></i> Reset to Box Defaults
             </button>
+            <button type="button" class="btn btn-sm text-white font-weight-bold shadow-sm" id="btn_auto_bom" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 1px solid #3b82f6; border-radius: 6px;" title="Auto-generate structural BOM, Nails & Consumables using Size (m) x Weight (kg) Engineering Rules">
+                <i class="fas fa-magic mr-1"></i> Auto-BOM (Size + Weight)
+            </button>
+            <button type="button" class="btn btn-sm text-white font-weight-bold shadow-sm" id="btn_open_box_cad" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border: 1px solid #818cf8; border-radius: 6px;" title="View Live 3D Isometric & 2D Engineering Box Diagram">
+                <i class="fas fa-cube mr-1"></i> 3D CAD Diagram
+            </button>
+            <a href="{% url 'bom_rule_master_list' %}" target="_blank" class="btn btn-sm btn-outline-info font-weight-bold" title="Configure Size x Weight (KG) BOM Rules">
+                <i class="fas fa-sliders-h mr-1"></i> BOM Rules
+            </a>
             <button type="button" class="btn btn-sm text-white font-weight-bold shadow-sm btn-trigger-cut-optimizer" style="background: linear-gradient(135deg, #0d9488, #0f766e); border: 1px solid #14b8a6; border-radius: 6px;">
                 <i class="fas fa-cut mr-1"></i> Cut Sheet Optimizer
             </button>
@@ -300,7 +309,7 @@
                     <select id="matrix_requirement_select" class="form-control form-control-sm font-weight-bold flex-grow-1">
                         <option value="" {% if not selected_requirement_id %}selected{% endif %}>-- Select Box / Job Item to Cost --</option>
                         {% for req in requirements_list %}
-                        <option value="{{ req.id }}" data-l="{{ req.nad_length }}" data-w="{{ req.nad_width }}" data-h="{{ req.nad_height }}" data-uom="{{ req.nad_uom }}" data-qty="{{ req.nad_quantity }}" data-clearance="{{ req.nad_clearance }}" data-ply-thick="{{ req.nad_plywood_thickness }}" data-dim-type="{{ req.nad_dimension_type }}" data-quoted="{{ req.is_quoted|yesno:'true,false' }}" {% if selected_requirement_id and selected_requirement_id == req.id %}selected{% endif %}>
+                        <option value="{{ req.id }}" data-l="{{ req.nad_length }}" data-w="{{ req.nad_width }}" data-h="{{ req.nad_height }}" data-uom="{{ req.nad_uom }}" data-qty="{{ req.nad_quantity }}" data-clearance="{{ req.nad_clearance }}" data-ply-thick="{{ req.nad_plywood_thickness }}" data-clr-l="{{ req.nad_clr_length|default:0 }}" data-clr-w="{{ req.nad_clr_width|default:0 }}" data-clr-top="{{ req.nad_clr_top|default:0 }}" data-thk-l="{{ req.nad_thk_length|default:7 }}" data-thk-w="{{ req.nad_thk_width|default:7 }}" data-thk-h="{{ req.nad_thk_height|default:20 }}" data-dim-type="{{ req.nad_dimension_type }}" data-weight="{{ req.nad_job_weight|default:0 }}" data-req-type-id="{{ req.nad_type_of_req_id|default:'' }}" data-quoted="{{ req.is_quoted|yesno:'true,false' }}" {% if selected_requirement_id and selected_requirement_id == req.id %}selected{% endif %}>
                             {{ req.nad_item }} - {{ req.nad_type_of_req }} ({{ req.nad_length|floatformat:0 }}x{{ req.nad_width|floatformat:0 }}x{{ req.nad_height|floatformat:0 }} cm) {% if req.is_quoted %}✓ [Quoted]{% else %}(Not Quoted){% endif %}
                         </option>
                         {% empty %}
@@ -315,13 +324,19 @@
             <!-- Col 2: Job Size (cm) & Ply Clearance (cm) -->
             <div class="col-6 col-lg-3 mb-2 mb-lg-0">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <div class="spec-label mb-0">1. Job Size (cm) & Ply Clr</div>
+                    <div class="spec-label mb-0">1. Job Size (cm) & Clr</div>
+                    <select id="matrix_dim_type" class="badge border-0 font-weight-bold px-2 py-0" style="font-size: 0.68rem; background: #e0f2fe; color: #0369a1; height: 18px; cursor: pointer;" title="Dimension Type from Need Assessment">
+                        <option value="Cargo OD">Cargo OD</option>
+                        <option value="Box ID">Box ID</option>
+                        <option value="Box OD">Box OD</option>
+                        <option value="Not Applicable">Not Applicable</option>
+                    </select>
                 </div>
                 <div class="d-flex gap-1">
                     <input type="number" id="job_size_l" class="matrix-input text-center font-weight-bold" placeholder="Job L" title="Job Length (cm)">
                     <input type="number" id="job_size_w" class="matrix-input text-center font-weight-bold" placeholder="Job W" title="Job Width (cm)">
                     <input type="number" id="job_size_h" class="matrix-input text-center font-weight-bold" placeholder="Job H" title="Job Height (cm)">
-                    <input type="number" id="box_clearance" class="matrix-input text-center font-weight-bold" style="max-width: 55px; background: #fef3c7; border: 1.5px solid #f59e0b;" placeholder="Clr" value="5" title="Plywood Clearance per side (cm) - Added 2x to L, W, H">
+                    <input type="number" id="box_clearance" class="matrix-input text-center font-weight-bold" style="max-width: 55px; background: #fef3c7; border: 1.5px solid #f59e0b;" placeholder="Clr" value="0" min="0" step="any" title="Plywood Clearance per side (cm) - Supports 0">
                 </div>
             </div>
 
@@ -331,9 +346,9 @@
                     <div class="spec-label mb-0">2. Box ID (Inner cm)</div>
                 </div>
                 <div class="d-flex gap-1">
-                    <input type="number" id="box_id_l" class="matrix-input text-center font-weight-bold" placeholder="ID L" title="Inner Length (Job Size + 2x Clearance)">
-                    <input type="number" id="box_id_w" class="matrix-input text-center font-weight-bold" placeholder="ID W" title="Inner Width (Job Size + 2x Clearance)">
-                    <input type="number" id="box_id_h" class="matrix-input text-center font-weight-bold" placeholder="ID H" title="Inner Height (Job Size + 2x Clearance)">
+                    <input type="number" id="box_id_l" class="matrix-input text-center font-weight-bold" placeholder="ID L" title="Inner Length (cm)">
+                    <input type="number" id="box_id_w" class="matrix-input text-center font-weight-bold" placeholder="ID W" title="Inner Width (cm)">
+                    <input type="number" id="box_id_h" class="matrix-input text-center font-weight-bold" placeholder="ID H" title="Inner Height (cm)">
                 </div>
             </div>
 
@@ -341,12 +356,17 @@
             <div class="col-12 col-lg-4">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <div class="spec-label mb-0">3. Box OD & Dimensions (Live)</div>
-                    <small class="text-muted" style="font-size: 0.68rem;">+7cm Walls / +20cm Base</small>
+                    <small id="od_offset_hint" class="text-muted" style="font-size: 0.68rem;">+7cm Walls / +20cm Base</small>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <span class="spec-badge" id="badge_od_cm">OD: 0.0 × 0.0 × 0.0 cm</span>
                     <span class="spec-badge" style="background: #fef3c7; color: #b45309;" id="badge_od_in">0.0 × 0.0 × 0.0 in</span>
                     <span class="spec-badge" style="background: #dcfce7; color: #15803d;" id="badge_od_ft">0.00 × 0.00 × 0.00 ft</span>
+                    <div class="d-inline-flex align-items-center bg-light border rounded px-2 py-0" title="Job Weight in KG (from Need Assessment)">
+                        <span class="small font-weight-bold text-muted mr-1">Wt (kg):</span>
+                        <input type="number" id="box_weight_kg" class="border-0 bg-transparent font-weight-bold text-dark text-center" style="width: 68px; font-size: 0.8rem;" value="0" min="0" step="any">
+                    </div>
+                    <div id="matched_bom_rule_banner" class="w-100 mt-1 small font-weight-bold text-primary" style="display: none; font-size: 0.72rem;"></div>
                 </div>
             </div>
         </div>
@@ -605,6 +625,8 @@
     </div>
 </div>
 
+
+
 <!-- Modal: Select Box Items for Assessment -->
 <div class="modal fade" id="modal_add_new_box" tabindex="-1" role="dialog" aria-labelledby="modalAddNewBoxLabel" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -752,6 +774,8 @@
     </div>
 </div>
 
+
+
 <!-- Part Code & GRN Search Modal -->
 <div class="modal fade" id="matrixPartCodeModal" tabindex="-1" role="dialog" aria-labelledby="matrixPartCodeModalLabel" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -837,6 +861,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- Modal: Cut Sheet & Nesting Optimizer -->
 <div class="modal fade" id="modal_cut_sheet_optimizer" tabindex="-1" role="dialog" aria-labelledby="modalCutSheetOptimizerLabel" aria-hidden="true" style="z-index: 1060;">
@@ -1103,7 +1129,27 @@
     </div>
 </div>
 
+<!-- 3D/2D CAD Engineering Diagram Modal -->
+<div class="modal fade" id="modal_box_cad" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="background: #0f172a; border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 px-3 border-0" style="background: #1e293b;">
+                <h6 class="modal-title text-white font-weight-bold">
+                    <i class="fas fa-cube text-info mr-2"></i> Box Engineering CAD &amp; 3D Assembly Diagram
+                </h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2" style="background: #0f172a;">
+                <div id="matrix_box_cad_container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Excel Matrix Logic Script -->
+<script src="{% static 'bvm_box_cad_viewer.js' %}"></script>
 <script>
 (function($) {
     // Shared scope across entire Matrix & Modal Picker
@@ -1358,21 +1404,10 @@
         const codeUpper = (code || '').toUpperCase().trim();
         const nameUpper = (name || '').toUpperCase().trim();
 
-        let id_l = parseFloat($('#box_id_l').val()) || 0;
-        let id_w = parseFloat($('#box_id_w').val()) || 0;
-        let id_h = parseFloat($('#box_id_h').val()) || 0;
-        const job_l = parseFloat($('#job_size_l').val()) || 0;
-        const job_w = parseFloat($('#job_size_w').val()) || 0;
-        const job_h = parseFloat($('#job_size_h').val()) || 0;
-        const plyClr = parseFloat($('#box_clearance').val()) || 5.0;
-
-        if (id_l <= 0 && job_l > 0) id_l = job_l + (2 * plyClr);
-        if (id_w <= 0 && job_w > 0) id_w = job_w + (2 * plyClr);
-        if (id_h <= 0 && job_h > 0) id_h = job_h + (2 * plyClr);
-
-        const od_l_cm = id_l > 0 ? (id_l + 7.0) : 0;
-        const od_w_cm = id_w > 0 ? (id_w + 7.0) : 0;
-        const od_h_cm = id_h > 0 ? (id_h + 20.0) : 0;
+        const liveOD = window.liveBoxOD || syncDimensions();
+        const od_l_cm = liveOD.od_l || 0;
+        const od_w_cm = liveOD.od_w || 0;
+        const od_h_cm = liveOD.od_h || 0;
 
         // Feet using 30.5 cm per ft (matches customer Excel sheet formula: 197/30.5, 82/30.5, 69/30.5)
         const l_ft = od_l_cm > 0 ? (od_l_cm / 30.5) : 0;
@@ -1648,31 +1683,124 @@
         $('#per_box_cost_display').html('Total Order Price (' + jobQty + ' Boxes): <strong>₹' + Math.round(totalOrderPrice).toLocaleString('en-IN') + '</strong>');
     }
 
-    // Synchronize Job Size -> Box ID -> OD with Clearance
-    function syncDimensions() {
-        const job_l = parseFloat($('#job_size_l').val()) || 0;
-        const job_w = parseFloat($('#job_size_w').val()) || 0;
-        const job_h = parseFloat($('#job_size_h').val()) || 0;
-        const plyClr = parseFloat($('#box_clearance').val()) || 5.0;
+    function parseNumZeroSafe(raw, fallback = 0) {
+        if (raw === null || raw === undefined) return fallback;
+        const str = String(raw).trim();
+        if (str === '' || str.toLowerCase() === 'none' || str.toLowerCase() === 'null') return fallback;
+        const val = parseFloat(str);
+        return isNaN(val) ? fallback : val;
+    }
 
-        let id_l = parseFloat($('#box_id_l').val()) || 0;
-        let id_w = parseFloat($('#box_id_w').val()) || 0;
-        let id_h = parseFloat($('#box_id_h').val()) || 0;
+    function applySourceDimsByType(l, w, h, plyClr, dimType) {
+        const clr = window.dirClr || { l: plyClr, w: plyClr, top: plyClr };
+        const thk = window.dirThk || { l: 7.0, w: 7.0, h: 20.0 };
 
-        // If user hasn't manually edited Box ID, compute Box ID = Job Size + 2 * Ply Clearance
-        if (!$('#box_id_l').data('user-edited') && job_l > 0) {
-            id_l = job_l + (2 * plyClr);
-            id_w = job_w + (2 * plyClr);
-            id_h = job_h + (2 * plyClr);
-            $('#box_id_l').val(id_l);
-            $('#box_id_w').val(id_w);
-            $('#box_id_h').val(id_h);
+        if (dimType === 'Box OD') {
+            // Box OD: Direct outer dimension, no clearance and no thickness offset needed
+            window.sourceBoxOD = { l: l, w: w, h: h, active: true };
+            $('#job_size_l').val(l);
+            $('#job_size_w').val(w);
+            $('#job_size_h').val(h);
+            $('#box_id_l').val(l);
+            $('#box_id_w').val(w);
+            $('#box_id_h').val(h);
+        } else if (dimType === 'Box ID') {
+            // Box ID: Job Size is Box ID (Clearance not applicable). Box OD = Box ID + Thickness
+            window.sourceBoxOD = { l: 0, w: 0, h: 0, active: false };
+            $('#job_size_l').val(l);
+            $('#job_size_w').val(w);
+            $('#job_size_h').val(h);
+            $('#box_id_l').val(l);
+            $('#box_id_w').val(w);
+            $('#box_id_h').val(h);
+        } else if (dimType === 'Not Applicable') {
+            window.sourceBoxOD = { l: 0, w: 0, h: 0, active: false };
+            $('#job_size_l').val(l);
+            $('#job_size_w').val(w);
+            $('#job_size_h').val(h);
+            $('#box_id_l').val(l);
+            $('#box_id_w').val(w);
+            $('#box_id_h').val(h);
+        } else {
+            // Cargo OD: Job Size = Cargo. Box ID = Cargo + Clearance (2*L, 2*W, 1*Top). Box OD = Box ID + Thickness
+            window.sourceBoxOD = { l: 0, w: 0, h: 0, active: false };
+            $('#job_size_l').val(l);
+            $('#job_size_w').val(w);
+            $('#job_size_h').val(h);
+            $('#box_id_l').val(l > 0 ? +(l + 2 * clr.l).toFixed(2) : 0);
+            $('#box_id_w').val(w > 0 ? +(w + 2 * clr.w).toFixed(2) : 0);
+            $('#box_id_h').val(h > 0 ? +(h + clr.top).toFixed(2) : 0);
         }
+    }
 
-        // Standard clearance to OD: +7cm walls, +20cm base height (or standard +7cm)
-        const od_l = id_l > 0 ? (id_l + 7.0) : 0;
-        const od_w = id_w > 0 ? (id_w + 7.0) : 0;
-        const od_h = id_h > 0 ? (id_h + 20.0) : 0;
+    // Synchronize Job Size <-> Box ID <-> Box OD respecting Dimension Type, Directional Clearance & Thickness
+    function syncDimensions() {
+        const dimType = ($('#matrix_dim_type').val() || 'Cargo OD').trim();
+        const plyClr = parseNumZeroSafe($('#box_clearance').val(), 0);
+        const clr = window.dirClr || { l: plyClr, w: plyClr, top: plyClr };
+        const thk = window.dirThk || { l: 7.0, w: 7.0, h: 20.0 };
+
+        let job_l = parseNumZeroSafe($('#job_size_l').val(), 0);
+        let job_w = parseNumZeroSafe($('#job_size_w').val(), 0);
+        let job_h = parseNumZeroSafe($('#job_size_h').val(), 0);
+
+        let id_l = parseNumZeroSafe($('#box_id_l').val(), 0);
+        let id_w = parseNumZeroSafe($('#box_id_w').val(), 0);
+        let id_h = parseNumZeroSafe($('#box_id_h').val(), 0);
+
+        let od_l = 0, od_w = 0, od_h = 0;
+
+        if (dimType === 'Box OD') {
+            // Box OD: Direct outer dimension, no clearance or thickness offset needed
+            if ($('#job_size_l').data('user-edited')) {
+                id_l = job_l; id_w = job_w; id_h = job_h;
+                $('#box_id_l').val(id_l); $('#box_id_w').val(id_w); $('#box_id_h').val(id_h);
+            } else if ($('#box_id_l').data('user-edited')) {
+                job_l = id_l; job_w = id_w; job_h = id_h;
+                $('#job_size_l').val(job_l); $('#job_size_w').val(job_w); $('#job_size_h').val(job_h);
+            }
+            od_l = job_l > 0 ? job_l : id_l;
+            od_w = job_w > 0 ? job_w : id_w;
+            od_h = job_h > 0 ? job_h : id_h;
+            $('#od_offset_hint').html('<span class="text-primary font-weight-bold">Exact Box OD (No clearance / thickness needed)</span>');
+        } else if (dimType === 'Box ID') {
+            // Box ID: Clearance not needed. Thickness applies: Box OD = Box ID + Thickness
+            if ($('#box_id_l').data('user-edited')) {
+                job_l = id_l; job_w = id_w; job_h = id_h;
+                $('#job_size_l').val(job_l); $('#job_size_w').val(job_w); $('#job_size_h').val(job_h);
+            } else {
+                id_l = job_l; id_w = job_w; id_h = job_h;
+                $('#box_id_l').val(id_l); $('#box_id_w').val(id_w); $('#box_id_h').val(id_h);
+            }
+            od_l = id_l > 0 ? +(id_l + thk.l).toFixed(2) : 0;
+            od_w = id_w > 0 ? +(id_w + thk.w).toFixed(2) : 0;
+            od_h = id_h > 0 ? +(id_h + thk.h).toFixed(2) : 0;
+            $('#od_offset_hint').html(`<span class="text-warning font-weight-bold">Box ID &rarr; OD: +${thk.l}L/+${thk.w}W/+${thk.h}H Thk (Clearance N/A)</span>`);
+        } else if (dimType === 'Not Applicable') {
+            if ($('#box_id_l').data('user-edited')) {
+                job_l = id_l; job_w = id_w; job_h = id_h;
+                $('#job_size_l').val(job_l); $('#job_size_w').val(job_w); $('#job_size_h').val(job_h);
+            } else {
+                id_l = job_l; id_w = job_w; id_h = job_h;
+                $('#box_id_l').val(id_l); $('#box_id_w').val(id_w); $('#box_id_h').val(id_h);
+            }
+            od_l = id_l; od_w = id_w; od_h = id_h;
+            $('#od_offset_hint').text('Direct Size (0 offset)');
+        } else {
+            // Cargo OD: Clearance (2*L, 2*W, Top) + Thickness (L, W, H)
+            if (!$('#box_id_l').data('user-edited') && job_l > 0) {
+                id_l = +(job_l + 2 * clr.l).toFixed(2);
+                id_w = +(job_w + 2 * clr.w).toFixed(2);
+                id_h = +(job_h + clr.top).toFixed(2);
+                $('#box_id_l').val(id_l);
+                $('#box_id_w').val(id_w);
+                $('#box_id_h').val(id_h);
+            }
+            od_l = id_l > 0 ? +(id_l + thk.l).toFixed(2) : 0;
+            od_w = id_w > 0 ? +(id_w + thk.w).toFixed(2) : 0;
+            od_h = id_h > 0 ? +(id_h + thk.h).toFixed(2) : 0;
+            $('#od_offset_hint').html(`<span class="text-info font-weight-bold">Clr: +${clr.l*2}L/+${clr.w*2}W/+${clr.top}Top</span> | <span class="text-warning font-weight-bold">Thk: +${thk.l}L/+${thk.w}W/+${thk.h}H</span>`);
+        }
 
         const in_l = (od_l / 2.54).toFixed(1);
         const in_w = (od_w / 2.54).toFixed(1);
@@ -1681,6 +1809,8 @@
         const ft_l = (od_l / 30.48).toFixed(2);
         const ft_w = (od_w / 30.48).toFixed(2);
         const ft_h = (od_h / 30.48).toFixed(2);
+
+        window.liveBoxOD = { od_l, od_w, od_h, id_l, id_w, id_h, job_l, job_w, job_h, ft_l, ft_w, ft_h };
 
         $('#badge_od_cm').text(`OD: ${od_l.toFixed(1)} × ${od_w.toFixed(1)} × ${od_h.toFixed(1)} cm`);
         if (typeof updateAllFormulaQuantities === 'function') updateAllFormulaQuantities();
@@ -1930,10 +2060,16 @@
         });
 
         function renderEmptyMatrixState() {
+            $('#job_size_l').val('');
+            $('#job_size_w').val('');
+            $('#job_size_h').val('');
             $('#box_id_l').val('');
             $('#box_id_w').val('');
             $('#box_id_h').val('');
-            $('#box_clearance').val('2');
+            $('#box_clearance').val('0');
+            $('#matrix_dim_type').val('Cargo OD');
+            window.sourceBoxOD = { l: 0, w: 0, h: 0, active: false };
+            window.naSourceDims = null;
             $('#od_cm_display').text('-- cm');
             $('#od_in_display').text('-- in');
             $('#od_ft_display').text('-- ft');
@@ -1968,18 +2104,53 @@
                 window.history.replaceState({ reqId: reqId }, '', newUrl);
             } catch(e) {}
             const opt = $(this).find('option:selected');
-            const l = parseFloat(opt.data('l')) || 0;
-            const w = parseFloat(opt.data('w')) || 0;
-            const h = parseFloat(opt.data('h')) || 0;
-            const clr = parseFloat(opt.data('clearance')) || 2.0;
+            let l = parseNumZeroSafe(opt.attr('data-l'), 0);
+            let w = parseNumZeroSafe(opt.attr('data-w'), 0);
+            let h = parseNumZeroSafe(opt.attr('data-h'), 0);
+            const uomStr = String(opt.attr('data-uom') || 'cm').trim().toLowerCase();
+            if (uomStr === 'in' || uomStr === 'inch' || uomStr === 'inches') {
+                l = +(l * 2.54).toFixed(2);
+                w = +(w * 2.54).toFixed(2);
+                h = +(h * 2.54).toFixed(2);
+            } else if (uomStr === 'mm') {
+                l = +(l / 10.0).toFixed(2);
+                w = +(w / 10.0).toFixed(2);
+                h = +(h / 10.0).toFixed(2);
+            }
 
-            $('#job_size_l').val(l);
-            $('#job_size_w').val(w);
-            $('#job_size_h').val(h);
-            const plyClr = parseFloat(opt.data('ply-thick')) || 5.0;
-            $('#box_clearance').val(plyClr);
+            // Preserve explicit 0.0! Prefer Plywood Clearance / Thickness (data-ply-thick) from NA, then data-clearance.
+            const rawPlyThick = opt.attr('data-ply-thick');
+            const rawClr = opt.attr('data-clearance');
+            let plyClr = 0;
+            if (rawPlyThick !== undefined && rawPlyThick !== null && String(rawPlyThick).trim() !== '' && String(rawPlyThick).toLowerCase() !== 'none' && !isNaN(parseFloat(rawPlyThick))) {
+                plyClr = parseFloat(rawPlyThick);
+            } else if (rawClr !== undefined && rawClr !== null && String(rawClr).trim() !== '' && String(rawClr).toLowerCase() !== 'none' && !isNaN(parseFloat(rawClr))) {
+                plyClr = parseFloat(rawClr);
+            }
+
+            let rawDimType = String(opt.attr('data-dim-type') || 'Cargo OD').trim();
+            if (!rawDimType || rawDimType.toLowerCase() === 'none' || rawDimType.toLowerCase() === 'job size') {
+                rawDimType = 'Cargo OD';
+            }
+
+            const clr_l = parseNumZeroSafe(opt.attr('data-clr-l'), plyClr);
+            const clr_w = parseNumZeroSafe(opt.attr('data-clr-w'), plyClr);
+            const clr_top = parseNumZeroSafe(opt.attr('data-clr-top'), plyClr);
+            const thk_l = parseNumZeroSafe(opt.attr('data-thk-l'), 7.0);
+            const thk_w = parseNumZeroSafe(opt.attr('data-thk-w'), 7.0);
+            const thk_h = parseNumZeroSafe(opt.attr('data-thk-h'), 20.0);
+            window.dirClr = { l: clr_l, w: clr_w, top: clr_top };
+            window.dirThk = { l: thk_l, w: thk_w, h: thk_h };
+
+            window.naSourceDims = { l: l, w: w, h: h, dimType: rawDimType };
+            $('#matrix_dim_type').val(rawDimType);
+            $('#box_clearance').val(plyClr || clr_l);
+            $('#box_weight_kg').val(parseFloat(opt.attr('data-weight')) || 0);
+            $('#matched_bom_rule_banner').hide();
+            $('#job_size_l, #job_size_w, #job_size_h').data('user-edited', false);
             $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
 
+            applySourceDimsByType(l, w, h, plyClr || clr_l, rawDimType);
             const dims = syncDimensions();
             const tmpl = $('#matrix_template_type').val();
 
@@ -2070,13 +2241,98 @@
             renderStructureRows(items);
         });
 
-        $('#job_size_l, #job_size_w, #job_size_h, #box_clearance').on('input', function() {
+        // Auto-Generate BOM using Size (m) x Weight (kg) Engineering Rule Engine
+        $('#btn_auto_bom').on('click', function() {
+            const reqId = $('#matrix_requirement_select').val();
+            if (!reqId) {
+                alert('Please select a Box / Job Item first.');
+                return;
+            }
+            const dims = syncDimensions();
+            const opt = $('#matrix_requirement_select option:selected');
+            const weightKg = parseFloat($('#box_weight_kg').val()) || parseFloat(opt.attr('data-weight')) || 0;
+            const reqTypeId = opt.attr('data-req-type-id') || '';
+            const tmpl = $('#matrix_template_type').val() || 'plywood_box';
+            const l_cm = dims.ft_l * 30.48;
+            const w_cm = dims.ft_w * 30.48;
+            const h_cm = dims.ft_h * 30.48;
+
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating...');
+            $.ajax({
+                url: "{% url 'api_auto_generate_bom' %}",
+                method: "POST",
+                contentType: "application/json",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                data: JSON.stringify({
+                    l_cm: l_cm,
+                    w_cm: w_cm,
+                    h_cm: h_cm,
+                    weight_kg: weightKg,
+                    template_type: tmpl,
+                    req_type_id: reqTypeId,
+                    wood_rate: typeof currentWoodRate !== 'undefined' ? currentWoodRate : 0,
+                    ply_rate: typeof currentPlyRate !== 'undefined' ? currentPlyRate : 0
+                }),
+                success: function(resp) {
+                    btn.prop('disabled', false).html('<i class="fas fa-magic mr-1"></i> Auto-BOM (Size + Weight)');
+                    if (resp.status !== 'success') {
+                        alert(resp.message || 'Auto-BOM failed.');
+                        return;
+                    }
+                    renderStructureRows(resp.rows || []);
+                    if (resp.nails && resp.nails.length && $('#nails_tbody tr').length === 0) {
+                        renderNails(resp.nails);
+                    }
+                    if (resp.consumables && resp.consumables.length && $('#materials_tbody tr').length === 0) {
+                        renderMaterials(resp.consumables);
+                    }
+                    recalculateMatrix();
+                    if (resp.rule) {
+                        $('#matched_bom_rule_banner')
+                            .html(`<i class="fas fa-check-circle text-success mr-1"></i> Matched Rule: <strong>${resp.rule.name}</strong> | Runner: ${resp.rule.runner_spec} | Ply: ${resp.rule.ply_mm}mm | Est. Nails: ${resp.summary.est_nail_kg} kg`)
+                            .show();
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html('<i class="fas fa-magic mr-1"></i> Auto-BOM (Size + Weight)');
+                    alert('Auto-BOM error: ' + (xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : xhr.statusText));
+                }
+            });
+        });
+
+        $('#job_size_l, #job_size_w, #job_size_h').on('input', function() {
+            if (window.sourceBoxOD) window.sourceBoxOD.active = false;
+            $('#job_size_l, #job_size_w, #job_size_h').data('user-edited', true);
             $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
             syncDimensions();
         });
 
+        $('#box_clearance').on('input', function() {
+            const dimType = ($('#matrix_dim_type').val() || 'Cargo OD').trim();
+            if (dimType === 'Cargo OD') {
+                $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
+            } else {
+                $('#job_size_l, #job_size_w, #job_size_h').data('user-edited', false);
+            }
+            syncDimensions();
+        });
+
         $('#box_id_l, #box_id_w, #box_id_h').on('input', function() {
-            $(this).data('user-edited', true);
+            if (window.sourceBoxOD) window.sourceBoxOD.active = false;
+            $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', true);
+            $('#job_size_l, #job_size_w, #job_size_h').data('user-edited', false);
+            syncDimensions();
+        });
+
+        $('#matrix_dim_type').on('change', function() {
+            const newDimType = $(this).val();
+            const plyClr = parseNumZeroSafe($('#box_clearance').val(), 0);
+            if (window.naSourceDims) {
+                $('#job_size_l, #job_size_w, #job_size_h').data('user-edited', false);
+                $('#box_id_l, #box_id_w, #box_id_h').data('user-edited', false);
+                applySourceDimsByType(window.naSourceDims.l, window.naSourceDims.w, window.naSourceDims.h, plyClr, newDimType);
+            }
             syncDimensions();
         });
 
@@ -2688,7 +2944,7 @@
             const l = parseFloat($('#new_box_l').val()) || 0;
             const w = parseFloat($('#new_box_w').val()) || 0;
             const h = parseFloat($('#new_box_h').val()) || 0;
-            const clearance = parseFloat($('#new_box_clearance').val()) || 2.0;
+            const clearance = parseNumZeroSafe($('#new_box_clearance').val(), 0);
             const qty = parseInt($('#new_box_qty').val(), 10) || 1;
 
             if (l <= 0 || w <= 0 || h <= 0) {
@@ -2735,6 +2991,8 @@
                         'data-uom': item.uom,
                         'data-qty': item.quantity,
                         'data-clearance': item.clearance,
+                        'data-ply-thick': item.plywood_thickness !== undefined ? item.plywood_thickness : item.clearance,
+                        'data-dim-type': item.dim_type || 'Cargo OD',
                         'data-quoted': 'false'
                     });
                     select.append(newOpt);
@@ -3449,6 +3707,34 @@
         // Print Cut Plan
         $('#btn_print_cut_plan').on('click', function() {
             window.print();
+        });
+
+        // 3D/2D CAD Diagram Modal Handler
+        $('#btn_open_box_cad').on('click', function() {
+            $('#modal_box_cad').modal('show');
+        });
+
+        $('#modal_box_cad').on('shown.bs.modal', function() {
+            if (window.BvmBoxCADViewer) {
+                if (!window._matrixCadViewerInitialized) {
+                    window._matrixCadViewerInitialized = true;
+                    BvmBoxCADViewer.init({
+                        containerId: 'matrix_box_cad_container',
+                        inputs: {
+                            length: '#job_size_l',
+                            width: '#job_size_w',
+                            height: '#job_size_h',
+                            clr_l: '#box_clearance',
+                            clr_w: '#box_clearance',
+                            clr_top: '#box_clearance',
+                            dim_type: '#matrix_dim_type',
+                            weight: '#box_weight_kg'
+                        }
+                    });
+                } else if (BvmBoxCADViewer.instances && BvmBoxCADViewer.instances['matrix_box_cad_container']) {
+                    BvmBoxCADViewer.instances['matrix_box_cad_container'].syncWithInputs();
+                }
+            }
         });
 
         // Trigger initial load
