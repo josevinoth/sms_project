@@ -1,0 +1,2104 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261106-07">
+
+<style>
+    /* Strict viewport fitting - ZERO whole-page scrolling */
+    html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+        background: #04081e !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+    .container-fluid.pt-2.pb-5 {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        height: calc(100vh - 65px) !important;
+        overflow: hidden !important;
+    }
+
+    /* Master Cockpit Container */
+    .cs-dashboard-root {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: calc(100vh - 65px) !important;
+        display: flex;
+        flex-direction: column;
+        padding: 0.25rem 0.5rem;
+        gap: 0.30rem;
+        box-sizing: border-box;
+        background: #04081e;
+        color: #ffffff;
+        overflow: hidden;
+    }
+
+    /* Top Control Bar */
+    .cs-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.45rem;
+        width: 100%;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(14, 25, 71, 0.95) 0%, rgba(8, 14, 45, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        border-radius: 6px;
+        padding: 0.20rem 0.50rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .filter-group-left {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+
+    .filter-group-right {
+        display: flex;
+        align-items: center;
+        gap: 0.40rem;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .filter-pill {
+        background: rgba(4, 9, 32, 0.9);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 20px;
+        padding: 0.10rem 0.45rem;
+        display: flex;
+        align-items: center;
+        gap: 0.30rem;
+        height: 27px;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-pill:focus-within {
+        border-color: #36d1ff;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.3);
+    }
+
+    .filter-branch-pill { max-width: 140px; }
+    .filter-emp-pill { max-width: 170px; }
+    .filter-date-range { max-width: 250px; }
+
+    .filter-pill label {
+        font-size: 0.58rem;
+        color: #36d1ff;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+    }
+
+    .filter-pill select {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.70rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 2px;
+        height: 20px;
+        line-height: 1;
+        flex: 1;
+        min-width: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .filter-pill select option {
+        background: #091336;
+        color: #fff;
+    }
+
+    .filter-date-range input[type="date"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.66rem !important;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 !important;
+        width: 82px;
+        max-width: 86px;
+        height: 20px;
+        line-height: 1;
+    }
+
+    .filter-date-range input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+        margin-left: 2px;
+    }
+
+    .date-arrow {
+        color: #36d1ff;
+        font-size: 0.52rem;
+        opacity: 0.7;
+        margin: 0 1px;
+        flex-shrink: 0;
+    }
+
+    .btn-clear-date-icon {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 0.65rem;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+    }
+
+    .btn-clear-date-icon:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* ══════ VIEW SWITCHER (Segmented Pill Switch) ══════ */
+    .view-switch-pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(4, 9, 32, 0.95);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 20px;
+        padding: 2px;
+        height: 27px;
+        box-sizing: border-box;
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+        flex-shrink: 0;
+    }
+
+    .view-switch-btn {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #94a3b8;
+        font-size: 0.60rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 3px 9px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        line-height: 1;
+    }
+
+    .view-switch-btn:hover {
+        color: #ffffff;
+    }
+
+    .view-switch-btn.active {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #ffffff;
+        box-shadow: 0 1px 8px rgba(2, 132, 199, 0.5), 0 0 8px rgba(54, 209, 255, 0.3);
+        font-weight: 800;
+    }
+
+    /* ══════ EXPORT EXCEL PILL ══════ */
+    .btn-export-pill {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.28) 100%);
+        border: 1px solid rgba(52, 211, 153, 0.55);
+        border-radius: 20px;
+        padding: 0 10px;
+        height: 27px;
+        box-sizing: border-box;
+        color: #34d399;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        line-height: 1;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        flex-shrink: 0;
+    }
+
+    .btn-export-pill:hover {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        border-color: #34d399;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ══════ SCALE BENCHMARK LEGEND PILL ══════ */
+    .cs-legend-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(4, 9, 32, 0.92);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 20px;
+        padding: 0 0.5rem;
+        height: 27px;
+        box-sizing: border-box;
+        flex-shrink: 0;
+    }
+
+    .legend-title {
+        font-size: 0.58rem;
+        color: #36d1ff;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+
+    .cs-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        font-size: 0.58rem;
+        font-weight: 800;
+        padding: 2px 5px;
+        border-radius: 10px;
+        white-space: nowrap;
+        line-height: 1;
+    }
+
+    .leg-red { background: rgba(239, 68, 68, 0.22); color: #fca5a5; border: 1px solid #ef4444; }
+    .leg-orange { background: rgba(245, 158, 11, 0.22); color: #fde68a; border: 1px solid #f59e0b; }
+    .leg-green { background: rgba(16, 185, 129, 0.22); color: #86efac; border: 1px solid #10b981; }
+    .leg-blue { background: rgba(59, 130, 246, 0.22); color: #93c5fd; border: 1px solid #3b82f6; }
+
+    /* Top KPI 8-Card Strip (Strict Single Horizontal Row) */
+    .cs-top-cards-row {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 0.30rem;
+        width: 100%;
+        flex-shrink: 0;
+    }
+
+    .top-kpi-card {
+        position: relative;
+        border-radius: 5px;
+        padding: 0.20rem 0.40rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 40px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-width: 0;
+        transition: transform 0.15s ease;
+    }
+
+    .top-kpi-card:hover { transform: translateY(-1px); }
+
+    .card-bg-demand { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); border-color: rgba(59, 130, 246, 0.4); }
+    .card-bg-allot { background: linear-gradient(135deg, #1e40af 0%, #172554 100%); border-color: rgba(96, 165, 250, 0.4); }
+    .card-bg-cnote { background: linear-gradient(135deg, #854d0e 0%, #451a03 100%); border-color: rgba(234, 179, 8, 0.4); }
+    .card-bg-transit { background: linear-gradient(135deg, #065f46 0%, #022c22 100%); border-color: rgba(16, 185, 129, 0.4); }
+    .card-bg-closed { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); border-color: rgba(45, 212, 191, 0.4); }
+    .card-bg-billing { background: linear-gradient(135deg, #0369a1 0%, #082f49 100%); border-color: rgba(56, 189, 248, 0.4); }
+    .card-bg-pod { background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); border-color: rgba(56, 189, 248, 0.4); }
+    .card-bg-revenue { background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100%); border-color: rgba(168, 85, 247, 0.45); }
+
+    .top-kpi-content {
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+        min-width: 0;
+    }
+
+    .top-kpi-title {
+        font-size: 0.52rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.82);
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-kpi-main-val {
+        font-size: 0.98rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.1;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-kpi-subtext {
+        font-size: 0.52rem;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-kpi-icon {
+        font-size: 1.25rem;
+        opacity: 0.16;
+        position: absolute;
+        right: 0.35rem;
+        top: 0.35rem;
+        pointer-events: none;
+    }
+
+    /* ══════ MAIN 3-COLUMN COCKPIT BODY ══════ */
+    .cs-cockpit-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.92fr 1.35fr 1.15fr;
+        gap: 0.35rem;
+        min-height: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .cs-cockpit-card {
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 6px;
+        border: 1px solid rgba(54, 209, 255, 0.22);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .cs-card-header {
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 0.25rem 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .cs-card-header h6 {
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Column 1: Executive Team Leaderboard */
+    .leaderboard-wrap {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.3rem 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .leaderboard-wrap::-webkit-scrollbar { width: 4px; }
+    .leaderboard-wrap::-webkit-scrollbar-thumb { background: rgba(54, 209, 255, 0.35); border-radius: 2px; }
+
+    .rep-card-item {
+        background: rgba(14, 28, 75, 0.6);
+        border: 1px solid rgba(54, 209, 255, 0.18);
+        border-radius: 5px;
+        padding: 0.30rem 0.45rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .rep-card-item:hover, .rep-card-item.selected {
+        background: rgba(37, 99, 235, 0.3);
+        border-color: #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .rep-left-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .rep-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: #ffffff;
+        font-size: 0.60rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .rep-name-box {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .rep-name {
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .rep-tag {
+        font-size: 0.54rem;
+        color: #94a3b8;
+    }
+
+    .rep-stats-box {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-align: right;
+    }
+
+    .rep-stat-val {
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.1;
+    }
+
+    .rep-stat-sub {
+        font-size: 0.52rem;
+        color: #94a3b8;
+    }
+
+    /* Column 2: Center Channel & Pipeline Panels */
+    .center-top-split {
+        height: 48%;
+        display: flex;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        overflow: hidden;
+    }
+
+    .center-bottom-split {
+        height: 52%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 0.3rem 0.5rem;
+    }
+
+    .channel-donut-box {
+        width: 44%;
+        height: 100%;
+        position: relative;
+        padding: 0.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .channel-legend-list {
+        flex: 1;
+        padding: 0.35rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3.5px;
+    }
+
+    .channel-legend-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.64rem;
+        background: rgba(14, 28, 75, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 4px;
+        padding: 2.5px 6px;
+    }
+
+    /* Column 3: Right Target vs Actual Matrix Deck (CS Dashboard Meter Cards Format) */
+    .right-top-box {
+        height: 50%;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .right-bottom-box {
+        height: 50%;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .kpi-target-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        height: 100%;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+    }
+
+    .kpi-target-card {
+        background: linear-gradient(180deg, rgba(14, 28, 75, 0.95) 0%, rgba(8, 16, 48, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.32);
+        border-radius: 6px;
+        padding: 5px 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .kpi-target-card:hover {
+        border-color: rgba(54, 209, 255, 0.7);
+        box-shadow: 0 6px 16px rgba(54, 209, 255, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .kpi-target-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1px;
+    }
+
+    .kpi-target-card-title {
+        font-size: 0.58rem;
+        font-weight: 900;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #f8fafc;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .kpi-target-card-check {
+        font-size: 0.75rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .kpi-target-card-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.14);
+        margin: 2px 0 3px 0;
+    }
+
+    .kpi-target-card-sub {
+        font-size: 0.54rem;
+        color: #94a3b8;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+
+    .kpi-target-card-sub strong {
+        color: #f8fafc;
+        font-size: 0.58rem;
+    }
+
+    .kpi-target-card-gauge {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2px 0;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .kpi-gauge-svg {
+        display: block;
+        overflow: visible;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .kpi-sla-badge {
+        margin-top: 2px;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-size: 0.52rem;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1;
+    }
+
+    /* Achievement Badges */
+    .badge-scale {
+        padding: 1.5px 6px;
+        border-radius: 3px;
+        font-size: 0.60rem;
+        font-weight: 800;
+        display: inline-block;
+        min-width: 40px;
+        text-align: center;
+        line-height: 1.1;
+    }
+
+    .badge-red { background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid #ef4444; }
+    .badge-orange { background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid #f59e0b; }
+    .badge-green { background: rgba(16, 185, 129, 0.25); color: #86efac; border: 1px solid #10b981; }
+    .badge-blue { background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid #3b82f6; }
+
+    /* ══════ WON CLIENTS IN-CARD TICKER & HEADER PILL ══════ */
+    .won-card-box {
+        margin-top: 1px;
+        padding: 2px 5px;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.38);
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5px;
+        transition: all 0.15s ease;
+    }
+
+    .won-card-box:hover {
+        background: rgba(16, 185, 129, 0.24);
+        border-color: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+    }
+
+    .won-status-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.52rem;
+        line-height: 1;
+    }
+
+    .won-status-chip {
+        color: #86efac;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+    }
+
+    .won-view-btn {
+        color: #38bdf8;
+        font-weight: 700;
+        font-size: 0.50rem;
+    }
+
+    .won-client-name-ticker {
+        font-size: 0.54rem;
+        font-weight: 700;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        line-height: 1.1;
+    }
+
+    .won-rotator-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #fef08a;
+    }
+
+    .btn-won-clients-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        border-radius: 12px;
+        padding: 1px 7px;
+        color: #86efac;
+        font-size: 0.56rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        line-height: 1.2;
+    }
+
+    .btn-won-clients-pill:hover {
+        background: rgba(16, 185, 129, 0.35);
+        border-color: #34d399;
+        color: #ffffff;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ══════ WON CLIENTS MODAL STYLING ══════ */
+    .won-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(3, 7, 24, 0.88);
+        backdrop-filter: blur(6px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .won-modal-dialog {
+        background: linear-gradient(180deg, #0b1536 0%, #060b24 100%);
+        border: 1px solid rgba(54, 209, 255, 0.4);
+        border-radius: 8px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9), 0 0 24px rgba(54, 209, 255, 0.25);
+        width: 920px;
+        max-width: 95vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: wonModalScale 0.18s ease-out;
+    }
+
+    @keyframes wonModalScale {
+        from { transform: scale(0.96); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .won-modal-header {
+        padding: 10px 14px;
+        background: rgba(14, 28, 75, 0.85);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .won-modal-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #1e1b4b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
+        flex-shrink: 0;
+    }
+
+    .won-modal-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .won-modal-subtitle {
+        font-size: 0.62rem;
+        color: #94a3b8;
+    }
+
+    .won-modal-close {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.3rem;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+
+    .won-modal-close:hover { color: #f87171; }
+
+    .won-modal-toolbar {
+        padding: 8px 14px;
+        background: rgba(6, 11, 36, 0.95);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .won-search-box {
+        position: relative;
+        flex: 1;
+        max-width: 380px;
+    }
+
+    .won-search-icon {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.65rem;
+        color: #94a3b8;
+    }
+
+    .won-search-box input {
+        width: 100%;
+        background: rgba(14, 28, 75, 0.7);
+        border: 1px solid rgba(54, 209, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px 8px 4px 26px;
+        color: #ffffff;
+        font-size: 0.68rem;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+    .won-search-box input:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+
+    .won-modal-info {
+        font-size: 0.62rem;
+        color: #94a3b8;
+    }
+
+    .won-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+        max-height: 440px;
+    }
+
+    .won-modal-body::-webkit-scrollbar { width: 5px; }
+    .won-modal-body::-webkit-scrollbar-thumb { background: rgba(54, 209, 255, 0.35); border-radius: 3px; }
+
+    .won-modal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.68rem;
+    }
+
+    .won-modal-table th {
+        background: #091238;
+        color: #93c5fd;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.60rem;
+        padding: 6px 10px;
+        border-bottom: 2px solid rgba(54, 209, 255, 0.3);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+
+    .won-modal-table td {
+        padding: 5px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        color: #d1dcfa;
+        vertical-align: middle;
+    }
+
+    .won-modal-table tr:hover td {
+        background: rgba(54, 209, 255, 0.1);
+    }
+
+    .badge-won-pill {
+        background: rgba(16, 185, 129, 0.2);
+        color: #86efac;
+        border: 1px solid #10b981;
+        border-radius: 10px;
+        padding: 2px 7px;
+        font-size: 0.58rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .won-lifecycle-tag {
+        background: rgba(59, 130, 246, 0.15);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 4px;
+        padding: 1.5px 5px;
+        font-size: 0.58rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .won-modal-footer {
+        padding: 8px 14px;
+        background: rgba(6, 11, 36, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .won-btn-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        border-radius: 4px;
+        padding: 3px 12px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .won-btn-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Alternative Matrix View (Toggled when requested) */
+    #matrix-view-panel {
+        display: none;
+        flex: 1;
+        min-height: 0;
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 6px;
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .matrix-table-wrap {
+        flex: 1;
+        overflow: auto;
+        min-height: 0;
+    }
+
+    .matrix-table-wrap::-webkit-scrollbar { width: 5px; height: 5px; }
+    .matrix-table-wrap::-webkit-scrollbar-thumb { background: rgba(54, 209, 255, 0.35); border-radius: 3px; }
+
+    .matrix-tbl {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.68rem;
+        white-space: nowrap;
+    }
+
+    .matrix-tbl th.grp-hdr {
+        font-size: 0.64rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding: 4px 6px;
+        text-align: center;
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.3);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .grp-sales { background: #1e3a8a; color: #93c5fd; }
+    .grp-type { background: #0284c7; color: #bae6fd; }
+    .grp-nature { background: #0f766e; color: #99f6e4; }
+    .grp-target { background: #b45309; color: #fde68a; }
+    .grp-actual { background: #15803d; color: #bbf7d0; }
+    .grp-achieve { background: #6b21a8; color: #e9d5ff; }
+
+    .matrix-tbl th.sub-hdr {
+        background: #081132;
+        color: #94a3b8;
+        font-weight: 700;
+        font-size: 0.60rem;
+        text-transform: uppercase;
+        padding: 4px 6px;
+        border-bottom: 2px solid rgba(54, 209, 255, 0.35);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        position: sticky;
+        top: 25px;
+        z-index: 9;
+        text-align: center;
+    }
+
+    .sticky-col-1 {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 8 !important;
+        background: #060b24 !important;
+        border-right: 1px solid rgba(54, 209, 255, 0.25) !important;
+        min-width: 125px;
+    }
+
+    .sticky-col-2 {
+        position: sticky !important;
+        left: 125px !important;
+        z-index: 8 !important;
+        background: #060b24 !important;
+        border-right: 1px solid rgba(54, 209, 255, 0.25) !important;
+        min-width: 75px;
+    }
+
+    th.sticky-col-1, th.sticky-col-2 { z-index: 12 !important; }
+
+    .matrix-tbl td {
+        padding: 3px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        color: #d1dcfa;
+        vertical-align: middle;
+        font-size: 0.66rem;
+    }
+
+    .matrix-tbl tbody tr:hover td { background: rgba(54, 209, 255, 0.12) !important; }
+
+    .matrix-tbl tr.row-total-footer td {
+        background: linear-gradient(90deg, #0e1e4a 0%, #0a1435 100%) !important;
+        color: #fef08a !important;
+        font-weight: 800 !important;
+        border-top: 2px solid #eab308 !important;
+        border-bottom: 2px solid #eab308 !important;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        font-size: 0.70rem;
+    }
+
+    .matrix-tbl tr.row-total-footer td.sticky-col-1,
+    .matrix-tbl tr.row-total-footer td.sticky-col-2 {
+        background: #0e1e4a !important;
+        z-index: 11 !important;
+    }
+
+    .col-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .col-center { text-align: center; }
+    .val-dim { color: rgba(255, 255, 255, 0.18); }
+</style>
+
+<div class="cs-dashboard-root">
+    <!-- ══════ TOP CONTROL BAR (Ultra-sleek single-row layout) ══════ -->
+    <div class="cs-top-bar">
+        <div class="filter-group-left">
+            <!-- 1. Branch Dropdown (Location_info) -->
+            <div class="filter-pill filter-branch-pill">
+                <label><i class="fas fa-map-marker-alt"></i> Branch:</label>
+                <select id="filter-branch">
+                    <option value="all">All Branches</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == default_branch_id %}selected{% endif %}>
+                        {{ branch.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 2. Sales Representative Dropdown -->
+            <div class="filter-pill filter-emp-pill">
+                <label><i class="fas fa-user-tie"></i> Rep:</label>
+                <select id="filter-employee">
+                    <option value="all">All Active Reps</option>
+                    {% for emp in sales_employees %}
+                    <option value="{{ emp.id }}" data-branch="{{ emp.branch_id }}">
+                        {{ emp.name }} ({{ emp.branch_name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 3. Streamlined Date Range Pill unified by Date of Call -->
+            <div class="filter-pill filter-date-range" title="All dashboard metrics unified by Date of Call (sc_date_of_call)">
+                <label><i class="fas fa-calendar-alt"></i> Call Date:</label>
+                <input type="date" id="filter-from-date" value="" title="From Call Date">
+                <span class="date-arrow">&rarr;</span>
+                <input type="date" id="filter-to-date" value="" title="To Call Date">
+                <button type="button" class="btn-clear-date-icon" id="btn-clear-date" title="Clear Date Filter (Show All Time)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-group-right">
+            <!-- 1. Segmented View Switcher Pill -->
+            <div class="view-switch-pill" role="tablist">
+                <button type="button" class="view-switch-btn active" id="btn-view-cockpit" title="Scroll-free cockpit dashboard view">
+                    <i class="fas fa-tachometer-alt"></i> Cockpit
+                </button>
+                <button type="button" class="view-switch-btn" id="btn-view-matrix" title="Full 26-column table matrix view">
+                    <i class="fas fa-table"></i> Table Matrix
+                </button>
+            </div>
+
+            <!-- 2. Streamlined Export Excel Pill -->
+            <button type="button" class="btn-export-pill" id="btn-export-excel" title="Download formatted 26-column Excel report">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+
+            <!-- 3. Performance Benchmark Scale Legend -->
+            <div class="cs-legend-bar">
+                <span class="legend-title"><i class="fas fa-tachometer-alt"></i> SCALE:</span>
+                <span class="cs-legend-item leg-red">0-35%</span>
+                <span class="cs-legend-item leg-orange">36-70%</span>
+                <span class="cs-legend-item leg-green">71-100%</span>
+                <span class="cs-legend-item leg-blue">&gt;100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ TOP 8 KPI HIGHLIGHT CARDS (Single Slim Row) ══════ -->
+    <div class="cs-top-cards-row">
+        <!-- 1. Total Calls -->
+        <div class="top-kpi-card card-bg-demand">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">TOTAL CALLS</span>
+                <span class="top-kpi-main-val" id="card-total-calls">0</span>
+                <span class="top-kpi-subtext" id="card-total-calls-sub">All Channels</span>
+            </div>
+            <i class="fas fa-phone-volume top-kpi-icon"></i>
+        </div>
+
+        <!-- 2. In-Person Calls -->
+        <div class="top-kpi-card card-bg-allot">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">IN-PERSON CALLS</span>
+                <span class="top-kpi-main-val" id="card-inperson-calls">0</span>
+                <span class="top-kpi-subtext" id="card-inperson-sub">0% of Calls</span>
+            </div>
+            <i class="fas fa-user-friends top-kpi-icon"></i>
+        </div>
+
+        <!-- 3. Tele-Calls -->
+        <div class="top-kpi-card card-bg-cnote">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">TELE-CALLS</span>
+                <span class="top-kpi-main-val" id="card-tele-calls">0</span>
+                <span class="top-kpi-subtext" id="card-tele-sub">0% of Calls</span>
+            </div>
+            <i class="fas fa-headset top-kpi-icon"></i>
+        </div>
+
+        <!-- 4. E-Mail & Teams -->
+        <div class="top-kpi-card card-bg-transit">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">DIGITAL OUTREACH</span>
+                <span class="top-kpi-main-val" id="card-email-calls">0</span>
+                <span class="top-kpi-subtext" id="card-email-sub">Mail &amp; Teams</span>
+            </div>
+            <i class="fas fa-envelope-open-text top-kpi-icon"></i>
+        </div>
+
+        <!-- 5. Target Revenue -->
+        <div class="top-kpi-card card-bg-closed">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">TARGET REVENUE</span>
+                <span class="top-kpi-main-val" id="card-target-rev">₹ 0.00 L</span>
+                <span class="top-kpi-subtext" id="card-target-rev-sub">Ex: ₹0L · Nw: ₹0L</span>
+            </div>
+            <i class="fas fa-bullseye top-kpi-icon"></i>
+        </div>
+
+        <!-- 6. Actual Revenue -->
+        <div class="top-kpi-card card-bg-billing">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">ACTUAL REVENUE</span>
+                <span class="top-kpi-main-val" id="card-actual-rev">₹ 0.00 L</span>
+                <span class="top-kpi-subtext" id="card-actual-rev-sub">0% Achieved</span>
+            </div>
+            <i class="fas fa-coins top-kpi-icon"></i>
+        </div>
+
+        <!-- 7. Existing In-Person Customers -->
+        <div class="top-kpi-card card-bg-pod">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">EXISTING IN-PERSON</span>
+                <span class="top-kpi-main-val" id="card-target-cust">0</span>
+                <span class="top-kpi-subtext" id="card-target-cust-sub">Target Nos</span>
+            </div>
+            <i class="fas fa-user-check top-kpi-icon"></i>
+        </div>
+
+        <!-- 8. New Onboarded (Won) -->
+        <div class="top-kpi-card card-bg-revenue" style="cursor:pointer;" onclick="openWonClientsModal()" title="Click to view newly onboarded clients with Business Won: Yes status">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">NEW ONBOARDED (WON)</span>
+                <span class="top-kpi-main-val" id="card-onboard-cust">0</span>
+                <span class="top-kpi-subtext" id="card-onboard-sub">Business Won: Yes</span>
+            </div>
+            <i class="fas fa-trophy top-kpi-icon"></i>
+        </div>
+    </div>
+
+    <!-- ══════ VIEW MODE 1: VISUAL COCKPIT (Zero Page Scroll) ══════ -->
+    <div class="cs-cockpit-grid" id="cockpit-view-grid">
+        <!-- ── Column 1: Executive Leaderboard & Contribution ── -->
+        <div class="cs-cockpit-card">
+            <div class="cs-card-header">
+                <h6><i class="fas fa-users-cog text-primary"></i> Team Leaderboard &amp; Reps</h6>
+                <span class="badge badge-dark" id="leaderboard-count-badge" style="font-size:0.56rem; border:1px solid #36d1ff;">
+                    0 Reps
+                </span>
+            </div>
+            <div class="leaderboard-wrap" id="leaderboard-container">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </div>
+
+        <!-- ── Column 2: Performance Target Matrix (6 Semicircular Meter Charts) ── -->
+        <div class="cs-cockpit-card">
+            <!-- Top Half: Revenue Target vs Actual (3 CS Semicircular Meters) -->
+            <div class="cs-card-header">
+                <h6><i class="fas fa-coins text-warning"></i> Revenue Performance Matrix</h6>
+                <span class="badge badge-scale badge-green" id="header-rev-badge">0% Achieved</span>
+            </div>
+            <div class="right-top-box">
+                <div class="kpi-target-cards-grid" id="revenue-meters-container">
+                    <!-- Populated dynamically via renderMeterCards() -->
+                </div>
+            </div>
+
+            <!-- Bottom Half: Customer Acquisition & Onboarding (3 CS Semicircular Meters) -->
+            <div class="cs-card-header" style="border-top:1px solid rgba(54, 209, 255, 0.2); display:flex; align-items:center; justify-content:space-between;">
+                <h6><i class="fas fa-user-check text-success"></i> Customer Acquisition &amp; Onboarding</h6>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" class="btn-won-clients-pill" id="btn-won-clients-header" onclick="openWonClientsModal()" title="View newly onboarded clients with Business Won: Yes status">
+                        <i class="fas fa-trophy text-warning"></i> Won Clients (<span id="header-won-count">0</span>)
+                    </button>
+                    <span class="badge badge-scale badge-blue" id="header-onboard-badge">0% Won</span>
+                </div>
+            </div>
+            <div class="right-bottom-box">
+                <div class="kpi-target-cards-grid" id="customer-meters-container">
+                    <!-- Populated dynamically via renderMeterCards() -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Column 3: Channel Activity & Pipeline Funnel (Pie/Donut & Bar Charts) ── -->
+        <div class="cs-cockpit-card">
+            <!-- Top Half: Call Channels (4 Metrics) -->
+            <div class="cs-card-header">
+                <h6><i class="fas fa-chart-pie text-info"></i> Call Channels &amp; Engagement (4 Channels)</h6>
+                <span class="badge badge-dark" style="font-size:0.56rem; border:1px solid #38bdf8;">ACTIVITY</span>
+            </div>
+            <div class="center-top-split">
+                <div class="channel-donut-box">
+                    <canvas id="channelChartCanvas"></canvas>
+                    <div style="position:absolute; text-align:center; pointer-events:none;">
+                        <div id="donut-center-total" style="font-size:0.92rem; font-weight:900; color:#fff; line-height:1;">0</div>
+                        <div style="font-size:0.52rem; color:#94a3b8; font-weight:700;">CALLS</div>
+                    </div>
+                </div>
+                <div class="channel-legend-list" id="channel-legend-badges">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Bottom Half: Pipeline Conversion Funnel (7 Metrics) -->
+            <div class="cs-card-header" style="border-top:1px solid rgba(54, 209, 255, 0.2);">
+                <h6><i class="fas fa-filter text-warning"></i> Sales Pipeline Conversion Funnel (7 Stages)</h6>
+                <span class="badge badge-dark" style="font-size:0.56rem; border:1px solid #eab308;">CONVERSION</span>
+            </div>
+            <div class="center-bottom-split">
+                <div style="flex:1; position:relative; width:100%; height:100%;">
+                    <canvas id="pipelineChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ VIEW MODE 2: FULL 26-METRIC MATRIX VIEW ══════ -->
+    <div id="matrix-view-panel">
+        <div class="cs-card-header">
+            <h6><i class="fas fa-table text-primary"></i> 26-Column Sales Performance &amp; Metrics Matrix</h6>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="text" id="sales-search-input" placeholder="Search salesperson or company..." style="background:rgba(4,9,32,0.85); border:1px solid rgba(54,209,255,0.35); border-radius:4px; padding:2px 8px; color:#fff; font-size:0.68rem; width:220px; outline:none;">
+                <span class="badge badge-dark" id="matrix-row-count" style="font-size:0.64rem; border:1px solid #36d1ff;">0 Executives</span>
+            </div>
+        </div>
+        <div class="matrix-table-wrap">
+            <table class="matrix-tbl">
+                <thead>
+                    <!-- Row 1: Merged Group Banners -->
+                    <tr>
+                        <th class="grp-hdr grp-sales sticky-col-1" colspan="2">SALESPERSON &amp; COMPANY</th>
+                        <th class="grp-hdr grp-sales" colspan="2">CALLS</th>
+                        <th class="grp-hdr grp-type" colspan="4">CALL TYPE</th>
+                        <th class="grp-hdr grp-nature" colspan="7">CALL NATURE (PIPELINE)</th>
+                        <th class="grp-hdr grp-target" colspan="6">TARGET (IN-PERSON)</th>
+                        <th class="grp-hdr grp-actual" colspan="6">ACTUAL (IN-PERSON)</th>
+                        <th class="grp-hdr grp-achieve" colspan="3">PERFORMANCE %</th>
+                    </tr>
+                    <!-- Row 2: Sub-headers -->
+                    <tr>
+                        <th class="sub-hdr sticky-col-1">Sales</th>
+                        <th class="sub-hdr sticky-col-2">Company</th>
+                        <th class="sub-hdr">Branch</th>
+                        <th class="sub-hdr">Calls</th>
+                        <!-- Call Type -->
+                        <th class="sub-hdr">E-Mail</th>
+                        <th class="sub-hdr">In-Person</th>
+                        <th class="sub-hdr">MS-Teams</th>
+                        <th class="sub-hdr">Tele-Call</th>
+                        <!-- Call Nature -->
+                        <th class="sub-hdr">Suspect</th>
+                        <th class="sub-hdr">Prospect</th>
+                        <th class="sub-hdr">RFQ</th>
+                        <th class="sub-hdr">Negotiation</th>
+                        <th class="sub-hdr">Contract</th>
+                        <th class="sub-hdr">Implementation</th>
+                        <th class="sub-hdr">Transaction</th>
+                        <!-- Targets -->
+                        <th class="sub-hdr">Tgt Rev Ex (₹L)</th>
+                        <th class="sub-hdr">Tgt Rev Nw (₹L)</th>
+                        <th class="sub-hdr">Tgt Cust</th>
+                        <th class="sub-hdr">Tgt Nw</th>
+                        <th class="sub-hdr">Tgt Ex</th>
+                        <th class="sub-hdr">Tgt Onboard</th>
+                        <!-- Actuals -->
+                        <th class="sub-hdr">Act Rev Ex (₹L)</th>
+                        <th class="sub-hdr">Act Rev Nw (₹L)</th>
+                        <th class="sub-hdr">Act Cust</th>
+                        <th class="sub-hdr">Act Nw</th>
+                        <th class="sub-hdr">Act Ex</th>
+                        <th class="sub-hdr">Act Onboard</th>
+                        <!-- Performance -->
+                        <th class="sub-hdr">Rev %</th>
+                        <th class="sub-hdr">Cust %</th>
+                        <th class="sub-hdr">Onboard %</th>
+                    </tr>
+                </thead>
+                <tbody id="matrix-tbody">
+                    <!-- Populated dynamically -->
+                </tbody>
+                <tfoot id="matrix-tfoot">
+                    <!-- Totals Row -->
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ══════ MODAL: NEWLY ONBOARDED & BUSINESS WON CLIENTS ══════ -->
+<div id="wonClientsModal" class="won-modal-backdrop" style="display:none;">
+    <div class="won-modal-dialog">
+        <div class="won-modal-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="won-modal-icon"><i class="fas fa-trophy"></i></div>
+                <div>
+                    <h5 class="won-modal-title">Newly Onboarded &amp; Business Won Clients</h5>
+                    <span class="won-modal-subtitle">Confirmed clients with <strong style="color:#86efac;">Business Won: Yes</strong> status</span>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge badge-success" id="modal-won-count" style="font-size:0.72rem; padding:4px 10px; border-radius:12px;">0 Clients</span>
+                <button type="button" class="won-modal-close" onclick="closeWonClientsModal()">&times;</button>
+            </div>
+        </div>
+        
+        <div class="won-modal-toolbar">
+            <div class="won-search-box">
+                <i class="fas fa-search won-search-icon"></i>
+                <input type="text" id="won-client-search" placeholder="Search customer name, executive, or status..." autocomplete="off">
+            </div>
+            <span class="won-modal-info"><i class="fas fa-info-circle text-info"></i> All listed clients have <strong>Business Won: Yes</strong></span>
+        </div>
+
+        <div class="won-modal-body">
+            <table class="won-modal-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px; text-align:center;">#</th>
+                        <th>New Customer Name</th>
+                        <th style="width:130px; text-align:center;">Business Won</th>
+                        <th style="width:180px;">Lifecycle Status</th>
+                        <th style="width:145px;">Sales Executive</th>
+                        <th style="width:110px; text-align:center;">Won Date</th>
+                        <th style="width:110px; text-align:right;">Expected Rev</th>
+                    </tr>
+                </thead>
+                <tbody id="won-modal-tbody">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="won-modal-footer">
+            <span style="font-size:0.68rem; color:#94a3b8;">Showing <strong id="modal-showing-count" style="color:#fff;">0</strong> onboarded won clients</span>
+            <button type="button" class="won-btn-close" onclick="closeWonClientsModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let channelChart = null;
+    let pipelineChart = null;
+    let currentRowsData = [];
+    let currentWonCustomers = [];
+    let wonRotatorInterval = null;
+
+    // Active Sales Representatives passed from backend (strictly active with recorded activity)
+    const activeEmployees = [
+        {% for emp in sales_employees %}
+        { id: "{{ emp.id }}", name: "{{ emp.name|escapejs }}", branch_id: "{{ emp.branch_id }}", branch_name: "{{ emp.branch_name|escapejs }}" },
+        {% endfor %}
+    ];
+
+    // Dynamically rebuild Sales Rep dropdown based on selected branch
+    function updateEmployeeDropdown(branchId, selectedEmpId) {
+        const empSelect = $('#filter-employee');
+        const currentVal = selectedEmpId || empSelect.val() || 'all';
+        empSelect.empty();
+        empSelect.append('<option value="all">All Active Reps</option>');
+
+        activeEmployees.forEach(function(emp) {
+            if (branchId === 'all' || String(emp.branch_id) === String(branchId)) {
+                const isSel = (String(emp.id) === String(currentVal)) ? 'selected' : '';
+                empSelect.append(`<option value="${emp.id}" data-branch="${emp.branch_id}" ${isSel}>${emp.name} (${emp.branch_name})</option>`);
+            }
+        });
+
+        if (!empSelect.find(`option[value="${currentVal}"]`).length) {
+            empSelect.val('all');
+        }
+    }
+
+    // Initialize with active sales reps
+    updateEmployeeDropdown($('#filter-branch').val(), '{{ default_employee_id }}');
+    fetchDashboardData();
+
+    // Event handlers
+    $('#filter-branch').on('change', function() {
+        updateEmployeeDropdown($(this).val(), 'all');
+        fetchDashboardData();
+    });
+
+    $('#filter-employee, #filter-from-date, #filter-to-date').on('change', function() {
+        fetchDashboardData();
+    });
+
+    // Clear Date button
+    $('#btn-clear-date').on('click', function() {
+        $('#filter-from-date').val('');
+        $('#filter-to-date').val('');
+        fetchDashboardData();
+    });
+
+    // View Mode Switcher
+    $('#btn-view-cockpit').on('click', function() {
+        $('.view-switch-btn').removeClass('active');
+        $(this).addClass('active');
+        $('#cockpit-view-grid').css('display', 'grid');
+        $('#matrix-view-panel').css('display', 'none');
+    });
+
+    $('#btn-view-matrix').on('click', function() {
+        $('.view-switch-btn').removeClass('active');
+        $(this).addClass('active');
+        $('#cockpit-view-grid').css('display', 'none');
+        $('#matrix-view-panel').css('display', 'flex');
+    });
+
+    // Export Excel Button
+    $('#btn-export-excel').on('click', function() {
+        const branchId = $('#filter-branch').val() || 'all';
+        const employeeId = $('#filter-employee').val() || 'all';
+        const fromDate = $('#filter-from-date').val() || '';
+        const toDate = $('#filter-to-date').val() || '';
+
+        const url = "{% url 'sales_metrics_export_excel' %}?branch_id=" + encodeURIComponent(branchId) +
+                    "&employee_id=" + encodeURIComponent(employeeId) +
+                    "&from_date=" + encodeURIComponent(fromDate) +
+                    "&to_date=" + encodeURIComponent(toDate);
+
+        window.location.href = url;
+    });
+
+    // Client-side quick filter on data table
+    $('#sales-search-input').on('keyup', function() {
+        const term = $(this).val().toLowerCase();
+        $('#matrix-tbody tr').each(function() {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(term) > -1);
+        });
+    });
+
+    // Main fetch function
+    function fetchDashboardData() {
+        const branchId = $('#filter-branch').val() || 'all';
+        const employeeId = $('#filter-employee').val() || 'all';
+        const fromDate = $('#filter-from-date').val() || '';
+        const toDate = $('#filter-to-date').val() || '';
+
+        $.ajax({
+            url: "{% url 'get_sales_metrics_dashboard_data' %}",
+            method: "GET",
+            data: {
+                branch_id: branchId,
+                employee_id: employeeId,
+                from_date: fromDate,
+                to_date: toDate
+            },
+            success: function(resp) {
+                currentRowsData = resp.rows || [];
+                currentWonCustomers = resp.won_customers || [];
+                $('#header-won-count').text(currentWonCustomers.length);
+                renderTopCards(resp.cards);
+                renderLeaderboard(resp.rows, employeeId);
+                renderCharts(resp.call_channels, resp.pipeline_stages, resp.totals);
+                renderMeterCards('revenue-meters-container', resp.revenue_meters);
+                renderMeterCards('customer-meters-container', resp.customer_meters);
+                if (resp.totals) {
+                    $('#header-rev-badge').text(`${resp.totals.rev_achieve_pct}% Achieved`);
+                    $('#header-onboard-badge').text(`${resp.totals.onboard_achieve_pct}% Won`);
+                }
+                renderMatrixTable(resp.rows, resp.totals);
+            },
+            error: function(err) {
+                console.error("Dashboard fetch error:", err);
+            }
+        });
+    }
+
+    // 1. Render Top Cards
+    function renderTopCards(cards) {
+        if (!cards) return;
+        $('#card-total-calls').text(cards.total_calls.val);
+        $('#card-total-calls-sub').text(cards.total_calls.sub);
+
+        $('#card-inperson-calls').text(cards.in_person.val);
+        $('#card-inperson-sub').text(cards.in_person.sub);
+
+        $('#card-tele-calls').text(cards.tele_calls.val);
+        $('#card-tele-sub').text(cards.tele_calls.sub);
+
+        $('#card-email-calls').text(cards.email_teams.val);
+        $('#card-email-sub').text(cards.email_teams.sub);
+
+        $('#card-target-rev').text(cards.target_rev.val);
+        $('#card-target-rev-sub').text(cards.target_rev.sub);
+
+        $('#card-actual-rev').text(cards.actual_rev.val);
+        $('#card-actual-rev-sub').text(cards.actual_rev.sub);
+
+        $('#card-target-cust').text(cards.target_cust.val);
+        $('#card-target-cust-sub').text(cards.target_cust.sub);
+
+        $('#card-onboard-cust').text(cards.new_onboard.val);
+        $('#card-onboard-sub').text(cards.new_onboard.sub);
+    }
+
+    // 2. Render Column 1: Team Leaderboard & Rep Selection
+    function renderLeaderboard(rows, selectedEmpId) {
+        if (!rows) return;
+        $('#leaderboard-count-badge').text(`${rows.length} Reps`);
+
+        let html = '';
+        rows.forEach(function(r) {
+            const isSelected = (selectedEmpId && String(r.salesperson_id) === String(selectedEmpId));
+            const initials = r.salesperson.substring(0, 2).toUpperCase();
+
+            html += `
+                <div class="rep-card-item ${isSelected ? 'selected' : ''}" data-empid="${r.salesperson_id}">
+                    <div class="rep-left-meta">
+                        <div class="rep-avatar">${initials}</div>
+                        <div class="rep-name-box">
+                            <span class="rep-name">${r.salesperson}</span>
+                            <span class="rep-tag">${r.company} · ${r.branch_name}</span>
+                        </div>
+                    </div>
+                    <div class="rep-stats-box">
+                        <div>
+                            <div class="rep-stat-val">${r.no_of_calls.toLocaleString()}</div>
+                            <div class="rep-stat-sub">Calls</div>
+                        </div>
+                        <div style="min-width:48px;">
+                            <div class="rep-stat-val" style="color:#86efac;">₹${r.actual_rev_total.toFixed(1)}L</div>
+                            <div class="rep-stat-sub">Rev (${r.rev_achieve_pct}%)</div>
+                        </div>
+                        <span class="badge-scale badge-${r.rev_color_class}">${r.rev_achieve_pct}%</span>
+                    </div>
+                </div>
+            `;
+        });
+        $('#leaderboard-container').html(html);
+
+        // Click on representative to select them in filter
+        $('.rep-card-item').on('click', function() {
+            const empId = $(this).data('empid');
+            $('#filter-employee').val(empId).trigger('change');
+        });
+    }
+
+    // 3. Render Column 2: Channel Activity & Pipeline Funnel
+    function renderCharts(channels, stages, totals) {
+        if (!channels || !stages || !totals) return;
+
+        // Total Calls count in Donut Center
+        $('#donut-center-total').text(totals.no_of_calls.toLocaleString());
+
+        // Channel Doughnut Chart
+        const donutCtx = document.getElementById('channelChartCanvas');
+        if (donutCtx) {
+            if (channelChart) channelChart.destroy();
+            channelChart = new Chart(donutCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: channels.map(c => c.name),
+                    datasets: [{
+                        data: channels.map(c => c.count),
+                        backgroundColor: ['#3b82f6', '#10b981', '#a855f7', '#f59e0b'],
+                        borderColor: '#060b24',
+                        borderWidth: 2,
+                        hoverOffset: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.raw || 0;
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    return ` ${ctx.label}: ${val.toLocaleString()} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Badges beside doughnut
+            let badgeHtml = '';
+            channels.forEach(function(c) {
+                badgeHtml += `
+                    <div class="channel-legend-row">
+                        <span style="display:flex; align-items:center; gap:4px; color:#d1dcfa; font-weight:600;">
+                            <i class="fas ${c.icon}" style="color:${c.color}; font-size:0.62rem;"></i> ${c.name}
+                        </span>
+                        <span>
+                            <strong style="color:#ffffff;">${c.count.toLocaleString()}</strong>
+                            <span style="color:#36d1ff; font-size:0.56rem; margin-left:3px;">(${c.pct}%)</span>
+                        </span>
+                    </div>
+                `;
+            });
+            $('#channel-legend-badges').html(badgeHtml);
+        }
+
+        // Pipeline Horizontal Bar Chart
+        const pipeCtx = document.getElementById('pipelineChartCanvas');
+        if (pipeCtx) {
+            if (pipelineChart) pipelineChart.destroy();
+            pipelineChart = new Chart(pipeCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: stages.map(s => s.name),
+                    datasets: [{
+                        label: 'Deals / Records',
+                        data: stages.map(s => s.count),
+                        backgroundColor: [
+                            'rgba(148, 163, 184, 0.85)',
+                            'rgba(96, 165, 250, 0.85)',
+                            'rgba(234, 179, 8, 0.85)',
+                            'rgba(249, 115, 22, 0.85)',
+                            'rgba(34, 197, 94, 0.85)',
+                            'rgba(129, 140, 248, 0.85)',
+                            'rgba(192, 132, 252, 0.85)'
+                        ],
+                        borderColor: [
+                            '#94a3b8',
+                            '#60a5fa',
+                            '#eab308',
+                            '#f97316',
+                            '#22c55e',
+                            '#818cf8',
+                            '#c084fc'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 3
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) { return ` Records: ${ctx.raw.toLocaleString()}`; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 9 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#ffffff', font: { size: 9, weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // 4. Render CS Dashboard Style Semicircular Target Meter Cards
+    function renderMeterCards(containerId, meters) {
+        const container = $('#' + containerId);
+        container.empty();
+        if (!meters || meters.length === 0) return;
+
+        let html = '';
+        meters.forEach(function(m) {
+            let pctInt = Math.round(m.pct) || 0;
+            let displayPct = pctInt + '%';
+            if (pctInt > 999) {
+                displayPct = '>999%';
+            }
+
+            const arcLength = 150.8;
+            const clampedPct = Math.min(Math.max(pctInt, 0), 100);
+            const dashoffset = (arcLength * (1 - clampedPct / 100)).toFixed(2);
+
+            let fontSize = '20';
+            if (pctInt > 999) {
+                fontSize = '14';
+            } else if (pctInt > 99) {
+                fontSize = '17';
+            }
+
+            let checkIcon = '<i class="fas fa-check-circle" style="color:#10b981;"></i>';
+            if (pctInt < 36) {
+                checkIcon = '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>';
+            } else if (pctInt < 71) {
+                checkIcon = '<i class="fas fa-clock" style="color:#f59e0b;"></i>';
+            } else if (pctInt > 100) {
+                checkIcon = '<i class="fas fa-bolt" style="color:#38bdf8;"></i>';
+            }
+
+            let fillColor = m.color || '#38bdf8';
+            let badgeBg = `${fillColor}22`;
+            let badgeBorder = `${fillColor}55`;
+
+            let bottomSnippet = '';
+            if (m.is_onboard) {
+                bottomSnippet = `
+                    <div class="won-card-box" onclick="openWonClientsModal()" title="Click to view all newly onboarded clients with Business Won: Yes status">
+                        <div class="won-status-line">
+                            <span class="won-status-chip"><i class="fas fa-check-circle text-success"></i> Won: Yes</span>
+                            <span class="won-view-btn">View All (${m.done}) &rarr;</span>
+                        </div>
+                        <div class="won-client-name-ticker">
+                            <i class="fas fa-building text-info" style="font-size:0.52rem;"></i>
+                            <span class="won-rotator-text" id="won-rotator-name">${m.latest_won_name || 'View Clients'}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bottomSnippet = `
+                    <div class="kpi-sla-badge" style="background:${badgeBg}; color:${fillColor}; border:1px solid ${badgeBorder};" title="${m.badge}">
+                        ${m.badge}
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="kpi-target-card">
+                    <div class="kpi-target-card-header">
+                        <span class="kpi-target-card-title">${m.title}</span>
+                        <span class="kpi-target-card-check">${checkIcon}</span>
+                    </div>
+                    <div class="kpi-target-card-divider"></div>
+                    <div class="kpi-target-card-sub">
+                        <span>Target: <strong>${m.target}</strong></span>
+                        <span>Done: <strong>${m.done}</strong></span>
+                    </div>
+                    <div class="kpi-target-card-gauge">
+                        <svg class="kpi-gauge-svg" viewBox="0 0 120 54" width="98" height="46">
+                            <path d="M 12 50 A 48 48 0 0 1 108 50" 
+                                  fill="none" 
+                                  stroke="rgba(255, 255, 255, 0.12)" 
+                                  stroke-width="8" 
+                                  stroke-linecap="round" />
+                            <path d="M 12 50 A 48 48 0 0 1 108 50" 
+                                  fill="none" 
+                                  stroke="${fillColor}" 
+                                  stroke-width="8" 
+                                  stroke-linecap="round"
+                                  stroke-dasharray="150.8" 
+                                  stroke-dashoffset="${dashoffset}" 
+                                  style="transition: stroke-dashoffset 0.8s ease; filter: drop-shadow(0 0 4px ${fillColor}99);" />
+                            <text x="60" y="46" text-anchor="middle" dominant-baseline="auto" font-size="${fontSize}" font-weight="900" fill="#ffffff" letter-spacing="-0.5px">${displayPct}</text>
+                        </svg>
+                    </div>
+                    ${bottomSnippet}
+                </div>
+            `;
+        });
+        container.html(html);
+
+        // Start rotating customer names in the Won meter card if multiple won clients exist
+        meters.forEach(function(m) {
+            if (m.is_onboard && m.won_preview && m.won_preview.length > 1) {
+                if (wonRotatorInterval) clearInterval(wonRotatorInterval);
+                let rIdx = 0;
+                wonRotatorInterval = setInterval(function() {
+                    rIdx = (rIdx + 1) % m.won_preview.length;
+                    const el = $('#won-rotator-name');
+                    if (el.length) {
+                        el.fadeOut(150, function() {
+                            $(this).text(m.won_preview[rIdx]).fadeIn(150);
+                        });
+                    }
+                }, 3000);
+            }
+        });
+    }
+
+    // ══════ WON CLIENTS MODAL LOGIC ══════
+    window.openWonClientsModal = function() {
+        renderWonModalTable(currentWonCustomers);
+        $('#wonClientsModal').fadeIn(150);
+        $('#won-client-search').val('').focus();
+    };
+
+    window.closeWonClientsModal = function() {
+        $('#wonClientsModal').fadeOut(120);
+    };
+
+    $('#wonClientsModal').on('click', function(e) {
+        if ($(e.target).hasClass('won-modal-backdrop')) {
+            closeWonClientsModal();
+        }
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#wonClientsModal').is(':visible')) {
+            closeWonClientsModal();
+        }
+    });
+
+    $('#won-client-search').on('keyup', function() {
+        const query = $(this).val().toLowerCase().trim();
+        if (!query) {
+            renderWonModalTable(currentWonCustomers);
+            return;
+        }
+        const filtered = currentWonCustomers.filter(function(item) {
+            return (item.customer_name && item.customer_name.toLowerCase().includes(query)) ||
+                   (item.sales_rep && item.sales_rep.toLowerCase().includes(query)) ||
+                   (item.status && item.status.toLowerCase().includes(query));
+        });
+        renderWonModalTable(filtered);
+    });
+
+    function renderWonModalTable(list) {
+        $('#modal-won-count').text(`${list.length} Won Clients`);
+        $('#modal-showing-count').text(list.length);
+        const tbody = $('#won-modal-tbody');
+        tbody.empty();
+        if (!list || list.length === 0) {
+            tbody.html('<tr><td colspan="7" style="text-align:center; padding:25px; color:#94a3b8;"><i class="fas fa-search mr-1"></i> No business won clients match this criteria.</td></tr>');
+            return;
+        }
+
+        let html = '';
+        list.forEach(function(item, idx) {
+            const revFormatted = item.revenue > 0 ? `₹${(item.revenue / 100000).toFixed(2)} L` : '-';
+            html += `
+                <tr>
+                    <td style="text-align:center; color:#94a3b8; font-size:0.64rem;">${idx + 1}</td>
+                    <td style="font-weight:700; color:#ffffff;">
+                        <i class="fas fa-building text-info mr-1" style="font-size:0.62rem;"></i> ${item.customer_name}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="badge-won-pill"><i class="fas fa-check-circle mr-1"></i> Won: Yes</span>
+                    </td>
+                    <td style="color:#d1dcfa; font-size:0.65rem;">
+                        <span class="won-lifecycle-tag">${item.status}</span>
+                    </td>
+                    <td style="color:#93c5fd; font-weight:600;">
+                        <i class="fas fa-user-tie text-secondary mr-1" style="font-size:0.58rem;"></i> ${item.sales_rep}
+                    </td>
+                    <td style="text-align:center; color:#e2e8f0; font-size:0.64rem;">${item.won_date}</td>
+                    <td style="text-align:right; font-weight:700; color:#86efac; font-size:0.66rem;">${revFormatted}</td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    }
+
+    // Helper for formatting zeroes
+    function fmtVal(v, isDec) {
+        if (!v || v === 0 || v === '0') return '<span class="val-dim">-</span>';
+        if (isDec) return Number(v).toFixed(2);
+        return Number(v).toLocaleString();
+    }
+
+    // 5. Render Alternative Matrix View Table
+    function renderMatrixTable(rows, totals) {
+        if (!rows) return;
+        $('#matrix-row-count').text(`${rows.length} Executives`);
+
+        let tbodyHtml = '';
+        rows.forEach(function(r) {
+            tbodyHtml += `
+                <tr>
+                    <td class="sticky-col-1 font-weight-bold" style="color:#ffffff;">
+                        <i class="fas fa-user-circle mr-1 text-primary"></i> ${r.salesperson}
+                    </td>
+                    <td class="sticky-col-2 font-weight-bold" style="color:#93c5fd;">${r.company}</td>
+                    <td class="col-center" style="color:#94a3b8;">${r.branch_name}</td>
+                    <td class="col-num font-weight-bold" style="color:#fef08a;">${r.no_of_calls.toLocaleString()}</td>
+
+                    <!-- Call Type -->
+                    <td class="col-num">${fmtVal(r.email)}</td>
+                    <td class="col-num" style="color:#93c5fd;">${fmtVal(r.in_person)}</td>
+                    <td class="col-num">${fmtVal(r.ms_teams)}</td>
+                    <td class="col-num" style="color:#86efac;">${fmtVal(r.tele_call)}</td>
+
+                    <!-- Call Nature -->
+                    <td class="col-num">${fmtVal(r.suspect)}</td>
+                    <td class="col-num">${fmtVal(r.prospect)}</td>
+                    <td class="col-num" style="color:#fde047;">${fmtVal(r.rfq)}</td>
+                    <td class="col-num">${fmtVal(r.negotiation)}</td>
+                    <td class="col-num" style="color:#86efac;">${fmtVal(r.contract_signed)}</td>
+                    <td class="col-num">${fmtVal(r.implementation)}</td>
+                    <td class="col-num">${fmtVal(r.transaction)}</td>
+
+                    <!-- Targets -->
+                    <td class="col-num" style="color:#fde68a;">${fmtVal(r.target_rev_exist, true)}</td>
+                    <td class="col-num" style="color:#fde68a;">${fmtVal(r.target_rev_new, true)}</td>
+                    <td class="col-num">${fmtVal(r.target_cust_total)}</td>
+                    <td class="col-num">${fmtVal(r.target_cust_new)}</td>
+                    <td class="col-num">${fmtVal(r.target_cust_exist)}</td>
+                    <td class="col-num">${fmtVal(r.target_cust_onboard)}</td>
+
+                    <!-- Actuals -->
+                    <td class="col-num" style="color:#86efac;">${fmtVal(r.actual_rev_exist, true)}</td>
+                    <td class="col-num" style="color:#86efac;">${fmtVal(r.actual_rev_new, true)}</td>
+                    <td class="col-num">${fmtVal(r.actual_cust_total)}</td>
+                    <td class="col-num">${fmtVal(r.actual_cust_new)}</td>
+                    <td class="col-num">${fmtVal(r.actual_cust_exist)}</td>
+                    <td class="col-num" style="color:#fde047; font-weight:800;">${fmtVal(r.actual_cust_onboard)}</td>
+
+                    <!-- Achievement Badges -->
+                    <td class="col-center"><span class="badge-scale badge-${r.rev_color_class}">${r.rev_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-${r.cust_color_class}">${r.cust_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-${r.onboard_color_class}">${r.onboard_achieve_pct}%</span></td>
+                </tr>
+            `;
+        });
+        $('#matrix-tbody').html(tbodyHtml);
+
+        // Totals Footer Row
+        if (totals) {
+            let tfootHtml = `
+                <tr class="row-total-footer">
+                    <td class="sticky-col-1"><i class="fas fa-layer-group mr-1 text-warning"></i> TOTAL</td>
+                    <td class="sticky-col-2">ALL</td>
+                    <td class="col-center">-</td>
+                    <td class="col-num">${totals.no_of_calls.toLocaleString()}</td>
+
+                    <!-- Call Type Totals -->
+                    <td class="col-num">${totals.email.toLocaleString()}</td>
+                    <td class="col-num">${totals.in_person.toLocaleString()}</td>
+                    <td class="col-num">${totals.ms_teams.toLocaleString()}</td>
+                    <td class="col-num">${totals.tele_call.toLocaleString()}</td>
+
+                    <!-- Call Nature Totals -->
+                    <td class="col-num">${totals.suspect.toLocaleString()}</td>
+                    <td class="col-num">${totals.prospect.toLocaleString()}</td>
+                    <td class="col-num">${totals.rfq.toLocaleString()}</td>
+                    <td class="col-num">${totals.negotiation.toLocaleString()}</td>
+                    <td class="col-num">${totals.contract_signed.toLocaleString()}</td>
+                    <td class="col-num">${totals.implementation.toLocaleString()}</td>
+                    <td class="col-num">${totals.transaction.toLocaleString()}</td>
+
+                    <!-- Target Totals -->
+                    <td class="col-num">${totals.target_rev_exist.toFixed(2)}</td>
+                    <td class="col-num">${totals.target_rev_new.toFixed(2)}</td>
+                    <td class="col-num">${totals.target_cust_total.toLocaleString()}</td>
+                    <td class="col-num">${totals.target_cust_new.toLocaleString()}</td>
+                    <td class="col-num">${totals.target_cust_exist.toLocaleString()}</td>
+                    <td class="col-num">${totals.target_cust_onboard.toLocaleString()}</td>
+
+                    <!-- Actual Totals -->
+                    <td class="col-num">${totals.actual_rev_exist.toFixed(2)}</td>
+                    <td class="col-num">${totals.actual_rev_new.toFixed(2)}</td>
+                    <td class="col-num">${totals.actual_cust_total.toLocaleString()}</td>
+                    <td class="col-num">${totals.actual_cust_new.toLocaleString()}</td>
+                    <td class="col-num">${totals.actual_cust_exist.toLocaleString()}</td>
+                    <td class="col-num">${totals.actual_cust_onboard.toLocaleString()}</td>
+
+                    <!-- Overall Achievement -->
+                    <td class="col-center"><span class="badge-scale badge-green">${totals.rev_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-blue">${totals.cust_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-blue">${totals.onboard_achieve_pct}%</span></td>
+                </tr>
+            `;
+            $('#matrix-tfoot').html(tfootHtml);
+        }
+    }
+});
+</script>
+{% endblock content %}

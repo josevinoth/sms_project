@@ -1,6 +1,6 @@
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" id="gate_in" action="{% if is_edit %}{% url 'gatein_update_new' gatein_id %}{% else %}{% url 'gatein_insert_new' %}{% endif %}" data-load_customer_model-url="{% url 'load_customer_model' %}">
+<form method="POST" id="gate_in" action="{% if is_edit %}{% url 'gatein_update' gatein_id %}{% else %}{% url 'gatein_insert' %}{% endif %}" data-load_customer_model-url="{% url 'load_customer_model' %}">
 	{% csrf_token %}
 	<div class="row container-fluid">
 		<div class="col-3">

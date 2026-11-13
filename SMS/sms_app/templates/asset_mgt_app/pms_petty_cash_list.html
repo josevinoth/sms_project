@@ -9,6 +9,9 @@
             <i class="fas fa-list-alt mr-2"></i> PMS Petty Cash List
         </h3>
         <div class="d-flex" style="gap:10px;">
+            <a href="{% url 'pms_petty_cash_export_zip' %}?ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-file-archive"></i> Download ZIP
+            </a>
             <a href="{% url 'pms_petty_cash_export_tally' %}?ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #10b981, #059669); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
                 <i class="fas fa-file-excel"></i> Export Tally
             </a>
@@ -88,7 +91,29 @@
         <div class="table-responsive">
             <table id="pms_petty_cash_table" class="table table-striped table-bordered modern-table w-100">
                 <thead>
-                    <tr>
+                    <tr class="filter-row">
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search S.No" disabled style="visibility:hidden; width:40px; min-width:40px;"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Voucher No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Voucher Date"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Trx Date"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Business"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Branch"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Expense Type"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Amount"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Credit Ledger"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search To Person"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Unit"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Job No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Vehicle No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Customer"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Bill No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Bill Amt"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search GST Amt"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Total Amt"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Created By"></th>
+                        <th></th>
+                    </tr>
+                    <tr style="white-space: nowrap;">
                         <th>S.No</th>
                         <th>Voucher No</th>
                         <th>Voucher Date</th>
@@ -114,7 +139,7 @@
                 <tbody>
                     {% for wpc in ppc_list %}
                     <tr>
-                        <td>{{ forloop.counter0|add:ppc_list.start_index }}</td>
+                        <td>{{ forloop.counter }}</td>
                         <td><strong>{{ wpc.ppc_number }}</strong></td>
                         <td>{{ wpc.ppc_date|date:"d-m-Y"|default:"-" }}</td>
                         <td>{{ wpc.ppc_transaction_date|date:"d-m-Y"|default:"-" }}</td>
@@ -146,6 +171,14 @@
                                 <a href="{% url 'pms_petty_cash_voucher_print' wpc.id %}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
                                     <i class="fas fa-print"></i>
                                 </a>
+                                <a href="{% url 'pms_petty_cash_combined_pdf' wpc.id %}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #dc3545; color: white; border-color: #dc3545;" title="Combined Voucher & Bill PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% if wpc.ppc_bill_attachment %}
+                                <a href="{{ wpc.ppc_bill_attachment.url }}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #6c757d; color: white; border-color: #6c757d;" title="View Attachment">
+                                    <i class="fas fa-paperclip"></i>
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'pms_petty_cash_update' wpc.id %}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;" title="Edit">
                                     <i class="far fa-edit"></i>
                                 </a>
@@ -158,37 +191,46 @@
                             </div>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="19" class="text-center text-muted py-4">No PMS Petty Cash records found.</td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination -->
-        {% if ppc_list.has_other_pages %}
-        <nav class="mt-3">
-            <ul class="pagination pagination-sm justify-content-center">
-                {% if ppc_list.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.previous_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">&laquo;</a></li>
-                {% endif %}
-                
-                {% for i in ppc_list.paginator.page_range %}
-                    {% if ppc_list.number == i %}
-                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                    {% elif i > ppc_list.number|add:'-3' and i < ppc_list.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?page={{ i }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">{{ i }}</a></li>
-                    {% endif %}
-                {% endfor %}
-
-                {% if ppc_list.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ ppc_list.next_page_number }}&ppc_number={{ search_ppc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}">&raquo;</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
     </div>
 </div>
+
+<style>
+    .filter-input {
+        min-width: 90px;
+        height: 30px !important;
+        font-size: 0.8rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        var table = $('#pms_petty_cash_table').DataTable({
+            scrollX: true,
+            dom: '<"d-flex justify-content-between align-items-center mb-2"l f><"d-flex justify-content-between align-items-center mb-2"B>rtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            order: [[0, 'asc']],
+            initComplete: function () {
+                $('.filter-row input').on('keyup change', function () {
+                    let colIndex = $(this).closest('th').index();
+                    table.column(colIndex).search(this.value).draw();
+                });
+            }
+        });
+
+        // Prevent column ordering when clicking input inside filter row
+        $('.filter-row input').on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,442 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-3 px-2 px-md-4">
+
+    <!-- ══ Page Header (Matches BVM Report Style) ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3">
+        <div class="modern-list-title d-flex align-items-center" style="gap: 8px;">
+            <i class="fas fa-truck-moving"></i>
+            <h3 class="mb-0 text-white font-weight-bold" style="font-size:1.25rem; letter-spacing:0.5px; text-transform:uppercase;">
+                Vehicles Placed & DMR Report
+            </h3>
+        </div>
+        <div>
+            <a href="{% url 'transport_reports' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.4rem 1.1rem; font-size:0.85rem; font-weight:700; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Search / Filter Section (Matches Image 2) ══ -->
+    <div class="form-section mb-3">
+        <form method="GET" action="{% url 'vehicle_placed_dmr_report' %}">
+            <div class="row align-items-end g-3">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern fw-bold" style="font-size:0.78rem; text-transform:uppercase;">From Date</label>
+                        <input type="date" class="form-control form-control-modern" name="from_date" id="from_date" value="{{ from_date }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern fw-bold" style="font-size:0.78rem; text-transform:uppercase;">To Date</label>
+                        <input type="date" class="form-control form-control-modern" name="to_date" id="to_date" value="{{ to_date }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern fw-bold" style="font-size:0.78rem; text-transform:uppercase;">Branch</label>
+                        <select name="branch" id="branch" class="form-control form-control-modern">
+                            <option value="">All Branches</option>
+                            <option value="MAA" {% if branch == "MAA" %}selected{% endif %}>MAA (Chennai)</option>
+                            <option value="BLR" {% if branch == "BLR" %}selected{% endif %}>BLR (Bengaluru)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern d-none d-md-block" style="visibility:hidden; font-size:0.78rem;">Actions</label>
+                        <div class="d-flex" style="gap: 10px;">
+                            <button type="submit" class="btn btn-submit flex-fill d-inline-flex align-items-center justify-content-center" style="height: 40px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; color: #fff;">
+                                <i class="fas fa-filter mr-1"></i> FILTER
+                            </button>
+                            <a href="{% url 'vehicle_placed_dmr_report' %}" class="btn btn-cancel flex-fill d-inline-flex align-items-center justify-content-center" style="height: 40px; border-radius: 8px; text-decoration: none; font-weight: 700;">
+                                <i class="fas fa-sync mr-1"></i> CLEAR
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Compact Low-Profile KPI Dashboard (Reduced Height) ══ -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 px-3 py-2 shadow-sm" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; gap: 12px;">
+        <div class="d-flex align-items-center flex-wrap" style="gap: 20px;">
+            <div class="d-flex align-items-center" style="gap: 8px;">
+                <i class="fas fa-truck text-success" style="font-size: 1.15rem;"></i>
+                <span class="text-muted font-weight-bold" style="font-size: 0.85rem; letter-spacing: 0.3px;">TOTAL VEHICLES PLACED:</span>
+                <span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.95rem; border-radius: 6px;">
+                    {{ total_placed }}
+                </span>
+            </div>
+            <div class="d-none d-sm-block" style="height: 22px; width: 1px; background: #cbd5e1;"></div>
+            <div class="d-flex align-items-center" style="gap: 8px;">
+                <i class="fas fa-paper-plane text-primary" style="font-size: 1.15rem;"></i>
+                <span class="text-muted font-weight-bold" style="font-size: 0.85rem; letter-spacing: 0.3px;">TOTAL DMR MAILS SENT:</span>
+                <span class="badge badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.95rem; border-radius: 6px;">
+                    {{ total_dmr_sent }}
+                </span>
+            </div>
+        </div>
+        <div class="text-muted small font-weight-600">
+            <i class="far fa-calendar-alt mr-1"></i> Period:
+            {% if from_date and to_date %}
+                <b>{{ from_date }}</b> to <b>{{ to_date }}</b>
+            {% elif from_date %}
+                From <b>{{ from_date }}</b>
+            {% elif to_date %}
+                Up to <b>{{ to_date }}</b>
+            {% else %}
+                <b>All Available Dates</b>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ══ Table Container with DataTables Buttons (Matches Image 2) ══ -->
+    <div class="table-container-modern p-3 mb-4">
+        <table id="vehicle_placed_dmr_table" class="table table-striped table-bordered modern-table w-100">
+            <thead style="background: #0f172a; color: #ffffff;">
+                <tr>
+                    <th style="width: 80px; text-align: center !important;" class="text-center">SNO</th>
+                    <th style="text-align: center !important;" class="text-center">DATE</th>
+                    <th style="width: 260px; text-align: center !important;" class="text-center">VEHICLES PLACED</th>
+                    <th style="width: 260px; text-align: center !important;" class="text-center">DMR MAILS SEND</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in daily_data %}
+                <tr>
+                    <td class="text-center font-weight-600 text-muted" style="text-align: center !important; vertical-align: middle !important;">
+                        {{ forloop.counter }}
+                    </td>
+                    <td class="text-center" style="text-align: center !important; vertical-align: middle !important;">
+                        <div class="d-inline-flex align-items-center justify-content-center text-center">
+                            <span class="font-weight-bold text-dark">{{ row.date }}</span>
+                            <span class="badge badge-light border text-muted ml-2 font-weight-normal" style="font-size: 0.78rem;">{{ row.day_name }}</span>
+                        </div>
+                    </td>
+                    <td class="text-center font-weight-bold" style="text-align: center !important; vertical-align: middle !important;">
+                        {% if row.vehicles_placed > 0 %}
+                        <span class="badge badge-success px-3 py-1 font-weight-bold" style="font-size: 0.9rem; border-radius: 6px;">
+                            {{ row.vehicles_placed }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted font-weight-bold">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center" style="text-align: center !important; vertical-align: middle !important;">
+                        <div class="d-inline-flex align-items-center justify-content-center" style="gap: 8px;">
+                            {% if row.dmr_mails_sent > 0 %}
+                            <span class="badge badge-primary px-3 py-1 font-weight-bold btn-dmr-details" 
+                                  style="font-size: 0.9rem; border-radius: 6px; cursor: pointer;" 
+                                  data-date-iso="{{ row.date_iso }}" 
+                                  data-date="{{ row.date }}" 
+                                  onclick="populateAndShowModal('{{ row.date_iso }}', '{{ row.date }}')"
+                                  title="Click to view Customer DMR Details">
+                                {{ row.dmr_mails_sent }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted font-weight-bold">0</span>
+                            {% endif %}
+
+                            {% if row.has_details %}
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center btn-dmr-details" 
+                                    style="width: 28px; height: 26px; padding: 0; border-radius: 6px; cursor: pointer;" 
+                                    data-date-iso="{{ row.date_iso }}" 
+                                    data-date="{{ row.date }}" 
+                                    onclick="populateAndShowModal('{{ row.date_iso }}', '{{ row.date }}')"
+                                    title="View Customer Placements & DMR Status">
+                                <i class="fas fa-eye" style="font-size: 0.8rem; pointer-events: none;"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- ══ Modal: Customer Placements & DMR Dispatch Status ══ -->
+<div class="modal fade" id="dmrLogModal" tabindex="-1" role="dialog" aria-labelledby="dmrLogModalTitle" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 10px 35px rgba(0,0,0,0.22); overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 0.9rem 1.25rem;">
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                    <i class="fas fa-truck-loading text-warning" style="font-size: 1.25rem;"></i>
+                    <div>
+                        <h5 class="modal-title font-weight-bold mb-0" id="dmrLogModalTitle" style="font-size: 1.05rem;">
+                            Customer Placements & DMR Dispatch Status
+                        </h5>
+                        <span class="small text-light opacity-75" id="dmrLogModalSubtitle"></span>
+                    </div>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" onclick="closeDmrModalFallback()" aria-label="Close" style="opacity: 0.85;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3" style="background: #f8fafc;">
+                <div class="table-responsive bg-white rounded border p-2">
+                    <table class="table table-sm table-hover mb-0" style="font-size: 0.82rem;">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width: 45px; text-align: center;">#</th>
+                                <th style="text-align: left;">Customer Name</th>
+                                <th style="width: 120px; text-align: center;">Vehicles Placed</th>
+                                <th style="width: 130px; text-align: center;">DMR Mail Status</th>
+                                <th style="width: 100px; text-align: center;">Dispatch Time</th>
+                                <th style="text-align: left;">Recipient (To)</th>
+                                <th style="width: 110px; text-align: center;">Sent By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dmrLogModalBody">
+                            <!-- Populated dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer py-2 px-3 bg-white justify-content-between">
+                <div class="small text-muted font-weight-600" id="dmrLogModalCount"></div>
+                <button type="button" class="btn btn-secondary btn-sm px-3 font-weight-bold" data-dismiss="modal" onclick="closeDmrModalFallback()" style="border-radius: 6px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-section {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .form-control-modern {
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+    .form-control-modern:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .table-container-modern {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    #vehicle_placed_dmr_table th,
+    #vehicle_placed_dmr_table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    #vehicle_placed_dmr_table th:nth-child(2),
+    #vehicle_placed_dmr_table td:nth-child(2) {
+        text-align: center !important;
+    }
+    #vehicle_placed_dmr_table thead th {
+        border: none;
+        padding: 0.75rem 0.85rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        text-align: center !important;
+    }
+    #vehicle_placed_dmr_table tbody td {
+        vertical-align: middle !important;
+        padding: 0.65rem 0.85rem;
+        text-align: center !important;
+    }
+    .btn-submit:hover {
+        opacity: 0.92;
+    }
+</style>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+// Customer breakdown data mapped by ISO date
+const customerBreakdown = {{ customer_breakdown_json|safe }};
+
+function populateAndShowModal(dateIso, dateFormatted) {
+    const list = customerBreakdown[dateIso] || [];
+    const subtitle = document.getElementById('dmrLogModalSubtitle');
+    const modalBody = document.getElementById('dmrLogModalBody');
+    const modalCount = document.getElementById('dmrLogModalCount');
+
+    let totalPlacedOnDate = 0;
+    let totalDmrSentOnDate = 0;
+    let totalPendingOnDate = 0;
+
+    list.forEach(item => {
+        totalPlacedOnDate += (item.vehicles_placed || 0);
+        if (item.dmr_sent) {
+            totalDmrSentOnDate++;
+        } else {
+            totalPendingOnDate++;
+        }
+    });
+
+    if (subtitle) {
+        subtitle.innerText = `Date: ${dateFormatted} | ${totalPlacedOnDate} Placed | DMR: ${totalDmrSentOnDate} Sent, ${totalPendingOnDate} Pending`;
+    }
+    if (modalCount) {
+        modalCount.innerText = `Total ${list.length} customer${list.length === 1 ? '' : 's'} with activity on this date`;
+    }
+
+    let rowsHtml = '';
+    if (list.length === 0) {
+        rowsHtml = '<tr><td colspan="7" class="text-center text-muted py-3">No customer activity found for this date.</td></tr>';
+    } else {
+        list.forEach((item, index) => {
+            const statusBadge = item.dmr_sent
+                ? '<span class="badge badge-success px-2 py-1 font-weight-bold" style="border-radius: 5px;"><i class="fas fa-check-circle mr-1"></i> Sent</span>'
+                : '<span class="badge badge-warning text-dark px-2 py-1 font-weight-bold" style="border-radius: 5px;"><i class="fas fa-clock mr-1"></i> Pending</span>';
+
+            const placedBadge = item.vehicles_placed > 0
+                ? `<span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.85rem; border-radius: 5px;">${item.vehicles_placed}</span>`
+                : '<span class="text-muted font-weight-bold">0</span>';
+
+            rowsHtml += `
+                <tr>
+                    <td class="text-center text-muted font-weight-600">${index + 1}</td>
+                    <td class="text-left font-weight-bold text-dark">
+                        <i class="fas fa-building text-primary mr-1"></i>${item.customer_name}
+                    </td>
+                    <td class="text-center">${placedBadge}</td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td class="text-center text-muted font-weight-600">${item.dmr_time}</td>
+                    <td class="text-left text-muted small" style="word-break: break-all;">
+                        ${item.dmr_recipient}
+                    </td>
+                    <td class="text-center text-dark font-weight-600">${item.dmr_sent_by}</td>
+                </tr>
+            `;
+        });
+    }
+
+    if (modalBody) {
+        modalBody.innerHTML = rowsHtml;
+    }
+
+    // Try Bootstrap modal method first
+    try {
+        if (window.jQuery && typeof jQuery('#dmrLogModal').modal === 'function') {
+            jQuery('#dmrLogModal').modal('show');
+            return;
+        }
+        if (window.$ && typeof $('#dmrLogModal').modal === 'function') {
+            $('#dmrLogModal').modal('show');
+            return;
+        }
+    } catch (e) {
+        console.warn("Bootstrap modal exception, falling back to direct display:", e);
+    }
+
+    // Fallback: direct CSS display if Bootstrap modal JS is unavailable
+    var modalEl = document.getElementById('dmrLogModal');
+    if (modalEl) {
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        document.body.classList.add('modal-open');
+        var existingBackdrop = document.getElementById('fallbackBackdrop');
+        if (!existingBackdrop) {
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'fallbackBackdrop';
+            backdrop.onclick = closeDmrModalFallback;
+            document.body.appendChild(backdrop);
+        }
+    }
+}
+
+function closeDmrModalFallback() {
+    try {
+        if (window.jQuery && typeof jQuery('#dmrLogModal').modal === 'function') {
+            jQuery('#dmrLogModal').modal('hide');
+        } else if (window.$ && typeof $('#dmrLogModal').modal === 'function') {
+            $('#dmrLogModal').modal('hide');
+        }
+    } catch (e) {}
+
+    var modalEl = document.getElementById('dmrLogModal');
+    if (modalEl) {
+        modalEl.style.display = 'none';
+        modalEl.classList.remove('show');
+    }
+    document.body.classList.remove('modal-open');
+    var backdrop = document.getElementById('fallbackBackdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+}
+
+// Global click delegation for eyeball buttons & badges
+$(document).on('click', '.btn-dmr-details', function(e) {
+    e.preventDefault();
+    var dateIso = $(this).attr('data-date-iso');
+    var dateFormatted = $(this).attr('data-date');
+    populateAndShowModal(dateIso, dateFormatted);
+});
+
+$(document).ready(function () {
+    // 1. Initialize Daily Summary Table
+    $('#vehicle_placed_dmr_table').DataTable({
+        "dom": '<"d-flex justify-content-between align-items-center mb-3 flex-wrap"lBf>rt<"d-flex justify-content-between align-items-center mt-3 flex-wrap"ip>',
+        "pageLength": 10,
+        "lengthMenu": [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+        "ordering": false,
+        "columnDefs": [
+            { "targets": [0, 1, 2, 3], "className": "text-center align-middle" }
+        ],
+        "buttons": [
+            {
+                extend: 'copy',
+                className: 'btn btn-sm btn-outline-secondary'
+            },
+            {
+                extend: 'csv',
+                className: 'btn btn-sm btn-outline-secondary'
+            },
+            {
+                extend: 'excelHtml5',
+                text: 'EXCEL',
+                title: 'Vehicles_Placed_and_DMR_Mails_Sent',
+                className: 'btn btn-sm btn-outline-secondary'
+            },
+            {
+                extend: 'pdfHtml5',
+                text: 'PDF',
+                title: 'Vehicles Placed & DMR Mails Sent',
+                className: 'btn btn-sm btn-outline-secondary'
+            },
+            {
+                extend: 'print',
+                className: 'btn btn-sm btn-outline-secondary'
+            }
+        ],
+        "language": {
+            "search": "Search:",
+            "searchPlaceholder": ""
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

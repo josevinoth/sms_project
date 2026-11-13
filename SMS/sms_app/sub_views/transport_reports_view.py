@@ -777,7 +777,7 @@ TRANSPORT_INVOICE_FIELD_MAPPING = {
 TRANSPORT_OPERATIONAL_EXPENSES_FIXED = {
     "GPRS Access & Service": "bf_gprs_access_service",
     "Insurance-Vehicles": "bf_insurance_vehicles",
-    "Vehicle-Hire": "bf_vehicle_hire",
+    "Vehicle Hire": "bf_vehicle_hire",
 }
 
 TRANSPORT_OPERATIONAL_EXPENSES_VARIABLE = {
@@ -820,11 +820,10 @@ TRANSPORT_NON_OPERATIONAL_EXPENSES_VARIABLE = {
     "Telephone & Mobile": "bf_telephone_mobile_expenses",
     "Training": "bf_training_expenses",
     "Travelling": "bf_travelling_expenses",
-    "Power and Fuel Expenses": "bf_power_fuel",
+    "Power & Fuel": "bf_power_fuel",
 }
 
 TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
-    "Corp Staff": "bf_corp_staff",
     "Bonus-Corp Staff": "bf_bonus_corp_staff",
     "EDLI Contribution-Corp Staff": "bf_EDLI_contribution_corp_staff",
     "Employer Contribution to ESI-Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
@@ -837,7 +836,6 @@ TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
     "LWF-Corp Staff": "bf_lwf_corp_staff",
     "Salaries & Wages-Corp Staff": "bf_salaries_wages_corp_staff",
 
-    "Dept Staff": "bf_dept_staff",
     "Bonus-Staff": "bf_bonus_staff",
     "EDLI Contribution-Staff": "bf_EDLI_contribution_staff",
     "Employer Contribution to ESI-Staff": "bf_employer_contribution_to_ESI_staff",
@@ -850,7 +848,6 @@ TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
     "LWF-Staff": "bf_lwf_dept_staff",
     "Salaries & Wages-Staff": "bf_salaries_wages_staff",
 
-    "Drivers": "bf_driver_staff",
     "Bonus-Drivers": "bf_bonus_drivers",
     "EDLI Contribution-Drivers": "bf_EDLI_contribution_drivers",
     "Employer Contribution to ESI-Drivers": "bf_employer_contribution_to_ESI_drivers",
@@ -870,7 +867,7 @@ TRANSPORT_DEPARTMENT_EXPENSES_CATEGORIES = {
     "Consultancy": "bf_consultancy_charges",
     "Celebration": "bf_celebration_expenses",
     "Directors Remuneration": "bf_directors_remuneration",
-    "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
+    "Interest on Statutory Dues": "bf_interest_on_statutory_dues",
     "Office Repairs & Maintenance": "bf_office_repairs_maintenance",
     "Professional & Legal": "bf_professional_legal_charges",
     "Rent-Furniture & Fittings": "bf_rent_furniture_fittings",
@@ -880,7 +877,7 @@ TRANSPORT_DEPARTMENT_EXPENSES_CATEGORIES = {
 
 TRANSPORT_INTEREST_EXPENSES_CATEGORIES = {
     "Interest on Borrowings": "bf_interest_on_borrowings",
-    "Interest on vehicle loan": "bf_interest_on_vehicle_loan",
+    "Interest on Vehicle Loan": "bf_interest_on_vehicle_loan",
 }
 
 TRANSPORT_BUDGET_FIELD_MAPPING = {
@@ -4849,9 +4846,9 @@ def own_vehicle_pl_report_view(request):
             ext_expenses = ext_expenses.filter(exp_ext_vehicle_number__vm_registrationnumber__in=unique_veh_nos)
 
         if date_from:
-            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_end_date__gte=date_from)
+            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_end_date__date__gte=date_from)
         if date_to:
-            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_start_date__lte=date_to)
+            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_start_date__date__lte=date_to)
 
         for ext_exp in ext_expenses:
             general_expenses += safe_num(ext_exp.exp_ext_amount)
@@ -7234,321 +7231,97 @@ def location_pl_report_view(request):
         except:
             pass
 
-    trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]
-    ).select_related(
-        'tr_enquirynumber',
-        'tr_enquirynumber__en_customername',
-        'tr_consignmentnumber'
-    ).annotate(
-        resolved_date=Coalesce(
-            'tr_departeddate',
-            'tr_departeddate_pickup',
-            'tr_loading_time',
-            'tr_reporteddate',
-            'tr_reporteddate_pickup',
-            'tr_reporteddate_delivery',
-            'tr_unloading_time',
-            'tr_dock_in_time',
-            'tr_dock_out_time',
-            'tr_created_at'
-        )
+    trips = get_filtered_trips(branch_id, None, None, date_from, date_to, None)
+    trips = trips.filter(
+        Q(tr_category_id=1) | Q(tc_financestatus_id=10),
+        tc_financestatus_id__in=[1, 2, 4, 5, 6, 7, 9, 10]
     )
+    all_trips = list(trips.select_related(
+        'tr_enquirynumber', 'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber', 'tr_vehiclesource', 'tr_vehicletype'
+    ))
 
-    if branch_id:
-        trips = trips.filter(get_branch_filter_q(branch_id))
+    trip_id_to_pk = {t.id: t.id for t in all_trips}
+    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in all_trips if t.tr_tripnumber}
+    all_query_ids = [str(t.id) for t in all_trips] + [str(t.tr_tripnumber).strip() for t in all_trips if t.tr_tripnumber]
 
-    # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
-    # This prevents the database from performing a full table scan to evaluate the complex resolved_date annotation
-    from datetime import datetime, timedelta, time
-    try:
-        if date_from and date_to:
-            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
-            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
-            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
-            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
-            trips = trips.filter(tr_created_at__range=[dt_start, dt_end])
-        elif date_from:
-            d_from = datetime.strptime(date_from, "%Y-%m-%d").date() - timedelta(days=90)
-            dt_start = timezone.make_aware(datetime.combine(d_from, time.min))
-            trips = trips.filter(tr_created_at__gte=dt_start)
-        elif date_to:
-            d_to = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=90)
-            dt_end = timezone.make_aware(datetime.combine(d_to, time.max))
-            trips = trips.filter(tr_created_at__lte=dt_end)
-    except Exception:
-        pass
+    invoices = TransInvoiceInfo.objects.filter(
+        Q(ti_trip_id__in=trip_id_to_pk.keys()) |
+        Q(ti_consignment_id__in=[t.tr_consignmentnumber_id for t in all_trips if t.tr_consignmentnumber_id])
+    ).select_related('ti_trip', 'ti_consignment')
 
-    if date_from and date_to:
-        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
-    elif date_from:
-        trips = trips.filter(resolved_date__date__gte=date_from)
-    elif date_to:
-        trips = trips.filter(resolved_date__date__lte=date_to)
+    invoice_map = {}
+    for i in invoices:
+        if i.ti_trip_id:
+            invoice_map[i.ti_trip_id] = i
+        elif i.ti_consignment_id:
+            for t in all_trips:
+                if t.tr_consignmentnumber_id == i.ti_consignment_id and t.id not in invoice_map:
+                    invoice_map[t.id] = i
 
-    trips_list = [t for t in trips if (t.tr_category_id not in [2, 3] or t.tc_financestatus_id == 10)]
-    trip_ids = [t.id for t in trips_list]
-    trip_enquiries = [t.tr_enquirynumber_id for t in trips_list]
-
-    chunk_size = 900
-    invoices = []
-    for i in range(0, len(trip_ids), chunk_size):
-        invoices.extend(list(TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids[i:i+chunk_size])))
-    invoice_obj_map = {i.ti_trip_id: i for i in invoices}
-
-    trip_id_to_pk = {t.id: t.id for t in trips_list}
-    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in trips_list if t.tr_tripnumber}
-    # Collect all possible search strings (IDs and Trip Numbers - including raw and upper for robust matching)
-    all_query_ids = [str(t.id) for t in trips_list] + [str(t.tr_tripnumber).strip() for t in trips_list if t.tr_tripnumber] + [str(t.tr_tripnumber).strip().upper() for t in trips_list if t.tr_tripnumber]
-    all_query_ids = list(set(all_query_ids))
-
-    expenses = []
-    chunk_size = 900
-    for i in range(0, len(all_query_ids), chunk_size):
-        chunk = all_query_ids[i:i+chunk_size]
-        expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).select_related('de_expense_type').defer('de_receiver_signature', 'de_remarks')))
-        
+    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
     expense_map = {}
     for e in expenses:
         t_id = None
-        search_key = str(e.trip_number).strip().upper() if e.trip_number else ""
-        if search_key in trip_num_to_pk:
-            t_id = trip_num_to_pk[search_key]
-        elif search_key.isdigit():
-            t_id = int(search_key)
+        s_key = str(e.trip_number).strip().upper() if e.trip_number else ''
+        if s_key in trip_num_to_pk:
+            t_id = trip_num_to_pk[s_key]
+        elif s_key.isdigit():
+            t_id = int(s_key)
         if t_id and t_id in trip_id_to_pk:
             expense_map.setdefault(t_id, []).append(e)
 
-    # VENDOR BILLS (MARKET & ATTACHED)
-    # Filter bills to a generous date window around the report period to avoid fetching the entire database
-    from datetime import datetime, timedelta
-    try:
-        dt_from = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
-        dt_to = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
-        market_bills = MarketBillInfo.objects.filter(mb_created_at__range=(dt_from, dt_to))
-        attached_bills = AttachedBillInfo.objects.filter(ab_bill_date__range=(dt_from, dt_to))
-    except Exception:
-        market_bills = MarketBillInfo.objects.all()
-        attached_bills = AttachedBillInfo.objects.all()
+    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
 
-    all_bills = market_bills.only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details')
     bill_no_map = {}
-    for b in all_bills:
+    for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
         if b.mb_selected_trips:
-            ids = [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]
-            for tid in ids:
+            for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
                 try:
                     bill_no_map[int(tid)] = b
                 except:
                     pass
+                bill_no_map[str(tid).strip().upper()] = b
 
     attached_bill_map = {}
-    all_attached_bills = attached_bills.only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run')
-    for b in all_attached_bills:
+    for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
         if b.ab_selected_trips:
-            ids = [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]
-            for tid in ids:
+            for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
                 try:
                     attached_bill_map[int(tid)] = b
-                except ValueError:
-                    attached_bill_map[tid] = b
-
-    # ALLOTMENTS & RATES
-    va_map = {}
-    chunk_size = 900
-    for i in range(0, len(trip_enquiries), chunk_size):
-        chunk = trip_enquiries[i:i+chunk_size]
-        for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=chunk).select_related('va_vendor'):
-            va_map[va.va_enquirynumber_id] = va
-
-    vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
-    rates = VendorratemasterInfo1.objects.filter(vr1_vendor_id__in=vendor_ids).values(
-        'vr1_fromlocation_id', 'vr1_tolocation_id', 'vr1_vehicletype_id', 'vr1_vendor_id', 'vr1_rate'
-    )
-    rate_map = {
-        (r['vr1_fromlocation_id'], r['vr1_tolocation_id'], r['vr1_vehicletype_id'], r['vr1_vendor_id']): r['vr1_rate']
-        for r in rates
-    }
-
-    veh_nos = [t.tr_vehiclenumber for t in trips_list if t.tr_vehiclenumber]
-    veh_vendor_map = {}
-    for i in range(0, len(veh_nos), chunk_size):
-        chunk = veh_nos[i:i+chunk_size]
-        for v in VehiclemasterInfo.objects.filter(vm_registrationnumber__in=chunk).select_related('vm_vendor'):
-            if v.vm_registrationnumber:
-                veh_vendor_map[v.vm_registrationnumber.strip()] = v.vm_vendor
-
-    own_rev = 0.0
-    att_rev = 0.0
-    mkt_rev = 0.0
-
-    own_op_exp = 0.0
-    att_op_exp = 0.0
-    mkt_op_exp = 0.0
-
-    def safe_num(val):
-        try:
-            if val is None: return 0.0
-            return float(val)
-        except:
-            return 0.0
-
-    # -------------------------------
-    # PRE-CALCULATE PRORATED FUEL COST AND SALARY PER TRIP
-    # -------------------------------
-    fuel_lookup, salary_lookup = calculate_own_vehicle_fuel_and_salary(
-        trips_list, date_from=date_from, date_to=date_to
-    )
-
-    for trip in trips_list:
-        v_source = trip.tr_vehiclesource_id
-        inv = invoice_obj_map.get(trip.id)
-
-        selling_bd = get_trip_selling_breakdown(trip, inv=inv, allotment=va_map.get(trip.tr_enquirynumber_id))
-        selling_total = selling_bd['total_selling']
-        selling_trip = selling_bd['selling_trip']
-        selling_toll = selling_bd['selling_toll']
-        selling_parking = selling_bd['selling_parking']
-        selling_loading = selling_bd['selling_loading']
-        selling_unloading = selling_bd['selling_unloading']
-        selling_weighment = selling_bd['selling_weighment']
-        selling_handling = selling_bd['selling_handling']
-        selling_halting = selling_bd['selling_halting']
-        selling_supervisor = selling_bd['selling_supervisor']
-        selling_rto = selling_bd['selling_rto']
-        selling_beta = selling_bd['selling_beta']
-        selling_cancellation = selling_bd['selling_cancellation']
-
-        if v_source == 1:
-            own_rev += selling_total
-        elif v_source == 2:
-            att_rev += selling_total
-        elif v_source == 3:
-            mkt_rev += selling_total
-
-        if v_source == 1:
-            t_exp = 0.0
-            toll_expense, fuel_expense, driver_salary, acting_driver, driver_bata, parking_expense, loading_expense, unloading_expense, weighment_expense, handling_expense, vehicle_hire = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-            
-            # Pull Driver Salary from pre-calculated lookup (if available)
-            driver_salary = round(salary_lookup.get(trip.id, 0.0), 2)
-
-            for e in expense_map.get(trip.id, []):
-                extype = str(e.de_expense_type).lower()
-                parking_val = safe_num(e.de_parkingcost)
-                loading_val = safe_num(e.de_loadingcost)
-                unloading_val = safe_num(e.de_unloadingcost)
-                weighment_val = safe_num(e.de_weighmentcost)
-                handling_val = safe_num(e.de_supervisorcost)
-                toll_val = safe_num(e.de_rtocost)
-                bata_val = safe_num(e.de_battacost)
-
-                parking_expense += parking_val
-                loading_expense += loading_val
-                unloading_expense += unloading_val
-                weighment_expense += weighment_val
-                handling_expense += handling_val
-                toll_expense += toll_val
-                driver_bata += bata_val
-
-                cost = safe_num(e.de_total_cost)
-                if 'fuel' in extype or 'diesel' in extype:
-                    # Fuel cost is always pulled directly from Fuelfillinginfo database to prevent double counting
+                except:
                     pass
-                elif 'salary' in extype:
-                    if driver_salary == 0.0:
-                        driver_salary += cost
-                elif 'acting' in extype:
-                    acting_driver += cost
-                elif 'hire' in extype or 'freight' in extype:
-                    vehicle_hire += cost
-                elif 'toll' in extype:
-                    if not toll_val: toll_expense += cost
-                elif 'parking' in extype:
-                    if not parking_val: parking_expense += cost
-                elif 'loading' in extype:
-                    if not loading_val: loading_expense += cost
-                elif 'unloading' in extype:
-                    if not unloading_val: unloading_expense += cost
-                elif 'weighment' in extype:
-                    if not weighment_val: weighment_expense += cost
-                elif 'bata' in extype or 'batta' in extype:
-                    if not bata_val: driver_bata += cost
-                elif 'handling' in extype:
-                    if not handling_val: handling_expense += cost
+                attached_bill_map[str(tid).strip().upper()] = b
 
-            # --- Fuel Cost: prorated from Fuelfillinginfo ---
-            fuel_expense = round(fuel_lookup.get(trip.id, 0.0), 2)
+    fuel_lookup, salary_lookup = calculate_own_vehicle_fuel_and_salary(all_trips, date_from=date_from, date_to=date_to)
 
-            t_exp = (driver_salary + fuel_expense + acting_driver + driver_bata + toll_expense + parking_expense +
-                     loading_expense + unloading_expense + weighment_expense + handling_expense + vehicle_hire)
-            own_op_exp += t_exp
+    rev_by_source = {1: 0.0, 2: 0.0, 3: 0.0}
+    cost_by_source = {1: 0.0, 2: 0.0, 3: 0.0}
 
-        elif v_source == 2:  # ATTACHED
-            # 1. Base Trip Cost (Pro-rated from Bill or Allotment)
-            va_info = va_map.get(trip.tr_enquirynumber_id)
-            reported_km = safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm)
-            departed_km = safe_num(trip.tr_departedkm)
-            km_run = max(0, reported_km - departed_km)
+    for t in all_trips:
+        inv = invoice_map.get(t.id)
+        texp = expense_map.get(t.id, [])
+        va = va_map.get(t.tr_enquirynumber_id)
+        ab = attached_bill_map.get(t.id) or (attached_bill_map.get(str(t.tr_tripnumber).strip().upper()) if t.tr_tripnumber else None)
+        mb = bill_no_map.get(t.id) or (bill_no_map.get(str(t.tr_tripnumber).strip().upper()) if t.tr_tripnumber else None)
+        pfuel = fuel_lookup.get(t.id)
+        psalary = salary_lookup.get(t.id)
+        selling, buying, profit, profit_pct, disp_date = get_trip_pl_data(
+            t, inv, texp, va, ab, mb, prorated_fuel=pfuel, prorated_salary=psalary
+        )
+        src = t.tr_vehiclesource_id
+        if src in rev_by_source:
+            rev_by_source[src] += selling
+            cost_by_source[src] += buying
 
-            ab_bill = attached_bill_map.get(trip.id) or (
-                attached_bill_map.get(str(trip.tr_tripnumber).strip()) if trip.tr_tripnumber else None)
-            if ab_bill:
-                ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
-                ab_total_km = safe_num(ab_bill.ab_total_km_run)
-                ab_rate = (ab_buy_cost / ab_total_km) if ab_total_km > 0 else 0
-                buying_trip_cost = round(ab_rate * km_run, 2)
-            else:
-                buying_trip_cost = (
-                    safe_num(getattr(va_info, 'va_specialbuy', 0)) or
-                    safe_num(getattr(va_info, 'va_standardbuy', 0))
-                    if va_info else 0
-                )
+    own_rev = rev_by_source[1]
+    att_rev = rev_by_source[2]
+    mkt_rev = rev_by_source[3]
 
-            # 2. Driver Settlement Expenses
-            buy_loading = buy_unloading = buy_weighment = buy_aai = 0.0
-            buy_toll = safe_num(trip.tc_tollcost)
-            buy_halting = buy_handling = buy_parking = buy_rto = buy_batta = 0.0
-
-            for e in expense_map.get(trip.id, []):
-                buy_loading += safe_num(e.de_loadingcost)
-                buy_unloading += safe_num(e.de_unloadingcost)
-                buy_weighment += safe_num(e.de_weighmentcost)
-                buy_handling += safe_num(e.de_supervisorcost)
-                buy_parking += safe_num(e.de_parkingcost)
-                buy_rto += safe_num(e.de_rtocost)
-                buy_batta += safe_num(e.de_battacost)
-
-                exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
-                cost_val = safe_num(e.de_total_cost)
-
-                if "toll" in exp_type_str and not ab_bill:
-                    if not e.de_rtocost: buy_toll += cost_val
-                elif "halting" in exp_type_str:
-                    buy_halting += cost_val
-                elif "parking" in exp_type_str and not e.de_parkingcost:
-                    buy_parking += cost_val
-                elif "loading" in exp_type_str and not e.de_loadingcost:
-                    buy_loading += cost_val
-                elif "unloading" in exp_type_str and not e.de_unloadingcost:
-                    buy_unloading += cost_val
-                elif "weighment" in exp_type_str and not e.de_weighmentcost:
-                    buy_weighment += cost_val
-                elif ("bata" in exp_type_str or "batta" in exp_type_str) and not e.de_battacost:
-                    buy_batta += cost_val
-
-            buying_total = (
-                    buying_trip_cost + buy_toll + buy_loading + buy_unloading +
-                    buy_weighment + buy_halting + buy_handling + buy_parking +
-                    buy_rto + buy_batta
-            )
-            att_op_exp += buying_total
-
-        elif v_source == 3:  # MARKET - use actual Market Bill total as expense
-            mb_obj = bill_no_map.get(trip.id)
-            if mb_obj:
-                buying_total = safe_num(mb_obj.mb_total_cost)
-                mkt_op_exp += buying_total
+    own_op_exp = cost_by_source[1]
+    att_op_exp = cost_by_source[2]
+    mkt_op_exp = cost_by_source[3]
 
     months_count = 1
     if date_from and date_to:
@@ -7561,7 +7334,7 @@ def location_pl_report_view(request):
         except:
             months_count = 1
 
-    own_trips = [t for t in trips_list if t.tr_vehiclesource_id == 1]
+    own_trips = [t for t in all_trips if t.tr_vehiclesource_id == 1]
     unique_veh_nos = set(trip.tr_vehiclenumber for trip in own_trips if trip.tr_vehiclenumber)
 
     vehicle_map = {v.vm_registrationnumber: v for v in VehiclemasterInfo.objects.all()}
@@ -7593,13 +7366,6 @@ def location_pl_report_view(request):
 
     net_profit = gross_profit - non_op_exp
     net_profit_pct = (net_profit / total_revenue * 100.0) if total_revenue > 0 else 0.0
-
-    branch_name = None
-    if branch_id:
-        try:
-            branch_name = Location_info.objects.get(id=branch_id).loc_name
-        except:
-            pass
 
     context = {
         'first_name': first_name,
@@ -8359,6 +8125,30 @@ def transport_mis(request):
     selected_year = request.GET.get("year")
     selected_vehicle_source = request.GET.get("vehicle_source")
 
+    if selected_vehicle_source in [None, '', 'None', 'All Sources']:
+        selected_vehicle_source = None
+    elif selected_vehicle_source:
+        clean_vs = selected_vehicle_source.strip().replace(" ", "-").replace("_", "-")
+        if clean_vs.lower() in ['m-dept', 'mdept']:
+            selected_vehicle_source = 'M-Dept'
+        elif clean_vs.lower() in ['b-dept', 'bdept']:
+            selected_vehicle_source = 'B-Dept'
+
+    if selected_unit:
+        clean_u = selected_unit.strip().replace(" ", "-").replace("_", "-")
+        if clean_u.lower() in ['m-dept', 'mdept']:
+            selected_unit = 'M-Dept'
+        elif clean_u.lower() in ['b-dept', 'bdept']:
+            selected_unit = 'B-Dept'
+        if not selected_vehicle_source and selected_unit in ['M-Dept', 'B-Dept']:
+            selected_vehicle_source = selected_unit
+
+    if selected_branch in [None, '', 'None', 'All Branches']:
+        selected_branch = None
+
+    if selected_unit in [None, '', 'None', 'All Units']:
+        selected_unit = None
+
     if selected_year and selected_year != 'None':
         try:
             selected_year = int(selected_year)
@@ -8391,12 +8181,31 @@ def transport_mis(request):
         budget_filter["bf_start_date_year__year"] = selected_year
         income_filter["ti_inv_date__year"] = selected_year
 
+    income_branch_q = Q()
     if selected_branch:
         expenses_filter["exp_ext_branch__loc_name"] = selected_branch
         budget_filter["bf_location__loc_name"] = selected_branch
-        income_filter["ti_trip__tr_updated_by__user_extinfo__emp_branch__loc_name"] = selected_branch
+        branch_city = "Chennai" if ("MAA" in selected_branch or "Chennai" in selected_branch) else (
+            "Bangalore" if ("BLR" in selected_branch or "Bangalore" in selected_branch) else selected_branch
+        )
+        branch_code = "MAA" if ("MAA" in selected_branch or "Chennai" in selected_branch) else (
+            "BLR" if ("BLR" in selected_branch or "Bangalore" in selected_branch) else selected_branch
+        )
+        income_branch_q = (
+            Q(ti_branch__iexact=branch_city) |
+            Q(ti_branch__icontains=branch_code) |
+            Q(ti_branch__icontains=selected_branch) |
+            Q(ti_customer__cu_name__icontains=branch_code) |
+            Q(ti_trip__tr_updated_by__user_extinfo__emp_branch__loc_name=selected_branch)
+        )
 
-    if selected_unit:
+    if selected_vehicle_source in ['M-Dept', 'B-Dept']:
+        expenses_filter["exp_ext_department"] = selected_vehicle_source
+        budget_filter["bf_unit"] = selected_vehicle_source
+    elif selected_vehicle_source:
+        budget_filter["bf_vehicle_source__ow_ownership"] = selected_vehicle_source
+        budget_filter["bf_unit__isnull"] = True
+    elif selected_unit:
         if selected_unit in ['M-Dept', 'B-Dept']:
             expenses_filter["exp_ext_department"] = selected_unit
             budget_filter["bf_unit"] = selected_unit
@@ -8404,27 +8213,15 @@ def transport_mis(request):
             expenses_filter["exp_ext_unit__unit_name"] = selected_unit
             budget_filter["bf_unit_reference__unit_name"] = selected_unit
 
-    if selected_vehicle_source:
-        budget_filter["bf_vehicle_source__ow_ownership"] = selected_vehicle_source
-        income_filter["ti_trip__tr_vehiclesource__ow_ownership"] = selected_vehicle_source
-
     if from_date:
-        try:
-            from_date_dt = datetime.strptime(from_date, "%Y-%m-%d")
-            expenses_filter["exp_ext_expense_number__exp_service_start_date__gte"] = from_date_dt
-            budget_filter["bf_start_date_year__gte"] = from_date_dt
-            income_filter["ti_inv_date__gte"] = from_date_dt
-        except ValueError:
-            pass
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__date__gte"] = from_date
+        budget_filter["bf_start_date_year__gte"] = from_date
+        income_filter["ti_inv_date__gte"] = from_date
 
     if to_date:
-        try:
-            to_date_dt = datetime.strptime(to_date, "%Y-%m-%d")
-            expenses_filter["exp_ext_expense_number__exp_service_start_date__lte"] = to_date_dt
-            budget_filter["bf_start_date_year__lte"] = to_date_dt
-            income_filter["ti_inv_date__lte"] = to_date_dt
-        except ValueError:
-            pass
+        expenses_filter["exp_ext_expense_number__exp_service_start_date__date__lte"] = to_date
+        budget_filter["bf_start_date_year__lte"] = to_date
+        income_filter["ti_inv_date__lte"] = to_date
 
     # Dynamic months calculation
     import calendar
@@ -8449,21 +8246,46 @@ def transport_mis(request):
 
     month_names_display = {i: calendar.month_name[i][:3] for i in display_months_indices}
 
+    expense_qs = ExpenseExtinfo.objects.filter(**expenses_filter).exclude(
+        exp_ext_expense_number__exp_service_start_date__isnull=True
+    )
+    if selected_vehicle_source and selected_vehicle_source not in ['M-Dept', 'B-Dept']:
+        expense_qs = expense_qs.exclude(exp_ext_department__in=['M-Dept', 'B-Dept']).filter(
+            Q(exp_ext_vehicle_source__ow_ownership=selected_vehicle_source) | Q(exp_ext_vehicle_source__isnull=True)
+        )
+
     expense_summary = (
-        ExpenseExtinfo.objects.filter(**expenses_filter)
-        .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
+        expense_qs
         .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
                 "exp_ext_expense_number__exp_service_start_date__month")
-        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
+        .annotate(total_expense=Sum('exp_ext_amount'))
     )
+
+    EXPENSE_TYPE_NORMALIZATIONS = {
+        "Vehicle-Hire": "Vehicle Hire",
+        "Vehicle Hire": "Vehicle Hire",
+        "Transportation Expenses": "Transportation",
+        "Unloading Expenses": "Unloading",
+        "Diesel Expenses-Vehicle": "Diesel-Vehicle",
+        "Power and Fuel Expenses": "Power & Fuel",
+        "Power & Fuel": "Power & Fuel",
+        "Interest On Statutory Dues": "Interest on Statutory Dues",
+        "Interest on vehicle loan": "Interest on Vehicle Loan",
+        "Insurance Car": "Insurance-Vehicles",
+        "Insurance-Vehicles": "Insurance-Vehicles",
+    }
 
     expense_dict = {}
     for item in expense_summary:
-        cat = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
+        raw_cat = item["exp_ext_expense_number__exp_expense_type__exp_type_name"]
+        cat = EXPENSE_TYPE_NORMALIZATIONS.get(raw_cat, raw_cat)
         month = item["exp_ext_expense_number__exp_service_start_date__month"]
         if month in display_months_indices:
             expense_dict.setdefault(cat, {i: 0 for i in display_months_indices})
             expense_dict[cat][month] += item["total_expense"]
+            if cat != raw_cat:
+                expense_dict.setdefault(raw_cat, {i: 0 for i in display_months_indices})
+                expense_dict[raw_cat][month] += item["total_expense"]
 
     # --- Add Attached Bill totals to "Transportation" Actual ---
     from ..sub_models.attached_bill_mod import AttachedBillInfo
@@ -8477,28 +8299,25 @@ def transport_mis(request):
     if to_date:
         attached_bill_filter["ab_from_date__lte"] = to_date
 
-    # Apply vehicle source filter if selected (Attached is usually ID 2)
-    if selected_vehicle_source:
-        attached_bill_filter["ab_vehicle_number__vm_ownership__ow_ownership"] = selected_vehicle_source
+    # Apply vehicle source filter if selected (Attached is ID 2)
+    if selected_vehicle_source and selected_vehicle_source != "ATTACHED":
+        attached_summary = []
     else:
-        # Default to only Attached vehicles if no filter is set?
-        # The user said "if vehicle source = attached", so we filter by it.
         attached_bill_filter["ab_vehicle_number__vm_ownership_id"] = 2
-
-    attached_summary = (
-        AttachedBillInfo.objects.filter(**attached_bill_filter)
-        .values("ab_from_date__month")
-        .annotate(
-            total_attached=Sum(
-                Coalesce(F('ab_bill_amount'), Value(0.0)) -
-                Coalesce(F('ab_extra_km_amount'), Value(0.0)) -
-                Coalesce(F('ab_toll_cost'), Value(0.0)),
-                output_field=FloatField()
-            ),
-            total_toll=Sum(Coalesce(F('ab_toll_cost'), Value(0.0)), output_field=FloatField()),
-            total_extra_km=Sum(Coalesce(F('ab_extra_km_amount'), Value(0.0)), output_field=FloatField())
+        attached_summary = (
+            AttachedBillInfo.objects.filter(**attached_bill_filter)
+            .values("ab_from_date__month")
+            .annotate(
+                total_attached=Sum(
+                    Coalesce(F('ab_bill_amount'), Value(0.0)) -
+                    Coalesce(F('ab_extra_km_amount'), Value(0.0)) -
+                    Coalesce(F('ab_toll_cost'), Value(0.0)),
+                    output_field=FloatField()
+                ),
+                total_toll=Sum(Coalesce(F('ab_toll_cost'), Value(0.0)), output_field=FloatField()),
+                total_extra_km=Sum(Coalesce(F('ab_extra_km_amount'), Value(0.0)), output_field=FloatField())
+            )
         )
-    )
 
     trans_cat = "Transportation"
     toll_cat = "Toll"
@@ -8522,35 +8341,56 @@ def transport_mis(request):
     if selected_branch:
         trip_filter["tr_updated_by__user_extinfo__emp_branch__loc_name"] = selected_branch
     if from_date:
-        trip_filter["tr_departeddate__gte"] = from_date
+        trip_filter["tr_departeddate__date__gte"] = from_date
     if to_date:
-        trip_filter["tr_departeddate__lte"] = to_date
+        trip_filter["tr_departeddate__date__lte"] = to_date
 
-    if selected_vehicle_source:
+    if selected_vehicle_source in ['M-Dept', 'B-Dept']:
+        trip_summary = []
+    elif selected_vehicle_source:
         trip_filter["tr_vehiclesource__ow_ownership"] = selected_vehicle_source
+        trip_summary = (
+            TripdetailInfo.objects.filter(**trip_filter)
+            .exclude(tr_departeddate__isnull=True)
+            .values("tr_departeddate__month")
+            .annotate(
+                total_halting=Sum('tc_haltingcost'),
+                total_loading=Sum('tc_loadingcost'),
+                total_parking=Sum('tc_parkingcost'),
+                total_betta=Sum('tc_betacost'),
+                total_handling=Sum('tc_handlingcost'),
+                # Sum Toll from Trip Closure if it's an OWN or MARKET vehicle
+
+                total_toll_trip_closure=Sum(Case(
+                    When(tr_vehiclesource_id__in=[1, 3], then=F('tc_tollcost')),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                ))
+
+            )
+        )
     else:
         trip_filter["tr_vehiclesource_id__in"] = [1, 2, 3]  # OWN, ATTACHED, and MARKET
+        trip_summary = (
+            TripdetailInfo.objects.filter(**trip_filter)
+            .exclude(tr_departeddate__isnull=True)
+            .values("tr_departeddate__month")
+            .annotate(
+                total_halting=Sum('tc_haltingcost'),
+                total_loading=Sum('tc_loadingcost'),
+                total_parking=Sum('tc_parkingcost'),
+                total_betta=Sum('tc_betacost'),
+                total_handling=Sum('tc_handlingcost'),
+                # Sum Toll from Trip Closure if it's an OWN or MARKET vehicle
 
-    trip_summary = (
-        TripdetailInfo.objects.filter(**trip_filter)
-        .exclude(tr_departeddate__isnull=True)
-        .values("tr_departeddate__month")
-        .annotate(
-            total_halting=Sum('tc_haltingcost'),
-            total_loading=Sum('tc_loadingcost'),
-            total_parking=Sum('tc_parkingcost'),
-            total_betta=Sum('tc_betacost'),
-            total_handling=Sum('tc_handlingcost'),
-            # Sum Toll from Trip Closure if it's an OWN or MARKET vehicle
+                total_toll_trip_closure=Sum(Case(
+                    When(tr_vehiclesource_id__in=[1, 3], then=F('tc_tollcost')),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                ))
 
-            total_toll_trip_closure=Sum(Case(
-                When(tr_vehiclesource_id__in=[1, 3], then=F('tc_tollcost')),
-                default=Value(0.0),
-                output_field=FloatField()
-            ))
-
+            )
         )
-    )
 
     halting_cat = "Halting"
     loading_cat = "Loading"
@@ -8573,7 +8413,7 @@ def transport_mis(request):
             expense_dict[handling_exp_cat][month] += float(item["total_handling"] or 0)
             expense_dict[toll_cat][month] += float(item["total_toll_trip_closure"] or 0)
 
-    # --- Add Driver Salary actuals to "Driver Betta" ---
+    # --- Add Driver Salary actuals to "Salaries & Wages-Drivers" ---
     from ..sub_models.driver_salary_mod import DriverSalaryInfo
     salary_filter = {}
     if selected_year:
@@ -8585,16 +8425,23 @@ def transport_mis(request):
     if to_date:
         salary_filter["ds_month__lte"] = to_date
 
-    salary_summary = (
-        DriverSalaryInfo.objects.filter(**salary_filter)
-        .values("ds_month__month")
-        .annotate(total_salary=Sum('ds_monthly_salary'))
-    )
+    if selected_vehicle_source and selected_vehicle_source != "BVM - OWN":
+        salary_summary = []
+    else:
+        salary_summary = (
+            DriverSalaryInfo.objects.filter(**salary_filter)
+            .values("ds_month__month")
+            .annotate(total_salary=Sum('ds_monthly_salary'))
+        )
+
+    driver_salary_cat = "Salaries & Wages-Drivers"
+    if driver_salary_cat not in expense_dict:
+        expense_dict[driver_salary_cat] = {i: 0 for i in display_months_indices}
 
     for item in salary_summary:
         month = item["ds_month__month"]
         if month in display_months_indices:
-            expense_dict[betta_cat][month] += float(item["total_salary"] or 0)
+            expense_dict[driver_salary_cat][month] += float(item["total_salary"] or 0)
 
     # --- Add Market Bill charges to Actuals ---
     from ..sub_models.market_bill_mod import MarketBillInfo
@@ -8649,11 +8496,14 @@ def transport_mis(request):
     if to_date:
         fuel_filter["ff_date__lte"] = to_date
 
-    fuel_summary = (
-        Fuelfillinginfo.objects.filter(**fuel_filter)
-        .values("ff_date__month")
-        .annotate(total_fuel=Sum('ff_fuel_price'))
-    )
+    if selected_vehicle_source and selected_vehicle_source != "BVM - OWN":
+        fuel_summary = []
+    else:
+        fuel_summary = (
+            Fuelfillinginfo.objects.filter(**fuel_filter)
+            .values("ff_date__month")
+            .annotate(total_fuel=Sum('ff_fuel_price'))
+        )
 
     diesel_cat = "Diesel-Vehicle"
     # Overwrite Diesel-Vehicle with Fuel Filling data
@@ -8664,107 +8514,170 @@ def transport_mis(request):
         if month in display_months_indices:
             expense_dict[diesel_cat][month] += float(item["total_fuel"] or 0)
 
-    income_actual_summary = (
-        TransInvoiceInfo.objects.filter(**income_filter)
-        .exclude(ti_inv_date__isnull=True)
-        .values("ti_inv_date__month")
-        .annotate(**{
-            cat.replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_"): Sum(field)
-            for cat, field in TRANSPORT_INVOICE_FIELD_MAPPING.items() if field is not None
-        })
+    # Income calculation matching Customerwise P&L Report
+    if selected_vehicle_source in ['M-Dept', 'B-Dept']:
+        all_income_trips = []
+    else:
+        vehicle_source_id = None
+        if selected_vehicle_source:
+            vehicle_source_id = OwnershipInfo.objects.filter(ow_ownership=selected_vehicle_source).values_list('id', flat=True).first()
+
+        income_trips = get_filtered_trips(selected_branch, None, vehicle_source_id, from_date, to_date, selected_year)
+        income_trips = income_trips.filter(
+            Q(tr_category_id=1) | Q(tc_financestatus_id=10),
+            tc_financestatus_id__in=[1, 2, 4, 5, 6, 7, 9, 10]
+        )
+
+        fields_to_fetch = [
+            'id', 'tr_enquirynumber_id', 'tr_consignmentnumber_id', 'resolved_date',
+            'tr_category_id', 'tc_financestatus_id', 'tc_tripcost', 'tc_special_sell',
+            'tc_tripcost_check', 'tc_special_sell_check', 'tc_haltingcost', 'tc_no_of_days_halting',
+            'tc_loadingcost', 'tc_loadingcost_check', 'tc_unloadingcost', 'tc_unloadingcost_check',
+            'tc_parkingcost', 'tc_parkingcost_check', 'tc_tollcost', 'tc_tollcost_check',
+            'tc_handlingcost', 'tc_handlingcost_check', 'tc_weighmentcost', 'tc_weighmentcost_check',
+            'tc_supervisorcost', 'tc_supervisorcost_check',
+            'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_cancellation', 'tc_cancellation_check',
+            'tr_vehicletype_placed_id', 'tr_vehicletype_id'
+        ]
+
+        all_income_trips = list(income_trips.values(*fields_to_fetch))
+
+    trip_ids = [t['id'] for t in all_income_trips]
+    c_ids = [t['tr_consignmentnumber_id'] for t in all_income_trips if t['tr_consignmentnumber_id']]
+
+    inv_qs = TransInvoiceInfo.objects.filter(
+        Q(ti_trip_id__in=trip_ids) | Q(ti_consignment_id__in=c_ids)
+    ).values(
+        'ti_trip_id', 'ti_consignment_id', 'ti_transportation_charges',
+        'ti_toll_charges', 'ti_docket_charges', 'ti_loading_charges',
+        'ti_unloading_charges', 'ti_weighment_charges', 'ti_halting_charges',
+        'ti_handling_charges', 'ti_parking_charges', 'ti_cancellation_charges'
     )
 
-    income_actual_dict = {cat: {i: 0 for i in display_months_indices} for cat in TRANSPORT_INCOME_CATEGORIES.keys()}
-    for item in income_actual_summary:
-        month = item["ti_inv_date__month"]
-        if month in display_months_indices:
-            for cat, field in TRANSPORT_INVOICE_FIELD_MAPPING.items():
-                if field:
-                    safe_key = cat.replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_")
-                    income_actual_dict[cat][month] += item.get(safe_key, 0.0)
+    c_to_trip = {t['tr_consignmentnumber_id']: t['id'] for t in all_income_trips if t['tr_consignmentnumber_id']}
+    trip_invoice_map = {}
+    for inv in inv_qs:
+        if inv['ti_trip_id']:
+            trip_invoice_map[inv['ti_trip_id']] = inv
+        elif inv['ti_consignment_id']:
+            trip_id = c_to_trip.get(inv['ti_consignment_id'])
+            if trip_id and trip_id not in trip_invoice_map:
+                trip_invoice_map[trip_id] = inv
 
-    halting_inc_cat = "Halting Charges"
-    loading_inc_cat = "Loading Charges"
-    handling_inc_cat = "Transportation Handling Charges"
-    trans_inc_cat = "Transportation Charges"
-    parking_inc_cat = "Parking Charges"
-    extra_km_cat = "Extra KM"
+    enq_ids = set(t['tr_enquirynumber_id'] for t in all_income_trips if t['tr_enquirynumber_id'])
+    from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 
-    # 1. Pull from TripdetailInfo (all vehicle sources)
-    trip_income_summary = (
-        TripdetailInfo.objects.filter(**trip_filter)
-        .exclude(tr_departeddate__isnull=True)
-        .values("tr_departeddate__month")
-        .annotate(
-            total_halting=Sum(Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=Value(0.0),
-                                   output_field=FloatField())),
-            total_loading=Sum(Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=Value(0.0),
-                                   output_field=FloatField())),
-            total_handling=Sum(Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=Value(0.0),
-                                    output_field=FloatField())),
-            total_transportation=Sum(Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=Value(0.0),
-                                          output_field=FloatField())),
-            total_parking=Sum(Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=Value(0.0),
-                                   output_field=FloatField())),
-            total_toll=Sum(Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=Value(0.0),
-                                output_field=FloatField()))
-        )
+    env_qs = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enq_ids).values(
+        'env_enquirynumber_id', 'env_vehicletype_id', 'env_special_sale', 'env_sale'
     )
-    for item in trip_income_summary:
-        month = item["tr_departeddate__month"]
-        if month in display_months_indices:
-            income_actual_dict[halting_inc_cat][month] += float(item["total_halting"] or 0)
-            income_actual_dict[loading_inc_cat][month] += float(item["total_loading"] or 0)
-            income_actual_dict[handling_inc_cat][month] += float(item["total_handling"] or 0)
-            income_actual_dict[trans_inc_cat][month] += float(item["total_transportation"] or 0)
-            income_actual_dict[parking_inc_cat][month] += float(item["total_parking"] or 0)
-            income_actual_dict["Toll Charges"][month] += float(item["total_toll"] or 0)
+    env_map = {}
+    env_fallback_map = {}
+    for env in env_qs:
+        eid = env['env_enquirynumber_id']
+        vtid = env['env_vehicletype_id']
+        if vtid:
+            env_map[(eid, vtid)] = env
+        if eid not in env_fallback_map:
+            env_fallback_map[eid] = env
 
-    # 2. Pull from AttachedBillInfo (for Attached vehicles)
-    if not (selected_vehicle_source and selected_vehicle_source != "ATTACHED"):
-        attached_income_summary = (
-            AttachedBillInfo.objects.filter(**attached_bill_filter)
-            .exclude(ab_from_date__isnull=True)
-            .values("ab_from_date__month")
-            .annotate(
-                total_transportation=Sum(
-                    Coalesce(F('ab_bill_amount'), Value(0.0)) -
-                    Coalesce(F('ab_extra_km_amount'), Value(0.0)) -
-                    Coalesce(F('ab_toll_cost'), Value(0.0)),
-                    output_field=FloatField()
-                ),
-                total_extra_km=Sum(Coalesce(F('ab_extra_km_amount'), Value(0.0)), output_field=FloatField()),
-                total_toll=Sum(Coalesce(F('ab_toll_cost'), Value(0.0)), output_field=FloatField())
-            )
-        )
-        for item in attached_income_summary:
-            month = item["ab_from_date__month"]
-            if month in display_months_indices:
-                income_actual_dict[trans_inc_cat][month] += float(item["total_transportation"] or 0)
-                if extra_km_cat in income_actual_dict:  # If there's an Extra KM income category
-                    income_actual_dict[extra_km_cat][month] += float(item["total_extra_km"] or 0)
-                income_actual_dict["Toll Charges"][month] += float(item["total_toll"] or 0)
+    va_qs = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enq_ids).values(
+        'va_enquirynumber_id', 'va_sale', 'va_special_sale'
+    )
+    va_map = {va['va_enquirynumber_id']: va for va in va_qs}
 
-    # 3. Pull from MarketBillInfo (for Market vehicles)
-    if not (selected_vehicle_source and selected_vehicle_source != "MARKET"):
-        market_income_summary = (
-            MarketBillInfo.objects.filter(**market_bill_filter)
-            .exclude(mb_bill_date__isnull=True)
-            .values("mb_bill_date__month")
-            .annotate(
-                total_halting=Sum(Coalesce(F('mb_halting_cost'), Value(0.0)), output_field=FloatField()),
-                total_loading=Sum(Coalesce(F('mb_loading_cost'), Value(0.0)), output_field=FloatField()),
-                total_transportation=Sum(Coalesce(F('mb_trip_cost'), Value(0.0)), output_field=FloatField()),
-                total_parking=Sum(Coalesce(F('mb_parking_cost'), Value(0.0)), output_field=FloatField())
-            )
+    income_actual_dict = {cat: {i: 0.0 for i in display_months_indices} for cat in TRANSPORT_INCOME_CATEGORIES.keys()}
+
+    def get_fast_transport_charge(t, inv):
+        if inv and inv.get('ti_transportation_charges') is not None and safe_num(inv['ti_transportation_charges']) > 0:
+            return safe_num(inv['ti_transportation_charges'])
+
+        is_settled = t.get('tc_financestatus_id') in [7, 9, 10]
+        is_special_sell_check = t.get('tc_special_sell_check', False)
+        is_tripcost_check = t.get('tc_tripcost_check', False)
+
+        eid = t.get('tr_enquirynumber_id')
+        vt_req = t.get('tr_vehicletype_id')
+        vt_placed = t.get('tr_vehicletype_placed_id')
+
+        def lookup_env():
+            if not eid:
+                return 0.0
+            env = env_map.get((eid, vt_placed)) or env_map.get((eid, vt_req)) or env_fallback_map.get(eid)
+            if env:
+                if env.get('env_special_sale') and safe_num(env['env_special_sale']) > 0:
+                    return safe_num(env['env_special_sale'])
+                if env.get('env_sale') and safe_num(env['env_sale']) > 0:
+                    return safe_num(env['env_sale'])
+            return 0.0
+
+        if is_settled:
+            if is_special_sell_check:
+                val = safe_num(t.get('tc_special_sell'))
+                return val if val > 0 else lookup_env()
+            elif is_tripcost_check:
+                val = safe_num(t.get('tc_tripcost'))
+                return val if val > 0 else lookup_env()
+            else:
+                return 0.0
+        else:
+            if is_special_sell_check:
+                val = safe_num(t.get('tc_special_sell'))
+                return val if val > 0 else lookup_env()
+            elif is_tripcost_check and safe_num(t.get('tc_tripcost')) > 0:
+                return safe_num(t.get('tc_tripcost'))
+            else:
+                val = lookup_env()
+                if val <= 0 and eid in va_map:
+                    va = va_map[eid]
+                    val = safe_num(va.get('va_special_sale')) or safe_num(va.get('va_sale'))
+                return val
+
+    for trip in all_income_trips:
+        r_date = trip.get('resolved_date')
+        if not r_date:
+            continue
+        if timezone.is_aware(r_date):
+            r_date = timezone.localtime(r_date)
+        m = r_date.month
+        if m not in display_months_indices:
+            continue
+
+        inv = trip_invoice_map.get(trip['id'])
+        is_cat_cancellation = (trip.get('tr_category_id') in [2, 3] and trip.get('tc_financestatus_id') == 10)
+        selling_trip = 0.0 if is_cat_cancellation else get_fast_transport_charge(trip, inv)
+
+        selling_toll = safe_num(inv['ti_toll_charges']) if inv else (safe_num(trip.get('tc_tollcost')) if trip.get('tc_tollcost_check', True) else 0.0)
+        selling_supervisor = safe_num(inv['ti_docket_charges']) if inv else (safe_num(trip.get('tc_supervisorcost')) if trip.get('tc_supervisorcost_check', True) else 0.0)
+        selling_loading = safe_num(inv['ti_loading_charges']) if inv else (safe_num(trip.get('tc_loadingcost')) if trip.get('tc_loadingcost_check', True) else 0.0)
+        selling_unloading = safe_num(inv['ti_unloading_charges']) if inv else (safe_num(trip.get('tc_unloadingcost')) if trip.get('tc_unloadingcost_check', True) else 0.0)
+        selling_weighment = safe_num(inv['ti_weighment_charges']) if inv else (safe_num(trip.get('tc_weighmentcost')) if trip.get('tc_weighmentcost_check', True) else 0.0)
+
+        halting_days = safe_num(trip.get('tc_no_of_days_halting'))
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_day_cost = safe_num(trip.get('tc_haltingcost'))
+        if (trip.get('tc_total_halting_cost_check', False) or trip.get('tc_haltingcost_check', False)) and tc_day_cost > 0:
+            selling_halting = tc_day_cost * halting_days
+        elif inv and safe_num(inv.get('ti_halting_charges')) > 0:
+            selling_halting = safe_num(inv.get('ti_halting_charges'))
+        else:
+            selling_halting = 0.0
+
+        selling_handling = safe_num(inv['ti_handling_charges']) if inv else (safe_num(trip.get('tc_handlingcost')) if trip.get('tc_handlingcost_check', True) else 0.0)
+        selling_parking = safe_num(inv['ti_parking_charges']) if inv else (safe_num(trip.get('tc_parkingcost')) if trip.get('tc_parkingcost_check', True) else 0.0)
+        selling_cancellation = safe_num(inv['ti_cancellation_charges']) if inv else (safe_num(trip.get('tc_cancellation')) if trip.get('tc_cancellation_check', True) else 0.0)
+
+        income_actual_dict["Transportation Charges"][m] += (
+            selling_trip + selling_supervisor + selling_cancellation
         )
-        for item in market_income_summary:
-            month = item["mb_bill_date__month"]
-            if month in display_months_indices:
-                income_actual_dict[halting_inc_cat][month] += float(item["total_halting"] or 0)
-                income_actual_dict[loading_inc_cat][month] += float(item["total_loading"] or 0)
-                income_actual_dict[trans_inc_cat][month] += float(item["total_transportation"] or 0)
-                income_actual_dict[parking_inc_cat][month] += float(item["total_parking"] or 0)
+        income_actual_dict["Halting Charges"][m] += selling_halting
+        income_actual_dict["Loading Charges"][m] += selling_loading
+        income_actual_dict["Unloading Charges"][m] += selling_unloading
+        income_actual_dict["Parking Charges"][m] += selling_parking
+        income_actual_dict["Toll Charges"][m] += selling_toll
+        income_actual_dict["Transportation Handling Charges"][m] += selling_handling
+        income_actual_dict["Weighment Charges"][m] += selling_weighment
 
     budget_summary = (
         BudgetInfo.objects.filter(**budget_filter)
@@ -8778,28 +8691,43 @@ def transport_mis(request):
         if month in display_months_indices:
             for cat, field in TRANSPORT_BUDGET_FIELD_MAPPING.items():
                 if field:
-                    budget_dict_by_month.setdefault(cat, {i: 0 for i in display_months_indices})
-                    budget_dict_by_month[cat][month] = item.get(field, 0.0)
+                    budget_dict_by_month.setdefault(cat, {i: 0.0 for i in display_months_indices})
+                    val = item.get(field)
+                    budget_dict_by_month[cat][month] = float(val) if val is not None else 0.0
 
     def get_category_summary(category_mapping, category_name, actual_dict, is_income=False):
         summary = []
-        grand_monthly_expenses = {i: 0 for i in display_months_indices}
-        grand_monthly_budgets = {i: 0 for i in display_months_indices}
-        grand_total_expense = 0
-        grand_total_budget = 0
+        grand_monthly_expenses = {i: 0.0 for i in display_months_indices}
+        grand_monthly_budgets = {i: 0.0 for i in display_months_indices}
+        grand_total_expense = 0.0
+        grand_total_budget = 0.0
 
         for category, field in category_mapping.items():
-            monthly_expenses = actual_dict.get(category, {i: 0 for i in display_months_indices})
-            monthly_budgets = budget_dict_by_month.get(category, {i: 0 for i in display_months_indices})
+            raw_expenses = actual_dict.get(category, {})
+            raw_budgets = budget_dict_by_month.get(category, {})
+
+            monthly_expenses = {
+                month: float(raw_expenses.get(month) or 0.0)
+                for month in display_months_indices
+            }
+            monthly_budgets = {
+                month: float(raw_budgets.get(month) or 0.0)
+                for month in display_months_indices
+            }
+
             # Variance calculation:
             # For Income: Actual - Budget (Positive = Over-performance)
             # For Expenses: Budget - Actual (Positive = Saving)
             if is_income:
-                monthly_variance = {month: monthly_expenses[month] - monthly_budgets[month] for month in
-                                    display_months_indices}
+                monthly_variance = {
+                    month: monthly_expenses[month] - monthly_budgets[month]
+                    for month in display_months_indices
+                }
             else:
-                monthly_variance = {month: monthly_budgets[month] - monthly_expenses[month] for month in
-                                    display_months_indices}
+                monthly_variance = {
+                    month: monthly_budgets[month] - monthly_expenses[month]
+                    for month in display_months_indices
+                }
 
             total_expense = sum(monthly_expenses.values())
             total_budget = sum(monthly_budgets.values())
@@ -8809,7 +8737,7 @@ def transport_mis(request):
             else:
                 total_variance = total_budget - total_expense
 
-            pl_percentage = (total_variance / total_budget * 100) if total_budget > 0 else 0.0
+            pl_percentage = (total_variance / total_budget * 100.0) if total_budget > 0 else 0.0
 
             for month in display_months_indices:
                 grand_monthly_expenses[month] += monthly_expenses[month]
@@ -8830,15 +8758,19 @@ def transport_mis(request):
             })
 
         if is_income:
-            grand_monthly_variance = {month: grand_monthly_expenses[month] - grand_monthly_budgets[month] for month in
-                                      display_months_indices}
+            grand_monthly_variance = {
+                month: grand_monthly_expenses[month] - grand_monthly_budgets[month]
+                for month in display_months_indices
+            }
             grand_total_variance = grand_total_expense - grand_total_budget
         else:
-            grand_monthly_variance = {month: grand_monthly_budgets[month] - grand_monthly_expenses[month] for month in
-                                      display_months_indices}
+            grand_monthly_variance = {
+                month: grand_monthly_budgets[month] - grand_monthly_expenses[month]
+                for month in display_months_indices
+            }
             grand_total_variance = grand_total_budget - grand_total_expense
 
-        grand_pl_percentage = (grand_total_variance / grand_total_budget * 100) if grand_total_budget > 0 else 0.0
+        grand_pl_percentage = (grand_total_variance / grand_total_budget * 100.0) if grand_total_budget > 0 else 0.0
 
         summary.append({
             "expense_type": f"Total {category_name}",
@@ -8868,8 +8800,8 @@ def transport_mis(request):
     interest_summary = get_category_summary(TRANSPORT_INTEREST_EXPENSES_CATEGORIES, "Interest Expenses", expense_dict)
 
     # Total Expense Calculation
-    total_expense_monthly_budget = {i: 0 for i in display_months_indices}
-    total_expense_monthly_actual = {i: 0 for i in display_months_indices}
+    total_expense_monthly_budget = {i: 0.0 for i in display_months_indices}
+    total_expense_monthly_actual = {i: 0.0 for i in display_months_indices}
 
     expense_summaries = [
         op_fixed_summary,
@@ -8883,10 +8815,10 @@ def transport_mis(request):
 
     for month in display_months_indices:
         total_expense_monthly_budget[month] = sum(
-            summary[-1]["monthly_budgets"][month] for summary in expense_summaries
+            float(summary[-1]["monthly_budgets"].get(month) or 0.0) for summary in expense_summaries
         )
         total_expense_monthly_actual[month] = sum(
-            summary[-1]["monthly_expenses"][month] for summary in expense_summaries
+            float(summary[-1]["monthly_expenses"].get(month) or 0.0) for summary in expense_summaries
         )
 
     total_expense_monthly_variance = {
@@ -8908,34 +8840,62 @@ def transport_mis(request):
     }
 
     # Net Profit Calculation
-    net_monthly_budget = {i: 0 for i in display_months_indices}
-    net_monthly_actual = {i: 0 for i in display_months_indices}
+    net_monthly_budget = {i: 0.0 for i in display_months_indices}
+    net_monthly_actual = {i: 0.0 for i in display_months_indices}
 
     for month in display_months_indices:
-        net_monthly_budget[month] = income_summary[-1]["monthly_budgets"][month] - total_expense_monthly_budget[month]
-        net_monthly_actual[month] = income_summary[-1]["monthly_expenses"][month] - total_expense_monthly_actual[month]
+        inc_b = float(income_summary[-1]["monthly_budgets"].get(month) or 0.0)
+        inc_a = float(income_summary[-1]["monthly_expenses"].get(month) or 0.0)
+        net_monthly_budget[month] = inc_b - total_expense_monthly_budget[month]
+        net_monthly_actual[month] = inc_a - total_expense_monthly_actual[month]
 
-    net_monthly_variance = {month: net_monthly_actual[month] - net_monthly_budget[month] for month in
-                            display_months_indices}
-    net_monthly_pl_percentage = {
-        month: (net_monthly_variance[month] / net_monthly_budget[month] * 100) if net_monthly_budget[
-                                                                                      month] != 0 else 0.0
+    net_monthly_variance = {
+        month: net_monthly_actual[month] - net_monthly_budget[month]
         for month in display_months_indices
     }
+
+    # Profit % Calculations (Net Profit / Total Income * 100)
+    budget_monthly_pl_percentage = {
+        month: (net_monthly_budget[month] / float(income_summary[-1]["monthly_budgets"].get(month) or 0.0) * 100.0)
+        if float(income_summary[-1]["monthly_budgets"].get(month) or 0.0) > 0 else 0.0
+        for month in display_months_indices
+    }
+    actual_monthly_pl_percentage = {
+        month: (net_monthly_actual[month] / float(income_summary[-1]["monthly_expenses"].get(month) or 0.0) * 100.0)
+        if float(income_summary[-1]["monthly_expenses"].get(month) or 0.0) > 0 else 0.0
+        for month in display_months_indices
+    }
+    variance_monthly_pl_percentage = {
+        month: actual_monthly_pl_percentage[month] - budget_monthly_pl_percentage[month]
+        for month in display_months_indices
+    }
+
     total_net_budget = sum(net_monthly_budget.values())
     total_net_actual = sum(net_monthly_actual.values())
     total_net_variance = total_net_actual - total_net_budget
-    total_net_pl_percentage = (total_net_variance / total_net_budget * 100) if total_net_budget != 0 else 0.0
+
+    total_income_budget = float(income_summary[-1]["total_budget"] or 0.0)
+    total_income_actual = float(income_summary[-1]["total_expense"] or 0.0)  # holds grand total income
+
+    budget_total_pl_percentage = (total_net_budget / total_income_budget * 100.0) if total_income_budget > 0 else 0.0
+    actual_total_pl_percentage = (total_net_actual / total_income_actual * 100.0) if total_income_actual > 0 else 0.0
+    variance_total_pl_percentage = actual_total_pl_percentage - budget_total_pl_percentage
 
     net_summary = {
         "monthly_budget": net_monthly_budget,
         "monthly_actual": net_monthly_actual,
         "monthly_variance": net_monthly_variance,
-        "monthly_pl_percentage": net_monthly_pl_percentage,
+        "monthly_pl_percentage": actual_monthly_pl_percentage,
+        "budget_monthly_pl_percentage": budget_monthly_pl_percentage,
+        "actual_monthly_pl_percentage": actual_monthly_pl_percentage,
+        "variance_monthly_pl_percentage": variance_monthly_pl_percentage,
         "total_budget": total_net_budget,
         "total_actual": total_net_actual,
         "total_variance": total_net_variance,
-        "pl_percentage": total_net_pl_percentage,
+        "budget_total_pl_percentage": budget_total_pl_percentage,
+        "actual_total_pl_percentage": actual_total_pl_percentage,
+        "variance_total_pl_percentage": variance_total_pl_percentage,
+        "pl_percentage": actual_total_pl_percentage,
     }
 
     import calendar

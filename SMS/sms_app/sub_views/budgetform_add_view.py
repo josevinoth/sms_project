@@ -208,53 +208,137 @@ def budgetform_list(request):
                 (budget.bf_subscription_membership or 0)
         ), 2)
 
-        row_emp = round((
-                (budget.bf_corp_staff or 0) +
-                (budget.bf_dept_staff or 0) +
-                (budget.bf_driver_staff or 0)
-        ), 2)
+        corp_staff = (
+            (budget.bf_bonus_corp_staff or 0) +
+            (budget.bf_EDLI_contribution_corp_staff or 0) +
+            (budget.bf_employer_contribution_to_ESI_corp_staff or 0) +
+            (budget.bf_employer_contribution_to_PF_corp_staff or 0) +
+            (budget.bf_EPF_admin_charges_corp_staff or 0) +
+            (budget.bf_exgratia_corp_staff or 0) +
+            (budget.bf_gratuity_corp_staff or 0) +
+            (budget.bf_incentive_corp_staff or 0) +
+            (budget.bf_insurance_corp_staff or 0) +
+            (budget.bf_lwf_corp_staff or 0) +
+            (budget.bf_salaries_wages_corp_staff or 0)
+        )
+        if budget.bf_corp_staff and budget.bf_corp_staff > 0 and corp_staff == 0:
+            corp_staff = budget.bf_corp_staff
 
-        row_ops = round((
-                (budget.bf_fixed or 0) +
-                (budget.bf_insurance_warehouse or 0) +
-                (budget.bf_insurance_wcc or 0) +
-                (budget.bf_rent_premises or 0) +
-                (budget.bf_security_service_charges or 0) +
-                (budget.bf_manpower_supply_expenses or 0)
-        ), 2)
+        dept_staff = (
+            (budget.bf_bonus_staff or 0) +
+            (budget.bf_EDLI_contribution_staff or 0) +
+            (budget.bf_employer_contribution_to_ESI_staff or 0) +
+            (budget.bf_employer_contribution_to_PF_staff or 0) +
+            (budget.bf_EPF_admin_charges_staff or 0) +
+            (budget.bf_exgratia_dept_staff or 0) +
+            (budget.bf_gratuity_staff or 0) +
+            (budget.bf_incentive_dept_staff or 0) +
+            (budget.bf_insurance_staff or 0) +
+            (budget.bf_lwf_dept_staff or 0) +
+            (budget.bf_salaries_wages_staff or 0)
+        )
+        if budget.bf_dept_staff and budget.bf_dept_staff > 0 and dept_staff == 0:
+            dept_staff = budget.bf_dept_staff
 
-        row_non_ops = round((
-                (budget.bf_oe_Fixed or 0) +
-                (budget.bf_depreciation or 0) +
-                (budget.bf_software_AMC_charges or 0) +
-                (budget.bf_amc or 0) +
-                (budget.bf_internet_data_card_expenses or 0) +
-                (budget.bf_rent_plant_machinery or 0) +
-                (budget.bf_oe_variable or 0) +
-                (budget.bf_CGST_ineligible_ITC or 0) +
-                (budget.bf_conveyance_expenses or 0) +
-                (budget.bf_diesel_expenses_gense or 0) +
-                (budget.bf_handling_expenses or 0) +
-                (budget.bf_hotel_boarding_lodging_expenses or 0) +
-                (budget.bf_IGST_ineligible_ITC or 0) +
-                (budget.bf_office_supplies_general_expenses or 0) +
-                (budget.bf_power_fuel or 0) +
-                (budget.bf_postage_courier or 0) +
-                (budget.bf_printing_stationery or 0) +
-                (budget.bf_service_maintenance_expenses or 0) +
-                (budget.bf_SGST_ineligible_ITC or 0) +
-                (budget.bf_staff_welfare_staff or 0) +
-                (budget.bf_telephone_mobile_expenses or 0) +
-                (budget.bf_training_expenses or 0) +
-                (budget.bf_travelling_expenses or 0)
-        ), 2)
+        driver_staff = (
+            (budget.bf_bonus_drivers or 0) +
+            (budget.bf_EDLI_contribution_drivers or 0) +
+            (budget.bf_employer_contribution_to_ESI_drivers or 0) +
+            (budget.bf_employer_contribution_to_PF_drivers or 0) +
+            (budget.bf_EPF_admin_charges_drivers or 0) +
+            (budget.bf_exgratia_drivers or 0) +
+            (budget.bf_gratuity_drivers or 0) +
+            (budget.bf_incentive_drivers or 0) +
+            (budget.bf_insurance_drivers or 0) +
+            (budget.bf_lwf_drivers or 0) +
+            (budget.bf_salaries_wages_drivers or 0)
+        )
+        if budget.bf_driver_staff and budget.bf_driver_staff > 0 and driver_staff == 0:
+            driver_staff = budget.bf_driver_staff
+
+        row_emp = round(corp_staff + dept_staff + driver_staff, 2)
+
+        ops_fixed = (
+            (budget.bf_insurance_warehouse or 0) +
+            (budget.bf_insurance_wcc or 0) +
+            (budget.bf_rent_premises or 0) +
+            (budget.bf_security_service_charges or 0) +
+            (budget.bf_manpower_supply_expenses or 0) +
+            (budget.bf_gprs_access_service or 0) +
+            (budget.bf_insurance_vehicles or 0) +
+            (budget.bf_vehicle_hire or 0)
+        )
+        if budget.bf_fixed and budget.bf_fixed > 0 and ops_fixed == 0:
+            ops_fixed = budget.bf_fixed
+
+        ops_variable = (
+            (budget.bf_crane_handling_expenses or 0) +
+            (budget.bf_diesel_expenses_forklift or 0) +
+            (budget.bf_forklift_handling_expenses or 0) +
+            (budget.bf_packing_services or 0) +
+            (budget.bf_support_handling or 0) +
+            (budget.bf_fumigation_expenses or 0) +
+            (budget.bf_acting_driver or 0) +
+            (budget.bf_cng or 0) +
+            (budget.bf_diesel_vehicle or 0) +
+            (budget.bf_driver_betta or 0) +
+            (budget.bf_extra_hrs or 0) +
+            (budget.bf_extra_km or 0) +
+            (budget.bf_halting or 0) +
+            (budget.bf_loading or 0) +
+            (budget.bf_parking or 0) +
+            (budget.bf_rates_taxes or 0) +
+            (budget.bf_toll or 0) +
+            (budget.bf_transportation or 0) +
+            (budget.bf_unloading or 0) +
+            (budget.bf_vehicle_maintenance or 0) +
+            (budget.bf_weighment or 0)
+        )
+        if budget.bf_variable and budget.bf_variable > 0 and ops_variable == 0:
+            ops_variable = budget.bf_variable
+
+        row_ops = round(ops_fixed + ops_variable, 2)
+
+        non_ops_fixed = (
+            (budget.bf_amc or 0) +
+            (budget.bf_depreciation or 0) +
+            (budget.bf_internet_data_card_expenses or 0) +
+            (budget.bf_rent_plant_machinery or 0) +
+            (budget.bf_software_AMC_charges or 0)
+        )
+        if budget.bf_oe_Fixed and budget.bf_oe_Fixed > 0 and non_ops_fixed == 0:
+            non_ops_fixed = budget.bf_oe_Fixed
+
+        non_ops_variable = (
+            (budget.bf_CGST_ineligible_ITC or 0) +
+            (budget.bf_conveyance_expenses or 0) +
+            (budget.bf_diesel_expenses_gense or 0) +
+            (budget.bf_handling_expenses or 0) +
+            (budget.bf_hotel_boarding_lodging_expenses or 0) +
+            (budget.bf_IGST_ineligible_ITC or 0) +
+            (budget.bf_office_supplies_general_expenses or 0) +
+            (budget.bf_postage_courier or 0) +
+            (budget.bf_power_fuel or 0) +
+            (budget.bf_printing_stationery or 0) +
+            (budget.bf_service_maintenance_expenses or 0) +
+            (budget.bf_SGST_ineligible_ITC or 0) +
+            (budget.bf_staff_welfare_staff or 0) +
+            (budget.bf_telephone_mobile_expenses or 0) +
+            (budget.bf_training_expenses or 0) +
+            (budget.bf_travelling_expenses or 0)
+        )
+        if budget.bf_oe_variable and budget.bf_oe_variable > 0 and non_ops_variable == 0:
+            non_ops_variable = budget.bf_oe_variable
+
+        row_non_ops = round(non_ops_fixed + non_ops_variable, 2)
 
         row_interest = round((
                 (budget.bf_interest_on_borrowings or 0) +
                 (budget.bf_interest_on_vehicle_loan or 0)
         ), 2)
 
-        row_total = round(row_income + row_dept + row_emp + row_interest + row_ops + row_non_ops, 2)
+        # Overall total represents total expenses (excluding income)
+        row_total = round(row_dept + row_emp + row_interest + row_ops + row_non_ops, 2)
 
         # Attach per-row subtotals as dynamic attributes
         budget.row_income_subtotal = row_income
@@ -273,9 +357,9 @@ def budgetform_list(request):
         operational_expenses_total += row_ops
         non_operational_expenses_total += row_non_ops
 
-    # Calculate the overall grand total
+    # Calculate the overall grand total (Total Expenses excluding Income)
     overall_total = round(
-        income_total + department_expenses_total + employee_benefits_total +
+        department_expenses_total + employee_benefits_total +
         interest_total + operational_expenses_total + non_operational_expenses_total, 2
     )
     income_total = round(income_total, 2)

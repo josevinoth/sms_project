@@ -9,11 +9,13 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo
+from ..sub_models.wms_expense_type_mod import WMSExpenseTypeInfo
 from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
 from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo, Warehouse_goods_info, UnitInfo
 from ..sub_forms.wms_petty_cash_form import WMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
+from django.views.decorators.csrf import csrf_exempt
 
 
 def is_admin_or_supervisor_user(request):
@@ -361,7 +363,8 @@ def wms_petty_cash_list(request):
         user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
 
     context = {
-        'wpc_list': page_obj,
+        'wpc_list': wpc_list,
+        'page_obj': page_obj,
         'search_wpc_number': wpc_number,
         'search_date': search_date,
         'from_date': from_date,
@@ -670,3 +673,92 @@ def wms_petty_cash_export_tally(request):
     response['Content-Disposition'] = 'attachment; filename="WMS_Petty_Cash_Tally_Export.xlsx"'
     wb.save(response)
     return response
+
+
+@csrf_exempt
+def add_wms_expense_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        if not name:
+            return JsonResponse({"success": False, "error": "Expense type name cannot be empty."})
+
+        existing = WMSExpenseTypeInfo.objects.filter(wms_exp_type_name__iexact=name).first()
+        if existing:
+            if not existing.wms_exp_type_status:
+                existing.wms_exp_type_status = True
+                existing.save()
+            return JsonResponse({
+                "success": True,
+                "id": existing.id,
+                "name": existing.wms_exp_type_name,
+                "message": "Expense type already exists."
+            })
+
+        from django.db.models import Max
+        from django.db import connection
+        try:
+            new_obj = WMSExpenseTypeInfo.objects.create(wms_exp_type_name=name, wms_exp_type_status=True)
+        except Exception:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT setval(pg_get_serial_sequence('sms_app_wmsexpensetypeinfo', 'id'), (SELECT COALESCE(MAX(id), 1) FROM sms_app_wmsexpensetypeinfo));")
+                new_obj = WMSExpenseTypeInfo.objects.create(wms_exp_type_name=name, wms_exp_type_status=True)
+            except Exception:
+                max_id = WMSExpenseTypeInfo.objects.aggregate(Max('id'))['id__max'] or 0
+                new_obj = WMSExpenseTypeInfo.objects.create(id=max_id + 1, wms_exp_type_name=name, wms_exp_type_status=True)
+
+        return JsonResponse({
+            "success": True,
+            "id": new_obj.id,
+            "name": new_obj.wms_exp_type_name
+        })
+    return JsonResponse({"success": False, "error": "Invalid request method."})
+
+
+def wms_petty_cash_combined_pdf(request, wpc_id):
+    wpc = get_object_or_404(WMSPettyCashInfo, pk=wpc_id)
+    from ..utils.petty_cash_pdf_utils import generate_petty_cash_combined_pdf
+    pdf_bytes = generate_petty_cash_combined_pdf(wpc, pc_type='WMS')
+    safe_name = re.sub(r'[\\/*?:"<>|]', '_', wpc.wpc_number or f'WMS_{wpc.id}')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{safe_name}_combined.pdf"'
+    return response
+
+
+def wms_petty_cash_export_zip(request):
+    wpc_number = request.GET.get('wpc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_unit = request.GET.get('search_unit', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
+
+    filters = Q()
+    if wpc_number:
+        filters &= Q(wpc_number__icontains=wpc_number)
+    if search_date:
+        filters &= Q(wpc_transaction_date=search_date)
+    if from_date:
+        filters &= Q(wpc_date__gte=from_date)
+    if to_date:
+        filters &= Q(wpc_date__lte=to_date)
+    if search_unit:
+        filters &= Q(wpc_unit__icontains=search_unit)
+
+    is_admin_or_supervisor = is_admin_or_supervisor_user(request)
+    if not is_admin_or_supervisor:
+        user_branch = get_user_branch_code(request)
+        if user_branch:
+            filters &= (Q(wpc_branch__loc_name__icontains=user_branch) | Q(wpc_number__istartswith=f"{user_branch}-"))
+    else:
+        if search_branch:
+            filters &= (Q(wpc_branch__loc_name__icontains=search_branch) | Q(wpc_number__istartswith=f"{search_branch}-"))
+
+    wpc_list = WMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
+        'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',
+        'wpc_credit_ledger', 'wpc_to', 'wpc_customer', 'wpc_created_by', 'wpc_updated_by'
+    )
+    from ..utils.petty_cash_pdf_utils import export_petty_cash_zip
+    return export_petty_cash_zip(wpc_list, pc_type='WMS', zip_filename='WMS_Petty_Cash_Attachments.zip')
+
+
