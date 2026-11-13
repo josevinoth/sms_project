@@ -114,24 +114,24 @@
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">UOM</label>
-                            <select name="cbm_uom" class="form-control form-control-modern">
-                                <option value="">-- Select --</option>
+                            <select name="cbm_uom" id="id_cbm_uom" class="form-control form-control-modern">
+                                <option value="" data-name="cm">-- Select (cm) --</option>
                                 {% for u in uoms %}
-                                    <option value="{{ u.id }}" {% if item and item.cbm_uom_id == u.id %}selected{% endif %}>{{ u }}</option>
+                                    <option value="{{ u.id }}" data-name="{{ u|lower }}" {% if item and item.cbm_uom_id == u.id %}selected{% elif not item and u.id == 3 %}selected{% endif %}>{{ u }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="row">
                             <div class="col-4 form-group-modern">
-                                <label class="form-label-modern">Length</label>
+                                <label class="form-label-modern">Length (<span class="cbm-uom-text">cm</span>)</label>
                                 <input type="number" step="0.01" name="cbm_length" class="form-control form-control-modern" value="{{ item.cbm_length|default:0 }}" required>
                             </div>
                             <div class="col-4 form-group-modern">
-                                <label class="form-label-modern">Width</label>
+                                <label class="form-label-modern">Width (<span class="cbm-uom-text">cm</span>)</label>
                                 <input type="number" step="0.01" name="cbm_width" class="form-control form-control-modern" value="{{ item.cbm_width|default:0 }}" required>
                             </div>
                             <div class="col-4 form-group-modern">
-                                <label class="form-label-modern">Height</label>
+                                <label class="form-label-modern">Height (<span class="cbm-uom-text">cm</span>)</label>
                                 <input type="number" step="0.01" name="cbm_height" class="form-control form-control-modern" value="{{ item.cbm_height|default:0 }}" required>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                         <div id="cbm_clearance_section">
                             <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
                                 <label class="form-label-modern mb-0" style="color: #0369a1; font-weight: 700;">
-                                    <i class="fas fa-arrows-alt-h mr-1"></i> Clearance (cm)
+                                    <i class="fas fa-arrows-alt-h mr-1"></i> Clearance (<span class="cbm-uom-text">cm</span>)
                                 </label>
                                 <small class="text-muted" style="font-size: 0.7rem;">Cargo OD &rarr; Box ID</small>
                             </div>
@@ -164,7 +164,7 @@
                         <div id="cbm_thickness_section">
                             <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
                                 <label class="form-label-modern mb-0" style="color: #b45309; font-weight: 700;">
-                                    <i class="fas fa-layer-group mr-1"></i> Thickness (cm)
+                                    <i class="fas fa-layer-group mr-1"></i> Thickness (<span class="cbm-uom-text">cm</span>)
                                 </label>
                                 <small class="text-muted" style="font-size: 0.7rem;">Box ID &rarr; Box OD</small>
                             </div>
@@ -252,6 +252,7 @@ $(document).ready(function () {
                 thk_w: '#id_cbm_thk_width',
                 thk_h: '#id_cbm_thk_height',
                 dim_type: '#id_cbm_dimension_type',
+                uom: '#id_cbm_uom',
                 weight: 'input[name="cbm_job_weight"]',
                 part_code: 'input[name="cbm_item_code"]',
                 box_name: 'input[name="cbm_item_name"]',
@@ -259,6 +260,42 @@ $(document).ready(function () {
             }
         });
     }
+
+    // UOM dynamic conversion & label update
+    var currentUom = ($('#id_cbm_uom option:selected').attr('data-name') || $('#id_cbm_uom option:selected').text() || 'cm').trim().toLowerCase();
+    if (!currentUom || currentUom.indexOf('select') !== -1) currentUom = 'cm';
+
+    var uomToCm = { 'cm': 1.0, 'mm': 0.1, 'in': 2.54, 'ft': 30.48 };
+
+    function updateUomLabelsAndConvert(newUom) {
+        if (!newUom || newUom.indexOf('select') !== -1) newUom = 'cm';
+        $('.cbm-uom-text').text(newUom);
+
+        if (currentUom !== newUom && uomToCm[currentUom] && uomToCm[newUom]) {
+            var factor = uomToCm[currentUom] / uomToCm[newUom];
+            var dimFields = [
+                'input[name="cbm_length"]', 'input[name="cbm_width"]', 'input[name="cbm_height"]',
+                '#id_cbm_clr_length', '#id_cbm_clr_width', '#id_cbm_clr_top',
+                '#id_cbm_thk_length', '#id_cbm_thk_width', '#id_cbm_thk_height'
+            ];
+            dimFields.forEach(function (sel) {
+                var el = $(sel);
+                var val = parseFloat(el.val());
+                if (!isNaN(val) && val > 0) {
+                    var converted = +(val * factor).toFixed(newUom === 'mm' ? 1 : 2);
+                    el.val(converted).trigger('input');
+                }
+            });
+        }
+        currentUom = newUom;
+    }
+
+    $('#id_cbm_uom').on('change', function () {
+        var opt = $('#id_cbm_uom option:selected');
+        var uomName = (opt.attr('data-name') || opt.text() || 'cm').trim().toLowerCase();
+        updateUomLabelsAndConvert(uomName);
+    });
+    updateUomLabelsAndConvert(currentUom);
 
     $('#id_cbm_wood_type').multiselect({
         includeSelectAllOption: true,
