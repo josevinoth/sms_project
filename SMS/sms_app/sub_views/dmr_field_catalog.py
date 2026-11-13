@@ -138,6 +138,7 @@ DMR_PAGE_CATALOG = [
             {"key": "loading_unloading_combined", "label": "Loading / Unloading Charges (Combined)", "type": "number", "desc": "Sum of loading and unloading charges"},
             {"key": "hbl_wise_split_cost", "label": "HBL Wise Split Cost", "type": "number", "desc": "Trip cost split equally across consignment goods for C-Note (Trip Cost / Goods Count)"},
             {"key": "custom_total_charges", "label": "Total Charges / Cost (Configurable)", "type": "number", "desc": "Configurable summation of selected charges", "has_multi_charges": True},
+            {"key": "supervisor_cost", "label": "Supervisor Cost", "type": "number", "desc": "Supervisor charges / cost"},
         ]
     },
     {
@@ -149,7 +150,8 @@ DMR_PAGE_CATALOG = [
             {"key": "s_no", "label": "S.NO (Serial Number)", "type": "number", "desc": "Auto-incrementing row number (1, 2, 3...)"},
             {"key": "month_name", "label": "Month Name", "type": "string", "desc": "E.g., January, February"},
             {"key": "static_text", "label": "Static Text / Fixed Value", "type": "string", "desc": "Fixed constant text in every row", "has_static_value": True},
-            {"key": "blank_column", "label": "Blank / Empty Column", "type": "string", "desc": "Empty placeholder column"},
+            {"key": "blank_column", "label": "Blank / Empty Column", "type": "string", "desc": "Empty placeholder column", "has_static_value": True},
+            {"key": "default_column", "label": "Default / Empty Column", "type": "string", "desc": "Empty column or default value to reflect across full column in Excel", "has_static_value": True},
         ]
     }
 ]
@@ -198,6 +200,7 @@ CARGO_GOODS_FIELD_KEYS = {
     'co_seal_number',        # Shipper Seal # / Smart Lock
     'static_text',           # Fixed text
     'blank_column',          # Blank placeholder
+    'default_column',        # Default / empty column
 }
 
 CARGO_HEADER_KEYWORDS = [
@@ -282,9 +285,7 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
     # 1. System / Custom
     if fk == "s_no":
         return row_idx
-    if fk == "blank_column":
-        return ""
-    if fk == "static_text":
+    if fk in ("blank_column", "default_column", "static_text"):
         return static_val or ""
     if fk == "month_name":
         dt = trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
@@ -511,6 +512,8 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         return _safe_num(trip.tc_handlingcost)
     if fk == "cancellation_charges":
         return _safe_num(trip.tc_cancellation)
+    if fk in ("supervisor_cost", "supervisor_charges", "supervisorcost", "supervisorcharges"):
+        return _safe_num(trip.tc_supervisorcost)
     if fk == "parking_unloading_combined":
         return _safe_num(trip.tc_parkingcost) + _safe_num(trip.tc_unloadingcost)
     if fk in ("loading_unloading_combined", "loading_unloading_charges"):

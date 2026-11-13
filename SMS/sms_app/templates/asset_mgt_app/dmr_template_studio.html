@@ -356,12 +356,28 @@
                               '</div>';
             }
 
-            // Static text input if field_key is static_text
+            // Tab for default / static value to reflect across full column in Excel
             var staticValHtml = '';
-            if (col.field_key === 'static_text') {
-                staticValHtml = '<div class="mr-2 d-inline-block" style="width: 140px;">' +
-                                '<input type="text" class="form-control form-control-xs py-0" style="height: 28px; font-size: 0.8rem;" placeholder="Fixed text value..." ' +
-                                'value="' + (col.static_value || '') + '" onchange="updateColStaticVal(' + idx + ', this.value)">' +
+            var isStaticOrEmpty = (
+                col.field_key === 'static_text' ||
+                col.field_key === 'blank_column' ||
+                col.field_key === 'default_column' ||
+                col.field_key === 'custom_column'
+            );
+            if (isStaticOrEmpty) {
+                staticValHtml = '<div class="mr-2 d-inline-block" style="min-width: 175px;" title="Value to reflect across full column in Excel (leave blank for empty)">' +
+                                '<div class="input-group input-group-sm">' +
+                                    '<div class="input-group-prepend">' +
+                                        '<span class="input-group-text py-0 px-2 bg-light text-muted font-weight-bold" style="font-size: 0.72rem; height: 28px;">' +
+                                            '<i class="fas fa-edit mr-1 text-primary"></i> Value' +
+                                        '</span>' +
+                                    '</div>' +
+                                    '<input type="text" class="form-control form-control-xs py-0" style="height: 28px; font-size: 0.8rem; background-color: #fffdf5; border-color: #ffe082;" ' +
+                                           'placeholder="Value in full column..." ' +
+                                           'value="' + escapeHtml(col.static_value || '') + '" ' +
+                                           'oninput="updateColStaticVal(' + idx + ', this.value)" ' +
+                                           'onchange="updateColStaticVal(' + idx + ', this.value)">' +
+                                '</div>' +
                                 '</div>';
             }
 
