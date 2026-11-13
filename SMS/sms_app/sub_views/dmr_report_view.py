@@ -1096,10 +1096,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                 if hh == "toll pass":
                     row.append(safe_num(trip.tc_tollcost));
                     continue
-                if hh == "PARKING CHARGES":
-                    row.append(safe_num(trip.tc_supervisorcost));
-                    continue
-                if hh == "supervisor charges":
+                if hh in ("supervisor charges", "supervisor cost"):
                     row.append(safe_num(trip.tc_supervisorcost));
                     continue
                 if hh == "unloading charges":
@@ -1269,7 +1266,16 @@ def trip_report(request):
     # -------------------------
     customer_id = request.POST.get('dmr_customer') or request.GET.get('dmr_customer')
     dept_id = request.POST.get('customer_department') or request.GET.get('customer_department')
-    from_date = (request.POST.get('from_date') or request.GET.get('from_date') or '').strip()
+    today_dt = date.today()
+    default_from_date = date(today_dt.year, today_dt.month, 1).strftime('%Y-%m-%d')
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        from_date = from_date.strip() if from_date is not None else default_from_date
+    else:
+        if 'from_date' in request.GET:
+            from_date = request.GET.get('from_date', '').strip()
+        else:
+            from_date = default_from_date
     to_date = (request.POST.get('to_date') or request.GET.get('to_date') or '').strip()
     selected_month = request.POST.get('month') or request.GET.get('month')
     selected_year = request.POST.get('year') or request.GET.get('year')
@@ -1506,7 +1512,12 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
 def export_dmr_excel(request):
     customer_id = request.GET.get('customer_id') or request.GET.get('dmr_customer')
     dept_id = request.GET.get('customer_department') or request.GET.get('dept_id')
-    from_date = (request.GET.get('from_date') or '').strip()
+    today_dt = date.today()
+    default_from_date = date(today_dt.year, today_dt.month, 1).strftime('%Y-%m-%d')
+    if 'from_date' in request.GET:
+        from_date = (request.GET.get('from_date') or '').strip()
+    else:
+        from_date = default_from_date
     to_date = (request.GET.get('to_date') or '').strip()
     month = request.GET.get('month')
     year = request.GET.get('year')
@@ -1640,7 +1651,12 @@ def trip_send_email(request):
 
     customer_id = request.POST.get('customer_id')
     dept_id = request.POST.get('customer_department') or request.POST.get('dept_id')
-    from_date = (request.POST.get('from_date') or '').strip()
+    today_dt = date.today()
+    default_from_date = date(today_dt.year, today_dt.month, 1).strftime('%Y-%m-%d')
+    if 'from_date' in request.POST:
+        from_date = (request.POST.get('from_date') or '').strip()
+    else:
+        from_date = default_from_date
     to_date = (request.POST.get('to_date') or '').strip()
     month = request.POST.get('month')
     year = request.POST.get('year')
@@ -1822,7 +1838,12 @@ def trip_report_ajax(request):
     # Filters (same names as used in trip_report form)
     customer_id = request.GET.get('dmr_customer')
     dept_id = request.GET.get('customer_department')
-    from_date = (request.GET.get('from_date') or '').strip()
+    today_dt = date.today()
+    default_from_date = date(today_dt.year, today_dt.month, 1).strftime('%Y-%m-%d')
+    if 'from_date' in request.GET:
+        from_date = (request.GET.get('from_date') or '').strip()
+    else:
+        from_date = default_from_date
     to_date = (request.GET.get('to_date') or '').strip()
     selected_month = request.GET.get('month')
     selected_year = request.GET.get('year')

@@ -123,20 +123,22 @@ def driver_expense_add(request, expense_id=0):
                         elif hasattr(trip, 'tr_enquirynumber') and trip.tr_enquirynumber and trip.tr_enquirynumber.en_customer:
                             customer_obj = trip.tr_enquirynumber.en_customer
 
-                # Map Driver Expense fields to exact labels shown in Driver Expense form
+                # Map Driver Expense fields to standard Petty Cash expense types (Option B)
                 expense_mapping = [
-                    (exp.de_parkingcost, 'Parking Cost'),
-                    (exp.de_loadingcost, 'Loading Cost'),
-                    (exp.de_unloadingcost, 'Unloading Cost'),
-                    (exp.de_weighmentcost, 'Weighment Cost'),
+                    (exp.de_parkingcost, 'Parking'),
+                    (exp.de_loadingcost, 'Loading'),
+                    (exp.de_unloadingcost, 'Unloading'),
+                    (exp.de_weighmentcost, 'Weighment'),
                     (exp.de_supervisorcost, 'Supervisor Cost'),
                     (exp.de_rtocost, 'RTO Expense'),
-                    (exp.de_battacost, 'Batta Expense'),
+                    (exp.de_battacost, 'Driver Betta'),
                 ]
                 
                 for amount, type_name in expense_mapping:
                     if amount and float(amount) > 0.0:
-                        tms_exp_type = TMSExpenseTypeInfo.objects.filter(tms_exp_type_name__icontains=type_name).first()
+                        tms_exp_type = TMSExpenseTypeInfo.objects.filter(tms_exp_type_name__iexact=type_name).first()
+                        if not tms_exp_type:
+                            tms_exp_type = TMSExpenseTypeInfo.objects.filter(tms_exp_type_name__icontains=type_name).first()
                         
                         if not tms_exp_type:
                             from django.db.models import Max

@@ -563,6 +563,7 @@ def pms_petty_cash_export_tally(request):
     to_date = request.GET.get('to_date', "").strip()
     search_unit = request.GET.get('search_unit', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
 
     filters = Q()
     if ppc_number:
@@ -745,12 +746,13 @@ def pms_petty_cash_export_zip(request):
     to_date = request.GET.get('to_date', "").strip()
     search_unit = request.GET.get('search_unit', "").strip()
     search_branch = request.GET.get('search_branch', "").strip()
+    search_user = request.GET.get('search_user', "").strip()
 
     filters = Q()
     if ppc_number:
         filters &= Q(ppc_number__icontains=ppc_number)
     if search_date:
-        filters &= Q(ppc_transaction_date=search_date)
+        filters &= (Q(ppc_date=search_date) | Q(ppc_transaction_date=search_date))
     if from_date:
         filters &= Q(ppc_date__gte=from_date)
     if to_date:
@@ -760,12 +762,23 @@ def pms_petty_cash_export_zip(request):
 
     is_admin_or_supervisor = is_admin_or_supervisor_user(request)
     if not is_admin_or_supervisor:
-        user_branch = get_user_branch_code(request)
-        if user_branch:
-            filters &= (Q(ppc_branch__loc_name__icontains=user_branch) | Q(ppc_number__istartswith=f"{user_branch}-"))
+        user_branch_code = get_user_branch_code(request)
+        if user_branch_code == 'BLR':
+            filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+        elif user_branch_code == 'MAA':
+            filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+        elif user_branch_code:
+            filters &= Q(ppc_branch__loc_name__icontains=user_branch_code)
     else:
         if search_branch:
-            filters &= (Q(ppc_branch__loc_name__icontains=search_branch) | Q(ppc_number__istartswith=f"{search_branch}-"))
+            if search_branch == 'BLR':
+                filters &= (Q(ppc_branch__loc_name__icontains='BLR') | Q(ppc_branch__loc_name__icontains='Bangalore') | Q(ppc_branch__loc_name__icontains='Bengaluru'))
+            elif search_branch == 'MAA':
+                filters &= (Q(ppc_branch__loc_name__icontains='MAA') | Q(ppc_branch__loc_name__icontains='Chennai'))
+            else:
+                filters &= Q(ppc_branch__loc_name__icontains=search_branch)
+        if search_user:
+            filters &= Q(ppc_created_by_id=search_user)
 
     ppc_list = PMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'ppc_business', 'ppc_branch', 'ppc_category', 'ppc_expense_type',

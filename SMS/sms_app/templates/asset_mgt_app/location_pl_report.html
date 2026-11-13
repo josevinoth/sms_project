@@ -74,6 +74,12 @@
                         <td class="font-weight-bold">Market Vehicle Revenue</td>
                         <td class="text-primary font-weight-bold">{{ mkt_rev }}</td>
                     </tr>
+                    {% if unassigned_rev > 0 %}
+                    <tr>
+                        <td class="font-weight-bold">Other / Unassigned Vehicle Revenue</td>
+                        <td class="text-primary font-weight-bold">{{ unassigned_rev }}</td>
+                    </tr>
+                    {% endif %}
                     <tr style="background-color: #e9ecef;">
                         <td class="font-weight-bold text-right">Total Revenue:</td>
                         <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_revenue }}</td>
@@ -94,6 +100,12 @@
                         <td class="font-weight-bold">Market Operational Expenses</td>
                         <td class="text-danger">{{ mkt_op_exp }}</td>
                     </tr>
+                    {% if unassigned_op_exp > 0 %}
+                    <tr>
+                        <td class="font-weight-bold">Other / Unassigned Operational Expenses</td>
+                        <td class="text-danger">{{ unassigned_op_exp }}</td>
+                    </tr>
+                    {% endif %}
                     <tr style="background-color: #e9ecef;">
                         <td class="font-weight-bold text-right">Total Operational Expenses:</td>
                         <td class="font-weight-bold" style="font-size: 1.2rem; color: #1a1a1a;">{{ total_op_exp }}</td>
