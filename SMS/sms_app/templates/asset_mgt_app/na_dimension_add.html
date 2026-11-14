@@ -90,19 +90,19 @@
                         <div class="row no-gutters">
                             <div class="col-4 pr-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Length</label>
+                                    <label class="form-label-modern">Length (<span class="nad-uom-text">cm</span>)</label>
                                     {% render_field form.nad_length id="nad_length" class="form-control form-control-modern" %}
                                 </div>
                             </div>
                             <div class="col-4 px-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Width</label>
+                                    <label class="form-label-modern">Width (<span class="nad-uom-text">cm</span>)</label>
                                     {% render_field form.nad_width id="nad_width" class="form-control form-control-modern" %}
                                 </div>
                             </div>
                             <div class="col-4 pl-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Height</label>
+                                    <label class="form-label-modern">Height (<span class="nad-uom-text">cm</span>)</label>
                                     {% render_field form.nad_height id="nad_height" class="form-control form-control-modern" %}
                                 </div>
                             </div>
@@ -112,7 +112,7 @@
                         <div id="na_clearance_section">
                             <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
                                 <label class="form-label-modern mb-0" style="color: #0369a1; font-weight: 700; font-size: 0.8rem;">
-                                    <i class="fas fa-arrows-alt-h mr-1"></i> Clearance (cm)
+                                    <i class="fas fa-arrows-alt-h mr-1"></i> Clearance (<span class="nad-uom-text">cm</span>)
                                 </label>
                                 <small class="text-muted" style="font-size: 0.68rem;">Cargo OD &rarr; Box ID</small>
                             </div>
@@ -142,7 +142,7 @@
                         <div id="na_thickness_section">
                             <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
                                 <label class="form-label-modern mb-0" style="color: #b45309; font-weight: 700; font-size: 0.8rem;">
-                                    <i class="fas fa-layer-group mr-1"></i> Thickness (cm)
+                                    <i class="fas fa-layer-group mr-1"></i> Thickness (<span class="nad-uom-text">cm</span>)
                                 </label>
                                 <small class="text-muted" style="font-size: 0.68rem;">Box ID &rarr; Box OD</small>
                             </div>
@@ -288,8 +288,9 @@
                     thk_w: '#nad_thk_width',
                     thk_h: '#nad_thk_height',
                     dim_type: '#nad_dimension_type',
+                    uom: '#nad_uom',
                     weight: '#nad_job_weight',
-                    part_code: '#nad_customer_part_code',
+                    part_code: '#nad_customer_part_code_val',
                     box_name: '#nad_item'
                 }
             });
@@ -310,6 +311,42 @@
 
         plywood_thickness();
         requirement_type();
+
+        // UOM dynamic conversion & label update for Need Assessment
+        var currentNAUom = ($('#nad_uom option:selected').text() || 'cm').trim().toLowerCase();
+        if (!currentNAUom || currentNAUom.indexOf('select') !== -1) currentNAUom = 'cm';
+        var uomToCm = { 'cm': 1.0, 'mm': 0.1, 'in': 2.54, 'ft': 30.48 };
+
+        function updateNAUom() {
+            var opt = $('#nad_uom option:selected');
+            var newUom = (opt.text() || 'cm').trim().toLowerCase();
+            if (!newUom || newUom.indexOf('select') !== -1) newUom = 'cm';
+            $('.nad-uom-text').text(newUom);
+
+            if (currentNAUom !== newUom && uomToCm[currentNAUom] && uomToCm[newUom]) {
+                var factor = uomToCm[currentNAUom] / uomToCm[newUom];
+                var dimFields = [
+                    '#nad_length', '#nad_width', '#nad_height',
+                    '#nad_clr_length', '#nad_clr_width', '#nad_clr_top',
+                    '#nad_thk_length', '#nad_thk_width', '#nad_thk_height'
+                ];
+                dimFields.forEach(function (sel) {
+                    var el = $(sel);
+                    var val = parseFloat(el.val());
+                    if (!isNaN(val) && val > 0) {
+                        var converted = +(val * factor).toFixed(newUom === 'mm' ? 1 : 2);
+                        el.val(converted).trigger('input');
+                    }
+                });
+            }
+            currentNAUom = newUom;
+            $('#nad_length').trigger('input');
+        }
+
+        $('#nad_uom').on('change', function () {
+            updateNAUom();
+        });
+        updateNAUom();
 
         // Load Customer Box Master items for Quick Fill
         $.get("{% url 'api_customer_box_items' %}", { customer_id: "{{ na_customer_id|default:'' }}" }, function(resp) {
@@ -337,9 +374,9 @@
             $('#nad_clr_length').val(it.clr_length || 0);
             $('#nad_clr_width').val(it.clr_width || 0);
             $('#nad_clr_top').val(it.clr_top || 0);
-            $('#nad_thk_length').val(it.thk_length || 7);
-            $('#nad_thk_width').val(it.thk_width || 7);
-            $('#nad_thk_height').val(it.thk_height || 20);
+            $('#nad_thk_length').val((it.thk_length !== undefined && it.thk_length !== null) ? it.thk_length : 0);
+            $('#nad_thk_width').val((it.thk_width !== undefined && it.thk_width !== null) ? it.thk_width : 0);
+            $('#nad_thk_height').val((it.thk_height !== undefined && it.thk_height !== null) ? it.thk_height : 0);
             $('#nad_plywood_thickness').val(it.plywood_thickness || it.clearance || 0);
             $('#nad_job_weight').val(it.job_weight || 0);
             if (it.consumables_id) $('#nad_consumables').val(it.consumables_id);
@@ -349,6 +386,11 @@
                 plywood_thickness();
             }
             updateNADimTypeVisibility();
+            updateNAUom();
+            var elLen = document.querySelector('#nad_length');
+            if (elLen) {
+                elLen.dispatchEvent(new Event('input', { bubbles: true }));
+            }
         });
 
         // Directional Dimension Type visibility
