@@ -98,6 +98,9 @@
                 <button type="submit" class="btn btn-primary mr-1">
                     <i class="fas fa-filter mr-1"></i> Filter
                 </button>
+                <button type="button" id="btnExportExcel" class="btn btn-success mr-1" title="Export filtered date range to Excel">
+                    <i class="fas fa-file-excel mr-1"></i> Export Excel
+                </button>
                 <a href="{% url 'vendor_p_l_mkt_report' %}" class="btn btn-outline-secondary">
                     <i class="fas fa-undo"></i>
                 </a>
@@ -181,18 +184,61 @@
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
             pageLength: 10,
             buttons: [
                 { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1' },
                 { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1' },
-                { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'MARKET P & L Report' },
+                { 
+                    text: '<i class="fas fa-file-excel mr-1"></i> Excel',
+                    className: 'btn btn-outline-success btn-sm mr-1',
+                    titleAttr: 'Export filtered date range to Excel',
+                    action: function (e, dt, node, config) {
+                        $('#btnExportExcel').trigger('click');
+                    }
+                },
                 { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'MARKET P & L Report' },
                 { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'MARKET P & L Report' }
             ],
             order: [[0, 'asc']]
+        });
+
+        $('#btnExportExcel').on('click', function () {
+            var $btn = $(this);
+            var dateFrom = $('input[name="date_from"]').val();
+            var dateTo = $('input[name="date_to"]').val();
+
+            if (!dateFrom || !dateTo) {
+                alert('Please select both From Date and To Date before exporting.');
+                return;
+            }
+
+            if (new Date(dateFrom) > new Date(dateTo)) {
+                alert('From Date cannot be after To Date.');
+                return;
+            }
+
+            var originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating...');
+
+            var params = new URLSearchParams({
+                date_from: dateFrom,
+                date_to: dateTo,
+                vendor_id: $('#vendor_select').val() || '',
+                veh_no: $('#vehicle_number').val() || '',
+                from_location: $('select[name="from_location"]').val() || '',
+                to_location: $('select[name="to_location"]').val() || '',
+                branch: $('select[name="branch"]').val() || '',
+                vehicle_type: $('#vehicle_type').val() || ''
+            });
+
+            window.location.href = "{% url 'vendor_p_l_mkt_report_export' %}?" + params.toString();
+
+            setTimeout(function () {
+                $btn.prop('disabled', false).html(originalHtml);
+            }, 6000);
         });
     });
 </script>

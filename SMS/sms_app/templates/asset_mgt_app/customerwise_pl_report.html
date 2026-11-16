@@ -105,6 +105,9 @@
                 <button type="submit" class="btn-modern btn-submit py-1 px-4" style="height: 36px;">
                     <i class="fas fa-filter mr-1"></i> Filter
                 </button>
+                <button type="button" id="btnExportExcel" class="btn-modern py-1 px-3 text-white font-weight-bold" style="height: 36px; background-color: #107c41; border: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="Export filtered date range to Excel">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
                 <a href="{{ request.path }}" class="btn-modern btn-cancel py-1 px-3 text-decoration-none" title="Reset Filters" style="height: 36px; display: inline-flex; align-items: center; justify-content: center;">
                     <i class="fas fa-undo"></i>
                 </a>
@@ -182,17 +185,19 @@
             },
             "dom": 'lBfrtip',
             "lengthMenu": [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
             "pageLength": 10,
             "buttons": [
                 'copy',
                 'csv',
                 {
-                    extend: 'excelHtml5',
-                    text: 'Excel',
-                    title: 'Customerwise P&L Report',
+                    text: '<i class="fas fa-file-excel mr-1"></i> Excel',
+                    titleAttr: 'Export filtered date range to Excel',
+                    action: function (e, dt, node, config) {
+                        $('#btnExportExcel').trigger('click');
+                    }
                 },
                 {
                     extend: 'pdfHtml5',
@@ -219,6 +224,42 @@
                 }
             ],
             "order": [[0, 'asc']]
+        });
+
+        $('#btnExportExcel').on('click', function () {
+            var $btn = $(this);
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            if (!fromDate || !toDate) {
+                alert('Please select both From Date and To Date before exporting.');
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert('From Date cannot be after To Date.');
+                return;
+            }
+
+            var originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating...');
+
+            var params = new URLSearchParams({
+                from_date: fromDate,
+                to_date: toDate,
+                branch: $('#branchSelect').val() || '',
+                trip_category: $('#tripCategorySelect').val() || '',
+                customer: $('#customerSelect').val() || '',
+                vehicle_source: $('#vehicleSourceSelect').val() || '',
+                status: $('#statusSelect').val() || '',
+                year: '{{ selected_year|default:"" }}'
+            });
+
+            window.location.href = "{% url 'customerwise_pl_report_export' %}?" + params.toString();
+
+            setTimeout(function () {
+                $btn.prop('disabled', false).html(originalHtml);
+            }, 6000);
         });
 
         $('form').on('submit', function(e) {
