@@ -70,6 +70,7 @@ PAGE_CATALOG = [
                 'group_name': 'Reports & KPI',
                 'pages': [
                     {'key': 'tms_cs_dashboard', 'name': 'CS Dashboard', 'url_name': 'cs_kpi_dashboard', 'prefixes': ['/SMS/cs_kpi_dashboard'], 'icon': 'fas fa-chart-line'},
+                    {'key': 'tms_ops_dashboard', 'name': 'Ops Dashboard', 'url_name': 'ops_dashboard', 'prefixes': ['/SMS/ops_dashboard'], 'icon': 'fas fa-truck-loading'},
                     {'key': 'tms_reports', 'name': 'Transport Reports', 'url_name': 'transport_reports', 'prefixes': ['/SMS/transport_reports'], 'icon': 'fas fa-book'},
                 ]
             }
