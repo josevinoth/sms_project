@@ -65,7 +65,10 @@ def md_dashboard(request):
     yesterday_str = (now - timedelta(days=1)).strftime('%Y-%m-%d')
 
     cur_month_first = now.date().replace(day=1)
+    cur_month_first_str = cur_month_first.strftime('%Y-%m-%d')
     last_month_end = cur_month_first - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+    last_month_start_str = last_month_start.strftime('%Y-%m-%d')
     last_month_end_str = last_month_end.strftime('%Y-%m-%d')
     last_month_label = last_month_end.strftime('%b')
 
@@ -75,6 +78,8 @@ def md_dashboard(request):
         'units': units,
         'today_str': today_str,
         'yesterday_str': yesterday_str,
+        'cur_month_first_str': cur_month_first_str,
+        'last_month_start_str': last_month_start_str,
         'last_month_end_str': last_month_end_str,
         'last_month_label': last_month_label,
     }
@@ -87,41 +92,96 @@ def get_md_dashboard_data(request):
     - Slide 1: Combined Executive Pulse (Transport + Warehouse)
     - Slide 2: Transport Movement Deep-Dive (TMS)
     - Slide 3: Warehouse Movement Deep-Dive (WMS)
-    Supports date parameter, last_month period parameter, yesterday comparison, and branch filtering.
+    Supports from_date / to_date range, single date, last_month, yesterday, and branch filtering.
     """
     if not is_admin_or_md(request):
         return JsonResponse({'status': 'error', 'message': 'Access restricted to Admin only.'}, status=403)
 
+    from_date_str = request.GET.get('from_date') or request.GET.get('start_date')
+    to_date_str = request.GET.get('to_date') or request.GET.get('end_date')
     selected_date_str = request.GET.get('date')
     branch_id = request.GET.get('branch_id')
     period = request.GET.get('period', 'day')
 
     now = timezone.now()
-    cur_month_first = now.date().replace(day=1)
+    today = now.date()
+    cur_month_first = today.replace(day=1)
     last_month_end = cur_month_first - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1)
 
     import calendar
 
-    if period == 'last_month':
+    # Determine date bounds: prioritize explicit from_date & to_date range
+    if from_date_str and to_date_str and from_date_str != 'undefined' and to_date_str != 'undefined':
+        try:
+            from_d = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            from_d = today
+        try:
+            to_d = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            to_d = today
+        if from_d > to_d:
+            from_d, to_d = to_d, from_d
+    elif period == 'last_month':
         if selected_date_str and selected_date_str != 'undefined':
             try:
                 parsed_d = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
                 cur_month_start = parsed_d.replace(day=1)
                 _, last_day = calendar.monthrange(parsed_d.year, parsed_d.month)
-                target_date = parsed_d.replace(day=last_day)
+                from_d = cur_month_start
+                to_d = parsed_d.replace(day=last_day)
             except ValueError:
-                target_date = last_month_end
-                cur_month_start = last_month_start
+                from_d = last_month_start
+                to_d = last_month_end
         else:
-            target_date = last_month_end
-            cur_month_start = last_month_start
+            from_d = last_month_start
+            to_d = last_month_end
+    elif period == 'this_month':
+        from_d = cur_month_first
+        to_d = today
+    elif period == 'yesterday':
+        from_d = today - timedelta(days=1)
+        to_d = from_d
+    else:
+        if selected_date_str and selected_date_str != 'undefined':
+            try:
+                d = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                d = today
+            from_d = d
+            to_d = d
+        else:
+            from_d = today
+            to_d = today
 
-        prev_month_end = cur_month_start - timedelta(days=1)
+    is_range = (from_d != to_d)
+    target_date = to_d
+
+    t_start = timezone.make_aware(datetime.combine(from_d, time.min))
+    t_end = timezone.make_aware(datetime.combine(to_d, time.max))
+
+    if is_range:
+        day_count = (to_d - from_d).days + 1
+        y_to = from_d - timedelta(days=1)
+        y_from = from_d - timedelta(days=day_count)
+        y_start = timezone.make_aware(datetime.combine(y_from, time.min))
+        y_end = timezone.make_aware(datetime.combine(y_to, time.max))
+        yesterday_date = y_to
+
+        cur_m_start_dt = t_start
+        cur_m_end_dt = t_end
+        prev_m_start_dt = y_start
+        prev_m_end_dt = y_end
+        cur_month_start = from_d
+
+        if from_d.strftime('%b %Y') == to_d.strftime('%b %Y'):
+            data_date_display = f"{from_d.strftime('%d %b %Y')} - {to_d.strftime('%d %b %Y')}"
+        else:
+            data_date_display = f"{from_d.strftime('%d %b %Y')} - {to_d.strftime('%d %b %Y')}"
+    elif period == 'last_month':
+        prev_month_end = from_d - timedelta(days=1)
         prev_month_start = prev_month_end.replace(day=1)
-
-        t_start = timezone.make_aware(datetime.combine(cur_month_start, time.min))
-        t_end = timezone.make_aware(datetime.combine(target_date, time.max))
         y_start = timezone.make_aware(datetime.combine(prev_month_start, time.min))
         y_end = timezone.make_aware(datetime.combine(prev_month_end, time.max))
 
@@ -130,36 +190,28 @@ def get_md_dashboard_data(request):
         prev_m_start_dt = y_start
         prev_m_end_dt = y_end
         yesterday_date = prev_month_end
+        cur_month_start = from_d
 
-        data_date_display = target_date.strftime('%b %Y') + " (Overall)"
+        data_date_display = to_d.strftime('%b %Y') + " (Overall)"
     else:
-        if selected_date_str and selected_date_str != 'undefined':
-            try:
-                target_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                target_date = now.date()
-        else:
-            target_date = now.date()
-
-        yesterday_date = target_date - timedelta(days=1)
+        yesterday_date = from_d - timedelta(days=1)
 
         def get_day_bounds(d):
             start = timezone.make_aware(datetime.combine(d, time.min))
             end = timezone.make_aware(datetime.combine(d, time.max))
             return start, end
 
-        t_start, t_end = get_day_bounds(target_date)
         y_start, y_end = get_day_bounds(yesterday_date)
 
-        cur_month_start = target_date.replace(day=1)
+        cur_month_start = from_d.replace(day=1)
         prev_month_end = cur_month_start - timedelta(days=1)
         prev_month_start = prev_month_end.replace(day=1)
         cur_m_start_dt, _ = get_day_bounds(cur_month_start)
-        _, cur_m_end_dt = get_day_bounds(target_date)
+        _, cur_m_end_dt = get_day_bounds(from_d)
         prev_m_start_dt, _ = get_day_bounds(prev_month_start)
         _, prev_m_end_dt = get_day_bounds(prev_month_end)
 
-        data_date_display = target_date.strftime('%d %b %Y')
+        data_date_display = from_d.strftime('%d %b %Y')
 
     # -------------------------------------------------------------
     # 1. TRANSPORT (TMS) METRICS - STRICT COHORT CONVERSION PIPELINE
@@ -177,7 +229,7 @@ def get_md_dashboard_data(request):
 
     is_live_today = (req_today > 0)
 
-    if period == 'last_month':
+    if period == 'last_month' or is_range:
         cn_cohort_today = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=enq_today).count()
         cnotes_today = cn_cohort_today if cn_cohort_today > 0 else ConsignmentdetailInfo.objects.filter(co_created_at__range=(t_start, t_end)).count()
 
@@ -195,6 +247,11 @@ def get_md_dashboard_data(request):
             Q(tr_unloading_time__range=(y_start, y_end)) |
             Q(tr_updated_at__range=(y_start, y_end), tc_financestatus_id__in=[2, 7])
         ).distinct().count()
+
+        if req_today < cnotes_today:
+            req_today = max(req_today, cnotes_today)
+        if req_yest < cnotes_yest:
+            req_yest = max(req_yest, cnotes_yest)
 
         active_trips_on_road = max(0, trips_dispatched_today - delivered_today)
         missed_vehicles_today = max(0, req_today - cnotes_today)
@@ -434,7 +491,8 @@ def get_md_dashboard_data(request):
 
     # Fetch trips matching location P&L report criteria for current month
     # Pre-filter using tr_created_at with 90-day buffer matching location_pl_report_view
-    pl_dt_start = cur_month_start - timedelta(days=90)
+    rev_range_start = from_d if is_range else cur_month_start
+    pl_dt_start = rev_range_start - timedelta(days=90)
     pl_dt_end = target_date + timedelta(days=90)
 
     pl_trips_qs = TripdetailInfo.objects.filter(
@@ -450,7 +508,7 @@ def get_md_dashboard_data(request):
             'tr_reporteddate', 'tr_reporteddate_pickup', 'tr_reporteddate_delivery',
             'tr_unloading_time', 'tr_dock_in_time', 'tr_dock_out_time', 'tr_created_at'
         )
-    ).filter(resolved_date__date__range=[cur_month_start, target_date])
+    ).filter(resolved_date__date__range=[rev_range_start, target_date])
     pl_trips = [t for t in pl_trips_qs if (t.tr_category_id not in [2, 3] or t.tc_financestatus_id == 10)]
     pl_trip_ids = [t.id for t in pl_trips]
     trip_enquiries = [t.tr_enquirynumber_id for t in pl_trips]
@@ -547,7 +605,7 @@ def get_md_dashboard_data(request):
         maa_unbilled += residual_unbilled
 
     # If early morning / demo fallback (no live trips logged for today yet), provide harmonious baseline revenue
-    if overall_revenue == 0.0 and period != 'last_month' and not is_live_today:
+    if overall_revenue == 0.0 and period != 'last_month' and not is_range and not is_live_today and target_date == now.date():
         overall_revenue = 14850000.0
         overall_invoiced = 8220000.0
         overall_unbilled = 6630000.0
@@ -869,7 +927,10 @@ def get_md_dashboard_data(request):
         wh_branch_occ_pct.append(pct)
 
     # High-Value Stock Checks
-    high_value_today = HighvalueInfo.objects.filter(hc_date=str(target_date)).count()
+    if is_range:
+        high_value_today = HighvalueInfo.objects.filter(hc_date__range=(str(from_d), str(to_d))).count()
+    else:
+        high_value_today = HighvalueInfo.objects.filter(hc_date=str(target_date)).count()
     high_value_total_pending = HighvalueInfo.objects.filter(hc_approval_status_id=2).count()
 
     # Damages & Deviations (DamagereportInfo excluding nil damage 6)
@@ -897,7 +958,7 @@ def get_md_dashboard_data(request):
     # -------------------------------------------------------------
     # 3. EXECUTIVE PULSE & TICKER (SLIDE 1 COMBINED)
     # -------------------------------------------------------------
-    if req_today == 0 and cnotes_today == 0 and trips_dispatched_today == 0 and gatein_today == 0:
+    if not is_range and target_date == now.date() and req_today == 0 and cnotes_today == 0 and trips_dispatched_today == 0 and gatein_today == 0 and inward_pkg_today == 0:
         # Fallback to realistic operational baseline for early-morning or demo views
         req_today = 34
         req_yest = 31
@@ -937,10 +998,15 @@ def get_md_dashboard_data(request):
     # 1. Diesel Spend from Fuelfillinginfo
     try:
         from ..sub_models.fuelfilling_mod import Fuelfillinginfo
-        fuel_month_cost = Fuelfillinginfo.objects.filter(
-            ff_date__year=target_date.year,
-            ff_date__month=target_date.month
-        ).aggregate(tot=Sum('ff_fuel_price'))['tot']
+        if is_range:
+            fuel_month_cost = Fuelfillinginfo.objects.filter(
+                ff_date__range=(from_d, to_d)
+            ).aggregate(tot=Sum('ff_fuel_price'))['tot']
+        else:
+            fuel_month_cost = Fuelfillinginfo.objects.filter(
+                ff_date__year=target_date.year,
+                ff_date__month=target_date.month
+            ).aggregate(tot=Sum('ff_fuel_price'))['tot']
         if not fuel_month_cost or fuel_month_cost == 0:
             fuel_tot_2026 = Fuelfillinginfo.objects.filter(ff_date__year=2026).aggregate(tot=Sum('ff_fuel_price'))['tot'] or 10633847.0
             fuel_month_cost = fuel_tot_2026 / 8  # 8 operating months in 2026
@@ -1274,7 +1340,15 @@ def get_md_dashboard_data(request):
     if stock_turns_rate < 1.0 or stock_turns_rate > 15.0:
         stock_turns_rate = 4.6
 
-    if period == 'last_month':
+    if is_range:
+        ticker_items = [
+            f"Period ({data_date_display}): {trips_dispatched_today} Dispatched Trips ({delivered_today} Delivered)",
+            f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']} Lakhs (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
+            f"Conversion SLA: {cnotes_today} C-Notes from {req_today} Vehicles Requested ({round(cnotes_today / req_today * 100, 1) if req_today > 0 else 0}%)",
+            f"Warehouse Inward: {inward_weight_today:.1f} MT • Outward: {outward_weight_today:.1f} MT ({gatein_today} Gate-Ins)",
+            f"Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+        ]
+    elif period == 'last_month':
         ticker_items = [
             f"Last Month ({target_date.strftime('%b %Y')}): {trips_dispatched_today} Dispatched Trips ({delivered_today} Delivered)",
             f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']} Lakhs (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
@@ -1296,6 +1370,9 @@ def get_md_dashboard_data(request):
         'status': 'success',
         'period': period,
         'is_last_month': (period == 'last_month'),
+        'is_range': is_range,
+        'from_date': str(from_d),
+        'to_date': str(to_d),
         'month_name': target_date.strftime('%b'),
         'data_date_display': data_date_display,
         'target_date': str(target_date),

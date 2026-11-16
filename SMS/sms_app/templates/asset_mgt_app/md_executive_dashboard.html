@@ -1248,12 +1248,22 @@
 
         <!-- Right Controls -->
         <div class="header-right">
-            <!-- Quick Date Selector -->
-            <div style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 4px;">
-                <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Today</button>
-                <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Yesterday</button>
-                <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
-                <input type="date" id="date-picker-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.72rem; border-radius: 4px; padding: 2px 5px; outline: none; cursor: pointer; color-scheme: dark;">
+            <!-- Quick Date & Date Range Filter (From Date to To Date) -->
+            <div class="date-filter-box" style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 5px;">
+                <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Today</button>
+                <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Yesterday</button>
+                <button id="btn-date-thismonth" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View This Month (MTD)">This Month</button>
+                <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
+
+                <div style="display:flex; align-items:center; gap:3px; margin-left: 2px; padding-left: 5px; border-left: 1px solid rgba(255,255,255,0.12);">
+                    <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">From</span>
+                    <input type="date" id="date-from-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
+                    <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">To</span>
+                    <input type="date" id="date-to-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
+                    <button id="btn-date-apply" class="ctrl-btn" style="padding: 2px 7px; border: 1px solid rgba(54, 209, 255, 0.4); font-size: 0.69rem; color: #36d1ff;" title="Apply Date Range">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
             </div>
 
             <!-- Play / Pause Kiosk Auto-Slide -->
@@ -1780,7 +1790,7 @@
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                     <div class="dash-card card-bg-revenue">
-                        <div class="dash-kpi-label">Total Revenue (MTD)</div>
+                        <div class="dash-kpi-label" id="tms-kpi-rev-lbl">Total Revenue (MTD)</div>
                         <div class="dash-kpi-value" id="tms-kpi-rev-val">₹0.0L</div>
                         <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="tms-kpi-rev-sub">Billed: ₹0.0L • Unbilled: ₹0.0L</div>
                         <i class="fas fa-sack-dollar"></i>
@@ -2183,7 +2193,7 @@
                 <!-- WMS 8 KPI Cards (CS KPI Dashboard Theme) -->
                 <div class="dash-kpi-row" style="margin-bottom: 6px;">
                     <div class="dash-card card-bg-demand">
-                        <div class="dash-kpi-label">Gate-In Today</div>
+                        <div class="dash-kpi-label" id="wms-kpi-gatein-lbl">Gate-In Today</div>
                         <div class="dash-kpi-value" id="wms-kpi-gatein">0</div>
                         <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-gatein-sub">Y'day: 0</div>
                         <i class="fas fa-truck-ramp-box"></i>
@@ -3074,42 +3084,97 @@
             });
 
             // Date mode controls
-            let activeDateValue = todayStr;
+            let activeFromDate = todayStr;
+            let activeToDate = todayStr;
             let activePeriod = 'day';
+            const lastMonthStartStr = '{{ last_month_start_str|default:"2026-10-01" }}';
             const lastMonthEndStr = '{{ last_month_end_str|default:"2026-10-31" }}';
+            const curMonthFirstStr = '{{ cur_month_first_str|default:"2026-11-01" }}';
+
+            function clearPresetActive() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-thismonth, #btn-date-lastmonth').removeClass('active');
+            }
 
             $('#btn-date-today').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = todayStr;
+                activeFromDate = todayStr;
+                activeToDate = todayStr;
                 activePeriod = 'day';
-                $('#date-picker-input').val(todayStr);
+                $('#date-from-input').val(todayStr);
+                $('#date-to-input').val(todayStr);
                 loadDashboardData();
             });
 
             $('#btn-date-yest').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = yesterdayStr;
-                activePeriod = 'day';
-                $('#date-picker-input').val(yesterdayStr);
+                activeFromDate = yesterdayStr;
+                activeToDate = yesterdayStr;
+                activePeriod = 'yesterday';
+                $('#date-from-input').val(yesterdayStr);
+                $('#date-to-input').val(yesterdayStr);
+                loadDashboardData();
+            });
+
+            $('#btn-date-thismonth').on('click', function() {
+                clearPresetActive();
+                $(this).addClass('active');
+                activeFromDate = curMonthFirstStr;
+                activeToDate = todayStr;
+                activePeriod = 'this_month';
+                $('#date-from-input').val(curMonthFirstStr);
+                $('#date-to-input').val(todayStr);
                 loadDashboardData();
             });
 
             $('#btn-date-lastmonth, #btn-date-active').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = lastMonthEndStr;
+                activeFromDate = lastMonthStartStr;
+                activeToDate = lastMonthEndStr;
                 activePeriod = 'last_month';
-                $('#date-picker-input').val(lastMonthEndStr);
+                $('#date-from-input').val(lastMonthStartStr);
+                $('#date-to-input').val(lastMonthEndStr);
                 loadDashboardData();
             });
 
-            $('#date-picker-input').on('change', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
-                activeDateValue = $(this).val();
-                activePeriod = 'day';
+            function applyCustomDateFilter() {
+                let fDate = $('#date-from-input').val();
+                let tDate = $('#date-to-input').val();
+                if (!fDate && !tDate) return;
+                if (!fDate) fDate = tDate;
+                if (!tDate) tDate = fDate;
+
+                if (fDate > tDate) {
+                    const tmp = fDate;
+                    fDate = tDate;
+                    tDate = tmp;
+                    $('#date-from-input').val(fDate);
+                    $('#date-to-input').val(tDate);
+                }
+
+                clearPresetActive();
+                activeFromDate = fDate;
+                activeToDate = tDate;
+                activePeriod = (fDate === tDate) ? 'day' : 'range';
+                $('#btn-date-apply').addClass('active');
+                setTimeout(() => $('#btn-date-apply').removeClass('active'), 800);
                 loadDashboardData();
+            }
+
+            $('#btn-date-apply').on('click', function() {
+                applyCustomDateFilter();
+            });
+
+            $('#date-from-input, #date-to-input').on('change', function() {
+                applyCustomDateFilter();
+            });
+
+            $('#date-from-input, #date-to-input').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    applyCustomDateFilter();
+                }
             });
 
             // Keyboard navigation (Left / Right arrow)
@@ -3125,13 +3190,16 @@
             // Data Loading & API Fetch
             // ==========================================
             function loadDashboardData() {
-                const selectedDate = activeDateValue || todayStr;
+                const fDate = activeFromDate || todayStr;
+                const tDate = activeToDate || todayStr;
 
                 $.ajax({
                     url: "{% url 'get_md_dashboard_data' %}",
                     type: "GET",
                     data: {
-                        date: selectedDate,
+                        from_date: fDate,
+                        to_date: tDate,
+                        date: tDate,
                         period: activePeriod,
                         branch_id: 'all'
                     },
@@ -3152,11 +3220,25 @@
                 const wms = data.warehouse;
 
                 // Update live status badge & labels
-                if (data.is_last_month) {
+                const prevPeriodLabel = data.is_range ? 'Prev: ' : (data.is_last_month ? 'Prev Mo: ' : "Y'day: ");
+
+                if (data.is_range) {
+                    $('#live-status-text').html('<i class="fas fa-calendar-alt" style="color:#36d1ff;"></i> ' + data.data_date_display);
+                    $('#macro-rev-label').text('Revenue (' + data.data_date_display + ')');
+                    $('#macro-freight-label').text('Freight Moved (' + data.data_date_display + ')');
+                    $('#s1-wh-gatein-lbl').text('Gate-In (' + data.data_date_display + ')');
+                    $('#tms-kpi-rev-lbl').text('Revenue (' + data.data_date_display + ')');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In (' + data.data_date_display + ')');
+                    if (wms.gatein_yest !== undefined) {
+                        $('#s1-wh-gatein-yest').text(prevPeriodLabel + wms.gatein_yest);
+                    }
+                } else if (data.is_last_month) {
                     $('#live-status-text').html('<i class="fas fa-calendar-check" style="color:#36d1ff;"></i> LAST MONTH (' + data.data_date_display + ')');
                     $('#macro-rev-label').text('Total Revenue (' + (data.month_name || 'Last Month') + ')');
                     $('#macro-freight-label').text('Freight Moved (' + (data.month_name || 'Last Month') + ')');
                     $('#s1-wh-gatein-lbl').text('Gate-In (' + (data.month_name || 'Last Month') + ')');
+                    $('#tms-kpi-rev-lbl').text('Total Revenue (' + (data.month_name || 'Last Month') + ')');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In (' + (data.month_name || 'Last Month') + ')');
                     if (wms.gatein_yest !== undefined) {
                         $('#s1-wh-gatein-yest').text("Prev Mo: " + wms.gatein_yest);
                     }
@@ -3165,6 +3247,8 @@
                     $('#macro-rev-label').text('Total Revenue (MTD)');
                     $('#macro-freight-label').text('Freight Moved Today');
                     $('#s1-wh-gatein-lbl').text('Gate-In');
+                    $('#tms-kpi-rev-lbl').text('Total Revenue (MTD)');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In Today');
                 }
 
                 // 1. Ticker
@@ -3295,7 +3379,7 @@
 
                 // Slide 1 Warehouse Movement Pulse Mini KPIs
                 $('#s1-wh-gatein').text(wms.gatein_today || 0);
-                $('#s1-wh-gatein-yest').text("Y'day: " + (wms.gatein_yest || 0));
+                $('#s1-wh-gatein-yest').text(prevPeriodLabel + (wms.gatein_yest || 0));
                 $('#s1-wh-in-mt').text(wms.inward_weight_mt !== undefined ? wms.inward_weight_mt : '0.0');
                 $('#s1-wh-in-pkg').text((wms.inward_pkg_today || 0).toLocaleString() + ' Pkgs');
                 $('#s1-wh-out-mt').text(wms.outward_weight_mt !== undefined ? wms.outward_weight_mt : '0.0');
@@ -3306,26 +3390,26 @@
                 $('#tms-kpi-req').text(tms.req_today);
                 const reqDelta = tms.req_growth >= 0 ? `+${tms.req_growth}%` : `${tms.req_growth}%`;
                 const deltaClass = tms.req_growth >= 0 ? 'up' : 'down';
-                $('#tms-kpi-req-sub').html(`Y'day: ${tms.req_yest} (<span class="kpi-delta ${deltaClass}">${reqDelta}</span>)`);
+                $('#tms-kpi-req-sub').html(`${prevPeriodLabel}${tms.req_yest} (<span class="kpi-delta ${deltaClass}">${reqDelta}</span>)`);
 
                 $('#tms-kpi-cnotes').text(tms.cnotes_today);
                 if (tms.cnotes_today === 0 && tms.req_today > 0) {
-                    $('#tms-kpi-cnotes-sub').html(`Y'day: ${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                    $('#tms-kpi-cnotes-sub').html(`${prevPeriodLabel}${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
                 } else if (tms.req_today > 0) {
                     const convPct = Math.round((tms.cnotes_today / tms.req_today) * 100);
-                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest} (${convPct}% Conv)`);
+                    $('#tms-kpi-cnotes-sub').text(`${prevPeriodLabel}${tms.cnotes_yest} (${convPct}% Conv)`);
                 } else {
-                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest}`);
+                    $('#tms-kpi-cnotes-sub').text(`${prevPeriodLabel}${tms.cnotes_yest}`);
                 }
 
                 $('#tms-kpi-disp').text(tms.dispatched_today);
                 if (tms.dispatched_today === 0 && tms.req_today > 0) {
-                    $('#tms-kpi-disp-sub').html(`Y'day: ${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                    $('#tms-kpi-disp-sub').html(`${prevPeriodLabel}${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
                 } else if (tms.cnotes_today > 0) {
                     const dispPct = Math.round((tms.dispatched_today / tms.cnotes_today) * 100);
-                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest} (${dispPct}% on road)`);
+                    $('#tms-kpi-disp-sub').text(`${prevPeriodLabel}${tms.dispatched_yest} (${dispPct}% on road)`);
                 } else {
-                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest}`);
+                    $('#tms-kpi-disp-sub').text(`${prevPeriodLabel}${tms.dispatched_yest}`);
                 }
 
                 $('#tms-kpi-active').text(tms.active_on_road);
@@ -3338,7 +3422,7 @@
                     $('#tms-kpi-missed-branches').text('MAA: 0 • BLR: 0');
                 }
                 $('#tms-kpi-deliv').text(tms.delivered_today);
-                $('#tms-kpi-deliv-sub').text(`Y'day: ${tms.delivered_yest}`);
+                $('#tms-kpi-deliv-sub').text(`${prevPeriodLabel}${tms.delivered_yest}`);
                 $('#tms-kpi-ready-val').text(`₹${unbilledRevL}L`);
                 $('#tms-kpi-ready-cnt').html(`Unbilled pipeline (<b style="color:#f59e0b;">${unbilledPct}%</b>)`);
 
@@ -3506,7 +3590,7 @@
 
                 // 4. Slide 3: WMS Deep Dive KPIs
                 $('#wms-kpi-gatein').text(wms.gatein_today);
-                $('#wms-kpi-gatein-sub').text(`Y'day: ${wms.gatein_yest}`);
+                $('#wms-kpi-gatein-sub').text(`${prevPeriodLabel}${wms.gatein_yest}`);
                 $('#wms-kpi-in-wt').text(`${wms.inward_weight_mt} MT`);
                 $('#wms-kpi-in-pkg').text(`${wms.inward_pkg_today.toLocaleString()} Pkgs`);
                 $('#wms-kpi-out-wt').text(`${wms.outward_weight_mt} MT`);
