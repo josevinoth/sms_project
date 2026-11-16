@@ -70,7 +70,12 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(instance=dispatch_info)
             dispatch_list = Dispatch_info.objects.all()
             dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-            dispatch_goods_list = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
+            partial_goods_ids = GoodsPartialDispatchInfo.objects.filter(
+                pd_dispatch_info=dispatch_info
+            ).values_list('pd_goods_id', flat=True)
+            dispatch_goods_list = Warehouse_goods_info.objects.filter(
+                Q(wh_dispatch_num=dispatch_num_val) | Q(wh_dispatch_id=dispatch_info) | Q(id__in=partial_goods_ids)
+            ).distinct()
             request.session['ses_dispatch_id'] = dispatch_info.id
             gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
             context = {

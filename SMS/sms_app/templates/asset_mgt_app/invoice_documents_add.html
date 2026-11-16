@@ -1,6 +1,15 @@
 {% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+    .disable_a_href:focus,
+    input[readonly]:focus,
+    select[readonly]:focus,
+    textarea[readonly]:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+</style>
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
@@ -22,27 +31,27 @@
                         
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Enquiry Number</label>
-                            {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Consignment Number</label>
-                            {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Trip Number</label>
-                            {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Trip Category</label>
-                            {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Customer Ref No</label>
-                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No" {% if is_invoiced %}readonly disabled{% endif %}>
+                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No" {% if is_invoiced %}readonly disabled tabindex="-1"{% endif %}>
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
-                            {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
 
                         <!-- CNotes Reference Status (read-only) -->
@@ -86,31 +95,31 @@
                         
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Customer Name</label>
-                            {% render_field tripclosure_form.customer_name class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.customer_name class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Trip Date</label>
-                            {% render_field tripclosure_form.trip_date class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.trip_date class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Source</label>
-                            {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Number</label>
-                            {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Placed</label>
-                            {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Departed Location</label>
-                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Reported Location</label>
-                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" %}
                         </div>
                     </div>
                 </div>
@@ -126,7 +135,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px; cursor: pointer;" title="Bill Trip Charges to Customer" %}
                             </div>
                         </div>
@@ -134,7 +143,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Special Sell</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.special_sell id="special_sell" readonly="readonly" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none;" %}
+                                {% render_field tripclosure_form.special_sell id="special_sell" readonly="readonly" tabindex="-1" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none;" %}
                                 {% render_field tripclosure_form.special_sell_check id="special_sell_check" class="ml-2" style="width:16px; height:16px; cursor: pointer;" title="Bill to Customer / Enable Edit" %}
                             </div>
                         </div>
@@ -148,77 +157,77 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Toll</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm disable_a_href py-1" id="tc_tollcost" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm disable_a_href py-1" id="tc_tollcost" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Loading</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_loadingcost class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_loadingcost class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Unloading</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_unloadingcost class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_unloadingcost class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Weighment</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_weighmentcost class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_weighmentcost class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Supervisor</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_supervisorcost id="tc_supervisorcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_supervisorcost id="tc_supervisorcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                             </div>
                         </div>
                         <input type="hidden" name="tc_no_of_pods" id="tc_no_of_pods" value="{{ trip.tc_no_of_pods|default:0 }}">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
                             <div class="d-flex align-items-center w-50">
-                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly tabindex="-1" value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
                                 {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">RTO</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Batta</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control form-control-modern form-control-sm disable_a_href py-1" readonly="readonly" tabindex="-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
@@ -576,6 +585,7 @@
             var $input = $("#special_sell");
             if (isChecked) {
                 $input.prop("readonly", false);
+                $input.attr("tabindex", "0");
                 $input.removeClass("disable_a_href");
                 $input.css({
                     "background-color": "#ffffff",
@@ -584,6 +594,7 @@
                 });
             } else {
                 $input.prop("readonly", true);
+                $input.attr("tabindex", "-1");
                 $input.addClass("disable_a_href");
                 $input.css({
                     "background-color": "#e9ecef",
@@ -593,6 +604,27 @@
             }
             checkSellRateDocRequirement();
         }
+
+        function enforceDisabledTabindex() {
+            $('.disable_a_href').each(function () {
+                if ($(this).attr('id') === 'special_sell' && $('#special_sell_check').is(':checked')) {
+                    return;
+                }
+                $(this).attr('tabindex', '-1');
+                if ($(this).is('input, textarea')) {
+                    $(this).prop('readonly', true);
+                }
+            });
+            $('input[readonly], textarea[readonly]').not('#special_sell:not([readonly])').attr('tabindex', '-1');
+        }
+
+        // Prevent tab or programmatic focus on disabled/readonly elements
+        $(document).on('focus', '.disable_a_href', function () {
+            if ($(this).attr('id') === 'special_sell' && $('#special_sell_check').is(':checked')) {
+                return;
+            }
+            $(this).blur();
+        });
 
         function checkSellRateDocRequirement() {
             var isChecked = $("#special_sell_check").is(":checked");
@@ -628,9 +660,11 @@
         $("#special_sell_check").on("change", function() {
             if ($(this).is(":checked")) {
                 $("#tc_tripcost_check").prop("checked", false);
+                toggleSpecialSellEdit();
                 $("#special_sell").focus();
+            } else {
+                toggleSpecialSellEdit();
             }
-            toggleSpecialSellEdit();
         });
 
         // If both are somehow checked initially, remove check from Special Sell
@@ -640,6 +674,7 @@
 
         // Initialize state on page load
         toggleSpecialSellEdit();
+        enforceDisabledTabindex();
         checkSellRateDocRequirement();
 
         // Validate Special Sell only if lower than actual rate

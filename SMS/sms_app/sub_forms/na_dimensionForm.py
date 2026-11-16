@@ -17,3 +17,11 @@ class NadimensionForm(forms.ModelForm):
         self.fields['nad_dimension_type'].empty_label = "--Select--"
         self.fields['nad_consumables'].empty_label = "--Select--"
         self.fields['nad_vechicle_type'].empty_label = "--Select--"
+        if 'nad_master_item' in self.fields:
+            self.fields['nad_master_item'].empty_label = "--Select Master Item--"
+            self.fields['nad_master_item'].required = False
+        if 'nad_customer_part_code' in self.fields:
+            self.fields['nad_customer_part_code'].required = False
+        for fld in ['nad_clr_length', 'nad_clr_width', 'nad_clr_top', 'nad_thk_length', 'nad_thk_width', 'nad_thk_height']:
+            if fld in self.fields:
+                self.fields[fld].required = False

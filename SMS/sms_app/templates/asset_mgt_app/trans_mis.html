@@ -65,6 +65,8 @@
                         {{ source.ow_ownership }}
                     </option>
                     {% endfor %}
+                    <option value="M-Dept" {% if selected_vehicle_source == "M-Dept" %} selected {% endif %}>M-Dept</option>
+                    <option value="B-Dept" {% if selected_vehicle_source == "B-Dept" %} selected {% endif %}>B-Dept</option>
                 </select>
             </div>
 

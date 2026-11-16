@@ -27,11 +27,11 @@ body > .container-fluid,
     }
 
     #main-content {
-        flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
-        max-width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
-        margin-left: var(--sidebar-collapsed-width, 88px) !important;
+        flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+        max-width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
+        margin-left: var(--sidebar-collapsed-width, 60px) !important;
         padding: 0.4rem 0.75rem 0.4rem 0.4rem !important;
-        width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
+        width: calc(100% - var(--sidebar-collapsed-width, 60px)) !important;
         transition: margin-left 0.22s ease, flex 0.22s ease, max-width 0.22s ease, width 0.22s ease !important;
     }
 

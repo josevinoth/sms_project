@@ -1,0 +1,277 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0 text-white">
+                <i class="fas fa-cogs mr-2"></i> {% if rule %}Edit Master BOM Rule{% else %}Add Master BOM Rule{% endif %}
+            </h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'bom_rule_master_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.95rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back to Master BOM List
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+
+        <!-- Rule Header Card -->
+        <div class="modern-card mb-4">
+            <div class="form-section-title mb-3"><i class="fas fa-sliders-h mr-1"></i> Size (Meters) × Weight (KG) Bracket &amp; Consumables Norm</div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label-modern">Rule Name *</label>
+                    <input type="text" name="br_name" class="form-control form-control-modern" value="{{ rule.br_name|default:'' }}" placeholder="e.g. Up to 2x2x2m | 1001-3000 kg" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label-modern">Template Type</label>
+                    <select name="br_template_type" class="form-control form-control-modern">
+                        <option value="all" {% if not rule or rule.br_template_type == 'all' %}selected{% endif %}>All Box Types</option>
+                        <option value="plywood_box" {% if rule.br_template_type == 'plywood_box' %}selected{% endif %}>Plywood Box</option>
+                        <option value="pine_ply_box" {% if rule.br_template_type == 'pine_ply_box' %}selected{% endif %}>Pine + Plywood Box</option>
+                        <option value="skid_base" {% if rule.br_template_type == 'skid_base' %}selected{% endif %}>Skid Base Only</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label-modern">Requirement Type (Optional)</label>
+                    <select name="br_req_type" class="form-control form-control-modern">
+                        <option value="">-- Any Requirement Type --</option>
+                        {% for rt in req_types %}
+                            <option value="{{ rt.id }}" {% if rule and rule.br_req_type_id == rt.id %}selected{% endif %}>{{ rt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label class="form-label-modern">Max L (m)</label>
+                    <input type="number" step="0.1" name="br_max_length_m" class="form-control form-control-modern" value="{{ rule.br_max_length_m|default:2.0 }}" required>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label-modern">Max W (m)</label>
+                    <input type="number" step="0.1" name="br_max_width_m" class="form-control form-control-modern" value="{{ rule.br_max_width_m|default:2.0 }}" required>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label-modern">Max H (m)</label>
+                    <input type="number" step="0.1" name="br_max_height_m" class="form-control form-control-modern" value="{{ rule.br_max_height_m|default:2.0 }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label-modern">Min Weight (KG)</label>
+                    <input type="number" step="1" name="br_min_weight_kg" class="form-control form-control-modern" value="{{ rule.br_min_weight_kg|default:0 }}" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label-modern">Max Weight (KG)</label>
+                    <input type="number" step="1" name="br_max_weight_kg" class="form-control form-control-modern" value="{{ rule.br_max_weight_kg|default:500 }}" required>
+                </div>
+
+                <div class="col-md-3 mb-2">
+                    <label class="form-label-modern">Nails (kg per CFT Wood)</label>
+                    <input type="number" step="0.05" name="br_nail_kg_per_cft" class="form-control form-control-modern" value="{{ rule.br_nail_kg_per_cft|default:0.45 }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label-modern">Nails (kg per 100 SQFT Ply)</label>
+                    <input type="number" step="0.05" name="br_nail_kg_per_100sqft" class="form-control form-control-modern" value="{{ rule.br_nail_kg_per_100sqft|default:0.35 }}">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label-modern">VCI Overlap %</label>
+                    <input type="number" step="1" name="br_vci_overlap_pct" class="form-control form-control-modern" value="{{ rule.br_vci_overlap_pct|default:15 }}">
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label-modern">Strap Pitch (ft)</label>
+                    <input type="number" step="0.5" name="br_strapping_pitch_ft" class="form-control form-control-modern" value="{{ rule.br_strapping_pitch_ft|default:2.5 }}">
+                </div>
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                    <div class="custom-control custom-checkbox mb-2">
+                        <input type="checkbox" class="custom-control-input" id="br_is_active" name="br_is_active" {% if not rule or rule.br_is_active %}checked{% endif %}>
+                        <label class="custom-control-label font-weight-bold" for="br_is_active">Active Rule</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Components / Terminologies Card -->
+        <div class="modern-card mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="form-section-title mb-0"><i class="fas fa-cubes mr-1"></i> Structural Components &amp; Terminologies</div>
+                    <small class="text-muted">Add or customize any terminology (Runner, Deck, Lifting Runner, Saddle Support, Cross Joist, Corner Post, etc.)</small>
+                </div>
+                <button type="button" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.9rem;" onclick="addComponentRow()">
+                    <i class="fas fa-plus mr-1"></i> Add Component
+                </button>
+            </div>
+
+            <datalist id="terminology_suggestions">
+                <option value="BASE RUNNER">
+                <option value="LIFTING RUNNER">
+                <option value="DECK BOARD">
+                <option value="CROSS JOIST">
+                <option value="SADDLE SUPPORT">
+                <option value="FORKLIFT POCKET">
+                <option value="LENGTH PANEL">
+                <option value="LENGTH FRAME (HORIZ)">
+                <option value="HEIGHT FRAME (VERT)">
+                <option value="MID RAIL">
+                <option value="WIDTH PANEL">
+                <option value="WIDTH FRAME (HORIZ)">
+                <option value="TOP PANEL">
+                <option value="TOP LENGTH FRAME">
+                <option value="TOP WIDTH FRAME">
+                <option value="CORNER POST">
+                <option value="FRAME SUPPORT (LENGTH)">
+                <option value="FRAME SUPPORT (WIDTH)">
+                <option value="JOB & TOP ARREST">
+                <option value="HEAVY DIAGONAL BRACING">
+            </datalist>
+
+            <div class="table-container-modern">
+                <div class="table-responsive">
+                    <table class="table modern-table text-nowrap" id="components_table" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 170px;">Section</th>
+                                <th style="min-width: 220px;">Component / Terminology</th>
+                                <th style="min-width: 110px;">Material</th>
+                                <th style="min-width: 155px;">Length Source</th>
+                                <th style="min-width: 90px;">Fixed L (ft)</th>
+                                <th style="min-width: 135px;">Width Source</th>
+                                <th style="min-width: 90px;">Width (in)</th>
+                                <th style="min-width: 95px;">Thk (in / mm)</th>
+                                <th style="min-width: 175px;">Qty / Pitch Rule</th>
+                                <th style="min-width: 95px;">Nos / Pitch</th>
+                                <th class="text-center" style="width: 60px;">Del</th>
+                            </tr>
+                        </thead>
+                        <tbody id="components_tbody">
+                            {% for c in components %}
+                            <tr>
+                                <td>
+                                    <select name="comp_section[]" class="form-control form-control-sm">
+                                        {% for val, lbl in section_choices %}
+                                            <option value="{{ val }}" {% if c.section == val %}selected{% endif %}>{{ lbl }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="comp_name[]" list="terminology_suggestions" class="form-control form-control-sm font-weight-bold" value="{{ c.name }}" required>
+                                </td>
+                                <td>
+                                    <select name="comp_mat[]" class="form-control form-control-sm">
+                                        <option value="wood" {% if c.mat == 'wood' %}selected{% endif %}>Wood</option>
+                                        <option value="plywood" {% if c.mat == 'plywood' %}selected{% endif %}>Plywood</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="comp_len_mode[]" class="form-control form-control-sm">
+                                        {% for val, lbl in len_choices %}
+                                            <option value="{{ val }}" {% if c.len_mode == val %}selected{% endif %}>{{ lbl }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" step="0.1" name="comp_len_val[]" class="form-control form-control-sm text-center" value="{{ c.len_val }}"></td>
+                                <td>
+                                    <select name="comp_width_mode[]" class="form-control form-control-sm">
+                                        {% for val, lbl in width_choices %}
+                                            <option value="{{ val }}" {% if c.width_mode == val %}selected{% endif %}>{{ lbl }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" step="0.5" name="comp_width_val[]" class="form-control form-control-sm text-center" value="{{ c.width_val }}"></td>
+                                <td><input type="number" step="0.5" name="comp_thk_val[]" class="form-control form-control-sm text-center" value="{{ c.thk_val }}"></td>
+                                <td>
+                                    <select name="comp_qty_mode[]" class="form-control form-control-sm">
+                                        {% for val, lbl in qty_choices %}
+                                            <option value="{{ val }}" {% if c.qty_mode == val %}selected{% endif %}>{{ lbl }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" step="0.25" name="comp_qty_val[]" class="form-control form-control-sm text-center" value="{{ c.qty_val }}"></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-action btn-action-delete btn-modern btn-cancel p-2" style="background: #ef4444; color: white !important;" onclick="$(this).closest('tr').remove()">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <button type="button" class="btn-modern py-2 px-4" style="background: #0d9488; color: white;" onclick="addComponentRow()">
+                    <i class="fas fa-plus mr-1"></i> Add Another Terminology / Component
+                </button>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'bom_rule_master_list' %}" class="btn-modern btn-cancel px-4" style="text-decoration: none;">Cancel</a>
+                    <button type="submit" class="btn-modern btn-submit px-5">
+                        <i class="fas fa-check mr-2"></i> Save Master BOM Rule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function addComponentRow() {
+    const html = `
+        <tr>
+            <td>
+                <select name="comp_section[]" class="form-control form-control-sm">
+                    <option value="BASE">BASE</option>
+                    <option value="LENGTH (2 SIDES)">LENGTH (2 SIDES)</option>
+                    <option value="WIDTH (2 SIDES)">WIDTH (2 SIDES)</option>
+                    <option value="TOP">TOP</option>
+                    <option value="SUPPORTS & ARREST">SUPPORTS & ARREST</option>
+                </select>
+            </td>
+            <td><input type="text" name="comp_name[]" list="terminology_suggestions" class="form-control form-control-sm font-weight-bold" placeholder="e.g. SADDLE SUPPORT" required></td>
+            <td>
+                <select name="comp_mat[]" class="form-control form-control-sm">
+                    <option value="wood">Wood</option>
+                    <option value="plywood">Plywood</option>
+                </select>
+            </td>
+            <td>
+                <select name="comp_len_mode[]" class="form-control form-control-sm">
+                    <option value="L_FT">Box Length (ft)</option>
+                    <option value="W_FT">Box Width (ft)</option>
+                    <option value="H_FT">Box Height (ft)</option>
+                    <option value="DIAG_LH_FT">Diagonal L-H (ft)</option>
+                    <option value="FIXED">Fixed Length (ft)</option>
+                </select>
+            </td>
+            <td><input type="number" step="0.1" name="comp_len_val[]" class="form-control form-control-sm text-center" value="0"></td>
+            <td>
+                <select name="comp_width_mode[]" class="form-control form-control-sm">
+                    <option value="FIXED">Fixed (in)</option>
+                    <option value="W_FT">Box Width (ft)</option>
+                    <option value="H_FT">Box Height (ft)</option>
+                </select>
+            </td>
+            <td><input type="number" step="0.5" name="comp_width_val[]" class="form-control form-control-sm text-center" value="4"></td>
+            <td><input type="number" step="0.5" name="comp_thk_val[]" class="form-control form-control-sm text-center" value="2"></td>
+            <td>
+                <select name="comp_qty_mode[]" class="form-control form-control-sm">
+                    <option value="FIXED">Fixed Nos</option>
+                    <option value="PITCH_L">By Length Pitch (ft)</option>
+                    <option value="PITCH_W">By Width Pitch (ft)</option>
+                    <option value="PITCH_L_2S">2 Sides Length Pitch (ft)</option>
+                    <option value="PITCH_W_2S">2 Sides Width Pitch (ft)</option>
+                </select>
+            </td>
+            <td><input type="number" step="0.25" name="comp_qty_val[]" class="form-control form-control-sm text-center" value="2"></td>
+            <td class="text-center">
+                <button type="button" class="btn-action btn-action-delete btn-modern btn-cancel p-2" style="background: #ef4444; color: white !important;" onclick="$(this).closest('tr').remove()">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+    $('#components_tbody').append(html);
+}
+</script>
+{% endblock %}

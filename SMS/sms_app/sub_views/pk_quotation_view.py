@@ -120,18 +120,17 @@ def get_plywood_sheets_catalog():
 @login_required(login_url='login_page')
 def pk_quotation_add(request, quotation_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    na_assessment_num_id = request.session.get('na_assessment_id')
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else None)
+    na_assessment_num_id = request.session.get('na_assessment_id') or request.session.get('na_assessment_num_id') or request.GET.get('assessment_id')
+    if na_assessment_num_id:
+        request.session['na_assessment_id'] = na_assessment_num_id
+        request.session['na_assessment_num_id'] = na_assessment_num_id
     na_customer_name_id = request.session.get('na_customer_name_id')
     na_customer_new_name_id = request.session.get('na_customer_new_name')
 
-    try:
-        user_ext = User_extInfo.objects.get(user=user_id)
-        role = user_ext.emp_role
-        role_id = user_ext.emp_role.id
-    except User_extInfo.DoesNotExist:
-        messages.error(request, "User role not found.")
-        return redirect('some_error_page')
+    user_ext = User_extInfo.objects.filter(user=user_id).first() if user_id else None
+    role = user_ext.emp_role if user_ext else None
+    role_id = role.id if role else 1
 
     if request.method == "GET":
         if quotation_id == 0:
@@ -327,13 +326,13 @@ def pk_quotation_add(request, quotation_id=0):
                         stock_qty_str = request.POST.get('pkqt_quantity', None)
                         if not stock_qty_str:
                             messages.error(request, 'Quantity is required.')
-                            return redirect(request.META['HTTP_REFERER'])
+                            return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
                         try:
                             stock_qty = float(stock_qty_str)
                         except ValueError:
                             messages.error(request, 'Invalid quantity value. It should be a number.')
-                            return redirect(request.META['HTTP_REFERER'])
+                            return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
                         if stock_qty > stock_qty_available:
                             error_message = (
@@ -341,25 +340,25 @@ def pk_quotation_add(request, quotation_id=0):
                                 f"Available: {stock_qty_available}, Requested: {stock_qty}"
                             )
                             messages.error(request, error_message)
-                            return redirect(request.META['HTTP_REFERER'])
+                            return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
                             # ✅ Store selected values in session even when validation fails
                             # request.session['last_cost_type'] = form.cleaned_data.get(
                             #     'pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
 
-                            return redirect(request.META['HTTP_REFERER'])
+                            return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
                         # ✅ Uncomment this if stock validation is needed
                         # if stock_qty <= 0:
                         #     messages.error(request, 'Quantity should be greater than 0.')
-                        #     return redirect(request.META['HTTP_REFERER'])
+                        #     return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
                         # elif stock_qty > stock_qty_available:
                         #     error_message = (
                         #         f'Quantity should be less than or equal to available stock: '
                         #         f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
                         #     )
                         #     messages.error(request, error_message)
-                        #     return redirect(request.META['HTTP_REFERER'])
+                        #     return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
                         form.save()
 
@@ -395,7 +394,7 @@ def pk_quotation_add(request, quotation_id=0):
 
                     except StockMaintenance.DoesNotExist:
                         messages.error(request, 'Selected stock purchase record not found.')
-                        return redirect(request.META['HTTP_REFERER'])
+                        return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
                 else:
                     quotation=form.save()
                     # Extract relevant fields
@@ -461,7 +460,7 @@ def pk_quotation_add(request, quotation_id=0):
                     print(f"Error in {field}: {error}")
                     messages.error(request, f"Error in {field}: {error}")
 
-        return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+        return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
 
 # List quotation
@@ -479,7 +478,7 @@ def pk_quotation_delete(request,quotation_id):
     quotation.delete()
     recalculate_dependent_costs(assessment_id, request)
     # return redirect('/SMS/pK_quotation_cancel')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER') or '/SMS/pk_quotation_insert/')
 
 @login_required(login_url='login_page')
 def pK_quotation_cancel(request):
@@ -663,9 +662,18 @@ def load_quotation_matrix(request):
             'height': float(r.nad_height or 0.0),
             'uom': str(r.nad_uom) if r.nad_uom else 'cm',
             'quantity': int(r.nad_quantity or 1),
-            'clearance': float(r.nad_clearance or 5.0),
-            'plywood_thickness': float(r.nad_plywood_thickness or 0.0),
-            'dimension_type': str(r.nad_dimension_type.dimension_type if r.nad_dimension_type else 'Job Size'),
+            'clearance': float(r.nad_plywood_thickness) if r.nad_plywood_thickness is not None else (float(r.nad_clearance) if r.nad_clearance is not None else 0.0),
+            'plywood_thickness': float(r.nad_plywood_thickness) if r.nad_plywood_thickness is not None else 0.0,
+            'clr_length': float(r.nad_clr_length or 0.0),
+            'clr_width': float(r.nad_clr_width or 0.0),
+            'clr_top': float(r.nad_clr_top or 0.0),
+            'thk_length': float(r.nad_thk_length or 7.0),
+            'thk_width': float(r.nad_thk_width or 7.0),
+            'thk_height': float(r.nad_thk_height or 20.0),
+            'dimension_type': str(r.nad_dimension_type.dimension_type if r.nad_dimension_type else 'Cargo OD'),
+            'job_weight': float(r.nad_job_weight or 0.0),
+            'customer_part_code': r.nad_customer_part_code or '',
+            'type_of_req_id': r.nad_type_of_req_id,
             'is_quoted': is_quoted,
         }
         req_list.append(r_data)
@@ -1236,6 +1244,10 @@ def save_quotation_matrix(request):
     summary.qs_engineer_cost = tot_engineer
     summary.qs_total_cft = tot_cft
     summary.qs_total_sqft = tot_sqft
+    if tot_cft > 0:
+        summary.qs_rate_per_cft = round(tot_wood / tot_cft, 2)
+    if tot_sqft > 0:
+        summary.qs_rate_per_sqft = round(tot_ply / tot_sqft, 2)
 
     tot_wom = round(tot_wood + tot_ply + tot_mat + tot_labour + tot_transport + tot_crane + tot_ht + tot_custom + tot_engineer, 2)
     tot_wm = round(tot_wom * (1.0 + (margin_val / 100.0)), 2)
@@ -1377,7 +1389,7 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
             requirement_id = int(req_param)
 
     if na_assessment_num_id == 0:
-        na_assessment_num_id = request.session.get('na_assessment_num_id', 0)
+        na_assessment_num_id = request.session.get('na_assessment_id') or request.session.get('na_assessment_num_id', 0)
         if not na_assessment_num_id:
             latest_assess = PkneedassessmentInfo.objects.order_by('-id').first()
             if latest_assess:
@@ -1394,6 +1406,7 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
         return redirect('pk_quotationsummary_list')
 
     # Update session so other quotation views stay in sync
+    request.session['na_assessment_id'] = assess_obj.id
     request.session['na_assessment_num_id'] = assess_obj.id
 
     requirements = Nadimension.objects.filter(nad_assess_num_id=assess_obj.id).order_by('id')
@@ -1417,9 +1430,18 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
             'nad_height': float(req.nad_height or 0.0),
             'nad_uom': req.nad_uom or 'cm',
             'nad_quantity': req.nad_quantity or 1,
-            'nad_clearance': float(getattr(req, 'nad_clearance', 2.0) or 2.0),
-            'nad_plywood_thickness': float(getattr(req, 'nad_plywood_thickness', 0.0) or 0.0),
-            'nad_dimension_type': str(req.nad_dimension_type.dimension_type if req.nad_dimension_type else 'Job Size'),
+            'nad_clearance': float(req.nad_clearance) if req.nad_clearance is not None else 0.0,
+            'nad_plywood_thickness': float(req.nad_plywood_thickness) if req.nad_plywood_thickness is not None else 0.0,
+            'nad_clr_length': float(req.nad_clr_length or 0.0),
+            'nad_clr_width': float(req.nad_clr_width or 0.0),
+            'nad_clr_top': float(req.nad_clr_top or 0.0),
+            'nad_thk_length': float(req.nad_thk_length or 7.0),
+            'nad_thk_width': float(req.nad_thk_width or 7.0),
+            'nad_thk_height': float(req.nad_thk_height or 20.0),
+            'nad_dimension_type': str(req.nad_dimension_type.dimension_type if req.nad_dimension_type else 'Cargo OD'),
+            'nad_job_weight': float(req.nad_job_weight or 0.0),
+            'nad_customer_part_code': req.nad_customer_part_code or '',
+            'nad_type_of_req_id': req.nad_type_of_req_id,
             'is_quoted': is_quoted,
         })
 
@@ -1630,7 +1652,8 @@ def matrix_create_box_item(request):
     length = float(data.get('length') or 0.0)
     width = float(data.get('width') or 0.0)
     height = float(data.get('height') or 0.0)
-    clearance = float(data.get('clearance') or 2.0)
+    raw_clr = data.get('clearance')
+    clearance = float(raw_clr) if (raw_clr is not None and str(raw_clr).strip() != '') else 0.0
     qty = int(data.get('quantity') or 1)
     user_id = request.session.get('ses_userID')
 
@@ -1655,6 +1678,7 @@ def matrix_create_box_item(request):
         nad_width=width,
         nad_height=height,
         nad_clearance=clearance,
+        nad_plywood_thickness=clearance,
         nad_quantity=qty,
         nad_uom=cm_uom,
         nad_updated_by_id=user_id,
@@ -1670,7 +1694,9 @@ def matrix_create_box_item(request):
             'length': float(new_dim.nad_length or 0.0),
             'width': float(new_dim.nad_width or 0.0),
             'height': float(new_dim.nad_height or 0.0),
-            'clearance': float(new_dim.nad_clearance or 2.0),
+            'clearance': float(new_dim.nad_clearance) if new_dim.nad_clearance is not None else 0.0,
+            'plywood_thickness': float(new_dim.nad_plywood_thickness) if new_dim.nad_plywood_thickness is not None else 0.0,
+            'dim_type': str(new_dim.nad_dimension_type.dimension_type if new_dim.nad_dimension_type else 'Cargo OD'),
             'quantity': int(new_dim.nad_quantity or 1),
             'uom': str(new_dim.nad_uom.unit_of_measure) if new_dim.nad_uom else 'cm',
             'is_quoted': False,

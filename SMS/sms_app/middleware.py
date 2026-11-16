@@ -13,7 +13,6 @@ PUBLIC_PREFIXES = (
     '/SMS/password_reset',
     '/SMS/privacy-policy',
     '/SMS/customer_login',
-    '/SMS/customer_register',
     '/SMS/ajax/get-customer-departments',
     '/admin/',
     '/static/',
@@ -41,6 +40,7 @@ COMMON_PREFIXES = (
 # Module Route Prefixes Mapping
 MODULE_ROUTES = {
     'admin': (
+        '/SMS/customer_register',
         '/SMS/registration_page',
         '/SMS/user_list',
         '/SMS/user_insert',

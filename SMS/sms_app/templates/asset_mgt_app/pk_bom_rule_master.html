@@ -1,0 +1,222 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0 text-white"><i class="fas fa-cogs mr-2"></i> Master BOM Rules (Size × Weight KG)</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'bom_rule_form_add' %}" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> Add Rule
+            </a>
+            <button type="button" class="btn-modern btn-highlight py-2 px-3" style="font-size: 0.9rem; background: #10b981; color: white;" data-toggle="modal" data-target="#csvImportModal">
+                <i class="fas fa-file-csv"></i> Import CSV
+            </button>
+            <a href="?reset_defaults=1" class="btn-modern py-2 px-3" style="font-size: 0.9rem; background: #f59e0b; color: white; text-decoration: none;" onclick="return confirm('Reset all BOM rules to BVM default Size x Weight matrix?')">
+                <i class="fas fa-sync-alt"></i> Reset Defaults
+            </a>
+            <a href="{% url 'customer_box_master_list' %}" class="btn-modern py-2 px-3" style="font-size: 0.9rem; background: rgba(255,255,255,0.18); color: white; text-decoration: none;">
+                <i class="fas fa-boxes"></i> Box Master
+            </a>
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2" role="alert">
+                {{ message }}
+                <button type="button" class="close py-2" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Filter -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="form-inline d-flex flex-wrap gap-2 align-items-center">
+                <label class="small font-weight-bold mr-2">Filter Max Size (MTR):</label>
+                <select name="size_m" class="form-control form-control-sm mr-2">
+                    <option value="">All Sizes</option>
+                    <option value="1.0" {% if size_filter == '1.0' %}selected{% endif %}>Up to 1×1×1 m</option>
+                    <option value="2.0" {% if size_filter == '2.0' %}selected{% endif %}>Up to 2×2×2 m</option>
+                    <option value="3.0" {% if size_filter == '3.0' %}selected{% endif %}>Up to 3×3×3 m</option>
+                    <option value="4.0" {% if size_filter == '4.0' %}selected{% endif %}>Up to 4×4×4 m</option>
+                    <option value="99.0" {% if size_filter == '99.0' %}selected{% endif %}>Oversize (&gt;4m)</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-dark mr-2">Filter</button>
+                <a href="{% url 'bom_rule_master_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rules Table -->
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table class="table modern-table text-nowrap" style="font-size: 0.85rem;">
+                <thead>
+                    <tr>
+                        <th>Rule Name</th>
+                        <th>Max Size (L×W×H m)</th>
+                        <th>Weight (KG)</th>
+                        <th>Base Runner (in)</th>
+                        <th>Runner Pitch (ft)</th>
+                        <th>Lift Runner (in × nos)</th>
+                        <th>Ply (mm)</th>
+                        <th>Frame (in)</th>
+                        <th>Batten Pitch (ft)</th>
+                        <th>Bracing</th>
+                        <th>Nails (kg/CFT)</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in rules %}
+                    <tr>
+                        <td class="font-weight-bold">{{ r.br_name }}</td>
+                        <td>{{ r.br_max_length_m }} × {{ r.br_max_width_m }} × {{ r.br_max_height_m }} m</td>
+                        <td><span class="badge badge-primary">{{ r.br_min_weight_kg|floatformat:0 }} – {{ r.br_max_weight_kg|floatformat:0 }} kg</span></td>
+                        <td>{{ r.br_base_runner_w_in }}" × {{ r.br_base_runner_h_in }}"</td>
+                        <td>{{ r.br_base_runner_pitch_ft }} ft</td>
+                        <td>{{ r.br_lifting_runner_w_in }}" × {{ r.br_lifting_runner_h_in }}" × {{ r.br_lifting_runner_nos }}</td>
+                        <td><span class="badge badge-info">{{ r.br_wall_ply_mm|floatformat:0 }} mm</span></td>
+                        <td>{{ r.br_frame_w_in }}" × {{ r.br_frame_h_in }}"</td>
+                        <td>{{ r.br_batten_pitch_ft }} ft</td>
+                        <td>{% if r.br_heavy_bracing %}<span class="badge badge-warning">Heavy</span>{% else %}Std{% endif %}</td>
+                        <td>{{ r.br_nail_kg_per_cft }}</td>
+                        <td class="text-right text-nowrap">
+                            <a href="{% url 'bom_rule_form_edit' r.id %}" class="btn-action btn-action-edit btn-modern btn-highlight p-2" title="Edit in Form"><i class="far fa-edit"></i></a>
+                            <a href="{% url 'bom_rule_master_delete' r.id %}" class="btn-action btn-action-delete btn-modern btn-cancel p-2" style="background: #ef4444; color: white !important;" title="Delete" onclick="return confirm('Delete this rule?')"><i class="fas fa-trash-alt"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Rule Modal -->
+<div class="modal fade" id="bomRuleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" id="bomRuleForm" action="{% url 'bom_rule_master_save' %}">
+                {% csrf_token %}
+                <div class="modal-header bg-info text-white py-2">
+                    <h6 class="modal-title font-weight-bold mb-0" id="bomRuleModalTitle">Add BOM Rule</h6>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="small font-weight-bold">Rule Name</label>
+                            <input type="text" name="br_name" id="r_name" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="small font-weight-bold">Template Type</label>
+                            <select name="br_template_type" id="r_tmpl" class="form-control form-control-sm">
+                                <option value="all">All Box Types</option>
+                                <option value="plywood_box">Plywood Box</option>
+                                <option value="pine_ply_box">Pine + Plywood Box</option>
+                                <option value="skid_base">Skid Base Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="small font-weight-bold">Req. Type (Optional)</label>
+                            <select name="br_req_type" id="r_req_type" class="form-control form-control-sm">
+                                <option value="">-- Any --</option>
+                                {% for rt in req_types %}<option value="{{ rt.id }}">{{ rt }}</option>{% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Max L (m)</label><input type="number" step="0.1" name="br_max_length_m" id="r_max_l" class="form-control form-control-sm" value="2"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Max W (m)</label><input type="number" step="0.1" name="br_max_width_m" id="r_max_w" class="form-control form-control-sm" value="2"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Max H (m)</label><input type="number" step="0.1" name="br_max_height_m" id="r_max_h" class="form-control form-control-sm" value="2"></div>
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">Min Weight (KG)</label><input type="number" step="1" name="br_min_weight_kg" id="r_min_kg" class="form-control form-control-sm" value="0"></div>
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">Max Weight (KG)</label><input type="number" step="1" name="br_max_weight_kg" id="r_max_kg" class="form-control form-control-sm" value="500"></div>
+
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Runner W"</label><input type="number" step="0.5" name="br_base_runner_w_in" id="r_rw" class="form-control form-control-sm" value="3"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Runner H"</label><input type="number" step="0.5" name="br_base_runner_h_in" id="r_rh" class="form-control form-control-sm" value="4"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Runner Pitch (ft)</label><input type="number" step="0.1" name="br_base_runner_pitch_ft" id="r_rpitch" class="form-control form-control-sm" value="2"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Lift W"</label><input type="number" step="0.5" name="br_lifting_runner_w_in" id="r_lw" class="form-control form-control-sm" value="4"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Lift H"</label><input type="number" step="0.5" name="br_lifting_runner_h_in" id="r_lh" class="form-control form-control-sm" value="1.5"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Lift Nos</label><input type="number" name="br_lifting_runner_nos" id="r_lnos" class="form-control form-control-sm" value="2"></div>
+
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Wall Ply (mm)</label><input type="number" step="1" name="br_wall_ply_mm" id="r_ply" class="form-control form-control-sm" value="10"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Deck Thk</label><input type="number" step="0.5" name="br_deck_thickness" id="r_deck_thk" class="form-control form-control-sm" value="10"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Frame W"</label><input type="number" step="0.5" name="br_frame_w_in" id="r_fw" class="form-control form-control-sm" value="4"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Frame H"</label><input type="number" step="0.5" name="br_frame_h_in" id="r_fh" class="form-control form-control-sm" value="1"></div>
+                        <div class="col-md-2 mb-2"><label class="small font-weight-bold">Batten Pitch (ft)</label><input type="number" step="0.1" name="br_batten_pitch_ft" id="r_bpitch" class="form-control form-control-sm" value="2"></div>
+                        <div class="col-md-2 mb-2 d-flex align-items-end">
+                            <div class="custom-control custom-checkbox mb-1">
+                                <input type="checkbox" class="custom-control-input" id="r_heavy" name="br_heavy_bracing">
+                                <label class="custom-control-label small font-weight-bold" for="r_heavy">Heavy Bracing</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">Nail kg / CFT</label><input type="number" step="0.05" name="br_nail_kg_per_cft" id="r_nail_cft" class="form-control form-control-sm" value="0.45"></div>
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">Nail kg / 100sqft</label><input type="number" step="0.05" name="br_nail_kg_per_100sqft" id="r_nail_sqft" class="form-control form-control-sm" value="0.35"></div>
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">VCI Overlap %</label><input type="number" step="1" name="br_vci_overlap_pct" id="r_vci" class="form-control form-control-sm" value="15"></div>
+                        <div class="col-md-3 mb-2"><label class="small font-weight-bold">Strap Pitch (ft)</label><input type="number" step="0.5" name="br_strapping_pitch_ft" id="r_strap" class="form-control form-control-sm" value="2.5"></div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-info font-weight-bold">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CSV Import Modal -->
+<div class="modal fade" id="csvImportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="{% url 'bom_rule_master_import_csv' %}">
+                {% csrf_token %}
+                <div class="modal-header py-2">
+                    <h6 class="modal-title font-weight-bold mb-0">Import Size × Weight (KG) Rules from CSV</h6>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">CSV columns: <code>name, max_l_m, max_w_m, max_h_m, min_kg, max_kg, runner_w_in, runner_h_in, runner_pitch_ft, lift_w_in, lift_h_in, ply_mm, frame_w_in, frame_h_in, batten_pitch_ft, heavy_bracing</code></p>
+                    <input type="file" name="csv_file" accept=".csv" class="form-control-file" required>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="submit" class="btn btn-sm btn-success font-weight-bold">Upload &amp; Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openRuleModal() {
+    $('#bomRuleForm').attr('action', "{% url 'bom_rule_master_save' %}");
+    $('#bomRuleModalTitle').text('Add BOM Rule');
+    $('#bomRuleForm')[0].reset();
+    $('#bomRuleModal').modal('show');
+}
+function editRule(d) {
+    $('#bomRuleForm').attr('action', "/SMS/bom_rule_master_save/" + d.id + "/");
+    $('#bomRuleModalTitle').text('Edit BOM Rule');
+    $('#r_name').val(d.name);
+    $('#r_req_type').val(d.req_type);
+    $('#r_tmpl').val(d.tmpl);
+    $('#r_max_l').val(d.max_l); $('#r_max_w').val(d.max_w); $('#r_max_h').val(d.max_h);
+    $('#r_min_kg').val(d.min_kg); $('#r_max_kg').val(d.max_kg);
+    $('#r_rw').val(d.rw); $('#r_rh').val(d.rh); $('#r_rpitch').val(d.rpitch);
+    $('#r_lw').val(d.lw); $('#r_lh').val(d.lh); $('#r_lnos').val(d.lnos);
+    $('#r_ply').val(d.ply_mm); $('#r_deck_thk').val(d.deck_thk);
+    $('#r_fw').val(d.fw); $('#r_fh').val(d.fh); $('#r_bpitch').val(d.bpitch);
+    $('#r_heavy').prop('checked', d.heavy);
+    $('#r_nail_cft').val(d.nail_cft); $('#r_nail_sqft').val(d.nail_sqft);
+    $('#r_vci').val(d.vci); $('#r_strap').val(d.strap);
+    $('#bomRuleModal').modal('show');
+}
+</script>
+{% endblock %}

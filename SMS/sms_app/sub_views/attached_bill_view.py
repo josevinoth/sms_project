@@ -495,20 +495,49 @@ def attached_bill_export_tally(request):
             vehicle_disp = ""
             if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None):
                 vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)"
+            toll_amt = float(bill.ab_toll_cost or 0)
+            trans_amt = round(total_amt - toll_amt, 2) if (toll_amt > 0 and total_amt >= toll_amt) else total_amt
             row = [
                 voucher_number, bill_date, ref_no, vendor_name, total_amt,
-                "Transportation", total_amt, "Maa-Att", "",
+                "Transportation", trans_amt, "Maa-Att", "",
                 vehicle_disp, "", (tds_ledger if tds_amount > 0 else ""), (tds_amount if tds_amount > 0 else ""), narration
             ]
             ws.append(row)
+            ws.cell(row=ws.max_row, column=6).fill = expense_fill
+            if toll_amt > 0:
+                toll_row = [
+                    voucher_number, bill_date, ref_no, "", "",
+                    "Toll", toll_amt, "Maa-Att", "",
+                    vehicle_disp, "", "", "", narration
+                ]
+                ws.append(toll_row)
+                ws.cell(row=ws.max_row, column=6).fill = expense_fill
             continue
+
+        # Parse saved per-trip costs from AttachedBillInfo.ab_trip_costs JSON
+        saved_costs = {}
+        if bill.ab_trip_costs:
+            try:
+                import json
+                saved_costs = json.loads(bill.ab_trip_costs)
+            except Exception:
+                saved_costs = {}
+
+        def get_trip_toll(t):
+            t_id_str = str(t.id)
+            if t_id_str in saved_costs:
+                return float(saved_costs[t_id_str].get('toll', 0) or 0)
+            return float(t.tc_tollcost or 0)
 
         # Separate regular trips from empty/business empty
         regular_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) not in [2, 3]]
         empty_only_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) == 2]
         biz_empty_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) == 3]
 
-        total_toll = sum(float(t.tc_tollcost or 0) for t in regular_trips)
+        total_toll = sum(get_trip_toll(t) for t in regular_trips)
+        if float(bill.ab_toll_cost or 0) > total_toll:
+            total_toll = float(bill.ab_toll_cost or 0)
+
         bill_buy_cost = float(bill.ab_bill_amount or 0) - total_toll
 
         def calc_trip_km(trip):
@@ -534,6 +563,7 @@ def attached_bill_export_tally(request):
         # so we can adjust the last row to make the sum exactly equal bill_buy_cost
         all_rows = []  # each entry: (type, trip_or_None, km, amount, job_no, customer_name, vehicle_disp, narration_suffix)
 
+        allocated_toll = 0.0
         for trip in regular_trips:
             cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else ""
             job_no = cnote or (trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else (trip.tr_tripnumber or ""))
@@ -547,8 +577,25 @@ def attached_bill_export_tally(request):
             transport_cost = calc_buy_cost(trip_km)
             vehicle_disp = f"{trip.tr_vehiclenumber}(A)" if trip.tr_vehiclenumber else ""
             all_rows.append(("Transportation", transport_cost, job_no, vehicle_disp, customer_name, ""))
-            if trip.tc_tollcost and float(trip.tc_tollcost) > 0:
-                all_rows.append(("Toll", float(trip.tc_tollcost), job_no, vehicle_disp, customer_name, ""))
+            trip_toll = get_trip_toll(trip)
+            if trip_toll > 0:
+                allocated_toll += trip_toll
+                all_rows.append(("Toll", trip_toll, job_no, vehicle_disp, customer_name, ""))
+
+        # If header toll cost exists but wasn't individually broken down per trip, assign remainder to last regular trip
+        if total_toll > allocated_toll and regular_trips:
+            rem_toll = round(total_toll - allocated_toll, 2)
+            last_trip = regular_trips[-1]
+            cnote = last_trip.tr_consignmentnumber.co_consignmentnumber if last_trip.tr_consignmentnumber else ""
+            job_no = cnote or (last_trip.tr_enquirynumber.en_enquirynumber if last_trip.tr_enquirynumber else (last_trip.tr_tripnumber or ""))
+            customer_name = ""
+            if last_trip.tr_enquirynumber and getattr(last_trip.tr_enquirynumber, 'en_customername', None):
+                try:
+                    customer_name = last_trip.tr_enquirynumber.en_customername.cu_name
+                except:
+                    customer_name = str(last_trip.tr_enquirynumber.en_customername)
+            vehicle_disp = f"{last_trip.tr_vehiclenumber}(A)" if last_trip.tr_vehiclenumber else ""
+            all_rows.append(("Toll", rem_toll, job_no, vehicle_disp, customer_name, ""))
 
         # Consolidated empty row
         if empty_only_trips:

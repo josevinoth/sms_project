@@ -3,6 +3,10 @@ import io
 import os
 import re
 import zipfile
+
+# Allow synchronous Django ORM operations when Playwright's sync API starts an event loop
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -260,23 +264,147 @@ def get_petty_cash_voucher_context(obj, pc_type='TMS'):
     }
 
 
-def generate_petty_cash_combined_pdf(obj, pc_type='TMS'):
+def generate_petty_cash_voucher_pdf(obj, pc_type='TMS', browser=None):
+    """
+    Renders the exact petty cash payment voucher as a single-page A4 landscape PDF.
+    Uses Playwright (Chromium) to match the browser print layout with real dotted lines.
+    Falls back to xhtml2pdf if Playwright is unavailable.
+    """
+    pc_type = pc_type.upper()
+    logo_b64 = get_logo_base64()
+
+    custom_css = """
+<style>
+@page { size: A4 landscape !important; margin: 8mm !important; }
+@media print { @page { size: A4 landscape !important; margin: 8mm !important; } }
+body { padding: 0 !important; margin: 0 !important; background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.voucher-container {
+    width: 100% !important; max-width: 100% !important; margin: 0 auto !important;
+    box-shadow: none !important; border: 2.5px solid #444 !important;
+    padding: 24px 34px 20px !important; box-sizing: border-box !important;
+}
+.header { min-height: 105px !important; margin-bottom: 16px !important; padding-bottom: 10px !important; }
+.header img { height: 100px !important; width: 175px !important; object-fit: contain !important; }
+.company-info h1 { font-size: 27px !important; }
+.company-info p { font-size: 13.5px !important; margin-top: 5px !important; }
+.voucher-title { font-size: 20px !important; margin: 8px 0 20px !important; }
+.row { margin-bottom: 16px !important; font-size: 17px !important; }
+.value { min-height: 24px !important; line-height: 24px !important; border-bottom: 2px dotted #444 !important; }
+.narration-value { min-height: 24px !important; line-height: 24px !important; border-bottom: 2px dotted #444 !important; background: none !important; }
+.signatures { margin-top: 32px !important; font-size: 17px !important; }
+.signature-space { height: 48px !important; }
+.prepared-name { font-size: 14px !important; }
+</style>
+"""
+
+    if pc_type == 'TMS':
+        amount_in_words = number_to_words(obj.tpc_amount or 0)
+        payment_to = ''
+        if obj.tpc_to_manual:
+            payment_to = obj.tpc_to_manual
+        elif obj.tpc_driver_name:
+            payment_to = obj.tpc_driver_name.dm_name
+        elif obj.tpc_driver_name_manual:
+            payment_to = obj.tpc_driver_name_manual
+        elif obj.tpc_to:
+            payment_to = obj.tpc_to.first_name or obj.tpc_to.username
+        clean_remarks = re.sub(r'\s*\[?Auto-generated.*', '', obj.tpc_remarks or '').strip()
+        context = {
+            'tpc': obj,
+            'amount_in_words': amount_in_words,
+            'payment_to': payment_to,
+            'clean_remarks': clean_remarks,
+        }
+        template_name = 'asset_mgt_app/tms_petty_cash_voucher.html'
+
+    elif pc_type == 'WMS':
+        total_val = obj.wpc_total_amount if (obj.wpc_total_amount and obj.wpc_total_amount > 0) else (obj.wpc_bill_amount or 0)
+        amount_in_words = number_to_words(total_val)
+        payment_to = ''
+        if obj.wpc_to_manual:
+            payment_to = obj.wpc_to_manual
+        elif obj.wpc_to:
+            payment_to = obj.wpc_to.first_name or obj.wpc_to.username
+        clean_remarks = re.sub(r'\s*\[?Auto-generated.*', '', obj.wpc_remarks or '').strip()
+        context = {
+            'wpc': obj,
+            'amount_in_words': amount_in_words,
+            'payment_to': payment_to,
+            'clean_remarks': clean_remarks,
+        }
+        template_name = 'asset_mgt_app/wms_petty_cash_voucher.html'
+
+    else:  # PMS
+        total_val = obj.ppc_total_amount if (obj.ppc_total_amount and obj.ppc_total_amount > 0) else (obj.ppc_bill_amount or obj.ppc_amount or 0)
+        amount_in_words = number_to_words(total_val)
+        payment_to = ''
+        if obj.ppc_to_manual:
+            payment_to = obj.ppc_to_manual
+        elif obj.ppc_to:
+            payment_to = obj.ppc_to.first_name or obj.ppc_to.username
+        clean_remarks = re.sub(r'\s*\[?Auto-generated.*', '', obj.ppc_remarks or '').strip()
+        context = {
+            'ppc': obj,
+            'amount_in_words': amount_in_words,
+            'payment_to': payment_to,
+            'clean_remarks': clean_remarks,
+        }
+        template_name = 'asset_mgt_app/pms_petty_cash_voucher.html'
+
+    html = render_to_string(template_name, context)
+    html = html.replace('onload="window.print()"', '')
+    if logo_b64:
+        html = html.replace('/media/logo4.0.png', f'data:image/png;base64,{logo_b64}')
+    html = html.replace('</head>', f'{custom_css}</head>')
+
+    # Try Playwright
+    try:
+        if browser:
+            page = browser.new_page()
+            page.set_content(html, wait_until='networkidle')
+            pdf_bytes = page.pdf(
+                format='A4',
+                landscape=True,
+                print_background=True,
+                prefer_css_page_size=True,
+                margin={'top': '8mm', 'bottom': '8mm', 'left': '8mm', 'right': '8mm'}
+            )
+            page.close()
+            return pdf_bytes
+        else:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                b = p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+                page = b.new_page()
+                page.set_content(html, wait_until='networkidle')
+                pdf_bytes = page.pdf(
+                    format='A4',
+                    landscape=True,
+                    print_background=True,
+                    prefer_css_page_size=True,
+                    margin={'top': '8mm', 'bottom': '8mm', 'left': '8mm', 'right': '8mm'}
+                )
+                b.close()
+                return pdf_bytes
+    except Exception as e:
+        print(f"Playwright rendering failed, falling back to xhtml2pdf: {e}")
+        ctx = get_petty_cash_voucher_context(obj, pc_type)
+        html_fallback = render_to_string('asset_mgt_app/petty_cash_voucher_pdf.html', ctx)
+        voucher_pdf_buf = io.BytesIO()
+        pisa.CreatePDF(html_fallback, dest=voucher_pdf_buf)
+        return voucher_pdf_buf.getvalue()
+
+
+def generate_petty_cash_combined_pdf(obj, pc_type='TMS', browser=None):
     """
     Renders the payment voucher as PDF and combines it with the attached bill (PDF or image).
     Returns PDF content as bytes.
     """
     pc_type = pc_type.upper()
-    ctx = get_petty_cash_voucher_context(obj, pc_type)
-    html = render_to_string('asset_mgt_app/petty_cash_voucher_pdf.html', ctx)
+    voucher_pdf_bytes = generate_petty_cash_voucher_pdf(obj, pc_type, browser=browser)
 
-    voucher_pdf_buf = io.BytesIO()
-    pisa_status = pisa.CreatePDF(html, dest=voucher_pdf_buf)
-    if pisa_status.err:
-        raise RuntimeError("Failed to generate voucher PDF via xhtml2pdf.")
-
-    voucher_pdf_buf.seek(0)
     writer = pypdf.PdfWriter()
-    voucher_reader = pypdf.PdfReader(voucher_pdf_buf)
+    voucher_reader = pypdf.PdfReader(io.BytesIO(voucher_pdf_bytes))
     for page in voucher_reader.pages:
         writer.add_page(page)
 
@@ -301,11 +429,32 @@ def generate_petty_cash_combined_pdf(obj, pc_type='TMS'):
                     writer.add_page(page)
 
             elif fname.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.jfif', '.tiff', '.tif')):
+                from reportlab.lib.pagesizes import A4, landscape
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.utils import ImageReader
+
                 img = Image.open(io.BytesIO(content))
                 if img.mode not in ('RGB', 'L'):
                     img = img.convert('RGB')
+                img_w, img_h = img.size
+                if img_w >= img_h:
+                    page_w, page_h = landscape(A4)
+                else:
+                    page_w, page_h = A4
+                margin = 20
+                avail_w = page_w - (2 * margin)
+                avail_h = page_h - (2 * margin)
+                scale = min(avail_w / img_w, avail_h / img_h)
+                draw_w = img_w * scale
+                draw_h = img_h * scale
+                x = (page_w - draw_w) / 2
+                y = (page_h - draw_h) / 2
+
                 img_pdf_buf = io.BytesIO()
-                img.save(img_pdf_buf, format='PDF')
+                c = canvas.Canvas(img_pdf_buf, pagesize=(page_w, page_h))
+                c.drawImage(ImageReader(img), x, y, width=draw_w, height=draw_h, preserveAspectRatio=True)
+                c.showPage()
+                c.save()
                 img_pdf_buf.seek(0)
                 img_reader = pypdf.PdfReader(img_pdf_buf)
                 for page in img_reader.pages:
@@ -322,8 +471,8 @@ def generate_petty_cash_combined_pdf(obj, pc_type='TMS'):
 
 def export_petty_cash_zip(queryset, pc_type='TMS', zip_filename=None):
     """
-    Creates a ZIP archive containing attachments and combined voucher PDFs
-    organized by: {BU_Folder}/{Voucher_Number}/{attachments and voucher PDF}.
+    Creates a ZIP archive containing attachments and pure voucher PDFs
+    organized by: {BU_Folder}/{Voucher_Number}/{attachment and voucher PDF separately}.
     Returns an HttpResponse with the ZIP archive.
     """
     pc_type = pc_type.upper()
@@ -347,49 +496,71 @@ def export_petty_cash_zip(queryset, pc_type='TMS', zip_filename=None):
     else:
         records_to_process = list(queryset)
 
+    # Launch Playwright browser once for the whole batch
+    playwright_ctx = None
+    browser = None
+    try:
+        from playwright.sync_api import sync_playwright
+        playwright_ctx = sync_playwright().start()
+        browser = playwright_ctx.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+    except Exception as e:
+        print(f"Could not launch Playwright for zip export: {e}")
+
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        for record in records_to_process:
-            # Determine BU folder name
-            if pc_type == 'TMS':
-                bu = record.tpc_business.bvm_business if record.tpc_business else 'BVM Trans Solutions'
-                voucher_raw = record.tpc_number or f"TMS_{record.id}"
-                att_field = getattr(record, 'tpc_bill_attachment', None)
-            elif pc_type == 'WMS':
-                bu = record.wpc_business.bvm_business if record.wpc_business else 'BVM Storage Solutions'
-                voucher_raw = record.wpc_number or f"WMS_{record.id}"
-                att_field = getattr(record, 'wpc_bill_attachment', None)
-            else:
-                bu = record.ppc_business.bvm_business if record.ppc_business else 'BVM Pack Solutions'
-                voucher_raw = record.ppc_number or f"PMS_{record.id}"
-                att_field = getattr(record, 'ppc_bill_attachment', None)
+    try:
+        with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for record in records_to_process:
+                # Determine BU folder name
+                if pc_type == 'TMS':
+                    bu = record.tpc_business.bvm_business if record.tpc_business else 'BVM Trans Solutions'
+                    voucher_raw = record.tpc_number or f"TMS_{record.id}"
+                    att_field = getattr(record, 'tpc_bill_attachment', None)
+                elif pc_type == 'WMS':
+                    bu = record.wpc_business.bvm_business if record.wpc_business else 'BVM Storage Solutions'
+                    voucher_raw = record.wpc_number or f"WMS_{record.id}"
+                    att_field = getattr(record, 'wpc_bill_attachment', None)
+                else:
+                    bu = record.ppc_business.bvm_business if record.ppc_business else 'BVM Pack Solutions'
+                    voucher_raw = record.ppc_number or f"PMS_{record.id}"
+                    att_field = getattr(record, 'ppc_bill_attachment', None)
 
-            bu_folder = sanitize_filename(bu)
-            voucher_folder = sanitize_filename(voucher_raw)
-            base_folder = f"{bu_folder}/{voucher_folder}"
+                bu_folder = sanitize_filename(bu)
+                voucher_folder = sanitize_filename(voucher_raw)
+                base_folder = f"{bu_folder}/{voucher_folder}"
 
-            # 1. Add raw attachment if exists
-            if att_field and att_field.name:
+                # 1. Add raw attachment if exists (SEPARATELY)
+                if att_field and att_field.name:
+                    try:
+                        att_field.open('rb')
+                        att_bytes = att_field.read()
+                        att_field.close()
+                        att_name = os.path.basename(att_field.name)
+                        safe_att_name = sanitize_filename(att_name)
+                        zip_file.writestr(f"{base_folder}/{safe_att_name}", att_bytes)
+                    except Exception as e:
+                        print(f"Error reading attachment for record {record}: {e}")
+
+                # 2. Add pure voucher PDF (SEPARATELY, NOT combined!)
                 try:
-                    att_field.open('rb')
-                    att_bytes = att_field.read()
-                    att_field.close()
-                    att_name = os.path.basename(att_field.name)
-                    safe_att_name = sanitize_filename(att_name)
-                    zip_file.writestr(f"{base_folder}/{safe_att_name}", att_bytes)
+                    pdf_bytes = generate_petty_cash_voucher_pdf(record, pc_type, browser=browser)
+                    if pdf_bytes:
+                        zip_file.writestr(f"{base_folder}/{voucher_folder}_voucher.pdf", pdf_bytes)
                 except Exception as e:
-                    print(f"Error reading attachment for record {record}: {e}")
+                    print(f"Error generating voucher PDF for record {record}: {e}")
 
-            # 2. Add combined voucher & bill PDF
+            if not zip_file.filelist:
+                zip_file.writestr("info.txt", "No attachments or vouchers found for the selected filter.")
+    finally:
+        if browser:
             try:
-                pdf_bytes = generate_petty_cash_combined_pdf(record, pc_type)
-                if pdf_bytes:
-                    zip_file.writestr(f"{base_folder}/{voucher_folder}_voucher_combined.pdf", pdf_bytes)
-            except Exception as e:
-                print(f"Error generating PDF for record {record}: {e}")
-
-        if not zip_file.filelist:
-            zip_file.writestr("info.txt", "No attachments or vouchers found for the selected filter.")
+                browser.close()
+            except Exception:
+                pass
+        if playwright_ctx:
+            try:
+                playwright_ctx.stop()
+            except Exception:
+                pass
 
     buf.seek(0)
     response = HttpResponse(buf.getvalue(), content_type='application/zip')
