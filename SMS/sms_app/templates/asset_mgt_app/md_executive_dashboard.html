@@ -1250,14 +1250,14 @@
         <div class="header-right">
             <!-- Quick Date & Date Range Filter (From Date to To Date) -->
             <div class="date-filter-box" style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 5px;">
-                <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Today</button>
+                <button id="btn-date-today" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Today</button>
                 <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Yesterday</button>
-                <button id="btn-date-thismonth" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View This Month (MTD)">This Month</button>
+                <button id="btn-date-thismonth" class="ctrl-btn active" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View This Month (MTD)">This Month</button>
                 <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
 
                 <div style="display:flex; align-items:center; gap:3px; margin-left: 2px; padding-left: 5px; border-left: 1px solid rgba(255,255,255,0.12);">
                     <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">From</span>
-                    <input type="date" id="date-from-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
+                    <input type="date" id="date-from-input" value="{{ cur_month_first_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
                     <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">To</span>
                     <input type="date" id="date-to-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
                     <button id="btn-date-apply" class="ctrl-btn" style="padding: 2px 7px; border: 1px solid rgba(54, 209, 255, 0.4); font-size: 0.69rem; color: #36d1ff;" title="Apply Date Range">
@@ -1529,13 +1529,13 @@
                                     <span class="exec-mini-val" style="color:#f59e0b;" id="s1-fin-repeat">98.2%</span>
                                 </div>
                                 <div class="exec-mini-box">
-                                    <span class="exec-mini-lbl">On-Time (OTP)</span>
-                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-otp">96.8%</span>
+                                    <span class="exec-mini-lbl">POD TAT</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-podtat">0.3 Days</span>
                                 </div>
                             </div>
 
                             <!-- Trunk Route & Highway Speed Callout -->
-                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:none; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; justify-content:space-between; align-items:center;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <i class="fas fa-route" style="color:#10b981; font-size:0.75rem;"></i>
                                     <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">Trunk Route: <b style="color:#36d1ff;">Chennai ↔ Bangalore</b> (52% Traffic)</span>
@@ -1580,7 +1580,7 @@
                                 <div class="dash-card card-enquiry" style="min-height:54px; padding:4px 8px;">
                                     <div class="dash-kpi-label">Space Used</div>
                                     <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-space-pct">34.1%</div>
-                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);">23,413 Sq.Ft</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-space-sqft">23,375 Sq.Ft</div>
                                 </div>
                             </div>
 
@@ -1589,24 +1589,24 @@
                                 <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
                                     <div class="hub-card-header">
                                         <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#36d1ff;"></i> Chennai Hub (MAA)</span>
-                                        <span class="branch-pill maa">42.1% Area</span>
+                                        <span class="branch-pill maa" id="s1-hub-maa-pill">48.2% Area</span>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Area: <b>12,861</b> / 30,582 Sq.Ft</span>
-                                            <span>Avail: <b>17,721</b></span>
+                                            <span>Area: <b id="s1-hub-maa-sqft">14,742</b> / <span id="s1-hub-maa-tot-sqft">30,582</span> Sq.Ft</span>
+                                            <span>Avail: <b id="s1-hub-maa-avail">15,839</b></span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill maa" style="width: 42.1%;"></div>
+                                            <div class="hub-bar-fill maa" id="s1-hub-maa-bar" style="width: 48.2%;"></div>
                                         </div>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Vol: <b>20,184</b> / 491,250 CFT</span>
-                                            <span>4.1% Vol</span>
+                                            <span>Vol: <b id="s1-hub-maa-cft">20,588</b> / <span id="s1-hub-maa-tot-cft">491,250</span> CFT</span>
+                                            <span id="s1-hub-maa-vol-pct">4.2% Vol</span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill maa" style="width: 4.1%;"></div>
+                                            <div class="hub-bar-fill maa" id="s1-hub-maa-vol-bar" style="width: 4.2%;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1614,24 +1614,24 @@
                                 <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
                                     <div class="hub-card-header">
                                         <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#f59e0b;"></i> Bangalore Hub (BLR)</span>
-                                        <span class="branch-pill blr">27.8% Area</span>
+                                        <span class="branch-pill blr" id="s1-hub-blr-pill">22.7% Area</span>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Area: <b>10,552</b> / 37,993 Sq.Ft</span>
-                                            <span>Avail: <b>27,441</b></span>
+                                            <span>Area: <b id="s1-hub-blr-sqft">8,632</b> / <span id="s1-hub-blr-tot-sqft">37,993</span> Sq.Ft</span>
+                                            <span>Avail: <b id="s1-hub-blr-avail">29,360</b></span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill blr" style="width: 27.8%;"></div>
+                                            <div class="hub-bar-fill blr" id="s1-hub-blr-bar" style="width: 22.7%;"></div>
                                         </div>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Vol: <b>11,832</b> / 249,916 CFT</span>
-                                            <span>4.7% Vol</span>
+                                            <span>Vol: <b id="s1-hub-blr-cft">10,960</b> / <span id="s1-hub-blr-tot-cft">249,916</span> CFT</span>
+                                            <span id="s1-hub-blr-vol-pct">4.4% Vol</span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill blr" style="width: 4.7%;"></div>
+                                            <div class="hub-bar-fill blr" id="s1-hub-blr-vol-bar" style="width: 4.4%;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1685,11 +1685,11 @@
                                         <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:5px 6px; margin-bottom:4px;">
                                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                                 <span style="font-size:0.62rem; color:#94a3b8;">Avg Gate-to-Dock TAT</span>
-                                                <span style="font-size:0.9rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;">42 Mins</span>
+                                                <span style="font-size:0.9rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="s1-wh-dock-tat">39 Mins</span>
                                             </div>
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                                                 <span style="font-size:0.62rem; color:#94a3b8;">Throughput Rate</span>
-                                                <span style="font-size:0.72rem; font-weight:600; color:#ffffff;">8.2 MT / hr</span>
+                                                <span style="font-size:0.72rem; font-weight:600; color:#ffffff;" id="s1-wh-handling-rate">3.5 MT / hr</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1733,7 +1733,7 @@
                             </div>
 
                             <!-- Equipment MHE & Facility Status Callout -->
-                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:none; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; justify-content:space-between; align-items:center;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <i class="fas fa-boxes-packing" style="color:#a855f7; font-size:0.75rem;"></i>
                                     <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">MHE Fleet: <b>6/6 Forklifts Operational</b> (Zero Downtime)</span>
@@ -1936,8 +1936,8 @@
                                 <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-kmpl">4.2 KM/L</span>
                             </div>
                             <div class="exec-mini-box">
-                                <span class="exec-mini-lbl">Delivery OTP</span>
-                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-otp">96.8%</span>
+                                <span class="exec-mini-lbl">POD TAT</span>
+                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-podtat">0.3 Days</span>
                             </div>
                         </div>
                     </div>
@@ -1951,8 +1951,8 @@
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <div style="display:flex; align-items:center; gap:2px; background:rgba(0,0,0,0.3); border-radius:12px; padding:1px 3px;">
-                                        <button id="btn-cs-day" class="branch-toggle-btn active" style="font-size:0.64rem; padding:2px 7px;">Today</button>
-                                        <button id="btn-cs-month" class="branch-toggle-btn" style="font-size:0.64rem; padding:2px 7px;">30 Days</button>
+                                        <button id="btn-cs-day" class="branch-toggle-btn" style="font-size:0.64rem; padding:2px 7px;">Today</button>
+                                        <button id="btn-cs-month" class="branch-toggle-btn active" style="font-size:0.64rem; padding:2px 7px;">Month (MTD)</button>
                                     </div>
                                 </div>
                             </div>
@@ -2171,7 +2171,7 @@
                         </div>
 
                         <!-- Live Route Telematics & Fastag Highway Efficiency -->
-                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:6px 8px; display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+                        <div style="display:none; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:6px 8px; flex-direction:column; gap:4px; margin-top:2px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-route text-info"></i> Route Telematics &amp; Highway Velocity</span>
                                 <span class="badge" style="font-size:0.55rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">MAA ↔ BLR TRUNK</span>
@@ -2318,7 +2318,7 @@
                         </div>
 
                         <!-- Warehouse Storage Zones & Bay Saturation -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                        <div style="display:none; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span><i class="fas fa-layer-group text-warning"></i> Bay &amp; Storage Zone Saturation</span>
                                 <span style="color:#10b981; font-size:0.56rem;">4 Zones Active</span>
@@ -2364,7 +2364,7 @@
                         </div>
 
                         <!-- Specialized Storage & Climate Chambers -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                        <div style="display:none; background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span><i class="fas fa-snowflake text-info"></i> Specialized Storage &amp; Climate Bays</span>
                                 <span style="color:#36d1ff; font-size:0.56rem;">Pharma &amp; Hazmat Ready</span>
@@ -2394,7 +2394,7 @@
                         </div>
 
                         <!-- Commodity Storage Mix -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                        <div style="display:none; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:3px;">
                                 <span><i class="fas fa-cubes-stacked text-info"></i> Commodity Storage Mix</span>
                                 <span style="color:#36d1ff;">Industry Split</span>
@@ -2501,7 +2501,7 @@
                         </div>
 
                         <!-- 2. Pallet & High-Bay Rack Capacity Intel -->
-                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(245,158,11,0.25); padding:6px 9px;">
+                        <div style="display:none; background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(245,158,11,0.25); padding:6px 9px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
                                     <i class="fas fa-boxes-stacked text-warning"></i> Pallet &amp; High-Bay Rack Utilization
@@ -2541,7 +2541,7 @@
                         </div>
 
                         <!-- 3. Hub Storage Yield & Ambient Compliance Controls -->
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                        <div style="display:none; grid-template-columns: 1fr 1fr; gap:6px;">
                             <!-- Storage Revenue Yield -->
                             <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.25); padding:6px 8px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
@@ -2592,7 +2592,7 @@
                         </div>
 
                         <!-- 4. Gate-to-Rack Inbound Workflow Pipeline -->
-                        <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.22); padding:6px 9px;">
+                        <div style="display:none; background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(16,185,129,0.22); padding:6px 9px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <span style="font-size:0.66rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.3px;">
                                     <i class="fas fa-diagram-project text-emerald"></i> Inbound Gate-to-Rack Live Pipeline
@@ -2676,7 +2676,7 @@
                         </div>
 
                         <!-- Staging Velocity & MHE Equipment Readiness -->
-                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:none; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:7px 9px; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-dolly text-warning"></i> Staging Velocity &amp; MHE Readiness</span>
                                 <span class="badge" style="font-size:0.55rem; background:rgba(54,209,255,0.15); color:#36d1ff; border:1px solid rgba(54,209,255,0.3); padding:1px 5px; border-radius:3px;">100% OPERATIONAL</span>
@@ -2771,7 +2771,7 @@
                         </div>
 
                         <!-- MHE Fleet Readiness & Battery Health Card -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                        <div style="display:none; background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
                                     <i class="fas fa-dolly text-info"></i> Material Handling Equipment Fleet
@@ -2808,34 +2808,34 @@
                                 <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
                                     <i class="fas fa-file-invoice-dollar text-emerald"></i> Storage Billing &amp; VAS Commercials
                                 </span>
-                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">₹56.9L MTD</span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;" id="s3-vas-total">₹3.6L MTD</span>
                             </div>
                             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Space Rental</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">₹32.8L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="s3-vas-space">₹2.2L</div>
                                     <div style="font-size:0.46rem; color:#10b981;">Billed MTD</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Handling</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">₹14.5L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="s3-vas-handling">₹1.0L</div>
                                     <div style="font-size:0.46rem; color:#36d1ff;">Flow Ops</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">VAS &amp; Kitting</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">₹3.2L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-vas-kitting">₹0.4L</div>
                                     <div style="font-size:0.46rem; color:#f59e0b;">Label/Pack</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Unbilled WIP</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">₹6.4L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;" id="s3-vas-unbilled">₹0.0L</div>
                                     <div style="font-size:0.46rem; color:#a855f7;">Pending Inv</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Cargo Integrity & High Value Executive SLA Card -->
-                        <div style="background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.6)); border:1px solid rgba(16, 185, 129, 0.25); border-radius:6px; padding:6px 8px;">
+                        <div style="display:none; background:linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.6)); border:1px solid rgba(16, 185, 129, 0.25); border-radius:6px; padding:6px 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-shield-halved text-success"></i> Cargo Integrity &amp; Safety SLA</span>
                                 <span class="badge" style="font-size:0.58rem; background:rgba(16,185,129,0.2); color:#10b981; border:1px solid rgba(16,185,129,0.4); padding:1px 5px; border-radius:3px;">100% AUDIT PASS</span>
@@ -3096,12 +3096,12 @@
             });
 
             // Date mode controls
-            let activeFromDate = todayStr;
-            let activeToDate = todayStr;
-            let activePeriod = 'day';
             const lastMonthStartStr = '{{ last_month_start_str|default:"2026-10-01" }}';
             const lastMonthEndStr = '{{ last_month_end_str|default:"2026-10-31" }}';
             const curMonthFirstStr = '{{ cur_month_first_str|default:"2026-11-01" }}';
+            let activeFromDate = curMonthFirstStr;
+            let activeToDate = todayStr;
+            let activePeriod = 'this_month';
 
             function clearPresetActive() {
                 $('#btn-date-today, #btn-date-yest, #btn-date-thismonth, #btn-date-lastmonth').removeClass('active');
@@ -3405,7 +3405,7 @@
                     $('#s1-fin-runrate').text('₹' + (tms.financial_intel.projected_run_rate_cr || '1.85') + ' Cr');
                     $('#s1-fin-shippers').text((tms.financial_intel.active_shippers || 48) + ' Accounts');
                     $('#s1-fin-repeat').text((tms.financial_intel.repeat_shipper_pct || 98.2) + '%');
-                    $('#s1-fin-otp').text((tms.financial_intel.otp_pct || 96.8) + '%');
+                    $('#s1-fin-podtat').text((tms.pod_turnaround_days || 0.3) + ' Days');
                 }
 
                 // Slide 1 Executive Warehouse Live Stock & Storage Intelligence (100% Real DB)
@@ -3639,7 +3639,7 @@
                     $('#tms-exp-diesel').text('₹' + (tms.financial_intel.diesel_spend_lakhs || '14.6') + ' L');
                     $('#tms-exp-toll').text('₹' + (tms.financial_intel.toll_spend_lakhs || '2.3') + ' L');
                     $('#tms-exp-kmpl').text((tms.financial_intel.fleet_mileage_kmpl || '4.2') + ' KM/L');
-                    $('#tms-exp-otp').text((tms.financial_intel.otp_pct || '96.8') + '%');
+                    $('#tms-exp-podtat').text((tms.pod_turnaround_days || '0.3') + ' Days');
                 }
 
                 // 4. Slide 3: WMS Deep Dive KPIs
@@ -3649,7 +3649,11 @@
                 $('#wms-kpi-in-pkg').text(`${wms.inward_pkg_today.toLocaleString()} Pkgs`);
                 $('#wms-kpi-out-wt').text(`${wms.outward_weight_mt} MT`);
                 $('#wms-kpi-out-pkg').text(`${wms.outward_pkg_today.toLocaleString()} Pkgs`);
-                $('#wms-kpi-in-val').text(`₹${wms.inward_val_lakhs}L`);
+                if (wms.inward_val_lakhs >= 100) {
+                    $('#wms-kpi-in-val').text(`₹${(wms.inward_val_lakhs / 100).toFixed(2)} Cr`);
+                } else {
+                    $('#wms-kpi-in-val').text(`₹${wms.inward_val_lakhs}L`);
+                }
                 $('#wms-kpi-occ-pct').text(`${wms.occupancy_pct}%`);
                 $('#wms-kpi-sqft-sub').text(`${wms.occupied_area_sqft.toLocaleString()} / ${wms.total_area_sqft.toLocaleString()} Sq.Ft`);
                 $('#wms-kpi-vol-pct').text(`${wms.vol_occupancy_pct}%`);
@@ -3657,7 +3661,7 @@
                 $('#wms-kpi-hv-pending').text(`${wms.high_value_pending} Pending Approval`);
                 $('#wms-kpi-damages').text(wms.damages_today);
 
-                // Slide 3 Dual Hub Details
+                // Slide 3 & Slide 1 Dual Hub Details (Identical Grounded Master Queries)
                 if (wms.hub_details) {
                     const maaHub = wms.hub_details.MAA || {};
                     const blrHub = wms.hub_details.BLR || {};
@@ -3667,17 +3671,20 @@
                         const maaAvailSqft = maaHub.avail_sqft !== undefined ? maaHub.avail_sqft : (maaHub.avail_area_sqft || 0);
                         const maaOccCft = maaHub.occupied_cft !== undefined ? maaHub.occupied_cft : (maaHub.occ_vol_cft || 0);
                         $('#s3-hub-maa-occ').text((maaHub.occ_pct || 0) + '%');
-                        $('#s3-hub-maa-sqft').text(maaOccSqft.toLocaleString());
-                        $('#s3-hub-maa-tot-sqft').text(maaTotSqft.toLocaleString());
+                        $('#s3-hub-maa-sqft, #s1-hub-maa-sqft').text(maaOccSqft.toLocaleString());
+                        $('#s3-hub-maa-tot-sqft, #s1-hub-maa-tot-sqft').text(maaTotSqft.toLocaleString());
                         $('#s3-hub-maa-avail').text(maaAvailSqft.toLocaleString() + ' Sq.Ft Available');
-                        $('#s3-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
-                        $('#s3-hub-maa-cft').text(maaOccCft.toLocaleString());
+                        $('#s1-hub-maa-avail').text(maaAvailSqft.toLocaleString());
+                        $('#s1-hub-maa-pill').text((maaHub.occ_pct || 0) + '% Area');
+                        $('#s3-hub-maa-bar, #s1-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-maa-cft, #s1-hub-maa-cft').text(maaOccCft.toLocaleString());
                         if (maaHub.vol_pct !== undefined) {
                             $('#s3-hub-maa-vol-pct').text(maaHub.vol_pct + '% CFT Used');
-                            $('#s3-hub-maa-vol-bar').css('width', Math.min(maaHub.vol_pct, 100) + '%');
+                            $('#s1-hub-maa-vol-pct').text(maaHub.vol_pct + '% Vol');
+                            $('#s3-hub-maa-vol-bar, #s1-hub-maa-vol-bar').css('width', Math.min(maaHub.vol_pct, 100) + '%');
                         }
                         if (maaHub.total_cft) {
-                            $('#s3-hub-maa-tot-cft').text(maaHub.total_cft.toLocaleString());
+                            $('#s3-hub-maa-tot-cft, #s1-hub-maa-tot-cft').text(maaHub.total_cft.toLocaleString());
                         }
                     }
                     const blrTotSqft = blrHub.total_sqft || blrHub.total_area_sqft;
@@ -3686,19 +3693,23 @@
                         const blrAvailSqft = blrHub.avail_sqft !== undefined ? blrHub.avail_sqft : (blrHub.avail_area_sqft || 0);
                         const blrOccCft = blrHub.occupied_cft !== undefined ? blrHub.occupied_cft : (blrHub.occ_vol_cft || 0);
                         $('#s3-hub-blr-occ').text((blrHub.occ_pct || 0) + '%');
-                        $('#s3-hub-blr-sqft').text(blrOccSqft.toLocaleString());
-                        $('#s3-hub-blr-tot-sqft').text(blrTotSqft.toLocaleString());
+                        $('#s3-hub-blr-sqft, #s1-hub-blr-sqft').text(blrOccSqft.toLocaleString());
+                        $('#s3-hub-blr-tot-sqft, #s1-hub-blr-tot-sqft').text(blrTotSqft.toLocaleString());
                         $('#s3-hub-blr-avail').text(blrAvailSqft.toLocaleString() + ' Sq.Ft Available');
-                        $('#s3-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
-                        $('#s3-hub-blr-cft').text(blrOccCft.toLocaleString());
+                        $('#s1-hub-blr-avail').text(blrAvailSqft.toLocaleString());
+                        $('#s1-hub-blr-pill').text((blrHub.occ_pct || 0) + '% Area');
+                        $('#s3-hub-blr-bar, #s1-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-blr-cft, #s1-hub-blr-cft').text(blrOccCft.toLocaleString());
                         if (blrHub.vol_pct !== undefined) {
                             $('#s3-hub-blr-vol-pct').text(blrHub.vol_pct + '% CFT Used');
-                            $('#s3-hub-blr-vol-bar').css('width', Math.min(blrHub.vol_pct, 100) + '%');
+                            $('#s1-hub-blr-vol-pct').text(blrHub.vol_pct + '% Vol');
+                            $('#s3-hub-blr-vol-bar, #s1-hub-blr-vol-bar').css('width', Math.min(blrHub.vol_pct, 100) + '%');
                         }
                         if (blrHub.total_cft) {
-                            $('#s3-hub-blr-tot-cft').text(blrHub.total_cft.toLocaleString());
+                            $('#s3-hub-blr-tot-cft, #s1-hub-blr-tot-cft').text(blrHub.total_cft.toLocaleString());
                         }
                     }
+                    $('#s1-wh-space-sqft').text(`${(wms.occupied_area_sqft || 23375).toLocaleString()} Sq.Ft`);
                 }
 
                 // Slide 3 Shift Handling Velocity
@@ -3721,19 +3732,24 @@
                     }
                 }
 
-                // Slide 3 Dock Operations & Queue
+                // Reconcile Dock Operations & TAT for both Page 1 and Page 3
                 if (wms.active_docks !== undefined) {
                     $('#wms-dock-badge').text(`${wms.active_docks} DOCKS ACTIVE`);
                     $('#wms-pipe-dock').text(`${wms.active_docks} Docks Live`);
                 }
                 if (wms.yard_tat_mins !== undefined) {
-                    $('#wms-dock-tat').text(`${wms.yard_tat_mins} Mins`);
+                    $('#wms-dock-tat, #s1-wh-dock-tat').text(`${wms.yard_tat_mins} Mins`);
                 }
                 if (wms.handling_rate_hr !== undefined) {
-                    $('#wms-dock-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
+                    $('#wms-dock-handling-rate, #s1-wh-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
                 }
                 if (wms.gate_queue_trucks !== undefined) {
                     $('#wms-dock-queue, #wms-pipe-gate').text(`${wms.gate_queue_trucks} Trucks`);
+                }
+
+                // Reconcile Storage Billing & VAS with Page 1 Warehouse Revenue
+                if (data.revenue_breakdown && data.revenue_breakdown.warehouse) {
+                    $('#s3-vas-total').text(`₹${data.revenue_breakdown.warehouse.total_revenue_lakhs}L MTD`);
                 }
 
                 // Slide 3 Top Storage Accounts
@@ -3878,7 +3894,7 @@
             // ==========================================
             // CS Leaderboard Rendering (Split by Branch)
             // ==========================================
-            let csLeaderboardMode = 'day'; // 'day' or 'month'
+            let csLeaderboardMode = 'month'; // 'month' or 'day'
             let csBranchFilter = 'all'; // 'all', 'MAA', or 'BLR'
             let latestTmsData = null;
 
@@ -3930,6 +3946,7 @@
                 items.forEach((item, idx) => {
                     const vehCount = (csLeaderboardMode === 'day') ? item.day_vehicles : item.month_vehicles;
                     const cnotesCount = (csLeaderboardMode === 'day') ? item.day_cnotes : item.month_cnotes;
+                    const convRateStr = (cnotesCount > 0 && vehCount > 0) ? `${Math.min(100, Math.round((cnotesCount / vehCount) * 100))}%` : '-';
                     const pct = Math.min((vehCount / maxVehicles) * 100, 100);
                     const rankClass = idx === 0 ? 'rank-1' : '';
                     const medal = medals[idx] || `#${idx + 1}`;
@@ -3953,7 +3970,7 @@
                                 </div>
                                 <div class="cs-sub-metrics">
                                     <span>C-Notes: <b style="color:#ffffff;">${cnotesCount}</b></span>
-                                    <span>Conv: <b style="color:var(--neon-green);">${item.conv_rate}%</b></span>
+                                    <span>Conv: <b style="color:var(--neon-green);">${convRateStr}</b></span>
                                     <span>${csLeaderboardMode === 'day' ? `MTD: <b style="color:#cbd5e1;">${item.month_vehicles}</b>` : `Today: <b style="color:#cbd5e1;">${item.day_vehicles}</b>`}</span>
                                 </div>
                             </div>
