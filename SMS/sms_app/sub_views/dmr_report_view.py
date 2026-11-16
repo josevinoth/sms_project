@@ -132,6 +132,46 @@ def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
                 return str(val).strip()
     return default
 
+
+def build_dmr_search_filter(search_val):
+    """
+    Build a comprehensive Q filter for DMR table searching across all visible fields:
+    consignment, trip number, customer, department, truck no, truck type, origin/destination locations,
+    consignor, consignee, HBL/HAWB, MAWB, BOE, eway bill, invoice, customer ref, seal, driver,
+    remarks, finance status, and vendor.
+    """
+    if not search_val:
+        return Q()
+    sv = str(search_val).strip()
+    return (
+        Q(tr_consignmentnumber__co_consignmentnumber__icontains=sv) |
+        Q(tr_tripnumber__icontains=sv) |
+        Q(tr_enquirynumber__en_customername__cu_name__icontains=sv) |
+        Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=sv) |
+        Q(tr_vehiclenumber__icontains=sv) |
+        Q(tr_vehicletype__vt_vehicletype__icontains=sv) |
+        Q(tr_departedlocation__place_name__icontains=sv) |
+        Q(tr_reportedlocation__place_name__icontains=sv) |
+        Q(tr_enquirynumber__en_fromlocaion__place_name__icontains=sv) |
+        Q(tr_enquirynumber__en_tolocation__place_name__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_consigner__consigner_name__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_consignee__consignee_name__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_hawbno__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_mawbno__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_boeno__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_ebillno__icontains=sv) |
+        Q(tr_consignmentnumber__cg_consignmentnumber__cg_consignerinvoice__icontains=sv) |
+        Q(tr_consignmentnumber__co_cusrefnum__icontains=sv) |
+        Q(tr_consignmentnumber__co_seal_number__icontains=sv) |
+        Q(tr_customerref__icontains=sv) |
+        Q(tr_drivername__icontains=sv) |
+        Q(tr_drivernumber__icontains=sv) |
+        Q(tr_remarks__icontains=sv) |
+        Q(tc_financestatus__status__icontains=sv) |
+        Q(tr_enquirynumber__vehicle_allotmentinfo__va_vendor__vend_name__icontains=sv) |
+        Q(tr_enquirynumber__vehicle_allotmentinfo__va_vendor__vend_code__icontains=sv)
+    )
+
 # -------------------------------------------------------------------------
 # CONSTANTS & TEMPLATES (Consolidated)
 # -------------------------------------------------------------------------
@@ -1318,7 +1358,7 @@ def trip_report(request):
         'tr_departedlocation',
         'tr_reportedlocation',
         'tc_financestatus'
-    ).order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+    ).order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
 
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
@@ -1563,12 +1603,13 @@ def export_dmr_excel(request):
 
     search_value = request.GET.get('search', '').strip()
     if search_value:
-        qs = qs.filter(
-            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
-            Q(tr_tripnumber__icontains=search_value) |
-            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-            Q(tr_vehiclenumber__icontains=search_value)
-        )
+        qs = qs.filter(build_dmr_search_filter(search_value)).distinct()
+
+    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first() if dept_id else None
+    dept_name = str(department) if department else None
+
+    template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
+    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc, customer_id=customer_obj.id, dept_id=dept_id, template_id=template_id)
 
     # Slicing and Ordering based on DataTable view / page length
     try:
@@ -1582,40 +1623,40 @@ def export_dmr_excel(request):
         length = -1
 
     try:
-        order_col_idx = int(request.GET.get('order[0][column]') or 1)
-        order_dir = request.GET.get('order[0][dir]', 'desc')
+        order_col_idx = int(request.GET.get('order[0][column]') or 0)
+        order_dir = request.GET.get('order[0][dir]', 'asc').lower()
     except Exception:
-        order_col_idx, order_dir = 1, 'desc'
+        order_col_idx, order_dir = 0, 'asc'
 
-    order_map = {
-        1: 'tr_departeddate_pickup',
-        2: 'tr_consignmentnumber__co_consignmentnumber',
-        3: 'tr_enquirynumber__en_customername__cu_name',
-        4: 'tr_departedlocation__place_name',
-        5: 'tr_reportedlocation__place_name',
-        6: 'tr_vehiclesource__ow_ownership',
-        7: 'tr_vehiclenumber',
-    }
-    sort_field = order_map.get(order_col_idx)
-    if order_col_idx == 1:
+    col_header = headers[order_col_idx].strip().lower() if (0 <= order_col_idx < len(headers)) else ""
+
+    if 'date' in col_header or not col_header or col_header in ('s.no', 'sr. no.', 'so no', 'se.no'):
         if order_dir == 'desc':
             qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
         else:
             qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
-    elif order_col_idx == 2:
+    elif 'consignment' in col_header or 'c-note' in col_header or 'cnote' in col_header or 'bvm job' in col_header or col_header == 'hbl no':
         from django.db.models.functions import Coalesce
         order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
         if order_dir == 'desc':
             qs = qs.order_by(order_expr.desc())
         else:
             qs = qs.order_by(order_expr.asc())
-    elif sort_field:
+    elif 'customer' in col_header or 'consignee' in col_header:
         if order_dir == 'desc':
-            qs = qs.order_by('-' + sort_field)
+            qs = qs.order_by('-tr_enquirynumber__en_customername__cu_name')
         else:
-            qs = qs.order_by(sort_field)
+            qs = qs.order_by('tr_enquirynumber__en_customername__cu_name')
+    elif 'truck' in col_header or 'vehicle' in col_header:
+        if order_dir == 'desc':
+            qs = qs.order_by('-tr_vehiclenumber')
+        else:
+            qs = qs.order_by('tr_vehiclenumber')
     else:
-        qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        if order_dir == 'desc':
+            qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        else:
+            qs = qs.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
 
     if length != -1:
         trips = list(qs[start : start + length])
@@ -1624,10 +1665,6 @@ def export_dmr_excel(request):
         trips = list(qs[start:]) if start > 0 else list(qs)
         start_idx = start + 1 if start > 0 else 1
 
-    department = CustomerdepartmentInfo.objects.filter(id=dept_id).first() if dept_id else None
-    dept_name = str(department) if department else None
-
-    template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
     wb, template_key = build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, start_idx=start_idx, template_id=template_id)
 
     excel_file = BytesIO()
@@ -1691,7 +1728,7 @@ def trip_send_email(request):
         'tr_departedlocation',
         'tr_reportedlocation',
         'tc_financestatus'
-    ).order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+    ).order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
 
     if dept_id:
         try:
@@ -1879,61 +1916,6 @@ def trip_report_ajax(request):
     if to_loc:
         trips = trips.filter(tr_enquirynumber__en_tolocation_id=to_loc)
 
-    # Ordering: simple mapping (if provided). Default to -tr_tripnumber
-    try:
-        order_col_idx = int(request.GET.get('order[0][column]') or 0)
-        order_dir = request.GET.get('order[0][dir]', 'desc')
-    except Exception:
-        order_col_idx, order_dir = 0, 'desc'
-
-    order_map = {
-        1: 'tr_departeddate_pickup',
-        2: 'tr_consignmentnumber__co_consignmentnumber',
-        3: 'tr_enquirynumber__en_customername__cu_name',
-        4: 'tr_departedlocation__place_name',
-        5: 'tr_reportedlocation__place_name',
-        6: 'tr_vehiclesource__ow_ownership',
-        7: 'tr_vehiclenumber',
-    }
-    sort_field = order_map.get(order_col_idx)
-    if order_col_idx == 1:
-        if order_dir == 'desc':
-            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
-        else:
-            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
-    elif order_col_idx == 2:
-        from django.db.models.functions import Coalesce
-        order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
-        if order_dir == 'desc':
-            trips = trips.order_by(order_expr.desc())
-        else:
-            trips = trips.order_by(order_expr.asc())
-    elif sort_field:
-        if order_dir == 'desc':
-            trips = trips.order_by('-' + sort_field)
-        else:
-            trips = trips.order_by(sort_field)
-    else:
-        trips = trips.order_by('-tr_tripnumber')
-
-    # Search filtering
-    if search_value:
-        trips = trips.filter(
-            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
-            Q(tr_tripnumber__icontains=search_value) |
-            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-            Q(tr_vehiclenumber__icontains=search_value)
-        )
-
-    records_total = TripdetailInfo.objects.filter(BASE_DMR_Q).count()
-    records_filtered = trips.order_by().values('id').count()
-
-    # Pagination
-    if length != -1:
-        paginated = list(trips[start:start + length])
-    else:
-        paginated = list(trips[start:])
-
     # Determine headers/template_key for this filter set (use customer/dept names if available)
     cust_name = ''
     dept_name = ''
@@ -1950,6 +1932,57 @@ def trip_report_ajax(request):
 
     template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
     headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=customer_id, dept_id=dept_id, template_id=template_id)
+
+    # Ordering: simple mapping (if provided). Default to Date ascending
+    try:
+        order_col_idx = int(request.GET.get('order[0][column]') or 0)
+        order_dir = request.GET.get('order[0][dir]', 'asc').lower()
+    except Exception:
+        order_col_idx, order_dir = 0, 'asc'
+
+        col_header = headers[order_col_idx].strip().lower() if (0 <= order_col_idx < len(headers)) else ""
+
+    if 'date' in col_header or not col_header or col_header in ('s.no', 'sr. no.', 'so no', 'se.no'):
+        if order_dir == 'desc':
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        else:
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
+    elif 'consignment' in col_header or 'c-note' in col_header or 'cnote' in col_header or 'bvm job' in col_header or col_header == 'hbl no':
+        from django.db.models.functions import Coalesce
+        order_expr = Coalesce('tr_consignmentnumber__co_consignmentnumber', 'tr_tripnumber')
+        if order_dir == 'desc':
+            trips = trips.order_by(order_expr.desc())
+        else:
+            trips = trips.order_by(order_expr.asc())
+    elif 'customer' in col_header or 'consignee' in col_header:
+        if order_dir == 'desc':
+            trips = trips.order_by('-tr_enquirynumber__en_customername__cu_name')
+        else:
+            trips = trips.order_by('tr_enquirynumber__en_customername__cu_name')
+    elif 'truck' in col_header or 'vehicle' in col_header:
+        if order_dir == 'desc':
+            trips = trips.order_by('-tr_vehiclenumber')
+        else:
+            trips = trips.order_by('tr_vehiclenumber')
+    else:
+        if order_dir == 'desc':
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.desc(nulls_last=True))
+        else:
+            trips = trips.order_by(DMR_EFFECTIVE_DATE_EXPR.asc(nulls_last=True))
+
+    records_total = trips.order_by().values('id').distinct().count()
+
+    # Search filtering
+    if search_value:
+        trips = trips.filter(build_dmr_search_filter(search_value)).distinct()
+
+    records_filtered = trips.order_by().values('id').distinct().count()
+
+    # Pagination
+    if length != -1:
+        paginated = list(trips[start:start + length])
+    else:
+        paginated = list(trips[start:])
 
     # Build rows for current page
     data_rows = get_dmr_rows(paginated, headers, template_key, cust_name, start_idx=start + 1)

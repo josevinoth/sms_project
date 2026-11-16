@@ -242,7 +242,7 @@
             }
 
             var originalHtml = $btn.html();
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating...');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating Excel (please wait)...');
 
             var params = new URLSearchParams({
                 from_date: fromDate,
@@ -259,7 +259,7 @@
 
             setTimeout(function () {
                 $btn.prop('disabled', false).html(originalHtml);
-            }, 6000);
+            }, 30000);
         });
 
         $('form').on('submit', function(e) {

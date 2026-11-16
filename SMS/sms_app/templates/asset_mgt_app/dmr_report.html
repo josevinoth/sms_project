@@ -228,6 +228,16 @@
 // Initialize DataTable with a reusable function so we can rebuild if headers change
 var tripTable = null;
 function initTripTable() {
+    // Find index of the Date column (header containing "date")
+    var dateColIdx = 0;
+    $('#trip_report_table thead th').each(function(idx) {
+        var txt = $(this).text().trim().toLowerCase();
+        if (txt === 'date' || txt.indexOf('date') !== -1) {
+            dateColIdx = idx;
+            return false;
+        }
+    });
+
     tripTable = $('#trip_report_table').DataTable({
         processing: true,
         serverSide: true,
@@ -275,7 +285,7 @@ function initTripTable() {
             },
             { extend: 'print', className: 'btn btn-secondary btn-sm' }
         ],
-        order: [[1, 'desc']]
+        order: [[dateColIdx, 'asc']]
     });
 }
 
@@ -290,9 +300,18 @@ function downloadDmrExcel() {
     var length = pageInfo ? pageInfo.length : 10;
     var searchVal = tripTable ? tripTable.search() : '';
 
+    var dateColIdx = 0;
+    $('#trip_report_table thead th').each(function(idx) {
+        var txt = $(this).text().trim().toLowerCase();
+        if (txt === 'date' || txt.indexOf('date') !== -1) {
+            dateColIdx = idx;
+            return false;
+        }
+    });
+
     var order = tripTable ? tripTable.order() : [];
-    var orderCol = (order && order.length && order[0].length) ? order[0][0] : 1;
-    var orderDir = (order && order.length && order[0].length > 1) ? order[0][1] : 'desc';
+    var orderCol = (order && order.length && order[0].length) ? order[0][0] : dateColIdx;
+    var orderDir = (order && order.length && order[0].length > 1) ? order[0][1] : 'asc';
 
     var params = {
         customer_id: custId,

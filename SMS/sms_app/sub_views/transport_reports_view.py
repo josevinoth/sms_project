@@ -200,41 +200,52 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
         if d.dm_name:
             driver_by_exact_name[d.dm_name.strip().lower()] = d.id
 
+    driver_resolve_cache = {}
+
     def resolve_driver_id(tr_driver_master_id, tr_drivername, tr_drivernumber):
         if tr_driver_master_id:
             return tr_driver_master_id
-        
+
+        cache_key = (tr_drivername, tr_drivernumber)
+        if cache_key in driver_resolve_cache:
+            return driver_resolve_cache[cache_key]
+
         drivername_clean = str(tr_drivername).strip() if tr_drivername else ""
         drivernumber_clean = str(tr_drivernumber).strip() if tr_drivernumber else ""
-        
+
         # 1. Try parsing dm_id from name (e.g. "Gregory (20063)")
         m_id = re.search(r'\((\d+)\)', drivername_clean)
         if m_id:
             dm_id_val = m_id.group(1)
             d_id = driver_by_dm_id.get(dm_id_val)
             if d_id:
+                driver_resolve_cache[cache_key] = d_id
                 return d_id
-                    
+
         # 2. Try matching by phone number
         if drivernumber_clean:
             d_id = driver_by_phone.get(drivernumber_clean)
             if d_id:
+                driver_resolve_cache[cache_key] = d_id
                 return d_id
-                    
+
         # 3. Try matching by name (case-insensitive exact)
         if drivername_clean:
             d_id = driver_by_exact_name.get(drivername_clean.lower())
             if d_id:
+                driver_resolve_cache[cache_key] = d_id
                 return d_id
-            
+
             # Substring fallback
             name_lower = drivername_clean.lower()
             for d in all_drivers:
                 if d.dm_name:
                     dm_name_lower = d.dm_name.lower()
                     if name_lower in dm_name_lower or dm_name_lower in name_lower:
+                        driver_resolve_cache[cache_key] = d.id
                         return d.id
-                        
+
+        driver_resolve_cache[cache_key] = None
         return None
 
     driver_month_pairs = set()
@@ -356,10 +367,23 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
             if trip_date:
                 trips_by_veh.setdefault(veh_no, []).append((t, trip_date))
 
-    # Fetch all fuel fills for these vehicles, sorted
-    all_fuel = Fuelfillinginfo.objects.filter(
-        ff_vehicle_num__vm_registrationnumber__in=list(veh_nos)
-    ).select_related('ff_vehicle_num').order_by('ff_vehicle_num__vm_registrationnumber', 'ff_date', 'ff_odometer_reading', 'id')
+    # Fetch all fuel fills for these vehicles, sorted (ignoring corrupt dates prior to 2000)
+    fuel_qs = Fuelfillinginfo.objects.filter(
+        ff_vehicle_num__vm_registrationnumber__in=list(veh_nos),
+        ff_date__year__gte=2000
+    )
+    if date_from:
+        import datetime
+        try:
+            if isinstance(date_from, str):
+                df_obj = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
+            else:
+                df_obj = date_from
+            fuel_qs = fuel_qs.filter(ff_date__gte=df_obj - datetime.timedelta(days=60))
+        except:
+            pass
+
+    all_fuel = fuel_qs.select_related('ff_vehicle_num').order_by('ff_vehicle_num__vm_registrationnumber', 'ff_date', 'ff_odometer_reading', 'id')
     
     fuel_by_veh = {}
     for f in all_fuel:
@@ -368,8 +392,9 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
 
     # Find earliest fuel fill date to restrict scanned history
     min_fuel_date = None
-    if all_fuel:
-        min_fuel_date = min(f.ff_date for f in all_fuel)
+    valid_fuel_dates = [f.ff_date for f in all_fuel if f.ff_date and f.ff_date.year >= 2000]
+    if valid_fuel_dates:
+        min_fuel_date = min(valid_fuel_dates)
 
     all_trips_by_veh = {}
     if veh_nos:
@@ -2280,7 +2305,7 @@ def invoice_pending_report_ajax_view(request):
 
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        Q(tr_category_id__in=[1, 3]) | Q(tc_financestatus_id=10),
+        Q(tr_category_id__in=[1, 3]) | Q(tc_financestatus_id=10) | Q(tr_operational_status_id=10),
         tr_departeddate__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
@@ -2288,8 +2313,11 @@ def invoice_pending_report_ajax_view(request):
         Q(tr_tripnumber__icontains='MAA') |
         Q(tr_tripnumber__icontains='BLR')
     ).exclude(
-        # Exclude trips with no C-note UNLESS they are cancelled (3, 10, 11)
-        Q(tr_consignmentnumber__isnull=True) & ~Q(tc_financestatus_id__in=[3, 10, 11])
+        # Exclude trips with no C-note UNLESS they are cancelled (3, 10, 11), ready for invoice (9), or have cancellation billing
+        Q(tr_consignmentnumber__isnull=True)
+        & ~Q(tc_financestatus_id__in=[3, 9, 10, 11])
+        & ~Q(tr_operational_status_id__in=[3, 10, 11])
+        & ~Q(tc_cancellation_check=True)
     ).exclude(
         id__in=all_invoiced_ids
     ).select_related(
@@ -3267,7 +3295,11 @@ def vendor_p_l_mkt_report_export_view(request):
         chunk_size = 900
         for i in range(0, len(all_query_ids), chunk_size):
             chunk = all_query_ids[i:i+chunk_size]
-            expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).defer('de_receiver_signature', 'de_remarks')))
+            expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).only(
+                'id', 'trip_number', 'de_expense_type', 'de_total_cost',
+                'de_loadingcost', 'de_unloadingcost', 'de_weighmentcost', 'de_parkingcost',
+                'de_rtocost', 'de_battacost', 'de_supervisorcost'
+            ).select_related('de_expense_type')))
 
         allotment_map = {}
         for a in allotments:
@@ -3285,18 +3317,29 @@ def vendor_p_l_mkt_report_export_view(request):
             if t_id and t_id in trip_id_to_pk:
                 expense_map.setdefault(t_id, []).append(e)
 
-        all_bills = MarketBillInfo.objects.all().only(
-            'mb_bill_no', 'mb_selected_trips', 'mb_trip_details',
-            'mb_trip_cost', 'mb_loading_cost', 'mb_unloading_cost',
-            'mb_parking_cost', 'mb_halting_cost', 'mb_total_cost', 'mb_vendor'
-        )
+        class DummyMB:
+            pass
+
         bill_obj_map = {}
-        for b in all_bills:
-            if b.mb_selected_trips:
-                ids = [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]
+        for b in MarketBillInfo.objects.values(
+            'id', 'mb_bill_no', 'mb_selected_trips', 'mb_trip_details',
+            'mb_trip_cost', 'mb_loading_cost', 'mb_unloading_cost',
+            'mb_parking_cost', 'mb_halting_cost', 'mb_total_cost', 'mb_vendor__vend_name'
+        ):
+            if b['mb_selected_trips']:
+                ids = [tid.strip() for tid in b['mb_selected_trips'].split(',') if tid.strip()]
+                d = DummyMB()
+                d.mb_bill_no = b['mb_bill_no']
+                d.mb_trip_details = b['mb_trip_details']
+                d.mb_trip_cost = b['mb_trip_cost']
+                d.mb_loading_cost = b['mb_loading_cost']
+                d.mb_unloading_cost = b['mb_unloading_cost']
+                d.mb_parking_cost = b['mb_parking_cost']
+                d.mb_halting_cost = b['mb_halting_cost']
+                d.mb_vendor = b['mb_vendor__vend_name']
                 for tid in ids:
                     try:
-                        bill_obj_map[int(tid)] = b
+                        bill_obj_map[int(tid)] = d
                     except:
                         pass
 
@@ -3310,28 +3353,131 @@ def vendor_p_l_mkt_report_export_view(request):
             for r in rates
         }
 
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "MARKET P&L"
+        # Pre-fetch Enquirynotevehicle in one single query to eliminate thousands of N+1 DB round-trips
+        env_by_enq_vt = {}
+        env_by_enq = {}
+        for env in Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=trip_enquiries).values(
+            'env_enquirynumber_id', 'env_vehicletype_id', 'env_special_sale', 'env_sale'
+        ):
+            enq_id = env['env_enquirynumber_id']
+            vt_id = env['env_vehicletype_id']
+            env_by_enq_vt[(enq_id, vt_id)] = env
+            env_by_enq.setdefault(enq_id, []).append(env)
 
-        ws.append(VENDOR_PL_MKT_MKT_HEADERS)
+        from openpyxl.cell import WriteOnlyCell
+
+        wb = openpyxl.Workbook(write_only=True)
+        ws = wb.create_sheet(title="MARKET P&L")
+
+        col_widths = {
+            'A': 8, 'B': 14, 'C': 24, 'D': 22, 'E': 22, 'F': 28, 'G': 16, 'H': 20,
+            'I': 14, 'J': 14, 'K': 14, 'L': 14, 'M': 14, 'N': 14, 'O': 14, 'P': 14, 'Q': 14, 'R': 16,
+            'S': 16, 'T': 24, 'U': 16, 'V': 14, 'W': 14, 'X': 14, 'Y': 14, 'Z': 14,
+            'AA': 14, 'AB': 14, 'AC': 14, 'AD': 16, 'AE': 16, 'AF': 12, 'AG': 12
+        }
+        for col_letter, width in col_widths.items():
+            ws.column_dimensions[col_letter].width = width
 
         header_fill = PatternFill(start_color="0A3278", end_color="0A3278", fill_type="solid")
         header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
-        thin_border = Border(
-            left=Side(style='thin', color='D9D9D9'),
-            right=Side(style='thin', color='D9D9D9'),
-            top=Side(style='thin', color='D9D9D9'),
-            bottom=Side(style='thin', color='D9D9D9')
-        )
 
-        for col_idx in range(1, len(VENDOR_PL_MKT_MKT_HEADERS) + 1):
-            cell = ws.cell(row=1, column=col_idx)
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        header_cells = []
+        for h in VENDOR_PL_MKT_MKT_HEADERS:
+            c = WriteOnlyCell(ws, value=h)
+            c.fill = header_fill
+            c.font = header_font
+            c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            header_cells.append(c)
+        ws.append(header_cells)
 
-        ws.row_dimensions[1].height = 28
+        def fast_get_enquiry_special_sell(trip):
+            if not trip or not trip.tr_enquirynumber_id:
+                return 0.0
+            enq_id = trip.tr_enquirynumber_id
+            vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+            vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+            if vt_req_id:
+                e = env_by_enq_vt.get((enq_id, vt_req_id))
+                if e:
+                    if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                        return float(e['env_special_sale'])
+                    if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                        return float(e['env_sale'])
+            if vt_placed_id:
+                e = env_by_enq_vt.get((enq_id, vt_placed_id))
+                if e:
+                    if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                        return float(e['env_special_sale'])
+                    if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                        return float(e['env_sale'])
+            e_list = env_by_enq.get(enq_id)
+            if e_list:
+                e = e_list[0]
+                if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                    return float(e['env_special_sale'])
+                if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            return 0.0
+
+        def fast_get_enquiry_standard_sell(trip):
+            if not trip or not trip.tr_enquirynumber_id:
+                return 0.0
+            enq_id = trip.tr_enquirynumber_id
+            vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+            vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+            if vt_req_id:
+                e = env_by_enq_vt.get((enq_id, vt_req_id))
+                if e and e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            if vt_placed_id:
+                e = env_by_enq_vt.get((enq_id, vt_placed_id))
+                if e and e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            e_list = env_by_enq.get(enq_id)
+            if e_list:
+                e = e_list[0]
+                if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            if trip.tc_tripcost is not None and float(trip.tc_tripcost) > 0:
+                return float(trip.tc_tripcost)
+            return 0.0
+
+        def fast_get_transport_charge(trip, inv, va_info):
+            if not trip:
+                return 0.0
+            if inv and getattr(inv, 'ti_transportation_charges', None) is not None and safe_num(inv.ti_transportation_charges) > 0:
+                return safe_num(inv.ti_transportation_charges)
+
+            is_settled = getattr(trip, 'tc_financestatus_id', None) in [7, 9, 10]
+            is_special_sell_check = getattr(trip, 'tc_special_sell_check', False)
+            is_tripcost_check = getattr(trip, 'tc_tripcost_check', False)
+
+            if is_settled:
+                if is_special_sell_check:
+                    val = safe_num(trip.tc_special_sell)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_special_sell(trip))
+                    return val
+                elif is_tripcost_check:
+                    val = safe_num(trip.tc_tripcost)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_standard_sell(trip))
+                    return val
+                else:
+                    return 0.0
+            else:
+                if is_special_sell_check:
+                    val = safe_num(trip.tc_special_sell)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_special_sell(trip))
+                    return val
+                elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
+                    return safe_num(trip.tc_tripcost)
+                else:
+                    val = safe_num(fast_get_enquiry_special_sell(trip))
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_standard_sell(trip))
+                    return val
 
         for idx, trip in enumerate(trips_list, start=1):
             inv = invoice_obj_map.get(trip.id)
@@ -3350,17 +3496,28 @@ def vendor_p_l_mkt_report_export_view(request):
                         allotment = a
                         break
 
-            selling_bd = get_trip_selling_breakdown(trip, inv=inv, allotment=allotment)
-            selling_trip = selling_bd['selling_trip']
-            selling_toll = selling_bd['selling_toll']
-            selling_parking = selling_bd['selling_parking']
-            selling_loading = selling_bd['selling_loading']
-            selling_unloading = selling_bd['selling_unloading']
-            selling_weighment = selling_bd['selling_weighment']
-            selling_handling = selling_bd['selling_handling']
-            selling_halting = selling_bd['selling_halting']
-            selling_cancellation = selling_bd['selling_cancellation']
-            total_selling = selling_bd['total_selling']
+            selling_trip = 0.0 if (trip.tr_category_id in [2, 3] and trip.tc_financestatus_id == 10) else fast_get_transport_charge(trip, inv, allotment)
+            selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+            selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+            selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+            selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+
+            halting_days = safe_num(trip.tc_no_of_days_halting) or 1.0
+            tc_day_cost = safe_num(trip.tc_haltingcost)
+            if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+                selling_halting = tc_day_cost * halting_days
+            elif inv and safe_num(inv.ti_halting_charges) > 0:
+                selling_halting = safe_num(inv.ti_halting_charges)
+            else:
+                selling_halting = 0.0
+
+            selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+            selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+            selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
+
+            total_selling = (selling_trip + selling_toll + selling_loading + selling_unloading +
+                             selling_weighment + selling_halting + selling_handling + selling_parking +
+                             selling_cancellation)
 
             mb_bill = bill_obj_map.get(trip.id)
             bill_no_val = mb_bill.mb_bill_no if mb_bill else ""
@@ -3374,7 +3531,7 @@ def vendor_p_l_mkt_report_export_view(request):
 
             buying_trip_cost = 0.0
             buying_loading = buying_unloading = buying_weighment = 0.0
-            buying_toll = buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
+            buying_toll = buying_halting = buying_handling = buying_parking = 0.0
 
             if mb_bill:
                 if mb_bill.mb_trip_details and str(trip.id) in mb_bill.mb_trip_details:
@@ -3407,47 +3564,32 @@ def vendor_p_l_mkt_report_export_view(request):
                 else:
                     buying_trip_cost = 0.0
 
-                trip_expenses = expense_map.get(trip.id, [])
-                for e in trip_expenses:
+                trip_exp = expense_map.get(trip.id, [])
+                for e in trip_exp:
                     buying_loading += safe_num(e.de_loadingcost)
                     buying_unloading += safe_num(e.de_unloadingcost)
                     buying_weighment += safe_num(e.de_weighmentcost)
                     buying_parking += safe_num(e.de_parkingcost)
-                    buying_rto += safe_num(e.de_rtocost)
-                    buying_batta += safe_num(e.de_battacost)
-
                     exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
                     cost_val = safe_num(e.de_total_cost)
-
                     if "toll" in exp_type_str:
                         if not e.de_rtocost: buying_toll += cost_val
                     elif "halting" in exp_type_str:
                         buying_halting += cost_val
                     elif "handling" in exp_type_str or "supervisor" in exp_type_str:
                         if not e.de_supervisorcost: buying_handling += cost_val
-                    elif "parking" in exp_type_str:
-                        if not e.de_parkingcost: buying_parking += cost_val
-                    elif "loading" in exp_type_str:
-                        if not e.de_loadingcost: buying_loading += cost_val
-                    elif "unloading" in exp_type_str:
-                        if not e.de_unloadingcost: buying_unloading += cost_val
-                    elif "weighment" in exp_type_str:
-                        if not e.de_weighmentcost: buying_weighment += cost_val
-                    elif "bata" in exp_type_str or "batta" in exp_type_str:
-                        if not e.de_battacost: buying_batta += cost_val
 
-                if trip.tr_vehiclesource_id == 3:  # MARKET
-                    buying_loading += safe_num(trip.tc_loadingcost)
-                    buying_unloading += safe_num(trip.tc_unloadingcost)
-                    buying_weighment += safe_num(trip.tc_weighmentcost)
-                    buying_parking += safe_num(trip.tc_parkingcost)
-                    buying_halting += (safe_num(trip.tc_haltingcost))
-                    buying_handling += safe_num(trip.tc_handlingcost)
+                buying_loading += safe_num(trip.tc_loadingcost)
+                buying_unloading += safe_num(trip.tc_unloadingcost)
+                buying_weighment += safe_num(trip.tc_weighmentcost)
+                buying_parking += safe_num(trip.tc_parkingcost)
+                buying_halting += safe_num(trip.tc_haltingcost)
+                buying_handling += safe_num(trip.tc_handlingcost)
 
             total_buying = (
                 buying_trip_cost + buying_loading + buying_unloading +
                 buying_weighment + buying_toll + buying_halting +
-                buying_handling + buying_parking + buying_rto + buying_batta
+                buying_handling + buying_parking
             )
 
             profit = total_selling - total_buying
@@ -3495,32 +3637,6 @@ def vendor_p_l_mkt_report_export_view(request):
                 f"{round(profit_pct_buying, 2)}%",
             ]
             ws.append(row_data)
-
-            curr_row = idx + 1
-            ws.row_dimensions[curr_row].height = 20
-            for col_idx in range(1, len(row_data) + 1):
-                c = ws.cell(row=curr_row, column=col_idx)
-                c.border = thin_border
-                if col_idx == 1:
-                    c.alignment = Alignment(horizontal="center", vertical="center")
-                elif col_idx in (2, 7, 8, 19, 21):
-                    c.alignment = Alignment(horizontal="center", vertical="center")
-                elif (9 <= col_idx <= 18) or (22 <= col_idx <= 31):
-                    c.alignment = Alignment(horizontal="right", vertical="center")
-                    c.number_format = '#,##0.00'
-                elif col_idx in (32, 33):
-                    c.alignment = Alignment(horizontal="right", vertical="center")
-                else:
-                    c.alignment = Alignment(horizontal="left", vertical="center")
-
-        for col in ws.columns:
-            max_len = 0
-            col_letter = col[0].column_letter
-            for cell in col:
-                val_str = str(cell.value or '')
-                if len(val_str) > max_len:
-                    max_len = len(val_str)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 11)
 
         output = BytesIO()
         wb.save(output)
@@ -7718,12 +7834,13 @@ def customerwise_pl_report_view(request):
 @login_required(login_url='login_page')
 def customerwise_pl_report_export_view(request):
     """
-    Exports Customerwise P&L Report directly to an Excel (.xlsx) file
-    filtered by date range and optional criteria.
+    High-performance export for Customerwise P&L Report directly to an Excel (.xlsx) file
+    using openpyxl write_only streaming to handle 20,000+ trips within seconds.
     """
     try:
         import openpyxl
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.cell import WriteOnlyCell
+        from openpyxl.styles import Font, PatternFill, Alignment
         from io import BytesIO
 
         branch_id = request.GET.get('branch')
@@ -7760,6 +7877,7 @@ def customerwise_pl_report_export_view(request):
         trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in all_matching_trips if t.tr_tripnumber}
         all_query_ids = [str(t.id) for t in all_matching_trips] + [str(t.tr_tripnumber).strip() for t in
                                                                    all_matching_trips if t.tr_tripnumber]
+        all_enq_ids = [t.tr_enquirynumber_id for t in all_matching_trips if t.tr_enquirynumber_id]
 
         invoices = TransInvoiceInfo.objects.filter(
             Q(ti_trip_id__in=trip_id_to_pk.keys()) |
@@ -7777,7 +7895,10 @@ def customerwise_pl_report_export_view(request):
                     if mt_id not in invoice_obj_map:
                         invoice_obj_map[mt_id] = i
 
-        expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
+        expenses = Driverexpense.objects.filter(
+            trip_number__in=all_query_ids
+        ).only('id', 'trip_number', 'de_expense_type', 'de_total_cost').select_related('de_expense_type')
+
         expense_map = {}
         for e in expenses:
             t_id = None
@@ -7790,29 +7911,51 @@ def customerwise_pl_report_export_view(request):
                 expense_map.setdefault(t_id, []).append(e)
 
         va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
-            va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_matching_trips if
-                                     t.tr_enquirynumber_id]).select_related('va_vendor')}
+            va_enquirynumber_id__in=all_enq_ids
+        ).only('id', 'va_enquirynumber_id', 'va_vendor_id', 'va_specialbuy', 'va_vehiclenumber', 'va_vehiclenumber_mkt').select_related('va_vendor')}
+
+        # Pre-fetch Enquirynotevehicle in one single query to eliminate thousands of N+1 DB round-trips
+        env_by_enq_vt = {}
+        env_by_enq = {}
+        for env in Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=all_enq_ids).values(
+            'env_enquirynumber_id', 'env_vehicletype_id', 'env_special_sale', 'env_sale'
+        ):
+            enq_id = env['env_enquirynumber_id']
+            vt_id = env['env_vehicletype_id']
+            env_by_enq_vt[(enq_id, vt_id)] = env
+            env_by_enq.setdefault(enq_id, []).append(env)
+
+        class DummyBill:
+            pass
 
         bill_no_map = {}
-        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
-            if b.mb_selected_trips:
-                for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
+        for b in MarketBillInfo.objects.values('id', 'mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
+            if b['mb_selected_trips']:
+                for tid in [tid.strip() for tid in b['mb_selected_trips'].split(',') if tid.strip()]:
+                    d = DummyBill()
+                    d.mb_bill_no = b['mb_bill_no']
+                    d.mb_total_cost = b['mb_total_cost']
+                    d.mb_trip_details = b['mb_trip_details']
                     try:
-                        bill_no_map[int(tid)] = b
+                        bill_no_map[int(tid)] = d
                     except:
                         pass
-                    bill_no_map[str(tid).strip().upper()] = b
+                    bill_no_map[str(tid).strip().upper()] = d
 
         attached_bill_map = {}
-        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost',
-                                                     'ab_total_km_run'):
-            if b.ab_selected_trips:
-                for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
+        for b in AttachedBillInfo.objects.values('id', 'ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
+            if b['ab_selected_trips']:
+                for tid in [tid.strip() for tid in b['ab_selected_trips'].split(',') if tid.strip()]:
+                    d = DummyBill()
+                    d.ab_bill_no = b['ab_bill_no']
+                    d.ab_buy_cost = b['ab_buy_cost']
+                    d.ab_total_km_run = b['ab_total_km_run']
+                    d.ab_selected_trips = b['ab_selected_trips']
                     try:
-                        attached_bill_map[int(tid)] = b
+                        attached_bill_map[int(tid)] = d
                     except:
                         pass
-                    attached_bill_map[str(tid).strip().upper()] = b
+                    attached_bill_map[str(tid).strip().upper()] = d
 
         # Fuel & Salary proration for OWN vehicles
         fuel_lookup, salary_lookup = calculate_own_vehicle_fuel_and_salary(
@@ -7822,36 +7965,158 @@ def customerwise_pl_report_export_view(request):
         vehicle_map = {}
         for v in VehiclemasterInfo.objects.all().select_related('vm_ownership'):
             if v.vm_registrationnumber:
-                vehicle_map[v.vm_registrationnumber] = v
-                vehicle_map[v.vm_registrationnumber.replace(" ", "").upper()] = v
+                owner = str(v.vm_ownership) if v.vm_ownership else ''
+                vehicle_map[v.vm_registrationnumber] = owner
+                vehicle_map[v.vm_registrationnumber.replace(" ", "").upper()] = owner
 
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Customerwise P&L"
+        # Write-only workbook (avoids keeping entire DOM in memory)
+        wb = openpyxl.Workbook(write_only=True)
+        ws = wb.create_sheet(title="Customerwise P&L")
+
+        col_widths = {
+            'A': 8, 'B': 14, 'C': 24, 'D': 28, 'E': 22, 'F': 22,
+            'G': 16, 'H': 16, 'I': 20, 'J': 15, 'K': 15, 'L': 15, 'M': 12
+        }
+        for col_letter, width in col_widths.items():
+            ws.column_dimensions[col_letter].width = width
 
         headers = [
             "SNo", "Trip Date", "Cnote", "Customer Name", "From", "To",
             "Vehicle Source", "Vehicle No", "Veh Type", "Revenue",
             "Expenses", "Profit", "Profit %"
         ]
-        ws.append(headers)
-
         header_fill = PatternFill(start_color="0A3278", end_color="0A3278", fill_type="solid")
         header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-        thin_border = Border(
-            left=Side(style='thin', color='D9D9D9'),
-            right=Side(style='thin', color='D9D9D9'),
-            top=Side(style='thin', color='D9D9D9'),
-            bottom=Side(style='thin', color='D9D9D9')
-        )
+        header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=1, column=col_idx)
+        header_cells = []
+        for h in headers:
+            cell = WriteOnlyCell(ws, value=h)
             cell.fill = header_fill
             cell.font = header_font
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.alignment = header_align
+            header_cells.append(cell)
+        ws.append(header_cells)
 
-        ws.row_dimensions[1].height = 28
+        def fast_get_enquiry_special_sell(trip):
+            if not trip or not trip.tr_enquirynumber_id:
+                return 0.0
+            enq_id = trip.tr_enquirynumber_id
+            vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+            vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+            if vt_req_id:
+                e = env_by_enq_vt.get((enq_id, vt_req_id))
+                if e:
+                    if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                        return float(e['env_special_sale'])
+                    if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                        return float(e['env_sale'])
+            if vt_placed_id:
+                e = env_by_enq_vt.get((enq_id, vt_placed_id))
+                if e:
+                    if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                        return float(e['env_special_sale'])
+                    if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                        return float(e['env_sale'])
+            e_list = env_by_enq.get(enq_id)
+            if e_list:
+                e = e_list[0]
+                if e['env_special_sale'] is not None and float(e['env_special_sale']) > 0:
+                    return float(e['env_special_sale'])
+                if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            return 0.0
+
+        def fast_get_enquiry_standard_sell(trip):
+            if not trip or not trip.tr_enquirynumber_id:
+                return 0.0
+            enq_id = trip.tr_enquirynumber_id
+            vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+            vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+            if vt_req_id:
+                e = env_by_enq_vt.get((enq_id, vt_req_id))
+                if e and e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            if vt_placed_id:
+                e = env_by_enq_vt.get((enq_id, vt_placed_id))
+                if e and e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            e_list = env_by_enq.get(enq_id)
+            if e_list:
+                e = e_list[0]
+                if e['env_sale'] is not None and float(e['env_sale']) > 0:
+                    return float(e['env_sale'])
+            if trip.tc_tripcost is not None and float(trip.tc_tripcost) > 0:
+                return float(trip.tc_tripcost)
+            return 0.0
+
+        def fast_get_transport_charge(trip, inv, va_info):
+            if not trip:
+                return 0.0
+            if inv and getattr(inv, 'ti_transportation_charges', None) is not None and safe_num(inv.ti_transportation_charges) > 0:
+                return safe_num(inv.ti_transportation_charges)
+
+            is_settled = getattr(trip, 'tc_financestatus_id', None) in [7, 9, 10]
+            is_special_sell_check = getattr(trip, 'tc_special_sell_check', False)
+            is_tripcost_check = getattr(trip, 'tc_tripcost_check', False)
+
+            if is_settled:
+                if is_special_sell_check:
+                    val = safe_num(trip.tc_special_sell)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_special_sell(trip))
+                    return val
+                elif is_tripcost_check:
+                    val = safe_num(trip.tc_tripcost)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_standard_sell(trip))
+                    return val
+                else:
+                    return 0.0
+            else:
+                if is_special_sell_check:
+                    val = safe_num(trip.tc_special_sell)
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_special_sell(trip))
+                    return val
+                elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
+                    return safe_num(trip.tc_tripcost)
+                else:
+                    val = safe_num(fast_get_enquiry_special_sell(trip))
+                    if val <= 0:
+                        val = safe_num(fast_get_enquiry_standard_sell(trip))
+                    return val
+
+        def fast_get_trip_selling(trip, inv, va_info):
+            if trip.tr_category_id in [2, 3] and trip.tc_financestatus_id != 10:
+                return 0.0
+            selling_trip = 0.0 if (trip.tr_category_id in [2, 3] and trip.tc_financestatus_id == 10) else fast_get_transport_charge(trip, inv, va_info)
+            selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+            selling_supervisor = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+            selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+            selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+            selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+
+            halting_days = safe_num(trip.tc_no_of_days_halting)
+            if halting_days <= 0:
+                halting_days = 1.0
+            tc_day_cost = safe_num(trip.tc_haltingcost)
+            if (getattr(trip, 'tc_total_halting_cost_check', False) or getattr(trip, 'tc_haltingcost_check', False)) and tc_day_cost > 0:
+                selling_halting = tc_day_cost * halting_days
+            elif inv and safe_num(inv.ti_halting_charges) > 0:
+                selling_halting = safe_num(inv.ti_halting_charges)
+            else:
+                selling_halting = 0.0
+
+            selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+            selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+            selling_rto = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+            selling_beta = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+            selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
+
+            return (selling_trip + selling_toll + selling_supervisor + selling_loading + selling_unloading +
+                    selling_weighment + selling_halting + selling_handling + selling_parking +
+                    selling_rto + selling_beta + selling_cancellation)
 
         for idx, trip in enumerate(all_matching_trips, start=1):
             inv = invoice_obj_map.get(trip.id)
@@ -7862,26 +8127,74 @@ def customerwise_pl_report_export_view(request):
             mb_bill = bill_no_map.get(trip.id) or (
                 bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
 
-            try:
-                prorated_fuel_val = fuel_lookup.get(trip.id, None)
-                prorated_salary_val = salary_lookup.get(trip.id, None)
-                selling, buying, profit, profit_pct, disp_date = get_trip_pl_data(
-                    trip, inv, trip_expenses, va_info, ab_bill, mb_bill,
-                    prorated_fuel=prorated_fuel_val, prorated_salary=prorated_salary_val
-                )
-            except Exception as e:
-                print(f"Error calculating P&L for trip {trip.id}: {e}")
-                selling = buying = profit = profit_pct = 0.0
-                disp_date = ""
+            selling = fast_get_trip_selling(trip, inv, va_info)
+
+            # Buying calculation
+            v_source = trip.tr_vehiclesource_id
+            total_buying = 0.0
+
+            if v_source == 1:  # OWN
+                fuel = fuel_lookup.get(trip.id, 0.0) or 0.0
+                salary = salary_lookup.get(trip.id, 0.0) or 0.0
+                other_exp = 0.0
+                for e in trip_expenses:
+                    et = str(e.de_expense_type).lower() if e.de_expense_type else ""
+                    cv = safe_num(e.de_total_cost)
+                    if 'salary' in et or any(k in et for k in ['fuel', 'diesel']):
+                        pass
+                    else:
+                        other_exp += cv
+                total_buying = fuel + salary + other_exp
+
+            elif v_source == 2:  # ATTACHED
+                if ab_bill:
+                    km_run = max(0, safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm) - safe_num(trip.tr_departedkm))
+                    ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
+                    ab_total_km = safe_num(ab_bill.ab_total_km_run)
+                    if 0 < km_run < 5000:
+                        ab_rate = (ab_buy_cost / ab_total_km) if ab_total_km > 0 else 0
+                        total_buying = round(ab_rate * km_run, 2)
+                    else:
+                        num_trips = 1
+                        if ab_bill.ab_selected_trips:
+                            num_trips = len([it.strip() for it in ab_bill.ab_selected_trips.split(',') if it.strip()])
+                        if num_trips < 1: num_trips = 1
+                        total_buying = round(ab_buy_cost / num_trips, 2)
+                else:
+                    total_buying = 0.0
+
+            elif v_source == 3:  # MARKET
+                if mb_bill and mb_bill.mb_trip_details and str(trip.id) in mb_bill.mb_trip_details:
+                    details = mb_bill.mb_trip_details[str(trip.id)]
+                    total_buying = (
+                        safe_num(details.get('trip_cost', 0)) +
+                        safe_num(details.get('loading_cost', 0)) +
+                        safe_num(details.get('unloading_cost', 0)) +
+                        safe_num(details.get('parking_cost', 0)) +
+                        safe_num(details.get('halting_cost', 0))
+                    )
+                else:
+                    tc_tripcost = safe_num(va_info.va_specialbuy) if (va_info and safe_num(va_info.va_specialbuy) > 0) else 0.0
+                    tc_tollcost = safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_vendor_check', False) else 0.0
+                    tc_supervisorcost = safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_vendor_check', False) else 0.0
+                    total_buying = tc_tripcost + tc_tollcost + tc_supervisorcost
+
+            profit = selling - total_buying
+            profit_pct = (profit / selling * 100) if selling > 0 else 0.0
+
+            disp_date = ""
+            date_val = getattr(trip, 'tr_departeddate', None) or getattr(trip, 'tr_created_at', None)
+            if date_val:
+                try:
+                    disp_date = date_val.strftime("%d-%m-%Y")
+                except:
+                    disp_date = str(date_val)[:10]
 
             veh_source_display = safe_str(trip.tr_vehiclesource)
             if not veh_source_display and trip.tr_vehiclenumber:
                 clean_no = str(trip.tr_vehiclenumber).replace(" ", "").upper()
                 v_match = vehicle_map.get(clean_no) or vehicle_map.get(trip.tr_vehiclenumber)
-                if v_match and v_match.vm_ownership:
-                    veh_source_display = safe_str(v_match.vm_ownership)
-                else:
-                    veh_source_display = "MARKET"
+                veh_source_display = v_match if v_match else "MARKET"
 
             row_data = [
                 idx,
@@ -7894,38 +8207,11 @@ def customerwise_pl_report_export_view(request):
                 safe_str(trip.tr_vehiclenumber),
                 safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
                 round(selling, 2),
-                round(buying, 2),
+                round(total_buying, 2),
                 round(profit, 2),
                 f"{round(profit_pct, 2)}%"
             ]
             ws.append(row_data)
-
-            curr_row = idx + 1
-            ws.row_dimensions[curr_row].height = 20
-            for col_idx in range(1, len(row_data) + 1):
-                c = ws.cell(row=curr_row, column=col_idx)
-                c.border = thin_border
-                if col_idx == 1:
-                    c.alignment = Alignment(horizontal="center", vertical="center")
-                elif col_idx in (10, 11, 12):
-                    c.alignment = Alignment(horizontal="right", vertical="center")
-                    c.number_format = '#,##0.00'
-                elif col_idx == 13:
-                    c.alignment = Alignment(horizontal="right", vertical="center")
-                elif col_idx in (2, 7, 8):
-                    c.alignment = Alignment(horizontal="center", vertical="center")
-                else:
-                    c.alignment = Alignment(horizontal="left", vertical="center")
-
-        # Column widths adjustment
-        for col in ws.columns:
-            max_len = 0
-            col_letter = col[0].column_letter
-            for cell in col:
-                val_str = str(cell.value or '')
-                if len(val_str) > max_len:
-                    max_len = len(val_str)
-            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
 
         output = BytesIO()
         wb.save(output)
@@ -7964,10 +8250,10 @@ def location_pl_report_view(request):
     date_from = (request.GET.get('date_from') or request.GET.get('from_date') or '').strip()
     date_to = (request.GET.get('date_to') or request.GET.get('to_date') or '').strip()
 
-    # --- Default date range: current financial year (Apr 1 → today) ---
+    # --- Default date range: current month (1st of month → today) to open quickly and prevent 504 Gateway Timeout ---
     today = timezone.localdate()
-    fy_start_year = today.year if today.month >= 4 else today.year - 1
-    _default_from = f"{fy_start_year}-04-01"
+    first_day = today.replace(day=1)
+    _default_from = first_day.strftime("%Y-%m-%d")
     _default_to = today.strftime("%Y-%m-%d")
 
     if not date_from:
@@ -8002,13 +8288,18 @@ def location_pl_report_view(request):
         Q(ti_consignment_id__in=[t.tr_consignmentnumber_id for t in all_trips if t.tr_consignmentnumber_id])
     ).select_related('ti_trip', 'ti_consignment')
 
+    cons_to_trips = {}
+    for t in all_trips:
+        if t.tr_consignmentnumber_id:
+            cons_to_trips.setdefault(t.tr_consignmentnumber_id, []).append(t)
+
     invoice_map = {}
     for i in invoices:
         if i.ti_trip_id:
             invoice_map[i.ti_trip_id] = i
         elif i.ti_consignment_id:
-            for t in all_trips:
-                if t.tr_consignmentnumber_id == i.ti_consignment_id and t.id not in invoice_map:
+            for t in cons_to_trips.get(i.ti_consignment_id, []):
+                if t.id not in invoice_map:
                     invoice_map[t.id] = i
 
     expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
@@ -8048,8 +8339,6 @@ def location_pl_report_view(request):
                 except:
                     pass
                 attached_bill_map[str(tid).strip().upper()] = b
-
-    fuel_lookup, salary_lookup = calculate_own_vehicle_fuel_and_salary(all_trips, date_from=date_from, date_to=date_to)
 
     vehicle_map = {}
     for v in VehiclemasterInfo.objects.all().select_related('vm_ownership'):
@@ -8300,17 +8589,13 @@ def location_pl_report_view(request):
         allotment = allotment_map_mkt.get((trip.tr_enquirynumber_id, trip.tr_vehiclenumber))
         if not allotment and trip.tr_vehiclenumber:
             clean_veh = trip.tr_vehiclenumber.replace(' ', '').upper()
-            for a in va_map.values():
-                if a.va_enquirynumber_id == trip.tr_enquirynumber_id:
-                    a_veh_no = (str(a.va_vehiclenumber) if a.va_vehiclenumber else a.va_vehiclenumber_mkt or '')
-                    if a_veh_no.replace(' ', '').upper() == clean_veh:
-                        allotment = a
-                        break
-        if not allotment and trip.tr_enquirynumber_id:
-            for a in va_map.values():
-                if a.va_enquirynumber_id == trip.tr_enquirynumber_id:
+            a = va_map.get(trip.tr_enquirynumber_id)
+            if a:
+                a_veh_no = (str(a.va_vehiclenumber) if a.va_vehiclenumber else a.va_vehiclenumber_mkt or '')
+                if a_veh_no.replace(' ', '').upper() == clean_veh:
                     allotment = a
-                    break
+        if not allotment and trip.tr_enquirynumber_id:
+            allotment = va_map.get(trip.tr_enquirynumber_id)
 
         mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
         buying_trip_cost = 0.0
@@ -9423,19 +9708,12 @@ def transport_mis(request):
             .exclude(tr_departeddate__isnull=True)
             .values("tr_departeddate__month")
             .annotate(
-                total_halting=Sum('tc_haltingcost'),
-                total_loading=Sum('tc_loadingcost'),
-                total_parking=Sum('tc_parkingcost'),
-                total_betta=Sum('tc_betacost'),
-                total_handling=Sum('tc_handlingcost'),
-                # Sum Toll from Trip Closure if it's an OWN or MARKET vehicle
-
+                # Sum FASTag Toll only for OWN vehicles (actual BVM bank deduction)
                 total_toll_trip_closure=Sum(Case(
-                    When(tr_vehiclesource_id__in=[1, 3], then=F('tc_tollcost')),
+                    When(tr_vehiclesource_id=1, then=F('tc_tollcost')),
                     default=Value(0.0),
                     output_field=FloatField()
                 ))
-
             )
         )
     else:
@@ -9445,19 +9723,12 @@ def transport_mis(request):
             .exclude(tr_departeddate__isnull=True)
             .values("tr_departeddate__month")
             .annotate(
-                total_halting=Sum('tc_haltingcost'),
-                total_loading=Sum('tc_loadingcost'),
-                total_parking=Sum('tc_parkingcost'),
-                total_betta=Sum('tc_betacost'),
-                total_handling=Sum('tc_handlingcost'),
-                # Sum Toll from Trip Closure if it's an OWN or MARKET vehicle
-
+                # Sum FASTag Toll only for OWN vehicles (actual BVM bank deduction)
                 total_toll_trip_closure=Sum(Case(
-                    When(tr_vehiclesource_id__in=[1, 3], then=F('tc_tollcost')),
+                    When(tr_vehiclesource_id=1, then=F('tc_tollcost')),
                     default=Value(0.0),
                     output_field=FloatField()
                 ))
-
             )
         )
 
@@ -9466,26 +9737,29 @@ def transport_mis(request):
     parking_cat = "Parking"
     toll_cat = "Toll"
     handling_exp_cat = "Handling Expenses"
+    weighment_cat = "Weighment"
+    unloading_cat = "Unloading"
 
-    for cat in [halting_cat, loading_cat, parking_cat, toll_cat, handling_exp_cat]:
+    for cat in [halting_cat, loading_cat, parking_cat, toll_cat, handling_exp_cat, weighment_cat, unloading_cat]:
         if cat not in expense_dict:
             expense_dict[cat] = {i: 0 for i in display_months_indices}
 
     for item in trip_summary:
         month = item["tr_departeddate__month"]
         if month in display_months_indices:
-            expense_dict[halting_cat][month] += float(item["total_halting"] or 0)
-            expense_dict[loading_cat][month] += float(item["total_loading"] or 0)
-            expense_dict[parking_cat][month] += float(item["total_parking"] or 0)
-            expense_dict[handling_exp_cat][month] += float(item["total_handling"] or 0)
             expense_dict[toll_cat][month] += float(item["total_toll_trip_closure"] or 0)
 
-    # --- Add Driver Betta from Petty Cash and Driver Settlement only ---
+    # --- Add Driver Settlement & Direct Petty Cash expenses to Actuals ---
     betta_cat = "Driver Betta"
-    expense_dict[betta_cat] = {i: 0 for i in display_months_indices}
+    for cat in [betta_cat, parking_cat, loading_cat, unloading_cat, weighment_cat, handling_exp_cat]:
+        if cat not in expense_dict:
+            expense_dict[cat] = {i: 0 for i in display_months_indices}
 
     # 1. Driver Settlement (Driverexpense)
-    de_qs = Driverexpense.objects.filter(de_battacost__gt=0)
+    de_qs = Driverexpense.objects.filter(
+        Q(de_battacost__gt=0) | Q(de_parkingcost__gt=0) | Q(de_loadingcost__gt=0) |
+        Q(de_unloadingcost__gt=0) | Q(de_weighmentcost__gt=0) | Q(de_supervisorcost__gt=0)
+    )
     if selected_vehicle_source in ['M-Dept', 'B-Dept']:
         de_qs = de_qs.none()
     elif selected_vehicle_source and selected_vehicle_source != "BVM - OWN":
@@ -9516,19 +9790,19 @@ def transport_mis(request):
 
         if dt.month in display_months_indices:
             expense_dict[betta_cat][dt.month] += float(de.de_battacost or 0)
+            expense_dict[parking_cat][dt.month] += float(de.de_parkingcost or 0)
+            expense_dict[loading_cat][dt.month] += float(de.de_loadingcost or 0)
+            expense_dict[unloading_cat][dt.month] += float(de.de_unloadingcost or 0)
+            expense_dict[weighment_cat][dt.month] += float(de.de_weighmentcost or 0)
+            expense_dict[handling_exp_cat][dt.month] += float(de.de_supervisorcost or 0)
 
-    # 2. Petty Cash (TMSPettyCashInfo) - matching Driver Settlement expense type strings
+    # 2. Direct Petty Cash (TMSPettyCashInfo) - Excluding auto-generated Driver Settlement vouchers
     from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
-    # Match driver settlement name with petty cash expense type string ('Batta Expense', 'Driver Betta', 'Batta', etc.)
     pc_qs = TMSPettyCashInfo.objects.filter(
-        Q(tpc_expense_type__tms_exp_type_name__icontains='betta') |
-        Q(tpc_expense_type__tms_exp_type_name__icontains='batta') |
-        Q(tpc_expense_type__tms_exp_type_name__icontains='bata')
-    ).filter(
         tpc_source_driver_expense_id__isnull=True
     ).exclude(
         tpc_remarks__icontains='[Auto-generated from Driver Settlement'
-    )
+    ).select_related('tpc_expense_type', 'tpc_branch')
 
     if selected_vehicle_source in ['M-Dept', 'B-Dept']:
         pc_qs = pc_qs.none()
@@ -9562,7 +9836,20 @@ def transport_mis(request):
             continue
 
         if dt.month in display_months_indices:
-            expense_dict[betta_cat][dt.month] += float(pc.tpc_amount or 0)
+            exp_name = (pc.tpc_expense_type.tms_exp_type_name if pc.tpc_expense_type else '').lower()
+            amt = float(pc.tpc_amount or 0)
+            if 'betta' in exp_name or 'batta' in exp_name or 'bata' in exp_name:
+                expense_dict[betta_cat][dt.month] += amt
+            elif 'parking' in exp_name:
+                expense_dict[parking_cat][dt.month] += amt
+            elif 'loading' in exp_name and 'unloading' not in exp_name:
+                expense_dict[loading_cat][dt.month] += amt
+            elif 'unloading' in exp_name:
+                expense_dict[unloading_cat][dt.month] += amt
+            elif 'weighment' in exp_name:
+                expense_dict[weighment_cat][dt.month] += amt
+            elif 'handling' in exp_name:
+                expense_dict[handling_exp_cat][dt.month] += amt
 
     # --- Add Driver Salary actuals to "Salaries & Wages-Drivers" ---
     from ..sub_models.driver_salary_mod import DriverSalaryInfo
@@ -9619,7 +9906,9 @@ def transport_mis(request):
                 total_loading=Sum('mb_loading_cost'),
                 total_unloading=Sum('mb_unloading_cost'),
                 total_parking=Sum('mb_parking_cost'),
-                total_halting=Sum('mb_halting_cost')
+                total_halting=Sum('mb_halting_cost'),
+                total_weighment=Sum('mb_weighment_cost'),
+                total_handling=Sum('mb_handling_cost')
             )
         )
 
@@ -9635,6 +9924,8 @@ def transport_mis(request):
             expense_dict[unloading_cat][month] += float(item["total_unloading"] or 0)
             expense_dict[parking_cat][month] += float(item["total_parking"] or 0)
             expense_dict[halting_cat][month] += float(item["total_halting"] or 0)
+            expense_dict[weighment_cat][month] += float(item["total_weighment"] or 0)
+            expense_dict[handling_exp_cat][month] += float(item["total_handling"] or 0)
 
     # --- Add Fuel Filling charges to "Diesel-Vehicle" Actual ---
     fuel_filter = {}
