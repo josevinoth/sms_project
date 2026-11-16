@@ -213,6 +213,7 @@ from .sub_views.wms_petty_cash_view import wms_petty_cash_add, wms_petty_cash_de
 from .sub_views.pms_petty_cash_view import pms_petty_cash_add, pms_petty_cash_delete, pms_petty_cash_list, generate_pms_petty_cash_number, get_pms_job_details, pms_petty_cash_export_tally, get_pms_customers_by_unit, get_pms_jobs_by_customer, pms_petty_cash_voucher_print, add_pms_vehicle, add_pms_expense_type, pms_petty_cash_combined_pdf, pms_petty_cash_export_zip
 from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_consumption_logs, delete_manpower_consumption
 from .sub_views.cs_kpi_dashboard_view import cs_kpi_dashboard, get_cs_kpi_dashboard_data
+from .sub_views.ops_dashboard_view import ops_dashboard, get_ops_dashboard_data
 from .sub_views.wms_kpi_dashboard_view import wms_kpi_dashboard, get_wms_kpi_dashboard_data
 warehouse_dashboard = wms_kpi_dashboard
 from .sub_views.pk_consumption_report_view import export_consumption_excel, export_consumption_pdf

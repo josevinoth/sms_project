@@ -1,0 +1,1258 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261112-06">
+
+<style>
+    @media screen and (min-width: 992px) {
+        html, body {
+            overflow: hidden !important;
+            height: 100% !important;
+            background: #04081e !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+        #main-content, .container-fluid {
+            padding: 0 !important;
+        }
+    }
+
+    @media screen and (max-width: 991px) {
+        html, body {
+            overflow: auto !important;
+            height: auto !important;
+            background: #04081e !important;
+        }
+    }
+
+    /* Master Container Strictly Fitting Viewport Height */
+    .ops-dashboard-root {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: calc(100vh - 65px);
+        display: flex;
+        flex-direction: column;
+        padding: 0.30rem 0.50rem 0.30rem 0.50rem;
+        gap: 0.30rem;
+        box-sizing: border-box;
+        background: #04081e;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Top Control Bar (36px) */
+    .ops-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.45rem;
+        width: 100%;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(14, 25, 71, 0.95) 0%, rgba(8, 14, 45, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        height: 36px;
+        box-sizing: border-box;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.38rem;
+        flex-wrap: nowrap;
+    }
+
+    .filter-pill {
+        background: rgba(4, 9, 32, 0.9);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 5px;
+        padding: 0.12rem 0.45rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        height: 26px;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-pill:focus-within {
+        border-color: #38bdf8;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+
+    .filter-pill label {
+        font-size: 0.62rem;
+        color: #38bdf8;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        letter-spacing: 0.3px;
+    }
+
+    .filter-pill select, .filter-pill input[type="date"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 2px;
+        height: 20px;
+        line-height: 1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    #ops-filter-ops {
+        max-width: 95px;
+        width: 95px;
+    }
+
+    #ops-filter-branch {
+        max-width: 95px;
+        width: 95px;
+    }
+
+    .filter-pill select option {
+        background: #091336;
+        color: #fff;
+    }
+
+    .filter-pill input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+    }
+
+    .btn-apply-filter {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: #fff;
+        border: 1px solid #3b82f6;
+        border-radius: 5px;
+        padding: 0 0.75rem;
+        font-size: 0.70rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-apply-filter:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+    }
+
+    .btn-preset-filter {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        color: #94a3b8;
+        border-radius: 5px;
+        padding: 0 0.50rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        cursor: pointer;
+        height: 26px;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .btn-preset-filter:hover {
+        background: rgba(30, 58, 138, 0.5);
+        color: #38bdf8;
+        border-color: #38bdf8;
+    }
+
+    .btn-preset-filter.active {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.4) 0%, rgba(56, 189, 248, 0.4) 100%);
+        color: #ffffff;
+        border-color: #38bdf8;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+        font-weight: 700;
+    }
+
+    /* Performance Benchmark Color Scale Legend Bar (Matching CS Dashboard Scale) */
+    .cs-legend-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(4, 9, 32, 0.92);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 5px;
+        padding: 0.12rem 0.55rem;
+        height: 26px;
+        box-sizing: border-box;
+        margin-left: auto;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .legend-title {
+        font-size: 0.62rem;
+        color: #38bdf8;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+
+    .cs-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.60rem;
+        font-weight: 800;
+        padding: 1.5px 5px;
+        border-radius: 3px;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+    }
+
+    .leg-red { 
+        background: rgba(239, 68, 68, 0.22); 
+        border: 1px solid #ef4444; 
+        color: #fca5a5; 
+    }
+
+    .leg-orange { 
+        background: rgba(245, 158, 11, 0.22); 
+        border: 1px solid #f59e0b; 
+        color: #fde68a; 
+    }
+
+    .leg-green { 
+        background: rgba(16, 185, 129, 0.22); 
+        border: 1px solid #10b981; 
+        color: #86efac; 
+    }
+
+    .leg-blue { 
+        background: rgba(59, 130, 246, 0.22); 
+        border: 1px solid #3b82f6; 
+        color: #93c5fd; 
+    }
+
+    /* 10 KPI Cards in Strict SINGLE LINE (42px) with 10 Completely Non-Repeating Colors */
+    .ops-cards-row {
+        display: grid;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 0.25rem;
+        width: 100%;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 1200px) {
+        .ops-cards-row {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .ops-cards-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .ops-kpi-card {
+        position: relative;
+        border-radius: 5px;
+        padding: 0.15rem 0.35rem;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 42px;
+        box-sizing: border-box;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        min-width: 0;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-kpi-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .ops-kpi-content {
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+        min-width: 0;
+        overflow: hidden;
+        line-height: 1.05;
+    }
+
+    .ops-kpi-title {
+        font-size: 0.49rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.88);
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .ops-kpi-main-val {
+        font-size: 0.98rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 1px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.2px;
+    }
+
+    .ops-kpi-subtext {
+        font-size: 0.47rem;
+        color: rgba(255, 255, 255, 0.72);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ops-kpi-subtext strong {
+        color: #ffffff;
+        font-weight: 800;
+    }
+
+    .ops-kpi-icon {
+        font-size: 1.15rem;
+        opacity: 0.10;
+        position: absolute;
+        right: 0.35rem;
+        top: 0.35rem;
+        pointer-events: none;
+    }
+
+    /* 10 Completely Non-Repeating, Unique Executive Palettes */
+    /* 1. Deep Royal Sapphire */
+    .kpi-pal-1 { background: linear-gradient(135deg, #1e40af 0%, #0f172a 100%); border-color: rgba(59, 130, 246, 0.55); }
+    /* 2. Cyan Arctic Teal */
+    .kpi-pal-2 { background: linear-gradient(135deg, #0e7490 0%, #083344 100%); border-color: rgba(6, 182, 212, 0.55); }
+    /* 3. Ocean Slate Blue (Placed OWN) */
+    .kpi-pal-3 { background: linear-gradient(135deg, #0369a1 0%, #082f49 100%); border-color: rgba(14, 165, 233, 0.55); }
+    /* 4. Warm Topaz Gold (Placed ATTC) */
+    .kpi-pal-4 { background: linear-gradient(135deg, #b45309 0%, #451a03 100%); border-color: rgba(245, 158, 11, 0.55); }
+    /* 5. Emerald Green (Placed MKT Local) */
+    .kpi-pal-5 { background: linear-gradient(135deg, #065f46 0%, #022c22 100%); border-color: rgba(16, 185, 129, 0.55); }
+    /* 6. Imperial Purple (Placed MKT OS) */
+    .kpi-pal-6 { background: linear-gradient(135deg, #6b21a8 0%, #3b0764 100%); border-color: rgba(168, 85, 247, 0.55); }
+    /* 7. Royal Indigo */
+    .kpi-pal-7 { background: linear-gradient(135deg, #3730a3 0%, #1e1b4b 100%); border-color: rgba(99, 102, 241, 0.55); }
+    /* 8. Persian Teal */
+    .kpi-pal-8 { background: linear-gradient(135deg, #0f766e 0%, #042f2e 100%); border-color: rgba(20, 184, 166, 0.55); }
+    /* 9. Slate Cerulean */
+    .kpi-pal-9 { background: linear-gradient(135deg, #155e75 0%, #0c4a6e 100%); border-color: rgba(56, 189, 248, 0.55); }
+    /* 10. Crimson Rose */
+    .kpi-pal-10 { background: linear-gradient(135deg, #9f1239 0%, #4c0519 100%); border-color: rgba(244, 63, 94, 0.55); }
+
+    /* Main Cockpit Split Grid (Left takes 36%, Right takes 64%) */
+    .ops-cockpit-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.36fr 0.64fr;
+        gap: 0.35rem;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    @media (max-width: 1100px) {
+        .ops-cockpit-grid {
+            grid-template-columns: 1fr;
+            overflow-y: auto;
+        }
+    }
+
+    .ops-col-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    /* Universal Panel Styling */
+    .ops-panel {
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 6px;
+        border: 1px solid rgba(54, 209, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .ops-panel-header {
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 0.20rem 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        height: 28px;
+        box-sizing: border-box;
+    }
+
+    .ops-panel-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ops-panel-title i {
+        color: #38bdf8;
+        font-size: 0.76rem;
+    }
+
+    .ops-badge {
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    /* Tables Styling */
+    .ops-table-wrap {
+        flex: 1;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        min-height: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Full-Height Left Allotment Particulars Table (View All Without Scrolling) */
+    .ops-matrix-table {
+        width: 100%;
+        height: 100%;
+        border-collapse: collapse;
+        font-size: 0.73rem;
+        margin: 0;
+        table-layout: fixed;
+    }
+
+    .ops-matrix-table th {
+        background: #081132;
+        color: #8fa0c9;
+        font-weight: 700;
+        padding: 4px 6px;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25);
+        font-size: 0.66rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 24px;
+        box-sizing: border-box;
+    }
+
+    .ops-matrix-table td {
+        padding: 4px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #d1dcfa;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ops-matrix-table tbody tr:hover td {
+        background: rgba(54, 209, 255, 0.08);
+    }
+
+    .particular-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .particular-icon {
+        width: 15px;
+        text-align: center;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+    }
+
+    .particular-name-block {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        line-height: 1.1;
+    }
+
+    .particular-name-text {
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .particular-sub-text {
+        font-size: 0.54rem;
+        color: #8fa0c9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .col-num {
+        text-align: right;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .col-center {
+        text-align: center;
+    }
+
+    /* Small compact table for top vendors */
+    .ops-mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.68rem;
+        table-layout: fixed;
+    }
+
+    .ops-mini-table th {
+        background: #081132;
+        color: #8fa0c9;
+        font-weight: 700;
+        padding: 3.5px 6px;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        font-size: 0.62rem;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        white-space: nowrap;
+    }
+
+    .ops-mini-table td {
+        padding: 3px 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #cbd5e1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ops-mini-table tr:hover td {
+        background: rgba(54, 209, 255, 0.08);
+    }
+
+    /* Chart Canvas Container */
+    .ops-chart-body {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        padding: 0.25rem 0.45rem;
+        box-sizing: border-box;
+    }
+</style>
+
+<div class="ops-dashboard-root">
+    <!-- Top Filter Bar (36px) -->
+    <div class="ops-top-bar">
+        <div class="filter-group">
+            <!-- 1. Branch Filter -->
+            <div class="filter-pill">
+                <label><i class="fas fa-map-marker-alt"></i> Branch:</label>
+                <select id="ops-filter-branch">
+                    <option value="all">All Branches</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == default_branch_id %}selected{% endif %}>
+                        {{ branch.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 2. Ops Rep Filter (Immediately next to Branch, Compact Sizing) -->
+            <div class="filter-pill" style="max-width: 145px;">
+                <label><i class="fas fa-user-cog"></i> Ops:</label>
+                <select id="ops-filter-ops" style="max-width: 95px; width: 95px;">
+                    <option value="all" selected>All Ops</option>
+                    {% for emp in ops_employees %}
+                    <option value="{{ emp.id }}" data-branch="{{ emp.branch_id }}" title="{{ emp.name }}" {% if emp.id == current_user_id %}data-current-user="1"{% endif %}>
+                        {{ emp.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 3. From Date -->
+            <div class="filter-pill">
+                <label><i class="fas fa-calendar-alt"></i> From:</label>
+                <input type="date" id="ops-filter-from-date" value="{{ default_from_date }}">
+            </div>
+
+            <!-- 4. To Date -->
+            <div class="filter-pill">
+                <label><i class="fas fa-calendar-alt"></i> To:</label>
+                <input type="date" id="ops-filter-to-date" value="{{ default_to_date }}">
+            </div>
+
+            <!-- Quick Presets (Auto-fetching) -->
+            <button type="button" class="btn-preset-filter active" data-preset="30d">Last 30 Days</button>
+            <button type="button" class="btn-preset-filter" data-preset="month">MTD</button>
+            <button type="button" class="btn-preset-filter" data-preset="week">This Week</button>
+            <button type="button" class="btn-preset-filter" data-preset="today">Today</button>
+
+            <!-- Subtle Live Loading Indicator -->
+            <span id="ops-loading-spinner" style="display:none; color:#38bdf8; font-size:0.75rem; margin-left:4px;" title="Fetching live data...">
+                <i class="fas fa-spinner fa-spin"></i>
+            </span>
+        </div>
+
+        <!-- Performance Benchmark Color Scale Legend Bar (Allotment Particulars Color Code Scale) -->
+        <div class="cs-legend-bar" title="Performance Benchmark Color Scale">
+            <span class="legend-title"><i class="fas fa-tachometer-alt"></i> Scale:</span>
+            <span class="cs-legend-item leg-red"><i class="fas fa-exclamation-circle"></i> 0 - 35%</span>
+            <span class="cs-legend-item leg-orange"><i class="fas fa-hourglass-half"></i> 36 - 70%</span>
+            <span class="cs-legend-item leg-green"><i class="fas fa-check-circle"></i> 71 - 100%</span>
+            <span class="cs-legend-item leg-blue"><i class="fas fa-bolt"></i> &gt; 100%</span>
+        </div>
+    </div>
+
+    <!-- 10 Highlight KPI Cards in Strict SINGLE LINE (42px) - 10 Non-Repeating Distinct Colors -->
+    <div class="ops-cards-row">
+        <!-- Card 1: Booking vs Placed (Royal Sapphire) -->
+        <div class="ops-kpi-card kpi-pal-1">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-truck-loading" style="color:#60a5fa;"></i> Booking Vs Placed</span>
+                <div class="ops-kpi-main-val" id="top-booking-placed-rate">0.0%</div>
+                <div class="ops-kpi-subtext" id="top-booking-placed-sub">0 Placed / 0 Demanded</div>
+            </div>
+            <i class="fas fa-truck-loading ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 2: Placed vs Invoiced (Cyan Arctic Teal) -->
+        <div class="ops-kpi-card kpi-pal-2">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-file-invoice-dollar" style="color:#06b6d4;"></i> Placed Vs Invoiced</span>
+                <div class="ops-kpi-main-val" id="top-placed-invoiced-rate">0.0%</div>
+                <div class="ops-kpi-subtext" id="top-placed-invoiced-sub">0 Invoiced / 0 Placed</div>
+            </div>
+            <i class="fas fa-file-invoice-dollar ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 3: Placed OWN (Ocean Slate Blue) -->
+        <div class="ops-kpi-card kpi-pal-3">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-truck-moving" style="color:#3b82f6;"></i> Placed OWN</span>
+                <div class="ops-kpi-main-val" id="top-placed-own">0</div>
+                <div class="ops-kpi-subtext">Own: <strong id="top-placed-own-pct">0.0%</strong></div>
+            </div>
+            <i class="fas fa-truck-moving ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 4: Placed ATTC (Warm Topaz Gold) -->
+        <div class="ops-kpi-card kpi-pal-4">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-link" style="color:#f59e0b;"></i> Placed ATTC</span>
+                <div class="ops-kpi-main-val" id="top-placed-attc">0</div>
+                <div class="ops-kpi-subtext">Attc: <strong id="top-placed-attc-pct">0.0%</strong></div>
+            </div>
+            <i class="fas fa-link ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 5: Placed MKT (Local) (Emerald Green) -->
+        <div class="ops-kpi-card kpi-pal-5">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-city" style="color:#10b981;"></i> Placed MKT (Local)</span>
+                <div class="ops-kpi-main-val" id="top-placed-mkt-local">0</div>
+                <div class="ops-kpi-subtext">Local: <strong id="top-placed-mkt-local-pct">0.0%</strong></div>
+            </div>
+            <i class="fas fa-city ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 6: Placed MKT (OS) (Imperial Purple) -->
+        <div class="ops-kpi-card kpi-pal-6">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-road" style="color:#a855f7;"></i> Placed MKT (OS)</span>
+                <div class="ops-kpi-main-val" id="top-placed-mkt-os">0</div>
+                <div class="ops-kpi-subtext">OS: <strong id="top-placed-mkt-os-pct">0.0%</strong></div>
+            </div>
+            <i class="fas fa-road ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 7: MKT Local Vendors (Royal Indigo) -->
+        <div class="ops-kpi-card kpi-pal-7">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-store-alt" style="color:#6366f1;"></i> MKT Local Vendors</span>
+                <div class="ops-kpi-main-val" id="top-vendors-mkt-local">0</div>
+                <div class="ops-kpi-subtext">Distinct Vendors</div>
+            </div>
+            <i class="fas fa-store-alt ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 8: MKT OS Vendors (Persian Teal) -->
+        <div class="ops-kpi-card kpi-pal-8">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-warehouse" style="color:#14b8a6;"></i> MKT OS Vendors</span>
+                <div class="ops-kpi-main-val" id="top-vendors-mkt-os">0</div>
+                <div class="ops-kpi-subtext">Distinct OS Vendors</div>
+            </div>
+            <i class="fas fa-warehouse ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 9: New Customer (Slate Cerulean) -->
+        <div class="ops-kpi-card kpi-pal-9">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-user-plus" style="color:#7dd3fc;"></i> New Customer</span>
+                <div class="ops-kpi-main-val" id="top-new-customers">0</div>
+                <div class="ops-kpi-subtext">On-boarded</div>
+            </div>
+            <i class="fas fa-user-plus ops-kpi-icon"></i>
+        </div>
+
+        <!-- Card 10: Lost Customer (Crimson Rose) -->
+        <div class="ops-kpi-card kpi-pal-10">
+            <div class="ops-kpi-content">
+                <span class="ops-kpi-title"><i class="fas fa-user-minus" style="color:#fb7185;"></i> Lost Customer</span>
+                <div class="ops-kpi-main-val" id="top-lost-customers">0</div>
+                <div class="ops-kpi-subtext">Inactive Vendors</div>
+            </div>
+            <i class="fas fa-user-minus ops-kpi-icon"></i>
+        </div>
+    </div>
+
+    <!-- Main Cockpit Split Grid: Left 36% (Table Full Height), Right 64% (Charts & Vendor Breakdown) -->
+    <div class="ops-cockpit-grid">
+        <!-- LEFT COLUMN: Allotment Particulars Takes 36% Width and FULL Height (No Scrolling) -->
+        <div class="ops-panel" style="height: 100%;">
+            <div class="ops-panel-header">
+                <div class="ops-panel-title">
+                    <i class="fas fa-clipboard-list"></i> Allotment Particulars
+                    <span id="ops-active-period-label" style="font-size:0.58rem; color:#94a3b8; font-weight:600; margin-left:3px;"></span>
+                </div>
+                <span class="ops-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.35);">
+                    <i class="fas fa-shield-alt"></i> AR Excluded
+                </span>
+            </div>
+
+            <div class="ops-table-wrap">
+                <table class="ops-matrix-table" id="ops-matrix-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 48%;">Particulars</th>
+                            <th class="col-num" style="width: 24%;">Value</th>
+                            <th class="col-center" style="width: 28%;">Operational Insight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ops-matrix-table-body">
+                        <!-- Populated dynamically via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: 64% Width, 2-Row Stack -->
+        <div class="ops-col-stack">
+            <!-- Top Half: Fleet Sourcing Donut + Conversion Funnel (Side-by-Side) -->
+            <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 0.35rem; flex: 1; min-height: 0;">
+                <!-- Panel A: Fleet Sourcing Mix -->
+                <div class="ops-panel">
+                    <div class="ops-panel-header">
+                        <div class="ops-panel-title">
+                            <i class="fas fa-chart-pie"></i> Fleet Sourcing Mix
+                        </div>
+                        <span class="ops-badge" style="background:rgba(59,130,246,0.15); color:#93c5fd; border:1px solid rgba(59,130,246,0.3);">
+                            OWN / ATTC / MKT
+                        </span>
+                    </div>
+                    <div class="ops-chart-body">
+                        <canvas id="chartFleetSourcing"></canvas>
+                    </div>
+                </div>
+
+                <!-- Panel B: Booking to Invoicing Conversion Pipeline -->
+                <div class="ops-panel">
+                    <div class="ops-panel-header">
+                        <div class="ops-panel-title">
+                            <i class="fas fa-filter"></i> Booking to Invoicing Funnel
+                        </div>
+                        <span class="ops-badge" id="funnel-rates-badge" style="background:rgba(16,185,129,0.15); color:#86efac; border:1px solid rgba(16,185,129,0.3);">
+                            Dropoff Pipeline
+                        </span>
+                    </div>
+                    <div class="ops-chart-body">
+                        <canvas id="chartFunnelPipeline"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Half: Market Logistics Chart + Market Vendor Volume Table (Side-by-Side) -->
+            <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 0.35rem; flex: 1; min-height: 0;">
+                <!-- Panel C: Market Logistics Local vs OS Deployment Chart -->
+                <div class="ops-panel">
+                    <div class="ops-panel-header">
+                        <div class="ops-panel-title">
+                            <i class="fas fa-chart-bar"></i> Market Logistics (Local vs OS)
+                        </div>
+                        <span class="ops-badge" style="background:rgba(20,184,166,0.15); color:#5eead4; border:1px solid rgba(20,184,166,0.3);">
+                            Trips vs Vendors
+                        </span>
+                    </div>
+                    <div class="ops-chart-body">
+                        <canvas id="chartMarketDeployment"></canvas>
+                    </div>
+                </div>
+
+                <!-- Panel D: Market Vendor Volume & Deployment Breakdown Table -->
+                <div class="ops-panel">
+                    <div class="ops-panel-header">
+                        <div class="ops-panel-title">
+                            <i class="fas fa-truck-loading"></i> Market Vendor Volume
+                        </div>
+                        <span class="ops-badge" style="background:rgba(99,102,241,0.15); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3);">
+                            Share %
+                        </span>
+                    </div>
+                    <div class="ops-table-wrap" style="overflow-y: auto;">
+                        <table class="ops-mini-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 44%;">Vendor Name</th>
+                                    <th class="col-num" style="width: 14%;">Total</th>
+                                    <th class="col-num" style="width: 13%;">Local</th>
+                                    <th class="col-num" style="width: 13%;">OS</th>
+                                    <th class="col-num" style="width: 16%;">Share %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-vendors-tbody">
+                                <!-- Populated dynamically via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    let sourcingChart = null;
+    let funnelChart = null;
+    let marketCompChart = null;
+
+    function formatDateInput(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    const currentUserId = "{{ current_user_id|default:'' }}";
+
+    function filterOpsByBranch(branchId) {
+        const $opsSelect = $('#ops-filter-ops');
+        const currentVal = $opsSelect.val();
+        let currentStillVisible = false;
+
+        $opsSelect.find('option').each(function() {
+            const $opt = $(this);
+            const optVal = $opt.val();
+            const optBranch = String($opt.data('branch') || '');
+
+            if (optVal === 'all') {
+                $opt.prop('hidden', false);
+                if (currentVal === 'all') currentStillVisible = true;
+                return;
+            }
+
+            if (branchId === 'all' || !branchId || optBranch === String(branchId)) {
+                $opt.prop('hidden', false);
+                if (optVal === currentVal) {
+                    currentStillVisible = true;
+                }
+            } else {
+                $opt.prop('hidden', true);
+            }
+        });
+
+        if (!currentStillVisible) {
+            $opsSelect.val('all');
+        }
+    }
+
+    // Quick Preset Handlers (Auto-fetching)
+    $('.btn-preset-filter').on('click', function() {
+        $('.btn-preset-filter').removeClass('active');
+        $(this).addClass('active');
+
+        const preset = $(this).data('preset');
+        const today = new Date();
+        let fromDate = new Date();
+        let toDate = new Date();
+
+        if (preset === 'today') {
+            // fromDate and toDate = today
+        } else if (preset === 'week') {
+            const dayOfWeek = today.getDay(); // 0 is Sun
+            const distToMon = (dayOfWeek + 6) % 7;
+            fromDate.setDate(today.getDate() - distToMon);
+            toDate.setDate(fromDate.getDate() + 6);
+        } else if (preset === 'month') {
+            fromDate.setDate(1);
+        } else if (preset === '30d') {
+            fromDate.setDate(today.getDate() - 30);
+        }
+
+        $('#ops-filter-from-date').val(formatDateInput(fromDate));
+        $('#ops-filter-to-date').val(formatDateInput(toDate));
+        fetchOpsDashboardData();
+    });
+
+    // Auto-fetch on Date Change (From & To)
+    $('#ops-filter-from-date, #ops-filter-to-date').on('change', function() {
+        $('.btn-preset-filter').removeClass('active');
+        fetchOpsDashboardData();
+    });
+
+    // Auto-fetch on Branch Change
+    $('#ops-filter-branch').on('change', function() {
+        filterOpsByBranch($(this).val());
+        fetchOpsDashboardData();
+    });
+
+    // Auto-fetch on Ops User Change (Select specific executive)
+    $('#ops-filter-ops').on('change', function() {
+        fetchOpsDashboardData();
+    });
+
+    function fetchOpsDashboardData() {
+        const branchId = $('#ops-filter-branch').val();
+        const fromDate = $('#ops-filter-from-date').val();
+        const toDate = $('#ops-filter-to-date').val();
+        const opsUserId = $('#ops-filter-ops').val() || 'all';
+
+        $('#ops-loading-spinner').show();
+
+        $.ajax({
+            url: "{% url 'get_ops_dashboard_data' %}",
+            type: "GET",
+            data: {
+                'branch_id': branchId,
+                'from_date': fromDate,
+                'to_date': toDate,
+                'ops_user_id': opsUserId
+            },
+            success: function(res) {
+                $('#ops-loading-spinner').hide();
+                if (res.status === 'success') {
+                    renderDashboard(res);
+                }
+            },
+            error: function(err) {
+                $('#ops-loading-spinner').hide();
+                console.error("Ops dashboard data fetch failed:", err);
+            }
+        });
+    }
+
+    function renderDashboard(data) {
+        // Headers
+        if (data.period_header) {
+            $('#ops-active-period-label').text(`(${data.period_header.replace('Selected Period (', '').replace(')', '')})`);
+        }
+
+        // Top KPI Cards
+        const c = data.top_cards || {};
+        $('#top-booking-placed-rate').text(c.booking_placed_rate || '0.0%');
+        $('#top-booking-placed-sub').text(c.booking_placed_sub || '0 Placed / 0 Demanded');
+
+        $('#top-placed-invoiced-rate').text(c.placed_invoiced_rate || '0.0%');
+        $('#top-placed-invoiced-sub').text(c.placed_invoiced_sub || '0 Invoiced / 0 Placed');
+
+        $('#top-placed-own').text(c.placed_own !== undefined ? c.placed_own : 0);
+        $('#top-placed-own-pct').text(c.placed_own_pct || '0.0%');
+
+        $('#top-placed-attc').text(c.placed_attc !== undefined ? c.placed_attc : 0);
+        $('#top-placed-attc-pct').text(c.placed_attc_pct || '0.0%');
+
+        $('#top-placed-mkt-local').text(c.placed_mkt_local !== undefined ? c.placed_mkt_local : 0);
+        $('#top-placed-mkt-local-pct').text(c.placed_mkt_local_pct || '0.0%');
+
+        $('#top-placed-mkt-os').text(c.placed_mkt_os !== undefined ? c.placed_mkt_os : 0);
+        $('#top-placed-mkt-os-pct').text(c.placed_mkt_os_pct || '0.0%');
+
+        $('#top-vendors-mkt-local').text(c.vendors_mkt_local !== undefined ? c.vendors_mkt_local : 0);
+        $('#top-vendors-mkt-os').text(c.vendors_mkt_os !== undefined ? c.vendors_mkt_os : 0);
+
+        $('#top-new-customers').text(c.new_customers !== undefined ? c.new_customers : 0);
+        $('#top-lost-customers').text(c.lost_customers !== undefined ? c.lost_customers : 0);
+
+        // Particulars Table (10 items, AR excluded, Streamlined Single Value Column)
+        let matrixHtml = '';
+        (data.particulars_table || []).forEach(function(row) {
+            matrixHtml += `
+                <tr>
+                    <td>
+                        <div class="particular-wrap">
+                            <span class="particular-icon" style="color:${row.icon_color};"><i class="${row.icon}"></i></span>
+                            <div class="particular-name-block">
+                                <span class="particular-name-text" title="${row.name}">${row.name}</span>
+                                <span class="particular-sub-text" title="${row.subtext || ''}">${row.subtext || ''}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="col-num" style="color:#ffffff; font-size:0.82rem; font-weight:800;">${row.period_val}</td>
+                    <td class="col-center">
+                        <span class="ops-badge" style="color:${row.badge_color}; background:${row.badge_bg}; border:1px solid ${row.badge_color}55;">
+                            ${row.insight}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+        $('#ops-matrix-table-body').html(matrixHtml);
+
+        // Top Vendors Table (Shared with Market Logistics)
+        let vendorRows = '';
+        (data.top_vendors_list || []).forEach(function(v) {
+            vendorRows += `
+                <tr>
+                    <td style="color:#ffffff; font-weight:600;" title="${v.name}">${v.name}</td>
+                    <td class="col-num" style="color:#38bdf8; font-weight:700;">${v.total}</td>
+                    <td class="col-num">${v.local}</td>
+                    <td class="col-num">${v.os}</td>
+                    <td class="col-num" style="color:#a5b4fc; font-weight:600;">${v.share_pct}</td>
+                </tr>
+            `;
+        });
+        if (!vendorRows) {
+            vendorRows = `<tr><td colspan="5" class="col-center" style="padding:15px; color:#64748b;">No market vendors deployed</td></tr>`;
+        }
+        $('#top-vendors-tbody').html(vendorRows);
+
+        // Chart 1: Fleet Sourcing Mix (Doughnut)
+        renderSourcingChart(data.chart_sourcing);
+
+        // Chart 2: Conversion Funnel
+        renderFunnelChart(data.chart_funnel);
+
+        // Chart 3: Market Deployment (Local vs OS)
+        renderMarketCompChart(data.chart_market_comp);
+    }
+
+    function renderSourcingChart(chartData) {
+        if (!chartData) return;
+        const ctx = document.getElementById('chartFleetSourcing');
+        if (!ctx) return;
+
+        if (sourcingChart) sourcingChart.destroy();
+
+        sourcingChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.data,
+                    backgroundColor: chartData.colors,
+                    borderColor: '#060b24',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { size: 9, family: 'Inter', weight: 600 },
+                            boxWidth: 9,
+                            padding: 6
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(8, 14, 45, 0.95)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1,
+                        titleColor: '#38bdf8',
+                        bodyColor: '#ffffff',
+                        callbacks: {
+                            label: function(item) {
+                                const total = item.dataset.data.reduce((a, b) => a + b, 0);
+                                const val = item.raw || 0;
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                                return ` ${item.label}: ${val} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderFunnelChart(chartData) {
+        if (!chartData) return;
+        const ctx = document.getElementById('chartFunnelPipeline');
+        if (!ctx) return;
+
+        if (funnelChart) funnelChart.destroy();
+
+        $('#funnel-rates-badge').text(`Placement: ${chartData.fulfillment_pct}% | Billing: ${chartData.invoicing_pct}%`);
+
+        funnelChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Units',
+                    data: chartData.data,
+                    backgroundColor: chartData.colors,
+                    borderColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(8, 14, 45, 0.95)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#8fa0c9', font: { size: 8 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#e2e8f0', font: { size: 9, weight: 600 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderMarketCompChart(chartData) {
+        if (!chartData) return;
+        const ctx = document.getElementById('chartMarketDeployment');
+        if (!ctx) return;
+
+        if (marketCompChart) marketCompChart.destroy();
+
+        marketCompChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Trips Placed',
+                        data: chartData.placed,
+                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Vendors Used',
+                        data: chartData.vendors,
+                        backgroundColor: 'rgba(20, 184, 166, 0.85)',
+                        borderColor: '#14b8a6',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { size: 8.5, family: 'Inter', weight: 600 },
+                            boxWidth: 8,
+                            padding: 6
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(8, 14, 45, 0.95)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#e2e8f0', font: { size: 8.5, weight: 600 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#8fa0c9', font: { size: 8 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initial fetch on page load
+    filterOpsByBranch($('#ops-filter-branch').val());
+    fetchOpsDashboardData();
+});
+</script>
+{% endblock content %}

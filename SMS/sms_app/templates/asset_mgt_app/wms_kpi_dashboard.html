@@ -428,7 +428,7 @@
         grid-template-columns: 58% calc(42% - 4px);
         gap: 4px;
         width: 100%;
-        flex: 1.05;
+        flex: 0.95;
         min-height: 0;
         box-sizing: border-box;
         overflow: hidden;
@@ -671,13 +671,13 @@
         border-radius: 3px;
     }
 
-    /* 4. Bottom Section: 3 Specialized Modules */
+    /* 4. Bottom Section: 4 Specialized Modules (Zero-Scroll 4-Column Grid) */
     .wms-bottom-grid {
         display: grid;
-        grid-template-columns: 36% 32% calc(32% - 4px);
+        grid-template-columns: 24% 31% 23% calc(22% - 4px);
         gap: 4px;
         width: 100%;
-        flex: 0.95;
+        flex: 1.15;
         min-height: 0;
         box-sizing: border-box;
         overflow: hidden;
@@ -685,12 +685,12 @@
 
     body.sidenav-expanded .wms-bottom-grid,
     body:has(.sidenav:hover) .wms-bottom-grid {
-        grid-template-columns: 38% 31% calc(31% - 4px);
+        grid-template-columns: 24% 31% 23% calc(22% - 4px);
     }
 
     @media (max-width: 1400px) {
         .wms-bottom-grid {
-            grid-template-columns: 38% 31% calc(31% - 4px);
+            grid-template-columns: 24% 31% 23% calc(22% - 4px);
         }
     }
 
@@ -795,33 +795,117 @@
     }
 
     /* Tables in Bottom Cards - Snug, Informative & Perfectly Sized */
+    /* 2-Column Grid for Dock SLA Operations Table to guarantee ALL 12 rows are 100% visible */
+    .dockops-grid-container {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px 4px;
+        align-content: stretch;
+        overflow: hidden;
+        padding: 1px 0;
+        box-sizing: border-box;
+    }
+
+    .dockops-cell-card {
+        background: rgba(3, 7, 24, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        padding: 1.5px 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+        box-sizing: border-box;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .dockops-cell-card:hover {
+        background: rgba(56, 189, 248, 0.09);
+        border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .dockops-cell-left {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        flex: 1;
+        gap: 0px;
+    }
+
+    .dockops-cell-title {
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        line-height: 1.1;
+    }
+
+    .dockops-cell-sub {
+        font-size: 0.46rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1;
+    }
+
+    .dockops-cell-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        flex-shrink: 0;
+        margin-left: 4px;
+        gap: 1px;
+    }
+
+    .dockops-cell-val {
+        font-size: 0.62rem;
+        font-weight: 800;
+        color: #38bdf8;
+        line-height: 1;
+    }
+
     .wms-mini-table {
         width: 100%;
+        height: 100%;
         border-collapse: collapse;
-        font-size: 0.62rem;
+        font-size: 0.6rem;
         color: #cbd5e1;
         table-layout: fixed;
     }
 
     .wms-mini-table th {
-        font-size: 0.54rem;
+        font-size: 0.52rem;
         text-transform: uppercase;
         color: #94a3b8;
         font-weight: 700;
-        padding: 2.5px 4px;
+        padding: 3px 4px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1;
+    }
+
+    .wms-mini-table td {
+        padding: 3px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .wms-mini-table td {
-        padding: 2.5px 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        line-height: 1.15;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .wms-mini-table tbody tr {
+        height: calc(100% / 6);
     }
 
     .wms-mini-table tr:hover {
@@ -843,10 +927,10 @@
         display: flex;
         align-items: center;
         justify-content: space-around;
-        padding: 3px 6px;
-        margin-top: 3px;
+        padding: 5px 8px;
+        margin-top: 4px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(3, 7, 24, 0.45);
+        background: rgba(3, 7, 24, 0.55);
         border-radius: 4px;
         flex-shrink: 0;
     }
@@ -856,34 +940,34 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 1px;
+        gap: 2px;
     }
 
     .compliance-kpi-lbl {
-        font-size: 0.52rem;
+        font-size: 0.55rem;
         color: #94a3b8;
         text-transform: uppercase;
         font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 3px;
+        gap: 4px;
     }
 
     .compliance-kpi-val {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 800;
-        line-height: 1.1;
+        line-height: 1.15;
     }
 
     /* Billing & Revenue Realization Strip - Fills space wisely with visual progress */
     .revenue-realization-box {
         display: flex;
         flex-direction: column;
-        gap: 3px;
-        padding: 3px 6px;
-        margin-top: 3px;
+        gap: 4px;
+        padding: 4px 8px;
+        margin-top: 4px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(3, 7, 24, 0.45);
+        background: rgba(3, 7, 24, 0.55);
         border-radius: 4px;
         flex-shrink: 0;
     }
@@ -892,7 +976,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 0.54rem;
+        font-size: 0.56rem;
         color: #94a3b8;
     }
 
@@ -1397,11 +1481,38 @@
             </div>
         </div>
 
-        <!-- Module 2: WMS Compliance, Safety & Audits -->
+        <!-- Module 2: Dedicated Dock Operations & SLA Turnaround -->
         <div class="wms-panel">
             <div class="panel-header">
                 <div class="panel-title">
-                    <i class="fas fa-user-shield"></i> Compliance & Safety
+                    <i class="fas fa-truck-loading text-info"></i> Dock Operations & Turnaround
+                </div>
+                <span class="panel-extra" style="color:#38bdf8; font-weight:700;"><i class="fas fa-stopwatch"></i> SLA Metrics</span>
+            </div>
+
+            <!-- 2-Column Grid to show all 12 Particulars seamlessly without scrolling -->
+            <div class="dockops-grid-container" id="dockops-table-body">
+                <!-- Populated dynamically via renderDockOps() -->
+            </div>
+
+            <!-- Bottom Dock SLA Health Summary Strip -->
+            <div class="compliance-footer-bar">
+                <div class="compliance-kpi-item">
+                    <span class="compliance-kpi-lbl"><i class="fas fa-stopwatch text-info"></i> Inbound Turnaround</span>
+                    <strong class="compliance-kpi-val" style="color:#38bdf8;" id="dock-kpi-inbound">0m</strong>
+                </div>
+                <div class="compliance-kpi-item">
+                    <span class="compliance-kpi-lbl"><i class="fas fa-shipping-fast text-success"></i> Outbound Turnaround</span>
+                    <strong class="compliance-kpi-val" style="color:#86efac;" id="dock-kpi-outbound">0m</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: WMS Compliance, Safety & Audits -->
+        <div class="wms-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-user-shield text-info"></i> Compliance & Safety
                 </div>
                 <span class="panel-extra" id="compliance-header-badge" style="color:#10b981; font-weight:700;"><i class="fas fa-clipboard-check"></i> Controls</span>
             </div>
@@ -1439,7 +1550,7 @@
             </div>
         </div>
 
-        <!-- Module 3: WMS Billing & Revenue Realization -->
+        <!-- Module 4: WMS Billing & Revenue Realization -->
         <div class="wms-panel">
             <div class="panel-header">
                 <div class="panel-title">
@@ -1815,6 +1926,37 @@ $(document).ready(function() {
         $('#pipeline-steps-container').html(html);
     }
 
+    // Render Dock Operations Cards & Summary (Particulars List - 2 Column Zero-Scroll Grid)
+    function renderDockOps(ops, summary) {
+        if (!ops || !ops.length) return;
+
+        let html = '';
+        ops.forEach(function(o) {
+            let pillClass = o.status_type === 'green' ? 'badge-green' : (o.status_type === 'amber' ? 'badge-orange' : 'badge-blue');
+            html += `
+                <div class="dockops-cell-card" title="${o.particular}: ${o.count} (${o.type}) - ${o.status}">
+                    <div class="dockops-cell-left">
+                        <div class="dockops-cell-title">
+                            <i class="fas ${o.icon} text-info" style="font-size:0.5rem; flex-shrink:0;"></i>
+                            <span>${o.particular}</span>
+                        </div>
+                        <div class="dockops-cell-sub">${o.type}</div>
+                    </div>
+                    <div class="dockops-cell-right">
+                        <span class="dockops-cell-val">${o.count}</span>
+                        <span class="card-badge ${pillClass}" style="padding:0.5px 3px; font-size:0.46rem;">${o.status}</span>
+                    </div>
+                </div>
+            `;
+        });
+        $('#dockops-table-body').html(html);
+
+        if (summary) {
+            $('#dock-kpi-inbound').text(summary.avg_inbound_time || '0m');
+            $('#dock-kpi-outbound').text(summary.avg_outbound_time || '0m');
+        }
+    }
+
     // Render Compliance Table & Health Summary
     function renderCompliance(controls, summary) {
         if (!controls || !controls.length) return;
@@ -2026,7 +2168,8 @@ $(document).ready(function() {
                     // 4. Inventory Pipeline Steps
                     renderPipeline(res.pipeline);
 
-                    // 5. Compliance Table & Health Summary
+                    // 5. Dock SLA Operations & Compliance
+                    renderDockOps(res.dock_operations, res.dock_summary);
                     renderCompliance(res.compliance_controls, res.compliance_summary);
 
                     // 6. Revenue Breakdown Table & Realization
