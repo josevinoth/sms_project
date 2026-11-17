@@ -103,6 +103,7 @@
                     <button type="submit" class="btn btn-warning text-white font-weight-bold shadow-sm" style="height: 42px; border-radius: 20px; padding: 0 20px;">
                         <i class="fas fa-filter mr-1"></i> FILTER
                     </button>
+<button type="button" id="btnExportExcel" class="btn text-white font-weight-bold shadow-sm" style="background-color: #107c41; border: none; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 15px; border-radius: 6px;" title="Export filtered date range to Excel"><i class="fas fa-file-excel"></i> Export Excel</button>
                     <a href="{% url 'vendor_rate_report' %}" class="btn btn-light text-dark font-weight-bold border shadow-sm ml-2" style="height: 42px; border-radius: 20px; padding: 0 20px; display:inline-flex; align-items:center; text-decoration:none;">
                         <i class="fas fa-sync-alt mr-1"></i> CLEAR
                     </a>
@@ -197,7 +198,10 @@
                 { extend: 'pdf', text: 'PDF', className: 'btn shadow-sm' },
                 { extend: 'print', text: 'PRINT', className: 'btn shadow-sm' }
             ],
-            "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+            "lengthMenu": [
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
+            ],
             "language": {
                 "lengthMenu": "Show _MENU_ entries"
             }
@@ -207,6 +211,39 @@
             e.preventDefault();
             table.ajax.reload();
         });
+
+    $('#btnExportExcel').on('click', function () {
+        var $btn = $(this);
+        var fromDate = $('[name="from_date"]').val();
+        var toDate = $('[name="to_date"]').val();
+
+        if (!fromDate || !toDate) {
+            alert('Please select both From Date and To Date before exporting.');
+            return;
+        }
+
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From Date cannot be after To Date.');
+            return;
+        }
+
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating Excel...');
+
+        var params = new URLSearchParams({
+            from_date: fromDate,
+            to_date: toDate,
+            branch: $('[name="branch"]').val() || '',
+            vendor: $('[name="vendor"]').val() || ''
+        });
+
+        window.location.href = "{% url 'vendor_rate_report_export' %}?" + params.toString();
+
+        setTimeout(function () {
+            $btn.prop('disabled', false).html(originalHtml);
+        }, 3000);
+    });
+
     });
 </script>
 

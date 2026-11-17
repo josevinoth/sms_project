@@ -70,7 +70,17 @@
                 </select>
             </div>
 
-            <div class="col-12 col-md-2 d-flex align-items-center" style="gap: 8px;">
+            <div class="col-12 col-md-2 mb-2 mb-md-0">
+                <label for="unit-scale-filter" class="form-label-modern font-weight-bold">Value Unit</label>
+                <select id="unit-scale-filter" class="form-control form-control-modern" onchange="applyUnitScale(this.value)">
+                    <option value="raw" selected>-------</option>
+                    <option value="rupee">Rupees</option>
+                    <option value="lakh">Lakhs</option>
+                    <option value="crore">Crores</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2 d-flex align-items-center mt-2" style="gap: 8px;">
                 <button type="button" onclick="updateFilters()" class="btn-modern btn-submit py-1 px-3 flex-grow-1" style="height: 36px;">
                     <i class="fas fa-filter mr-1"></i> Apply
                 </button>
@@ -132,7 +142,15 @@
     }
     #mis-table tbody td:first-child {
         text-align: left !important;
-        padding-left: 24px !important;
+        padding-left: 20px !important;
+    }
+    .mirror-checkbox {
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        accent-color: #0284c7;
+        margin-right: 6px;
     }
     #mis-table tbody tr.category-row td:first-child {
         text-align: left !important;
@@ -190,20 +208,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in income_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="income">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -213,20 +236,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in op_fixed_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="op_fixed">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -236,20 +264,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in op_variable_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="op_variable">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -259,20 +292,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in non_op_fixed_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="non_op_fixed">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -282,20 +320,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in non_op_variable_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="non_op_variable">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -305,20 +348,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in employee_benefits_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="employee_benefits">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -328,20 +376,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in dept_expenses_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="dept_expenses">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -351,20 +404,25 @@
         {% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>{% for m_idx in months %}<td></td>{% endfor %}<td></td>
     </tr>
     {% for summary in interest_summary %}
-    <tr class="{% if summary.is_total %}total-row{% endif %}">
-        <td>{{ summary.expense_type }}</td>
+    <tr class="{% if summary.is_total %}total-row{% else %}data-row{% endif %}" data-cat-type="expense" data-section="interest">
+        <td>
+            {% if not summary.is_total %}
+            <input type="checkbox" class="mirror-checkbox mr-2" data-category="{{ summary.expense_type }}" {% if summary.is_mirrored %}checked{% endif %} title="Mirror Actuals to Budget">
+            {% endif %}
+            {{ summary.expense_type }}
+        </td>
         {% for m_idx in months %}
-        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="income-bg col-budget" data-raw="{{ summary.monthly_budgets|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.original_monthly_budgets|get_item:m_idx|default:0 }}">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        <td class="income-bg col-budget-total" data-raw="{{ summary.total_budget|default:0 }}" data-orig-raw="{{ summary.original_total_budget|default:0 }}">{{ summary.total_budget|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual" data-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_expenses|get_item:m_idx|default:0 }}">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        <td class="actuals-bg col-actual-total" data-raw="{{ summary.total_expense|default:0 }}" data-orig-raw="{{ summary.total_expense|default:0 }}">{{ summary.total_expense|floatformat:0 }}</td>
         {% for m_idx in months %}
-        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        <td class="variance-bg col-variance" data-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ summary.monthly_variance|get_item:m_idx|default:0 }}">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
         {% endfor %}
-        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+        <td class="variance-bg col-variance-total" data-raw="{{ summary.total_variance|default:0 }}" data-orig-raw="{{ summary.total_variance|default:0 }}">{{ summary.total_variance|floatformat:0 }}</td>
     </tr>
     {% endfor %}
 
@@ -372,50 +430,50 @@
     <tr class="total-expense-row">
         <td><strong>TOTAL EXPENSES</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ total_expense_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-budget" data-raw="{{ total_expense_summary.monthly_budget|get_item:m_idx|default:0 }}" data-orig-raw="{{ total_expense_summary.monthly_budget|get_item:m_idx|default:0 }}"><strong>{{ total_expense_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ total_expense_summary.total_budget|floatformat:0 }}</strong></td>
+        <td class="col-budget-total" data-raw="{{ total_expense_summary.total_budget|default:0 }}" data-orig-raw="{{ total_expense_summary.total_budget|default:0 }}"><strong>{{ total_expense_summary.total_budget|floatformat:0 }}</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ total_expense_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-actual" data-raw="{{ total_expense_summary.monthly_actual|get_item:m_idx|default:0 }}" data-orig-raw="{{ total_expense_summary.monthly_actual|get_item:m_idx|default:0 }}"><strong>{{ total_expense_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ total_expense_summary.total_actual|floatformat:0 }}</strong></td>
+        <td class="col-actual-total" data-raw="{{ total_expense_summary.total_actual|default:0 }}" data-orig-raw="{{ total_expense_summary.total_actual|default:0 }}"><strong>{{ total_expense_summary.total_actual|floatformat:0 }}</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ total_expense_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-variance" data-raw="{{ total_expense_summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ total_expense_summary.monthly_variance|get_item:m_idx|default:0 }}"><strong>{{ total_expense_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ total_expense_summary.total_variance|floatformat:0 }}</strong></td>
+        <td class="col-variance-total" data-raw="{{ total_expense_summary.total_variance|default:0 }}" data-orig-raw="{{ total_expense_summary.total_variance|default:0 }}"><strong>{{ total_expense_summary.total_variance|floatformat:0 }}</strong></td>
     </tr>
 
     <!-- NET PROFIT SUMMARY -->
     <tr class="net-profit-row">
         <td><strong>NET PROFIT/LOSS</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-budget" data-raw="{{ net_summary.monthly_budget|get_item:m_idx|default:0 }}" data-orig-raw="{{ net_summary.monthly_budget|get_item:m_idx|default:0 }}"><strong>{{ net_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.total_budget|floatformat:0 }}</strong></td>
+        <td class="col-budget-total" data-raw="{{ net_summary.total_budget|default:0 }}" data-orig-raw="{{ net_summary.total_budget|default:0 }}"><strong>{{ net_summary.total_budget|floatformat:0 }}</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-actual" data-raw="{{ net_summary.monthly_actual|get_item:m_idx|default:0 }}" data-orig-raw="{{ net_summary.monthly_actual|get_item:m_idx|default:0 }}"><strong>{{ net_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.total_actual|floatformat:0 }}</strong></td>
+        <td class="col-actual-total" data-raw="{{ net_summary.total_actual|default:0 }}" data-orig-raw="{{ net_summary.total_actual|default:0 }}"><strong>{{ net_summary.total_actual|floatformat:0 }}</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
+        <td class="col-variance" data-raw="{{ net_summary.monthly_variance|get_item:m_idx|default:0 }}" data-orig-raw="{{ net_summary.monthly_variance|get_item:m_idx|default:0 }}"><strong>{{ net_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.total_variance|floatformat:0 }}</strong></td>
+        <td class="col-variance-total" data-raw="{{ net_summary.total_variance|default:0 }}" data-orig-raw="{{ net_summary.total_variance|default:0 }}"><strong>{{ net_summary.total_variance|floatformat:0 }}</strong></td>
     </tr>
     <!-- PROFIT % ROW -->
     <tr class="profit-percent-row">
         <td><strong>PROFIT %</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.budget_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        <td class="col-budget" data-percent="true" data-orig-pct="{{ net_summary.budget_monthly_pl_percentage|get_item:m_idx|default:0 }}"><strong>{{ net_summary.budget_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.budget_total_pl_percentage|floatformat:1 }}%</strong></td>
+        <td class="col-budget-total" data-percent="true" data-orig-pct="{{ net_summary.budget_total_pl_percentage|default:0 }}"><strong>{{ net_summary.budget_total_pl_percentage|floatformat:1 }}%</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.actual_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        <td class="col-actual" data-percent="true" data-orig-pct="{{ net_summary.actual_monthly_pl_percentage|get_item:m_idx|default:0 }}"><strong>{{ net_summary.actual_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.actual_total_pl_percentage|floatformat:1 }}%</strong></td>
+        <td class="col-actual-total" data-percent="true" data-orig-pct="{{ net_summary.actual_total_pl_percentage|default:0 }}"><strong>{{ net_summary.actual_total_pl_percentage|floatformat:1 }}%</strong></td>
         {% for m_idx in months %}
-        <td><strong>{{ net_summary.variance_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        <td class="col-variance" data-percent="true" data-orig-pct="{{ net_summary.variance_monthly_pl_percentage|get_item:m_idx|default:0 }}"><strong>{{ net_summary.variance_monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
         {% endfor %}
-        <td><strong>{{ net_summary.variance_total_pl_percentage|floatformat:1 }}%</strong></td>
+        <td class="col-variance-total" data-percent="true" data-orig-pct="{{ net_summary.variance_total_pl_percentage|default:0 }}"><strong>{{ net_summary.variance_total_pl_percentage|floatformat:1 }}%</strong></td>
     </tr>
 
     </tbody>
@@ -587,6 +645,261 @@
             exportCSV();
         }
     }
+
+    // ---- Mirror Actuals to Budget Functionality ----
+    function onMirrorCheckboxChange() {
+        const row = $(this).closest('tr');
+        const isChecked = $(this).is(':checked');
+
+        const budgetTds = row.find('td.col-budget');
+        const actualTds = row.find('td.col-actual');
+        const budgetTotalTd = row.find('td.col-budget-total');
+        const actualTotalTd = row.find('td.col-actual-total');
+        const varianceTds = row.find('td.col-variance');
+        const varianceTotalTd = row.find('td.col-variance-total');
+
+        const numMonths = budgetTds.length;
+
+        for (let i = 0; i < numMonths; i++) {
+            const bTd = $(budgetTds[i]);
+            const aTd = $(actualTds[i]);
+            const vTd = $(varianceTds[i]);
+
+            if (isChecked) {
+                const actualRaw = parseFloat(aTd.attr('data-raw')) || 0;
+                bTd.attr('data-raw', actualRaw);
+                vTd.attr('data-raw', 0);
+            } else {
+                const origBudgetRaw = parseFloat(bTd.attr('data-orig-raw')) || 0;
+                const actualRaw = parseFloat(aTd.attr('data-raw')) || 0;
+                bTd.attr('data-raw', origBudgetRaw);
+                vTd.attr('data-raw', origBudgetRaw - actualRaw);
+            }
+        }
+
+        if (isChecked) {
+            const actualTotalRaw = parseFloat(actualTotalTd.attr('data-raw')) || 0;
+            budgetTotalTd.attr('data-raw', actualTotalRaw);
+            varianceTotalTd.attr('data-raw', 0);
+        } else {
+            const origBudgetTotalRaw = parseFloat(budgetTotalTd.attr('data-orig-raw')) || 0;
+            const actualTotalRaw = parseFloat(actualTotalTd.attr('data-raw')) || 0;
+            budgetTotalTd.attr('data-raw', origBudgetTotalRaw);
+            varianceTotalTd.attr('data-raw', origBudgetTotalRaw - actualTotalRaw);
+        }
+
+        recalculateTotals();
+        applyUnitScale();
+
+        // Persist to server permanently via AJAX
+        const categoryName = $(this).attr('data-category') || '';
+        const branchVal = document.getElementById('branch-filter').value || 'All';
+        const yearVal = document.getElementById('year').value || '2026';
+
+        if (categoryName) {
+            $.ajax({
+                url: "{% url 'save_trans_mis_mirror_ajax' %}",
+                type: 'POST',
+                data: {
+                    category_name: categoryName,
+                    branch: branchVal,
+                    year: yearVal,
+                    is_mirrored: isChecked,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (res) {
+                    // Saved permanently to DB
+                },
+                error: function (err) {
+                    console.error('Failed to save mirror setting permanently:', err);
+                }
+            });
+        }
+    }
+
+    function recalculateTotals() {
+        const monthCount = {{ months|length }};
+        const sections = ['op_fixed', 'op_variable', 'non_op_fixed', 'non_op_variable', 'employee_benefits', 'dept_expenses', 'interest'];
+
+        // 1. Recalculate Income Total Row
+        let incomeMonthBudgets = new Array(monthCount).fill(0);
+        let incomeTotalBudget = 0;
+        let incomeMonthActuals = new Array(monthCount).fill(0);
+        let incomeTotalActual = 0;
+
+        $('#mis-table tbody tr.data-row[data-cat-type="income"]').each(function () {
+            const bTds = $(this).find('td.col-budget');
+            const aTds = $(this).find('td.col-actual');
+            for (let i = 0; i < monthCount; i++) {
+                incomeMonthBudgets[i] += parseFloat($(bTds[i]).attr('data-raw')) || 0;
+                incomeMonthActuals[i] += parseFloat($(aTds[i]).attr('data-raw')) || 0;
+            }
+            incomeTotalBudget += parseFloat($(this).find('td.col-budget-total').attr('data-raw')) || 0;
+            incomeTotalActual += parseFloat($(this).find('td.col-actual-total').attr('data-raw')) || 0;
+        });
+
+        const incomeTotalRow = $('#mis-table tbody tr.total-row[data-cat-type="income"]');
+        if (incomeTotalRow.length) {
+            const bTds = incomeTotalRow.find('td.col-budget');
+            const vTds = incomeTotalRow.find('td.col-variance');
+            for (let i = 0; i < monthCount; i++) {
+                $(bTds[i]).attr('data-raw', incomeMonthBudgets[i]);
+                $(vTds[i]).attr('data-raw', incomeMonthBudgets[i] - incomeMonthActuals[i]);
+            }
+            incomeTotalRow.find('td.col-budget-total').attr('data-raw', incomeTotalBudget);
+            incomeTotalRow.find('td.col-variance-total').attr('data-raw', incomeTotalBudget - incomeTotalActual);
+        }
+
+        // 2. Recalculate each Expense Section Total Row
+        let totalExpMonthBudgets = new Array(monthCount).fill(0);
+        let totalExpTotalBudget = 0;
+        let totalExpMonthActuals = new Array(monthCount).fill(0);
+        let totalExpTotalActual = 0;
+
+        sections.forEach(sec => {
+            let secMonthBudgets = new Array(monthCount).fill(0);
+            let secMonthActuals = new Array(monthCount).fill(0);
+            let secTotalBudget = 0;
+            let secTotalActual = 0;
+
+            $(`#mis-table tbody tr.data-row[data-section="${sec}"]`).each(function () {
+                const bTds = $(this).find('td.col-budget');
+                const aTds = $(this).find('td.col-actual');
+                for (let i = 0; i < monthCount; i++) {
+                    secMonthBudgets[i] += parseFloat($(bTds[i]).attr('data-raw')) || 0;
+                    secMonthActuals[i] += parseFloat($(aTds[i]).attr('data-raw')) || 0;
+                }
+                secTotalBudget += parseFloat($(this).find('td.col-budget-total').attr('data-raw')) || 0;
+                secTotalActual += parseFloat($(this).find('td.col-actual-total').attr('data-raw')) || 0;
+            });
+
+            const secTotalRow = $(`#mis-table tbody tr.total-row[data-section="${sec}"]`);
+            if (secTotalRow.length) {
+                const bTds = secTotalRow.find('td.col-budget');
+                const vTds = secTotalRow.find('td.col-variance');
+                for (let i = 0; i < monthCount; i++) {
+                    $(bTds[i]).attr('data-raw', secMonthBudgets[i]);
+                    $(vTds[i]).attr('data-raw', secMonthBudgets[i] - secMonthActuals[i]);
+                    totalExpMonthBudgets[i] += secMonthBudgets[i];
+                    totalExpMonthActuals[i] += secMonthActuals[i];
+                }
+                secTotalRow.find('td.col-budget-total').attr('data-raw', secTotalBudget);
+                secTotalRow.find('td.col-variance-total').attr('data-raw', secTotalBudget - secTotalActual);
+                totalExpTotalBudget += secTotalBudget;
+                totalExpTotalActual += secTotalActual;
+            }
+        });
+
+        // 3. Recalculate TOTAL EXPENSES Row
+        const totalExpRow = $('#mis-table tbody tr.total-expense-row');
+        if (totalExpRow.length) {
+            const bTds = totalExpRow.find('td.col-budget');
+            const vTds = totalExpRow.find('td.col-variance');
+            for (let i = 0; i < monthCount; i++) {
+                $(bTds[i]).attr('data-raw', totalExpMonthBudgets[i]);
+                $(vTds[i]).attr('data-raw', totalExpMonthBudgets[i] - totalExpMonthActuals[i]);
+            }
+            totalExpRow.find('td.col-budget-total').attr('data-raw', totalExpTotalBudget);
+            totalExpRow.find('td.col-variance-total').attr('data-raw', totalExpTotalBudget - totalExpTotalActual);
+        }
+
+        // 4. Recalculate NET PROFIT/LOSS Row
+        let netMonthBudgets = new Array(monthCount).fill(0);
+        let netMonthActuals = new Array(monthCount).fill(0);
+        let netTotalBudget = incomeTotalBudget - totalExpTotalBudget;
+        let netTotalActual = incomeTotalActual - totalExpTotalActual;
+
+        const netProfitRow = $('#mis-table tbody tr.net-profit-row');
+        if (netProfitRow.length) {
+            const bTds = netProfitRow.find('td.col-budget');
+            const aTds = netProfitRow.find('td.col-actual');
+            const vTds = netProfitRow.find('td.col-variance');
+            for (let i = 0; i < monthCount; i++) {
+                netMonthBudgets[i] = incomeMonthBudgets[i] - totalExpMonthBudgets[i];
+                netMonthActuals[i] = parseFloat($(aTds[i]).attr('data-raw')) || 0;
+                $(bTds[i]).attr('data-raw', netMonthBudgets[i]);
+                $(vTds[i]).attr('data-raw', netMonthActuals[i] - netMonthBudgets[i]);
+            }
+            netProfitRow.find('td.col-budget-total').attr('data-raw', netTotalBudget);
+            netProfitRow.find('td.col-variance-total').attr('data-raw', netTotalActual - netTotalBudget);
+        }
+
+        // 5. Recalculate PROFIT % Row
+        const profitPctRow = $('#mis-table tbody tr.profit-percent-row');
+        if (profitPctRow.length) {
+            const bTds = profitPctRow.find('td.col-budget');
+            const aTds = profitPctRow.find('td.col-actual');
+            const vTds = profitPctRow.find('td.col-variance');
+            for (let i = 0; i < monthCount; i++) {
+                const bPct = incomeMonthBudgets[i] > 0 ? (netMonthBudgets[i] / incomeMonthBudgets[i] * 100) : 0;
+                const aPct = parseFloat($(aTds[i]).text()) || 0; // percentage text
+                $(bTds[i]).children('strong').text(bPct.toFixed(1) + '%');
+                $(vTds[i]).children('strong').text((aPct - bPct).toFixed(1) + '%');
+            }
+            const bTotalPct = incomeTotalBudget > 0 ? (netTotalBudget / incomeTotalBudget * 100) : 0;
+            const aTotalPct = parseFloat(profitPctRow.find('td.col-actual-total').text()) || 0;
+            profitPctRow.find('td.col-budget-total').children('strong').text(bTotalPct.toFixed(1) + '%');
+            profitPctRow.find('td.col-variance-total').children('strong').text((aTotalPct - bTotalPct).toFixed(1) + '%');
+        }
+    }
+
+    // ---- Unit Scale Conversion (Raw / Rupee / Lakh / Crore) ----
+    function applyUnitScale(unit) {
+        if (!unit) unit = $('#unit-scale-filter').val() || 'raw';
+        localStorage.setItem('trans_mis_unit_scale', unit);
+
+        let divisor = 1;
+        let decimals = 0;
+        let suffix = '';
+
+        if (unit === 'lakh') {
+            divisor = 100000;
+            decimals = 2;
+            suffix = ' L';
+        } else if (unit === 'crore') {
+            divisor = 10000000;
+            decimals = 2;
+            suffix = ' Cr';
+        }
+
+        $('#mis-table tbody td[data-raw]').each(function () {
+            const raw = parseFloat($(this).attr('data-raw'));
+            if (isNaN(raw) || raw === 0) {
+                if ($(this).children('strong').length > 0) {
+                    $(this).children('strong').text('0');
+                } else {
+                    $(this).text('0');
+                }
+                return;
+            }
+
+            const converted = raw / divisor;
+            let formatted = '';
+            if (unit === 'raw') {
+                formatted = Math.round(converted).toString();
+            } else if (unit === 'rupee') {
+                formatted = Math.round(converted).toLocaleString('en-IN');
+            } else {
+                formatted = converted.toFixed(decimals) + suffix;
+            }
+
+            if ($(this).children('strong').length > 0) {
+                $(this).children('strong').text(formatted);
+            } else {
+                $(this).text(formatted);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $('#mis-table').on('change', '.mirror-checkbox', onMirrorCheckboxChange);
+
+        const savedUnit = localStorage.getItem('trans_mis_unit_scale') || 'raw';
+        $('#unit-scale-filter').val(savedUnit);
+        if (savedUnit !== 'raw') {
+            applyUnitScale(savedUnit);
+        }
+    });
 
     // ---- Filter Functions ----
     function updateFilters() {

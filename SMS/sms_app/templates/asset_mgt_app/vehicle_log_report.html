@@ -118,6 +118,7 @@
                         <button type="button" id="btn-filter" class="btn btn-submit flex-fill d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 8px; font-weight: 600;">
                             <i class="fas fa-filter mr-1"></i> Filter
                         </button>
+<button type="button" id="btnExportExcel" class="btn text-white font-weight-bold shadow-sm" style="background-color: #107c41; border: none; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 15px; border-radius: 6px;" title="Export filtered date range to Excel"><i class="fas fa-file-excel"></i> Export Excel</button>
                         <a href="{% url 'vehicle_log_report' %}" class="btn btn-cancel flex-fill d-inline-flex align-items-center justify-content-center" style="height: 42px; border-radius: 8px; text-decoration:none;">
                             <i class="fas fa-sync mr-1"></i> Clear
                         </a>
@@ -221,8 +222,8 @@
             },
             "dom": '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
             "lengthMenu": [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
             "pageLength": 10,
             "buttons": [
@@ -235,7 +236,10 @@
                     className: 'btn btn-sm btn-outline-secondary'
                 },
                 {
-                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel mr-1 text-success"></i> Excel',
+                action: function (e, dt, node, config) {
+                    $('#btnExportExcel').trigger('click');
+                },
                     text: 'Excel',
                     filename: function () {
                         let vehicle = "{{ vehicle_number|default:'' }}";
@@ -313,6 +317,46 @@
         $('#vehicle_log_filter_form').on('submit', function (e) {
             e.preventDefault();
             table.draw();
+        });
+
+        $('#btnExportExcel').on('click', function () {
+            var $btn = $(this);
+            var fromDate = $('#from_date').val();
+            var toDate = $('#to_date').val();
+
+            if (!fromDate || !toDate) {
+                alert('Please select both From Date and To Date before exporting.');
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert('From Date cannot be after To Date.');
+                return;
+            }
+
+            var originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating Excel...');
+
+            var tripCat = $('#trip_category').val();
+            var tripCatStr = tripCat && tripCat.length > 0 ? (Array.isArray(tripCat) ? tripCat.join(',') : tripCat) : '';
+
+            var params = new URLSearchParams({
+                from_date: fromDate,
+                to_date: toDate,
+                vehicle_number: $('#vehicle_number').val() || '',
+                from_location: $('select[name="from_location"]').val() || '',
+                to_location: $('select[name="to_location"]').val() || '',
+                branch: $('select[name="branch"]').val() || '',
+                vehicle_source: $('#vehicle_source').val() || '',
+                trip_type: $('#trip_type').val() || '',
+                trip_category: tripCatStr
+            });
+
+            window.location.href = "{% url 'vehicle_log_report_export' %}?" + params.toString();
+
+            setTimeout(function () {
+                $btn.prop('disabled', false).html(originalHtml);
+            }, 3000);
         });
     });
 </script>

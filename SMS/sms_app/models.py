@@ -283,3 +283,4 @@ from .sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateCo
 from .sub_models.pk_customer_box_master_mod import CustomerBoxItemMaster
 from .sub_models.pk_bom_rule_mod import PkBomRuleMaster, PkBomRuleComponent
 from .sub_models.mc_vehicletype_mod import Mc_vehicletype
+from .sub_models.trans_mis_mirror_setting_mod import TransportMISMirrorSetting

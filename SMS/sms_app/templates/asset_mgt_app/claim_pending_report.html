@@ -42,9 +42,16 @@
         <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
     </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary mt-3">Filter</button>
-        <a href="{{ request.path }}" class="btn btn-secondary mt-3">Clear</a>
+    <div class="col-md-4 d-flex align-items-end gap-2" style="gap: 8px;">
+        <button type="submit" class="btn btn-primary d-inline-flex align-items-center justify-content-center" style="height: 38px; padding: 0 16px;">
+            <i class="fas fa-filter mr-1"></i> Filter
+        </button>
+        <button type="button" id="btnExportExcel" class="btn text-white font-weight-bold d-inline-flex align-items-center justify-content-center shadow-sm" style="height: 38px; background-color: #107c41; border: none; padding: 0 16px; border-radius: 6px; gap: 6px;" title="Export to Excel">
+            <i class="fas fa-file-excel"></i> Export Excel
+        </button>
+        <a href="{{ request.path }}" class="btn btn-secondary d-inline-flex align-items-center justify-content-center" style="height: 38px; padding: 0 16px; text-decoration: none;">
+            <i class="fas fa-undo mr-1"></i> Clear
+        </a>
     </div>
 </form>
 <br>
@@ -91,8 +98,8 @@
             dom: 'lBfrtip',
 
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
 
             pageLength: 10,
@@ -105,7 +112,10 @@
                 // EXCEL EXPORT
                 // =========================
                 {
-                    extend: 'excelHtml5',
+                    text: '<i class="fas fa-file-excel mr-1 text-success"></i> Excel',
+                action: function (e, dt, node, config) {
+                    $('#btnExportExcel').trigger('click');
+                },
                     text: 'Excel',
                     title: 'Claim Pending Status Report',
 
@@ -200,6 +210,38 @@
         setTimeout(function () {
             table.columns.adjust().draw();
         }, 500);
+
+
+    $('#btnExportExcel').on('click', function () {
+        var $btn = $(this);
+        var fromDate = $('[name="from_date"]').val();
+        var toDate = $('[name="to_date"]').val();
+
+        if (!fromDate || !toDate) {
+            alert('Please select both From Date and To Date before exporting.');
+            return;
+        }
+
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From Date cannot be after To Date.');
+            return;
+        }
+
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating Excel...');
+
+        var params = new URLSearchParams({
+            from_date: fromDate,
+            to_date: toDate,
+            vehicle_number: $('[name="vehicle_number"]').val() || ''
+        });
+
+        window.location.href = "{% url 'claim_pending_report_export' %}?" + params.toString();
+
+        setTimeout(function () {
+            $btn.prop('disabled', false).html(originalHtml);
+        }, 3000);
+    });
 
     });
 </script>
