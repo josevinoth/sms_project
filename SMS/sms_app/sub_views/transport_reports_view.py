@@ -8877,9 +8877,10 @@ def time_analysis_report_ajax_view(request):
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
+        'tr_vehicletype_placed',
         'tr_vehicletype',
     ).only(
-        'tr_vehiclenumber', 'tr_vehicletype__vt_vehicletype', 'tr_created_at', 'tr_departeddate', 'tr_loading_time',
+        'tr_vehiclenumber', 'tr_vehicletype_placed__vt_vehicletype', 'tr_vehicletype__vt_vehicletype', 'tr_created_at', 'tr_departeddate', 'tr_loading_time',
         'tr_dock_in_time', 'tr_dock_out_time', 'tr_reporteddate', 'tr_departeddate_delivery',
         'tr_unloading_time', 'tr_reporteddate_pickup', 'tr_departeddate_pickup',
         'tr_enquirynumber__en_enquirynumber', 'tr_enquirynumber__en_customername__cu_name',
@@ -9013,7 +9014,7 @@ def time_analysis_report_ajax_view(request):
             cnote_no,
             customer_name,
             safe_str(trip.tr_vehiclenumber),
-            safe_str(trip.tr_vehicletype),
+            safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
             _fmt_dt(enquiry_created),
             _fmt_dt(pickup_dt),
             _fmt_dt(veh_allotted_dt),
@@ -9425,7 +9426,7 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
             'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_fromlocaion',
             'tr_enquirynumber__en_tolocation',
             'tr_consignmentnumber', 'tr_departedlocation', 'tr_reportedlocation',
-            'tr_vehicletype', 'tr_vehiclesource',
+            'tr_vehicletype_placed', 'tr_vehicletype', 'tr_vehiclesource',
             'tc_financestatus', 'tr_operational_status',
             'tr_updated_by', 'tr_updated_by__user_extinfo__emp_branch'
         ))
@@ -9434,7 +9435,7 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
             'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_fromlocaion',
             'tr_enquirynumber__en_tolocation',
             'tr_consignmentnumber', 'tr_departedlocation', 'tr_reportedlocation',
-            'tr_vehicletype', 'tr_vehiclesource',
+            'tr_vehicletype_placed', 'tr_vehicletype', 'tr_vehiclesource',
             'tc_financestatus', 'tr_operational_status',
             'tr_updated_by', 'tr_updated_by__user_extinfo__emp_branch'
         ))
@@ -9442,7 +9443,7 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
     enquiry_ids = [t.tr_enquirynumber_id for t in paginated_trips if t.tr_enquirynumber_id]
     allotments = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber_id__in=enquiry_ids
-    ).select_related('va_vendor', 'va_vehiclenumber')
+    ).select_related('va_vendor', 'va_vehiclenumber', 'va_vehicletype', 'va_vehicletype_placed')
 
     allotment_map = {}
     enquiry_allotment_map = {}
@@ -9494,7 +9495,15 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
         customer = str(
             trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "-"
         veh_no = trip.tr_vehiclenumber if trip.tr_vehiclenumber else "-"
-        veh_type = str(trip.tr_vehicletype) if trip.tr_vehicletype else "-"
+        veh_type = ""
+        if allotment and allotment.va_vehicletype_placed:
+            veh_type = str(allotment.va_vehicletype_placed)
+        elif getattr(trip, 'tr_vehicletype_placed', None):
+            veh_type = str(trip.tr_vehicletype_placed)
+        elif allotment and allotment.va_vehicletype:
+            veh_type = str(allotment.va_vehicletype)
+        else:
+            veh_type = str(trip.tr_vehicletype or "-")
         veh_source = str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "-"
         status_label = trip.tc_financestatus.status if trip.tc_financestatus else (trip.tr_operational_status.status if trip.tr_operational_status else "Trip Started")
 
