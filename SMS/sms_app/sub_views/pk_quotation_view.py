@@ -653,6 +653,17 @@ def load_quotation_matrix(request):
 
     for r in reqs:
         is_quoted = r.id in quoted_req_ids
+        wood_desc_names = [str(wd) for wd in r.nad_wood_description.all()]
+        wood_prefix = 'P'
+        if any('kiln' in w.lower() for w in wood_desc_names):
+            wood_prefix = 'K'
+        elif any('hard' in w.lower() for w in wood_desc_names):
+            wood_prefix = 'H'
+        elif any('rubber' in w.lower() for w in wood_desc_names):
+            wood_prefix = 'R'
+        elif any('pine' in w.lower() for w in wood_desc_names):
+            wood_prefix = 'P'
+
         r_data = {
             'id': r.id,
             'name': str(r.nad_item or f'Box Item #{r.id}'),
@@ -675,6 +686,8 @@ def load_quotation_matrix(request):
             'customer_part_code': r.nad_customer_part_code or '',
             'type_of_req_id': r.nad_type_of_req_id,
             'is_quoted': is_quoted,
+            'wood_prefix': wood_prefix,
+            'wood_descriptions': wood_desc_names,
         }
         req_list.append(r_data)
         if is_quoted and not first_quoted_req:
@@ -1421,6 +1434,18 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
         if is_quoted:
             has_quoted = True
 
+        wood_descs = list(req.nad_wood_description.values_list('pk_wood_description', flat=True))
+        wood_desc_str = ", ".join(wood_descs)
+        wood_prefix = 'P'
+        if any('kiln' in w.lower() for w in wood_descs):
+            wood_prefix = 'K'
+        elif any('pine' in w.lower() for w in wood_descs):
+            wood_prefix = 'P'
+        elif any('hard' in w.lower() for w in wood_descs):
+            wood_prefix = 'H'
+        elif any('rubber' in w.lower() for w in wood_descs):
+            wood_prefix = 'R'
+
         requirements_list.append({
             'id': req.id,
             'nad_item': req.nad_item,
@@ -1442,6 +1467,8 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
             'nad_job_weight': float(req.nad_job_weight or 0.0),
             'nad_customer_part_code': req.nad_customer_part_code or '',
             'nad_type_of_req_id': req.nad_type_of_req_id,
+            'wood_descriptions': wood_desc_str,
+            'wood_prefix': wood_prefix,
             'is_quoted': is_quoted,
         })
 

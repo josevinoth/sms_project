@@ -4,7 +4,7 @@ from django.db.models import Sum, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .driver_settlement_view import recalc_driver_settlement
-from ..models import Driverexpense, TripdetailInfo, driver_settlement_info
+from ..models import Driverexpense, TripdetailInfo, driver_settlement_info, DriverExpenseAttachment
 from ..sub_forms.driver_expense_form import DriverExpenseForm
 from datetime import datetime
 from ..sub_models.driver_master_mod import DrivermasterInfo
@@ -66,7 +66,33 @@ def driver_expense_add(request, expense_id=0):
             exp = form.save(commit=False)
             exp.driver_name = settlement.driver
             exp.de_driver_id = settlement
+
+            # Auto-populate Remarks with From-To route if left blank
+            if not exp.de_remarks:
+                trip_no = exp.trip_number or exp.de_trip_number
+                if trip_no:
+                    from ..sub_models.tripdetail_mod import TripdetailInfo
+                    trip_obj = TripdetailInfo.objects.filter(
+                        Q(tr_tripnumber=trip_no) | Q(id=trip_no) if str(trip_no).isdigit() else Q(tr_tripnumber=trip_no)
+                    ).first()
+                    if trip_obj:
+                        from_loc = trip_obj.tr_departedlocation.place_name if trip_obj.tr_departedlocation else ""
+                        to_loc = trip_obj.tr_reportedlocation.place_name if trip_obj.tr_reportedlocation else ""
+                        if from_loc or to_loc:
+                            exp.de_remarks = f"{from_loc}-{to_loc}"
+
             exp.save()
+
+            # Handle Multi-attachments
+            uploaded_files = request.FILES.getlist('de_bill_attachments')
+            created_user = request.user if (request.user and request.user.is_authenticated) else None
+            for f in uploaded_files:
+                DriverExpenseAttachment.objects.create(
+                    expense=exp,
+                    file=f,
+                    filename=f.name,
+                    uploaded_by=created_user
+                )
 
             # ------------------------------------------------------------------
             # AUTO-GENERATE TMS PETTY CASH ENTRIES FOR EXPENSES
@@ -167,6 +193,16 @@ def driver_expense_add(request, expense_id=0):
                         if tpc.tpc_transaction_date:
                             tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj, voucher_date=tpc.tpc_transaction_date)
                         tpc.save()
+
+                        # Also sync attachments from driver expense to this generated TMS petty cash
+                        from ..models import TMSPettyCashAttachment
+                        for de_att in exp.attachments.all():
+                            if de_att.file:
+                                TMSPettyCashAttachment.objects.create(
+                                    petty_cash=tpc,
+                                    file=de_att.file,
+                                    filename=de_att.filename
+                                )
             # ------------------------------------------------------------------
 
             # ALWAYS recalc after save
@@ -249,6 +285,10 @@ def driver_expense_add(request, expense_id=0):
             )
 
     # ================= 5️⃣ RENDER =================
+    attachments = []
+    if expense:
+        attachments = DriverExpenseAttachment.objects.filter(expense=expense).order_by('-uploaded_at')
+
     return render(request, "asset_mgt_app/driver_expense_add.html", {
         'form': form,
         'first_name': first_name,
@@ -256,7 +296,8 @@ def driver_expense_add(request, expense_id=0):
         'advance_total': advance_total,
         'expense_total': expense_total,
         'current_balance': current_balance,
-        'auto_trip_id': request.GET.get('trip_id') if not expense else None
+        'auto_trip_id': request.GET.get('trip_id') if not expense else None,
+        'attachments': attachments,
     })
 
 
@@ -277,6 +318,21 @@ def driver_expense_list(request):
         "asset_mgt_app/driver_expense_list.html",
         context
     )
+
+
+@login_required(login_url='login_page')
+def driver_expense_attachment_delete(request, attachment_id):
+    if request.method in ["POST", "DELETE"]:
+        attachment = get_object_or_404(DriverExpenseAttachment, pk=attachment_id)
+        if attachment.file:
+            try:
+                attachment.file.delete(save=False)
+            except Exception:
+                pass
+        attachment.delete()
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
 
 @login_required(login_url='login_page')

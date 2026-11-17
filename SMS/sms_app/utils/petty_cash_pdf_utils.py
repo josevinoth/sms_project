@@ -408,61 +408,78 @@ def generate_petty_cash_combined_pdf(obj, pc_type='TMS', browser=None):
     for page in voucher_reader.pages:
         writer.add_page(page)
 
-    # Determine attachment field
+    # Determine attachment files (support multi-attachment for TMS, WMS, and PMS)
+    att_files = []
     if pc_type == 'TMS':
-        att_field = getattr(obj, 'tpc_bill_attachment', None)
+        if hasattr(obj, 'attachments') and obj.attachments.exists():
+            for att in obj.attachments.all():
+                if att.file and att.file.name:
+                    att_files.append(att.file)
+        elif getattr(obj, 'tpc_bill_attachment', None) and obj.tpc_bill_attachment.name:
+            att_files.append(obj.tpc_bill_attachment)
     elif pc_type == 'WMS':
-        att_field = getattr(obj, 'wpc_bill_attachment', None)
+        if hasattr(obj, 'attachments') and obj.attachments.exists():
+            for att in obj.attachments.all():
+                if att.file and att.file.name:
+                    att_files.append(att.file)
+        elif getattr(obj, 'wpc_bill_attachment', None) and obj.wpc_bill_attachment.name:
+            att_files.append(obj.wpc_bill_attachment)
     else:
-        att_field = getattr(obj, 'ppc_bill_attachment', None)
+        if hasattr(obj, 'attachments') and obj.attachments.exists():
+            for att in obj.attachments.all():
+                if att.file and att.file.name:
+                    att_files.append(att.file)
+        elif getattr(obj, 'ppc_bill_attachment', None) and obj.ppc_bill_attachment.name:
+            att_files.append(obj.ppc_bill_attachment)
 
-    if att_field and att_field.name:
-        try:
-            att_field.open('rb')
-            content = att_field.read()
-            att_field.close()
-            fname = att_field.name.lower()
+    for att_field in att_files:
+        if att_field and att_field.name:
+            try:
+                att_field.open('rb')
+                content = att_field.read()
+                att_field.close()
+                fname = att_field.name.lower()
 
-            if fname.endswith('.pdf'):
-                att_reader = pypdf.PdfReader(io.BytesIO(content))
-                for page in att_reader.pages:
-                    writer.add_page(page)
+                if fname.endswith('.pdf'):
+                    att_reader = pypdf.PdfReader(io.BytesIO(content))
+                    for page in att_reader.pages:
+                        writer.add_page(page)
 
-            elif fname.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.jfif', '.tiff', '.tif')):
-                from reportlab.lib.pagesizes import A4, landscape
-                from reportlab.pdfgen import canvas
-                from reportlab.lib.utils import ImageReader
+                elif fname.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.jfif', '.tiff', '.tif')):
+                    from reportlab.lib.pagesizes import A4, landscape
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.utils import ImageReader
 
-                img = Image.open(io.BytesIO(content))
-                if img.mode not in ('RGB', 'L'):
-                    img = img.convert('RGB')
-                img_w, img_h = img.size
-                if img_w >= img_h:
-                    page_w, page_h = landscape(A4)
-                else:
-                    page_w, page_h = A4
-                margin = 20
-                avail_w = page_w - (2 * margin)
-                avail_h = page_h - (2 * margin)
-                scale = min(avail_w / img_w, avail_h / img_h)
-                draw_w = img_w * scale
-                draw_h = img_h * scale
-                x = (page_w - draw_w) / 2
-                y = (page_h - draw_h) / 2
+                    img = Image.open(io.BytesIO(content))
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+                    img_w, img_h = img.size
+                    if img_w >= img_h:
+                        page_w, page_h = landscape(A4)
+                    else:
+                        page_w, page_h = A4
+                    margin = 20
+                    avail_w = page_w - (2 * margin)
+                    avail_h = page_h - (2 * margin)
+                    scale = min(avail_w / img_w, avail_h / img_h)
+                    draw_w = img_w * scale
+                    draw_h = img_h * scale
+                    x = (page_w - draw_w) / 2
+                    y = (page_h - draw_h) / 2
 
-                img_pdf_buf = io.BytesIO()
-                c = canvas.Canvas(img_pdf_buf, pagesize=(page_w, page_h))
-                c.drawImage(ImageReader(img), x, y, width=draw_w, height=draw_h, preserveAspectRatio=True)
-                c.showPage()
-                c.save()
-                img_pdf_buf.seek(0)
-                img_reader = pypdf.PdfReader(img_pdf_buf)
-                for page in img_reader.pages:
-                    writer.add_page(page)
+                    img_pdf_buf = io.BytesIO()
+                    c = canvas.Canvas(img_pdf_buf, pagesize=(page_w, page_h))
+                    c.drawImage(ImageReader(img), x, y, width=draw_w, height=draw_h, preserveAspectRatio=True)
+                    c.showPage()
+                    c.save()
+                    img_pdf_buf.seek(0)
+                    img_reader = pypdf.PdfReader(img_pdf_buf)
+                    for page in img_reader.pages:
+                        writer.add_page(page)
 
-        except Exception as e:
-            # If attachment fails, still return voucher PDF rather than breaking completely
-            print(f"Warning: Failed to append bill attachment for {obj}: {e}")
+            except Exception as e:
+                # If attachment fails, still proceed rather than breaking completely
+                print(f"Warning: Failed to append bill attachment for {obj}: {e}")
 
     out_buf = io.BytesIO()
     writer.write(out_buf)
@@ -481,15 +498,22 @@ def export_petty_cash_zip(queryset, pc_type='TMS', zip_filename=None):
 
     if pc_type == 'TMS':
         att_attr = 'tpc_bill_attachment'
+        rel_name = 'attachments'
     elif pc_type == 'WMS':
         att_attr = 'wpc_bill_attachment'
+        rel_name = 'attachments'
     else:
         att_attr = 'ppc_bill_attachment'
+        rel_name = 'attachments'
 
     # If total count is large (> 50), prioritize records that actually have attachments
     total_count = queryset.count()
     if total_count > 50:
-        records_to_process = list(queryset.filter(**{f"{att_attr}__isnull": False}).exclude(**{att_attr: ""}))
+        from django.db.models import Q
+        records_to_process = list(queryset.filter(
+            Q(**{f"{att_attr}__isnull": False}) & ~Q(**{att_attr: ""}) |
+            Q(**{f"{rel_name}__isnull": False})
+        ).distinct())
         if not records_to_process:
             # If none have attachments, take the latest 50 records
             records_to_process = list(queryset[:50])
@@ -524,12 +548,43 @@ def export_petty_cash_zip(queryset, pc_type='TMS', zip_filename=None):
                     voucher_raw = record.ppc_number or f"PMS_{record.id}"
                     att_field = getattr(record, 'ppc_bill_attachment', None)
 
+                multi_att_list = list(record.attachments.all()) if hasattr(record, 'attachments') else []
+
+                # If this is a TMS petty cash auto-generated from Driver Expense, also pull driver expense attachments
+                if pc_type == 'TMS' and getattr(record, 'tpc_source_driver_expense_id', None):
+                    try:
+                        from ..models import Driverexpense
+                        de_source = Driverexpense.objects.filter(id=record.tpc_source_driver_expense_id).first()
+                        if de_source and hasattr(de_source, 'attachments'):
+                            multi_att_list.extend(list(de_source.attachments.all()))
+                    except Exception as e:
+                        print(f"Error fetching source driver expense attachments: {e}")
+
                 bu_folder = sanitize_filename(bu)
                 voucher_folder = sanitize_filename(voucher_raw)
                 base_folder = f"{bu_folder}/{voucher_folder}"
 
-                # 1. Add raw attachment if exists (SEPARATELY)
-                if att_field and att_field.name:
+                # 1. Add all attachments (SEPARATELY)
+                seen_files = set()
+                # From multi-attachment relation
+                for att in multi_att_list:
+                    if att.file and att.file.name:
+                        file_key = att.file.name
+                        if file_key in seen_files:
+                            continue
+                        seen_files.add(file_key)
+                        try:
+                            att.file.open('rb')
+                            att_bytes = att.file.read()
+                            att.file.close()
+                            att_name = os.path.basename(att.file.name)
+                            safe_att_name = sanitize_filename(att_name)
+                            zip_file.writestr(f"{base_folder}/{safe_att_name}", att_bytes)
+                        except Exception as e:
+                            print(f"Error reading multi attachment {att} for record {record}: {e}")
+
+                # Also fallback to legacy single attachment if not in seen_files
+                if att_field and att_field.name and att_field.name not in seen_files:
                     try:
                         att_field.open('rb')
                         att_bytes = att_field.read()

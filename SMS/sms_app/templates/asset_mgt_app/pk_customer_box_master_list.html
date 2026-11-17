@@ -4,11 +4,12 @@
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex flex-wrap justify-content-between align-items-center">
         <div>
-            <h2 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Customer Box Item Master</h2>
+            <h2 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Customer Box Item Master Catalog</h2>
+            <small class="text-white-50">Reusable box packaging specifications automatically captured from Need Assessments</small>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{% url 'customer_box_master_form_add' %}" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
-                <i class="fas fa-plus"></i> Add Box Item
+            <a href="{% url 'needassessment_list' %}" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-clipboard-check mr-1"></i> Need Assessments
             </a>
             <a href="{% url 'bom_rule_master_list' %}" class="btn-modern py-2 px-3" style="font-size: 0.9rem; background: rgba(255,255,255,0.18); color: white; text-decoration: none;">
                 <i class="fas fa-cogs"></i> Master BOM Rules
@@ -17,6 +18,17 @@
                 <i class="fas fa-home"></i> Home
             </a>
         </div>
+    </div>
+
+    <!-- Info Banner for Automated Workflow -->
+    <div class="alert alert-light border d-flex align-items-center justify-content-between py-2 px-3 mb-3 shadow-sm" style="background: #f0fdf4; border-color: #86efac !important; border-radius: 8px;">
+        <div class="small text-dark">
+            <i class="fas fa-magic text-success mr-2" style="font-size: 1rem;"></i>
+            <strong>Automated Box Catalog:</strong> All box designs are created and engineered in <strong>Need Assessment</strong> (<a href="{% url 'needassessment_list' %}" class="text-success font-weight-bold">na_dimension_insert</a>). With <em>"Save to Customer Box Master"</em> enabled by default, your designs automatically save here with an auto-generated Item Number for 1-click tagging on repeat orders.
+        </div>
+        <a href="{% url 'needassessment_list' %}" class="btn btn-sm btn-success text-white font-weight-bold ml-3 text-nowrap" style="background: #0f766e; border: none;">
+            <i class="fas fa-plus mr-1"></i> Open Need Assessments
+        </a>
     </div>
 
     {% if messages %}
@@ -40,7 +52,7 @@
                         <option value="{{ c.id }}" {% if selected_customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.cu_name }}</option>
                     {% endfor %}
                 </select>
-                <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm mr-2" placeholder="Search Part Code, Name, BVM Code..." style="min-width: 240px;">
+                <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm mr-2" placeholder="Search Item Number, Name, Part Code..." style="min-width: 240px;">
                 <button type="submit" class="btn btn-sm btn-dark mr-2"><i class="fas fa-search mr-1"></i> Filter</button>
                 <a href="{% url 'customer_box_master_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
             </form>
@@ -53,9 +65,9 @@
             <table class="table modern-table text-nowrap">
                 <thead>
                     <tr>
-                        <th>BVM Code</th>
+                        <th>Item Number</th>
                         <th>Customer</th>
-                        <th>Part Code / SKU</th>
+                        <th>Part Code (Optional)</th>
                         <th>Box / Machine Name</th>
                         <th>Req. Type</th>
                         <th>Dim. Type</th>
@@ -69,9 +81,9 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td><span class="badge badge-light border font-weight-bold">{{ item.cbm_bvm_code }}</span></td>
+                        <td><span class="badge badge-light border border-teal text-teal font-weight-bold" style="font-size: 0.9rem; color: #0f766e;">{{ item.cbm_bvm_code }}</span></td>
                         <td class="font-weight-bold">{{ item.cbm_customer.cu_name|default:"Global Standard" }}</td>
-                        <td class="text-primary font-weight-bold">{{ item.cbm_item_code|default:"-" }}</td>
+                        <td class="text-muted font-weight-bold">{% if item.cbm_item_code != item.cbm_bvm_code %}{{ item.cbm_item_code|default:"-" }}{% else %}-{% endif %}</td>
                         <td>{{ item.cbm_item_name }}</td>
                         <td>{{ item.cbm_type_of_req|default:"-" }}</td>
                         <td><span class="badge badge-info">{{ item.cbm_dimension_type|default:"-" }}</span></td>
@@ -106,7 +118,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="11" class="text-center text-muted py-4">
-                            No Customer Box Master items found. Click <strong>Add Customer Box Item</strong> to create one.
+                            No Customer Box Master items found. Add dimensions with <strong>Save to Customer Box Master</strong> enabled in <strong>Need Assessment</strong> to automatically populate your catalog.
                         </td>
                     </tr>
                     {% endfor %}

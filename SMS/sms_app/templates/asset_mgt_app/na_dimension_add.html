@@ -1,6 +1,99 @@
 {% extends "asset_mgt_app/base_modern.html" %}
 {% load static %}
 {% load widget_tweaks %}
+
+{% block extra_css %}
+<style>
+    /* Multiselect match standard .form-control-modern */
+    .multiselect-native-select {
+        display: block !important;
+        width: 100% !important;
+    }
+    .multiselect-native-select .btn-group {
+        display: block !important;
+        width: 100% !important;
+    }
+    .multiselect-native-select .btn-group > .btn.multiselect,
+    .multiselect.dropdown-toggle,
+    .custom-multiselect-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        height: 31px !important;
+        min-height: 31px !important;
+        max-height: 31px !important;
+        padding: 0.2rem 0.55rem !important;
+        background: var(--input-bg, #ffffff) !important;
+        border: 1.5px solid var(--input-border, #cbd5e1) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        font-family: inherit !important;
+        letter-spacing: normal !important;
+        color: var(--text-main, #1e293b) !important;
+        text-transform: none !important;
+        text-decoration: none !important;
+        line-height: 1.25 !important;
+        cursor: pointer !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+        box-sizing: border-box !important;
+        flex: 0 0 100% !important;
+    }
+    .multiselect-native-select .btn-group > .btn.multiselect:hover,
+    .multiselect.dropdown-toggle:hover,
+    .custom-multiselect-button:hover {
+        background: var(--input-focus-bg, #f8fafc) !important;
+        border-color: var(--input-border, #cbd5e1) !important;
+        box-shadow: none !important;
+    }
+    .multiselect-native-select .btn-group > .btn.multiselect:focus,
+    .multiselect-native-select .btn-group.show > .btn.multiselect,
+    .multiselect.dropdown-toggle:focus,
+    .custom-multiselect-button:focus {
+        background: var(--input-focus-bg, #f8fafc) !important;
+        border-color: var(--accent-blue, #0284c7) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        outline: none !important;
+    }
+    .multiselect-native-select .multiselect-selected-text,
+    .custom-multiselect-button .multiselect-selected-text {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        max-width: calc(100% - 20px) !important;
+        display: inline-block !important;
+        text-align: left !important;
+        font-weight: 600 !important;
+        font-size: 0.8rem !important;
+        color: var(--text-main, #1e293b) !important;
+    }
+    .multiselect-native-select .caret,
+    .multiselect.dropdown-toggle .caret {
+        margin-left: auto !important;
+        margin-right: 2px !important;
+        border-top: 5px solid var(--text-muted, #64748b) !important;
+        border-right: 4px solid transparent !important;
+        border-left: 4px solid transparent !important;
+    }
+    .multiselect-container {
+        border-radius: 8px !important;
+        padding: 6px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+        border: 1px solid var(--border-light, #e2e8f0) !important;
+        z-index: 9999 !important;
+        font-size: 0.82rem !important;
+    }
+    .multiselect-container > li > a > label {
+        font-size: 0.82rem !important;
+        padding: 4px 10px !important;
+        font-weight: 500 !important;
+        color: var(--text-main, #1e293b) !important;
+    }
+</style>
+{% endblock extra_css %}
+
 {% block content %}
 
 <div class="container-fluid py-4">
@@ -21,18 +114,6 @@
         {% csrf_token %}
 
         <div class="modern-card" style="padding: 1rem !important;">
-            <!-- Quick Fill from Customer Box Master -->
-            <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center py-2 px-3 mb-3" style="background: #f0fdfa; border-color: #99f6e4 !important;">
-                <div class="d-flex align-items-center gap-2 flex-grow-1 mr-2">
-                    <span class="font-weight-bold text-teal small text-nowrap mr-2" style="color: #0f766e;"><i class="fas fa-tags mr-1"></i> Quick Fill from Customer Box Master{% if na_customer_name %} ({{ na_customer_name }}){% endif %}:</span>
-                    <select id="cbm_quick_fill" class="form-control form-control-sm" style="max-width: 420px;">
-                        <option value="">-- Select Saved Customer Box Item (Optional) --</option>
-                    </select>
-                </div>
-                <a href="{% url 'customer_box_master_list' %}" target="_blank" class="btn btn-xs btn-outline-info font-weight-bold mt-1 mt-md-0">
-                    <i class="fas fa-boxes mr-1"></i> Manage Master
-                </a>
-            </div>
             <input type="hidden" name="nad_master_item" id="nad_master_item_id" value="{{ form.instance.nad_master_item_id|default:'' }}">
             <input type="hidden" name="nad_customer_part_code" id="nad_customer_part_code_val" value="{{ form.instance.nad_customer_part_code|default:'' }}">
 
@@ -66,10 +147,10 @@
                         </div>
                         <div class="form-group-modern" id="wood_desc">
                             <label class="form-label-modern">Wood Description</label>
-                            {% render_field form.nad_wood_description id="nad_wood_description" class="form-control form-control-modern disable_a_href" %}
+                            {% render_field form.nad_wood_description id="nad_wood_description" class="form-control form-control-modern" %}
                         </div>
                         <div class="form-group-modern" id="consumables">
-                            <label class="form-label-modern">Consumables</label>
+                            <label class="form-label-modern">Consumables / Protection</label>
                             {% render_field form.nad_consumables id="nad_consumables" class="form-control form-control-modern" %}
                         </div>
                         <div class="form-group-modern" id="vehicle_type">
@@ -210,28 +291,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Save to Customer Master Option -->
-            <div class="border rounded p-2 mb-3 bg-light">
-                <div class="d-flex flex-wrap align-items-center gap-3">
-                    <div class="custom-control custom-checkbox mr-3">
-                        <input type="checkbox" class="custom-control-input" id="save_to_master" name="save_to_master" onchange="$('#save_master_fields').toggle(this.checked)">
-                        <label class="custom-control-label small font-weight-bold text-primary" for="save_to_master">
-                            <i class="fas fa-save mr-1"></i> Save this Box Specification to Customer Box Master for future orders
-                        </label>
-                    </div>
-                    <div id="save_master_fields" class="flex-grow-1" style="display: none;">
-                        <div class="row">
-                            <div class="col-md-5 mb-1 mb-md-0">
-                                <input type="text" name="master_item_code" class="form-control form-control-sm" placeholder="Customer Part Code / SKU (e.g. TVS-101)">
-                            </div>
-                            <div class="col-md-7">
-                                <input type="text" name="master_item_name" class="form-control form-control-sm" placeholder="Machine / Box Name (e.g. CNC Spindle Crate)">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Interactive 3D & 2D Box Engineering Diagram -->
             <div class="row mt-2 mb-3">
                 <div class="col-12">
@@ -270,10 +329,166 @@
 {% endblock content %}
 
 {% block extra_js %}
-<script src="{% static 'bvm_box_cad_viewer.js' %}"></script>
+<script src="{% static 'bvm_box_cad_viewer.js' %}?v={% now 'U' %}"></script>
 <script>
-	$(document).ready(function () {
-        // Initialize Interactive 3D & 2D CAD Box Viewer
+    function reloadWoodDescriptions(targetSelectedIds) {
+        var wood_type = $('#nad_wood_type').val() || [];
+        if (!Array.isArray(wood_type)) wood_type = [wood_type];
+        var stock_types = wood_type.filter(Boolean).join(',');
+
+        var currentSelected = targetSelectedIds !== undefined ? targetSelectedIds : ($('#nad_wood_description').val() || []);
+        if (!Array.isArray(currentSelected)) currentSelected = [currentSelected];
+        currentSelected = currentSelected.map(String);
+
+        if (!stock_types) {
+            var $desc = $('#nad_wood_description');
+            $desc.empty();
+            $desc.multiselect('rebuild');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "load_pk_wood_description" %}',
+            data: { 'stock_type': stock_types },
+            success: function (data) {
+                var parsed = (typeof data === 'string') ? JSON.parse(data) : data;
+                var names = parsed["stock_description"] || [];
+                var ids = parsed["stock_description_id"] || [];
+                var $desc = $('#nad_wood_description');
+                $desc.empty();
+
+                for (var i = 0; i < ids.length; i++) {
+                    var idStr = ids[i].toString();
+                    var isSel = currentSelected.includes(idStr);
+                    var opt = new Option(names[i], idStr, isSel, isSel);
+                    $desc.append(opt);
+                }
+
+                $desc.removeClass('disable_a_href');
+                $desc.multiselect('rebuild');
+            }
+        });
+    }
+
+    function plywood_thickness() {
+        var wood_type = $('#nad_wood_type').val();
+        var has_plywood = false;
+
+        if (wood_type) {
+            if (Array.isArray(wood_type)) {
+                has_plywood = wood_type.includes('4') || wood_type.includes(4);
+            } else {
+                has_plywood = (wood_type == 4);
+            }
+        }
+
+        if (has_plywood) {
+            $('#nad_plywood_thickness').removeClass('disable_a_href');
+            $('#nad_plywood_thickness').prop('readonly', false);
+        } else {
+            $('#nad_plywood_thickness').addClass('disable_a_href');
+            $('#nad_plywood_thickness').val('0.0');
+            $('#nad_plywood_thickness').prop('readonly', true);
+        }
+    }
+
+    function requirement_type() {
+        var reqEl = document.getElementById("nad_type_of_req");
+        var requirement = reqEl ? reqEl.value : "";
+
+        if (requirement == 7) { // Plastic Pallet
+            $('#nad_wood_type').multiselect('disable');
+            $('#nad_wood_description').multiselect('disable');
+            $('#nad_consumables').multiselect('enable');
+            $("#wood_type, #wood_desc, #vehicle_type").hide();
+            $("#consumables, #uom").show();
+        } else if (requirement == 12) { // Standalone Consumables
+            $('#nad_consumables').multiselect('enable');
+            $("#consumables, #uom").show();
+            $("#wood_type, #wood_desc, #vehicle_type").hide();
+        } else if (requirement == 13) { // Lashing service
+            $('#nad_consumables').multiselect('enable');
+            $("#consumables, #vehicle_type, #uom").show();
+            $("#wood_type, #wood_desc").hide();
+        } else { // Wooden Box, Wooden Pallet, Wooden Crate, Bundling, Skid, Full Plywood Box, etc.
+            $('#nad_wood_type').multiselect('enable');
+            $('#nad_wood_description').multiselect('enable');
+            $('#nad_consumables').multiselect('enable');
+            $("#consumables, #wood_type, #wood_desc, #uom").show();
+            $("#vehicle_type").hide();
+        }
+
+        if (window.BvmBoxCADViewer && window.BvmBoxCADViewer.instances && window.BvmBoxCADViewer.instances['na_box_cad_container']) {
+            window.BvmBoxCADViewer.instances['na_box_cad_container'].syncWithInputs();
+        }
+    }
+
+    $(document).ready(function () {
+        // 1. Initialize Multiselects FIRST before any enable/disable or change calls
+        $('#nad_wood_type').multiselect({
+            includeSelectAllOption: false,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Wood Type',
+            nSelectedText: 'selected',
+            buttonClass: 'form-control form-control-modern custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
+
+        $('#nad_wood_description').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Wood Description',
+            nSelectedText: 'selected',
+            allSelectedText: 'All Descriptions Selected',
+            buttonClass: 'form-control form-control-modern custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
+
+        $('#nad_consumables').multiselect({
+            includeSelectAllOption: false,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Consumables / Protection',
+            nSelectedText: 'selected',
+            allSelectedText: 'All Consumables Selected',
+            buttonClass: 'form-control form-control-modern custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
+
+        $('#nad_wood_type').on('change', function () {
+            reloadWoodDescriptions();
+            plywood_thickness();
+        });
+
+        var initialWoodType = $('#nad_wood_type').val();
+        if (initialWoodType && initialWoodType.length) {
+            reloadWoodDescriptions();
+            plywood_thickness();
+        }
+
+        // 2. Requirement type logic
+        requirement_type();
+        $("#nad_type_of_req").change(function () {
+            requirement_type();
+            if (window.BvmBoxCADViewer && window.BvmBoxCADViewer.instances['na_box_cad_container']) {
+                window.BvmBoxCADViewer.instances['na_box_cad_container'].syncWithInputs();
+            }
+        });
+        $("#nad_consumables").change(function () {
+            if (window.BvmBoxCADViewer && window.BvmBoxCADViewer.instances['na_box_cad_container']) {
+                window.BvmBoxCADViewer.instances['na_box_cad_container'].syncWithInputs();
+            }
+        });
+
+        // 3. Initialize Interactive 3D & 2D CAD Box Viewer
         if (window.BvmBoxCADViewer) {
             BvmBoxCADViewer.init({
                 containerId: 'na_box_cad_container',
@@ -291,7 +506,9 @@
                     uom: '#nad_uom',
                     weight: '#nad_job_weight',
                     part_code: '#nad_customer_part_code_val',
-                    box_name: '#nad_item'
+                    box_name: '#nad_item',
+                    req_type: '#nad_type_of_req',
+                    consumable: '#nad_consumables'
                 }
             });
         }
@@ -309,10 +526,7 @@
             $('#add_dim_btn').addClass('disable_a_href');
         }
 
-        plywood_thickness();
-        requirement_type();
-
-        // UOM dynamic conversion & label update for Need Assessment
+        // 4. UOM dynamic conversion & label update for Need Assessment
         var currentNAUom = ($('#nad_uom option:selected').text() || 'cm').trim().toLowerCase();
         if (!currentNAUom || currentNAUom.indexOf('select') !== -1) currentNAUom = 'cm';
         var uomToCm = { 'cm': 1.0, 'mm': 0.1, 'in': 2.54, 'ft': 30.48 };
@@ -348,52 +562,7 @@
         });
         updateNAUom();
 
-        // Load Customer Box Master items for Quick Fill
-        $.get("{% url 'api_customer_box_items' %}", { customer_id: "{{ na_customer_id|default:'' }}" }, function(resp) {
-            window._cbmItems = {};
-            if (resp && resp.items) {
-                resp.items.forEach(function(it) {
-                    window._cbmItems[it.id] = it;
-                    const lbl = `${it.item_code || it.bvm_code} - ${it.item_name} (${it.length}x${it.width}x${it.height} ${it.uom || ''}, ${it.job_weight} kg)`;
-                    $('#cbm_quick_fill').append(`<option value="${it.id}">${lbl}</option>`);
-                });
-            }
-        });
-
-        $('#cbm_quick_fill').on('change', function() {
-            const it = window._cbmItems && window._cbmItems[$(this).val()];
-            if (!it) return;
-            $('#nad_master_item_id').val(it.id);
-            $('#nad_customer_part_code_val').val(`${it.item_code || it.bvm_code} - ${it.item_name}`.trim());
-            if (it.type_of_req_id) $('#nad_type_of_req').val(it.type_of_req_id).trigger('change');
-            if (it.dimension_type_id) $('#nad_dimension_type').val(it.dimension_type_id);
-            if (it.uom_id) $('#nad_uom').val(it.uom_id);
-            $('#nad_length').val(it.length);
-            $('#nad_width').val(it.width);
-            $('#nad_height').val(it.height);
-            $('#nad_clr_length').val(it.clr_length || 0);
-            $('#nad_clr_width').val(it.clr_width || 0);
-            $('#nad_clr_top').val(it.clr_top || 0);
-            $('#nad_thk_length').val((it.thk_length !== undefined && it.thk_length !== null) ? it.thk_length : 0);
-            $('#nad_thk_width').val((it.thk_width !== undefined && it.thk_width !== null) ? it.thk_width : 0);
-            $('#nad_thk_height').val((it.thk_height !== undefined && it.thk_height !== null) ? it.thk_height : 0);
-            $('#nad_plywood_thickness').val(it.plywood_thickness || it.clearance || 0);
-            $('#nad_job_weight').val(it.job_weight || 0);
-            if (it.consumables_id) $('#nad_consumables').val(it.consumables_id);
-            if (it.vechicle_type_id) $('#nad_vechicle_type').val(it.vechicle_type_id);
-            if (it.wood_type_ids && it.wood_type_ids.length) {
-                $('#nad_wood_type').val(it.wood_type_ids.map(String));
-                plywood_thickness();
-            }
-            updateNADimTypeVisibility();
-            updateNAUom();
-            var elLen = document.querySelector('#nad_length');
-            if (elLen) {
-                elLen.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-
-        // Directional Dimension Type visibility
+        // 6. Directional Dimension Type visibility
         function updateNADimTypeVisibility() {
             var opt = $('#nad_dimension_type option:selected');
             var txt = (opt.text() || '').trim();
@@ -418,118 +587,5 @@
         $('#nad_dimension_type').on('change', updateNADimTypeVisibility);
         updateNADimTypeVisibility();
     });
-</script>
-
-<script>
-	$("#nad_wood_type").change(function () {
-       var wood_type = $(this).val();
-       $('#nad_wood_description').removeClass('disable_a_href');
-            $.ajax({
-         url: '{% url "load_pk_wood_description" %}',
-         data: {
-           'stock_type': wood_type,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#nad_wood_description').removeClass('disable_a_href');
-             $("#nad_wood_description").empty();
-             $('#nad_wood_description').empty().append("<option value=''>--Select--</option>");
-             var nad_wood_description_name=JSON.parse(data)["stock_description"];
-             var nad_wood_description_id=JSON.parse(data)["stock_description_id"];
-             var len = (nad_wood_description_id).length;
-             $('#nad_wood_description').empty().append("<option value=''>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#nad_wood_description").append("<option value='"+nad_wood_description_id[i]+"'>"+nad_wood_description_name[i]+"</option>");
-             }
-         }
-       });
-     });
-</script>
-
-<script>
-	function plywood_thickness() {
-        var wood_type = $('#nad_wood_type').val();
-        var has_plywood = false;
-
-        if (wood_type) {
-            if (Array.isArray(wood_type)) {
-                has_plywood = wood_type.includes('4') || wood_type.includes(4);
-            } else {
-                has_plywood = (wood_type == 4);
-            }
-        }
-
-        if (has_plywood) {
-            $('#nad_plywood_thickness').removeClass('disable_a_href');
-            $('#nad_plywood_thickness').prop('readonly', false);
-        } else {
-            $('#nad_plywood_thickness').addClass('disable_a_href');
-            $('#nad_plywood_thickness').val('0.0');
-            $('#nad_plywood_thickness').prop('readonly', true);
-        }
-    }
-
-    $(document).ready(function () {
-        $('#nad_wood_type').on('change', function () {
-            plywood_thickness();
-        });
-    });
-</script>
-
-<script>
-	$(document).ready(function () {
-
-    $('#nad_wood_type').multiselect({
-        includeSelectAllOption: true,
-        enableFiltering: true,
-        enableCaseInsensitiveFiltering: true,
-        buttonWidth: '100%',
-        nonSelectedText: 'Select Wood Type ',
-        buttonClass: 'custom-multiselect-button',
-        maxHeight: 250,
-        dropUp: false
-    });
-
-    $('#nad_wood_description').multiselect({
-        includeSelectAllOption: true,
-        enableFiltering: true,
-        enableCaseInsensitiveFiltering: true,
-        buttonWidth: '100%',
-        nonSelectedText: 'Select Wood Description',
-        buttonClass: 'custom-multiselect-button',
-        maxHeight: 250,
-        dropUp: false
-    });
-});
-</script>
-
-<script>
-	$(document).ready(function () {
-        requirement_type();
-        $("#nad_type_of_req").change(function () {
-            requirement_type();
-        });
-    });
-
-    function requirement_type() {
-        var requirement = document.getElementById("nad_type_of_req").value;
-
-        if (requirement == 7) {
-            $('#nad_wood_type').multiselect('disable');
-            $('#nad_wood_description').multiselect('disable');
-            $("#consumables, #vehicle_type, #wood_type, #wood_desc, #uom").hide();
-        } else if (requirement == 12) {
-            $("#consumables").show();
-            $("#wood_type, #wood_desc, #uom, #vehicle_type").hide();
-        } else if (requirement == 13) {
-            $("#consumables, #vehicle_type").show();
-            $("#wood_type, #wood_desc, #uom").hide();
-        } else {
-            $('#nad_wood_type').multiselect('enable');
-            $('#nad_wood_description').multiselect('enable');
-            $("#consumables, #vehicle_type").hide();
-            $("#wood_type, #wood_desc, #uom").show();
-        }
-    }
 </script>
 {% endblock extra_js %}

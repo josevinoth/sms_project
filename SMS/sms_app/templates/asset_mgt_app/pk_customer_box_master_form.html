@@ -24,12 +24,13 @@
                 <div class="col-12 col-md-6 col-xl-3 col-compact mb-3">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-tag"></i> Identification</div>
-                        {% if item %}
                         <div class="form-group-modern">
-                            <label class="form-label-modern">BVM Master Code</label>
-                            <input type="text" class="form-control form-control-modern" value="{{ item.cbm_bvm_code }}" readonly>
+                            <label class="form-label-modern d-flex justify-content-between align-items-center">
+                                <span>Item Number</span>
+                                <span class="badge badge-success px-2 py-0" style="font-size: 0.75rem;"><i class="fas fa-magic mr-1"></i> Auto-generated</span>
+                            </label>
+                            <input type="text" name="cbm_bvm_code" class="form-control form-control-modern font-weight-bold" value="{{ item.cbm_bvm_code|default:next_item_number }}" readonly style="background: #f0fdf4; color: #047857; font-size: 0.95rem;">
                         </div>
-                        {% endif %}
                         <div class="form-group-modern">
                             <label class="form-label-modern">Customer (Blank = Global)</label>
                             <select name="cbm_customer" class="form-control form-control-modern">
@@ -40,12 +41,12 @@
                             </select>
                         </div>
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Customer Part Code / SKU *</label>
-                            <input type="text" name="cbm_item_code" class="form-control form-control-modern" value="{{ item.cbm_item_code|default:'' }}" placeholder="e.g. TVS-SPINDLE-01" required>
+                            <label class="form-label-modern">Customer Part Code / SKU <small class="text-muted">(Optional)</small></label>
+                            <input type="text" name="cbm_item_code" class="form-control form-control-modern" value="{% if item and item.cbm_item_code != item.cbm_bvm_code %}{{ item.cbm_item_code }}{% endif %}" placeholder="Optional (defaults to Item Number)">
                         </div>
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Box / Machine Name *</label>
-                            <input type="text" name="cbm_item_name" class="form-control form-control-modern" value="{{ item.cbm_item_name|default:'' }}" placeholder="e.g. CNC Spindle Crate" required>
+                            <label class="form-label-modern">Box / Machine Name <small class="text-muted">(Optional)</small></label>
+                            <input type="text" name="cbm_item_name" class="form-control form-control-modern" value="{{ item.cbm_item_name|default:'' }}" placeholder="e.g. Standard Wooden Crate">
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Requirement Type</label>
@@ -234,7 +235,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'bvm_box_cad_viewer.js' %}"></script>
+<script src="{% static 'bvm_box_cad_viewer.js' %}?v={% now 'U' %}"></script>
 <script>
 $(document).ready(function () {
     // Initialize Interactive 3D & 2D CAD Box Viewer
@@ -256,10 +257,17 @@ $(document).ready(function () {
                 weight: 'input[name="cbm_job_weight"]',
                 part_code: 'input[name="cbm_item_code"]',
                 box_name: 'input[name="cbm_item_name"]',
-                customer: 'select[name="cbm_customer"]'
+                customer: 'select[name="cbm_customer"]',
+                req_type: 'select[name="cbm_type_of_req"]'
             }
         });
     }
+
+    $('select[name="cbm_type_of_req"]').change(function () {
+        if (window.BvmBoxCADViewer && window.BvmBoxCADViewer.instances['cbm_box_cad_container']) {
+            window.BvmBoxCADViewer.instances['cbm_box_cad_container'].syncWithInputs();
+        }
+    });
 
     // UOM dynamic conversion & label update
     var currentUom = ($('#id_cbm_uom option:selected').attr('data-name') || $('#id_cbm_uom option:selected').text() || 'cm').trim().toLowerCase();
@@ -303,7 +311,7 @@ $(document).ready(function () {
         enableCaseInsensitiveFiltering: true,
         buttonWidth: '100%',
         nonSelectedText: 'Select Wood Type',
-        buttonClass: 'custom-multiselect-button',
+        buttonClass: 'form-control form-control-modern custom-multiselect-button',
         maxHeight: 250,
         dropUp: false
     });
@@ -314,25 +322,34 @@ $(document).ready(function () {
         enableCaseInsensitiveFiltering: true,
         buttonWidth: '100%',
         nonSelectedText: 'Select Wood Description',
-        buttonClass: 'custom-multiselect-button',
+        buttonClass: 'form-control form-control-modern custom-multiselect-button',
         maxHeight: 250,
         dropUp: false
     });
 
     // Dynamic reload of Wood Description when Wood Type changes
     $('#id_cbm_wood_type').change(function () {
-        var wood_type = $(this).val();
+        var wood_type = $(this).val() || [];
+        if (!Array.isArray(wood_type)) wood_type = [wood_type];
+        var stock_types = wood_type.filter(Boolean).join(',');
+
+        var currentSelected = $('#id_cbm_wood_description').val() || [];
+        if (!Array.isArray(currentSelected)) currentSelected = [currentSelected];
+        currentSelected = currentSelected.map(String);
+
         $.ajax({
             url: '{% url "load_pk_wood_description" %}',
-            data: { 'stock_type': wood_type },
+            data: { 'stock_type': stock_types },
             success: function (data) {
                 var descSelect = $('#id_cbm_wood_description');
                 descSelect.empty();
-                var parsed = JSON.parse(data);
+                var parsed = (typeof data === 'string') ? JSON.parse(data) : data;
                 var names = parsed["stock_description"] || [];
                 var ids = parsed["stock_description_id"] || [];
                 for (var i = 0; i < ids.length; i++) {
-                    descSelect.append("<option value='" + ids[i] + "'>" + names[i] + "</option>");
+                    var idStr = ids[i].toString();
+                    var isSel = currentSelected.includes(idStr);
+                    descSelect.append(new Option(names[i], idStr, isSel, isSel));
                 }
                 descSelect.multiselect('rebuild');
             }

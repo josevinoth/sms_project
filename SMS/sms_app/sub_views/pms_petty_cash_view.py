@@ -8,7 +8,7 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo, PMSPettyCashAttachment
 from ..sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
 from ..sub_models.pms_vehicle_mod import PMSVehicleInfo
 from django.views.decorators.csrf import csrf_exempt
@@ -284,6 +284,27 @@ def pms_petty_cash_add(request, ppc_id=0):
                     saved_wpc.ppc_created_by = created_user
             saved_wpc.ppc_updated_by = created_user
             saved_wpc.save()
+
+            # Handle Multi-attachments
+            uploaded_files = request.FILES.getlist('ppc_bill_attachments')
+            if not uploaded_files and 'ppc_bill_attachment' in request.FILES:
+                uploaded_files = request.FILES.getlist('ppc_bill_attachment')
+
+            for f in uploaded_files:
+                PMSPettyCashAttachment.objects.create(
+                    petty_cash=saved_wpc,
+                    file=f,
+                    filename=f.name,
+                    uploaded_by=created_user
+                )
+
+            # Sync legacy field if present or set from first attachment
+            if uploaded_files and not saved_wpc.ppc_bill_attachment:
+                first_att = saved_wpc.attachments.first()
+                if first_att and first_att.file:
+                    saved_wpc.ppc_bill_attachment = first_att.file
+                    saved_wpc.save(update_fields=['ppc_bill_attachment'])
+
             messages.success(request, "PMS Petty Cash saved successfully.")
             return redirect('pms_petty_cash_list')
         else:
@@ -294,10 +315,26 @@ def pms_petty_cash_add(request, ppc_id=0):
     if form.instance and form.instance.ppc_bill_attachment:
         bill_filename = os.path.basename(form.instance.ppc_bill_attachment.name)
 
+    attachments = []
+    if ppc_id != 0:
+        if form.instance.ppc_bill_attachment and bool(form.instance.ppc_bill_attachment.name):
+            if not PMSPettyCashAttachment.objects.filter(petty_cash=form.instance).exists():
+                try:
+                    PMSPettyCashAttachment.objects.create(
+                        petty_cash=form.instance,
+                        file=form.instance.ppc_bill_attachment,
+                        filename=os.path.basename(form.instance.ppc_bill_attachment.name),
+                        uploaded_by=form.instance.ppc_created_by
+                    )
+                except Exception:
+                    pass
+        attachments = PMSPettyCashAttachment.objects.filter(petty_cash=form.instance).order_by('-uploaded_at')
+
     context = {
         'form': form,
         'ppc_id': ppc_id,
         'bill_filename': bill_filename,
+        'attachments': attachments,
     }
     return render(request, "asset_mgt_app/pms_petty_cash_add.html", context)
 
@@ -379,6 +416,28 @@ def pms_petty_cash_list(request):
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/pms_petty_cash_list.html", context)
+
+
+def pms_petty_cash_attachment_delete(request, attachment_id):
+    if request.method in ["POST", "DELETE"]:
+        attachment = get_object_or_404(PMSPettyCashAttachment, pk=attachment_id)
+        ppc = attachment.petty_cash
+        if attachment.file:
+            try:
+                attachment.file.delete(save=False)
+            except Exception:
+                pass
+        attachment.delete()
+
+        # Update or clean legacy field if needed
+        if ppc:
+            remaining = PMSPettyCashAttachment.objects.filter(petty_cash=ppc).first()
+            ppc.ppc_bill_attachment = remaining.file if remaining else None
+            ppc.save(update_fields=['ppc_bill_attachment'])
+
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
 
 def pms_petty_cash_delete(request, ppc_id):
@@ -603,6 +662,55 @@ def pms_petty_cash_export_tally(request):
         'ppc_credit_ledger', 'ppc_to', 'ppc_customer', 'ppc_vehicle_number', 
     ).order_by('-id')
 
+    # Batch lookup vehicle numbers for jobs that don't have a direct ppc_vehicle_number
+    jobs_needing_lookup = set()
+    for wpc in ppc_list:
+        if not getattr(wpc, "ppc_vehicle_number", None) and wpc.ppc_job_no:
+            job_val = str(wpc.ppc_job_no).strip()
+            if job_val and job_val.upper() not in ('NA', 'N/A', '-'):
+                jobs_needing_lookup.add(job_val)
+
+    vehicle_map = {}
+    if jobs_needing_lookup:
+        job_lookup_keys = set()
+        for j in jobs_needing_lookup:
+            job_lookup_keys.add(j)
+            job_lookup_keys.add(j.upper())
+            job_lookup_keys.add(j.lower())
+
+        gatein_qs = Gatein_info.objects.filter(
+            gatein_job_no__in=job_lookup_keys
+        ).exclude(
+            gatein_truck_number__isnull=True
+        ).exclude(
+            gatein_truck_number__exact=''
+        ).values_list('gatein_job_no', 'gatein_truck_number')
+
+        for g_job, g_truck in gatein_qs:
+            if g_job and g_truck:
+                g_key = str(g_job).strip().upper()
+                if g_key not in vehicle_map:
+                    vehicle_map[g_key] = g_truck.strip()
+
+        remaining_jobs = {j for j in jobs_needing_lookup if j.upper() not in vehicle_map}
+        if remaining_jobs:
+            rem_lookup_keys = set()
+            for j in remaining_jobs:
+                rem_lookup_keys.add(j)
+                rem_lookup_keys.add(j.upper())
+                rem_lookup_keys.add(j.lower())
+
+            wh_qs = Warehouse_goods_info.objects.filter(
+                wh_job_no__in=rem_lookup_keys,
+                wh_truck_type__isnull=False
+            ).values_list('wh_job_no', 'wh_truck_type__vt_vehicletype')
+
+            for w_job, w_truck in wh_qs:
+                if w_job and w_truck:
+                    w_key = str(w_job).strip().upper()
+                    if w_key not in vehicle_map:
+                        vehicle_map[w_key] = w_truck.strip()
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Tally Export"
@@ -630,21 +738,17 @@ def pms_petty_cash_export_tally(request):
         customer = wpc.ppc_customer.cu_name if wpc.ppc_customer else ""
         job_no = wpc.ppc_job_no or ""
 
-        # Lookup vehicle number if available from Gatein or Goods
+        # Lookup vehicle number if available from direct selection, Gatein, or Goods
         veh_no = "N/A(V)"
-        if getattr(wpc, "ppc_vehicle_number", None):
+        if getattr(wpc, "ppc_vehicle_number", None) and wpc.ppc_vehicle_number.pc_vehicle_no:
             veh_no = wpc.ppc_vehicle_number.pc_vehicle_no
         elif job_no:
-            gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
-            if gatein and gatein.gatein_truck_number:
-                veh_no = gatein.gatein_truck_number
-            else:
-                wh_good = Warehouse_goods_info.objects.filter(wh_job_no__iexact=job_no).select_related('wh_truck_type').first()
-                if wh_good and wh_good.wh_truck_type:
-                    veh_no = wh_good.wh_truck_type.veh_type_name
+            clean_job = str(job_no).strip().upper()
+            if clean_job in vehicle_map:
+                veh_no = vehicle_map[clean_job]
 
-        amount = wpc.ppc_total_amount or wpc.ppc_bill_amount or 0.0
-        to_person = wpc.ppc_to.first_name if wpc.ppc_to else (wpc.ppc_to_manual or "")
+        amount = wpc.ppc_total_amount or wpc.ppc_bill_amount or wpc.ppc_amount or 0.0
+        to_person = (wpc.ppc_to.first_name or wpc.ppc_to.username) if wpc.ppc_to else (wpc.ppc_to_manual or "")
         trn_date = wpc.ppc_transaction_date.strftime("%d-%b") if wpc.ppc_transaction_date else ""
         remarks = wpc.ppc_remarks or ""
 

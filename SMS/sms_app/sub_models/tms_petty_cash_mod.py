@@ -64,3 +64,22 @@ class TMSPettyCashInfo(models.Model):
 
     def __str__(self):
         return self.tpc_number if self.tpc_number else 'No TMS Petty Cash Number'
+
+
+def tms_petty_cash_multi_file_path(instance, filename):
+    voucher_no = instance.petty_cash.tpc_number if instance.petty_cash and instance.petty_cash.tpc_number else f"temp_{instance.petty_cash_id or 'unknown'}"
+    return f"tms_petty_cash_bills/{voucher_no}/{filename}"
+
+
+class TMSPettyCashAttachment(models.Model):
+    petty_cash = models.ForeignKey(TMSPettyCashInfo, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=tms_petty_cash_multi_file_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"{self.petty_cash.tpc_number or 'TMS'} - {self.filename or self.file.name}"

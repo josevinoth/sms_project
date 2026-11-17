@@ -122,6 +122,32 @@
         font-size: 0.82rem;
         padding: 6px 10px;
     }
+    /* Transport Category column alignment and hierarchical left indentation */
+    #mis-table th:first-child,
+    .dataTables_scrollHead table th:first-child,
+    .dataTables_scrollHead th:first-child {
+        text-align: left !important;
+        padding-left: 12px !important;
+        vertical-align: middle !important;
+    }
+    #mis-table tbody td:first-child {
+        text-align: left !important;
+        padding-left: 24px !important;
+    }
+    #mis-table tbody tr.category-row td:first-child {
+        text-align: left !important;
+        padding-left: 12px !important;
+    }
+    #mis-table tbody tr.total-row td:first-child {
+        text-align: left !important;
+        padding-left: 16px !important;
+    }
+    #mis-table tbody tr.total-expense-row td:first-child,
+    #mis-table tbody tr.net-profit-row td:first-child,
+    #mis-table tbody tr.profit-percent-row td:first-child {
+        text-align: left !important;
+        padding-left: 12px !important;
+    }
     /* Allow DataTables scrollHead to naturally match table body scroll width */
     .dataTables_scrollHeadInner {
         box-sizing: content-box !important;
@@ -142,7 +168,7 @@
 <table id="mis-table" class="table table-striped table-bordered">
     <thead class="thead-dark">
     <tr style="text-align:center;">
-        <th rowspan="2" style="text-align:center; vertical-align:middle;">Transport Category</th>
+        <th rowspan="2" style="text-align:left; vertical-align:middle; padding-left:12px;">Transport Category</th>
         <th class="warehouse-budget-header text-center" colspan="{{ months|length|add:1 }}">Budget</th>
         <th class="warehouse-actuals-header text-center" colspan="{{ months|length|add:1 }}">Actuals</th>
         <th class="warehouse-variance-header text-center" colspan="{{ months|length|add:1 }}">Variance</th>
@@ -484,6 +510,12 @@
                 body { font-family: Arial, sans-serif; font-size: 10px; }
                 table { border-collapse: collapse; width: 100%; }
                 th, td { border: 1px solid #999; padding: 4px 6px; text-align: center; }
+                th:first-child, td:first-child { text-align: left !important; padding-left: 20px !important; }
+                tr.category-row td:first-child { padding-left: 8px !important; font-weight: bold !important; }
+                tr.total-row td:first-child { padding-left: 12px !important; font-weight: bold !important; }
+                tr.total-expense-row td:first-child,
+                tr.net-profit-row td:first-child,
+                tr.profit-percent-row td:first-child { padding-left: 8px !important; font-weight: bold !important; }
                 thead th { background-color: #343a40 !important; color: white !important; -webkit-print-color-adjust: exact; }
                 .income-bg { background-color: #C6E0B4 !important; -webkit-print-color-adjust: exact; }
                 .actuals-bg { background-color: #F4B084 !important; -webkit-print-color-adjust: exact; }
