@@ -104,12 +104,13 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
 
         # Ensure all checked-out goods have their storage time calculated with (+1 day count)
         for g in goods_qs:
-            if (not g.wh_storage_time or g.wh_storage_time == 0) and g.wh_checkin_time and g.wh_checkout_time:
+            if g.wh_checkin_time and g.wh_checkout_time:
                 c_in = g.wh_checkin_time.date() if hasattr(g.wh_checkin_time, 'date') else g.wh_checkin_time
                 c_out = g.wh_checkout_time.date() if hasattr(g.wh_checkout_time, 'date') else g.wh_checkout_time
                 calc_days = max((c_out - c_in).days + 1, 1)
-                Warehouse_goods_info.objects.filter(pk=g.pk).update(wh_storage_time=calc_days)
-                g.wh_storage_time = calc_days
+                if g.wh_storage_time != calc_days:
+                    Warehouse_goods_info.objects.filter(pk=g.pk).update(wh_storage_time=calc_days)
+                    g.wh_storage_time = calc_days
 
         # Calculate Warehouse Storage Charges
         dispatch_num = goods_qs.values_list('wh_dispatch_num', flat=True).distinct()

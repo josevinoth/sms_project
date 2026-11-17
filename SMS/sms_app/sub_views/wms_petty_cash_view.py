@@ -621,6 +621,55 @@ def wms_petty_cash_export_tally(request):
         'wpc_created_by'
     ).order_by('-id')
 
+    # Batch lookup vehicle numbers for jobs
+    jobs_needing_lookup = set()
+    for wpc in wpc_list:
+        if wpc.wpc_job_no:
+            job_val = str(wpc.wpc_job_no).strip()
+            if job_val and job_val.upper() not in ('NA', 'N/A', '-'):
+                jobs_needing_lookup.add(job_val)
+
+    vehicle_map = {}
+    if jobs_needing_lookup:
+        job_lookup_keys = set()
+        for j in jobs_needing_lookup:
+            job_lookup_keys.add(j)
+            job_lookup_keys.add(j.upper())
+            job_lookup_keys.add(j.lower())
+
+        gatein_qs = Gatein_info.objects.filter(
+            gatein_job_no__in=job_lookup_keys
+        ).exclude(
+            gatein_truck_number__isnull=True
+        ).exclude(
+            gatein_truck_number__exact=''
+        ).values_list('gatein_job_no', 'gatein_truck_number')
+
+        for g_job, g_truck in gatein_qs:
+            if g_job and g_truck:
+                g_key = str(g_job).strip().upper()
+                if g_key not in vehicle_map:
+                    vehicle_map[g_key] = g_truck.strip()
+
+        remaining_jobs = {j for j in jobs_needing_lookup if j.upper() not in vehicle_map}
+        if remaining_jobs:
+            rem_lookup_keys = set()
+            for j in remaining_jobs:
+                rem_lookup_keys.add(j)
+                rem_lookup_keys.add(j.upper())
+                rem_lookup_keys.add(j.lower())
+
+            wh_qs = Warehouse_goods_info.objects.filter(
+                wh_job_no__in=rem_lookup_keys,
+                wh_truck_type__isnull=False
+            ).values_list('wh_job_no', 'wh_truck_type__vt_vehicletype')
+
+            for w_job, w_truck in wh_qs:
+                if w_job and w_truck:
+                    w_key = str(w_job).strip().upper()
+                    if w_key not in vehicle_map:
+                        vehicle_map[w_key] = w_truck.strip()
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Tally Export"
@@ -651,16 +700,12 @@ def wms_petty_cash_export_tally(request):
         # Lookup vehicle number if available from Gatein or Goods
         veh_no = "N/A(V)"
         if job_no:
-            gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
-            if gatein and gatein.gatein_truck_number:
-                veh_no = gatein.gatein_truck_number
-            else:
-                wh_good = Warehouse_goods_info.objects.filter(wh_job_no__iexact=job_no).select_related('wh_truck_type').first()
-                if wh_good and wh_good.wh_truck_type:
-                    veh_no = wh_good.wh_truck_type.veh_type_name
+            clean_job = str(job_no).strip().upper()
+            if clean_job in vehicle_map:
+                veh_no = vehicle_map[clean_job]
 
         amount = wpc.wpc_total_amount or wpc.wpc_bill_amount or 0.0
-        to_person = wpc.wpc_to.first_name if wpc.wpc_to else (wpc.wpc_to_manual or "")
+        to_person = (wpc.wpc_to.first_name or wpc.wpc_to.username) if wpc.wpc_to else (wpc.wpc_to_manual or "")
         trn_date = wpc.wpc_transaction_date.strftime("%d-%b") if wpc.wpc_transaction_date else ""
         remarks = wpc.wpc_remarks or ""
 

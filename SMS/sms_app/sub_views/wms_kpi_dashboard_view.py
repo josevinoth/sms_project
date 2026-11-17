@@ -75,8 +75,26 @@ def wms_kpi_dashboard(request):
     customers = CustomerInfo.objects.all().order_by('cu_name')[:150]
 
     today = timezone.now().date()
-    month_start_date = today.replace(day=1).strftime('%Y-%m-%d')
-    today_date = today.strftime('%Y-%m-%d')
+    # Check if current month has transactions; if not, smart-fallback to latest month with data (e.g. Oct 2026)
+    has_recent_data = Warehouse_goods_info.objects.filter(
+        wh_checkin_time__year=today.year,
+        wh_checkin_time__month=today.month
+    ).exists()
+
+    if not has_recent_data:
+        latest_txn = Warehouse_goods_info.objects.filter(
+            wh_checkin_time__year=today.year
+        ).order_by('-wh_checkin_time').first()
+        if latest_txn and latest_txn.wh_checkin_time:
+            ref_date = latest_txn.wh_checkin_time.date()
+            month_start_date = ref_date.replace(day=1).strftime('%Y-%m-%d')
+            today_date = ref_date.strftime('%Y-%m-%d')
+        else:
+            month_start_date = today.replace(day=1).strftime('%Y-%m-%d')
+            today_date = today.strftime('%Y-%m-%d')
+    else:
+        month_start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        today_date = today.strftime('%Y-%m-%d')
 
     context = {
         'first_name': first_name,
@@ -107,6 +125,20 @@ def get_wms_kpi_dashboard_data(request):
     customer_id = request.GET.get('customer_id')
 
     today = timezone.now().date()
+    if not from_date or not to_date:
+        has_recent = Warehouse_goods_info.objects.filter(
+            wh_checkin_time__year=today.year,
+            wh_checkin_time__month=today.month
+        ).exists()
+        if not has_recent:
+            latest_wh = Warehouse_goods_info.objects.filter(wh_checkin_time__year=today.year).order_by('-wh_checkin_time').first()
+            if latest_wh and latest_wh.wh_checkin_time:
+                ref_date = latest_wh.wh_checkin_time.date()
+                if not from_date:
+                    from_date = ref_date.replace(day=1).strftime('%Y-%m-%d')
+                if not to_date:
+                    to_date = ref_date.strftime('%Y-%m-%d')
+
     if not from_date:
         from_date = today.replace(day=1).strftime('%Y-%m-%d')
     if not to_date:
@@ -614,6 +646,161 @@ def get_wms_kpi_dashboard_data(request):
         pre_qs = pre_qs.filter(pre_branch_q)
     pre_count = pre_qs.count()
 
+    # Calculate Inbound Dock-in, Gate-to-Dock turnaround and delays
+    valid_pre_dock = pre_qs.exclude(pregatein_arrival_date_time__isnull=True).exclude(pregatein_dock_in_date_time__isnull=True)
+    inbound_delays_sec = []
+    for p in valid_pre_dock:
+        sec = (p.pregatein_dock_in_date_time - p.pregatein_arrival_date_time).total_seconds()
+        if 0 <= sec <= 86400 * 7:
+            inbound_delays_sec.append(sec)
+
+    avg_gate_to_dock_mins = round(sum(inbound_delays_sec) / len(inbound_delays_sec) / 60, 1) if inbound_delays_sec else 0.0
+    avg_dockin_days = round(sum(inbound_delays_sec) / len(inbound_delays_sec) / 86400, 2) if inbound_delays_sec else 0.0
+    delayed_dockin_shipments = sum(1 for s in inbound_delays_sec if s > 1800)  # SLA threshold > 30 mins
+
+    dock_in_total = gatein_date_qs.count() or inbound_gatein_trucks
+    dock_in_pod_count = gatein_date_qs.exclude(gatein_invoice_att='').count()
+
+    # Calculate Outbound Dock-out, Gatepass and delays
+    valid_disp_dock = disp_date_qs.exclude(dispatch_dockin_time__isnull=True).exclude(dispatch_dockout_time__isnull=True)
+    outbound_delays_sec = []
+    for d in valid_disp_dock:
+        sec = (d.dispatch_dockout_time - d.dispatch_dockin_time).total_seconds()
+        if 0 <= sec <= 86400:  # within 24h regular turnaround
+            outbound_delays_sec.append(sec)
+
+    avg_dockout_mins = round(sum(outbound_delays_sec) / len(outbound_delays_sec) / 60, 1) if outbound_delays_sec else 0.0
+    avg_dockout_days = round(sum(outbound_delays_sec) / len(outbound_delays_sec) / 86400, 2) if outbound_delays_sec else 0.0
+    delayed_dockout_shipments = sum(1 for s in outbound_delays_sec if s > 1800)  # SLA threshold > 30 mins
+
+    dock_out_total = disp_date_qs.count()
+    gatepass_total = disp_date_qs.exclude(dispatch_num='').exclude(dispatch_num__isnull=True).count()
+
+    # Customer Movement
+    new_customers_count = CustomerInfo.objects.filter(cu_created_at__date__gte=from_date, cu_created_at__date__lte=to_date).count()
+    active_cust_ids = set(wh_qs.filter(wh_checkin_time__date__gte=from_date, wh_checkin_time__date__lte=to_date).values_list('wh_customer_name_id', flat=True))
+    all_time_cust_count = CustomerInfo.objects.count()
+    lost_customers_count = max(all_time_cust_count - len(active_cust_ids), 0) if len(active_cust_ids) > 0 else 0
+
+    # Dedicated Particulars Turnaround Operations Dataset
+    dock_operations = [
+        {
+            'particular': 'Pre-Gate-in',
+            'type': 'Manual / WMS',
+            'count': pre_count if pre_count > 0 else inbound_gatein_trucks,
+            'time_text': 'Yard Screening',
+            'status': 'Verified 100%',
+            'status_type': 'green',
+            'icon': 'fa-clipboard-check',
+        },
+        {
+            'particular': 'Avg. Delay Gate to Dock',
+            'type': 'Turnaround (SLA)',
+            'count': f"{avg_gate_to_dock_mins}m",
+            'time_text': f"{avg_dockin_days} Days",
+            'status': 'Optimal' if avg_gate_to_dock_mins <= 45 else 'Review',
+            'status_type': 'green' if avg_gate_to_dock_mins <= 45 else 'amber',
+            'icon': 'fa-stopwatch',
+        },
+        {
+            'particular': 'Dock-in',
+            'type': 'Manual / WMS',
+            'count': dock_in_total,
+            'time_text': 'Arrived at Dock',
+            'status': f"{dock_in_total} Inwarded",
+            'status_type': 'blue',
+            'icon': 'fa-door-open',
+        },
+        {
+            'particular': 'Dock-in (POD)',
+            'type': 'Manual / WMS',
+            'count': dock_in_pod_count,
+            'time_text': 'POD / Docs Attached',
+            'status': 'Verified' if dock_in_pod_count > 0 else 'Pending Docs',
+            'status_type': 'green' if dock_in_pod_count > 0 else 'amber',
+            'icon': 'fa-file-signature',
+        },
+        {
+            'particular': 'Avg. Delay in Dock-in',
+            'type': 'Time / Delay Rate',
+            'count': f"{avg_gate_to_dock_mins}m",
+            'time_text': f"{avg_dockin_days} Days",
+            'status': f"{avg_dockin_days} Days",
+            'status_type': 'green' if avg_dockin_days < 0.1 else 'amber',
+            'icon': 'fa-clock',
+        },
+        {
+            'particular': 'Dock-in Delayed Shipments',
+            'type': 'Threshold > 30 mins',
+            'count': delayed_dockin_shipments,
+            'time_text': f"Of {len(inbound_delays_sec)} Verified",
+            'status': 'Zero Delay' if delayed_dockin_shipments == 0 else f"{delayed_dockin_shipments} Delayed",
+            'status_type': 'green' if delayed_dockin_shipments == 0 else 'amber',
+            'icon': 'fa-exclamation-triangle',
+        },
+        {
+            'particular': 'Dock-out',
+            'type': 'Manual / WMS',
+            'count': dock_out_total,
+            'time_text': 'Orders Staged & Dispatched',
+            'status': f"{dock_out_total} Dispatched",
+            'status_type': 'blue',
+            'icon': 'fa-shipping-fast',
+        },
+        {
+            'particular': 'Gatepass',
+            'type': 'Manual / WMS',
+            'count': gatepass_total,
+            'time_text': 'Gatepass Generated',
+            'status': '100% Issued' if gatepass_total >= dock_out_total and dock_out_total > 0 else f"{gatepass_total} Issued",
+            'status_type': 'green' if gatepass_total >= dock_out_total else 'blue',
+            'icon': 'fa-ticket-alt',
+        },
+        {
+            'particular': 'Avg. Delay in Dock-out',
+            'type': 'Time / Turnaround',
+            'count': f"{avg_dockout_mins}m",
+            'time_text': f"{avg_dockout_days} Days",
+            'status': f"{avg_dockout_days} Days",
+            'status_type': 'green' if avg_dockout_days < 0.1 else 'amber',
+            'icon': 'fa-stopwatch-20',
+        },
+        {
+            'particular': 'Dock-out Delayed Shipments',
+            'type': 'Threshold > 30 mins',
+            'count': delayed_dockout_shipments,
+            'time_text': f"Of {len(outbound_delays_sec)} Verified",
+            'status': 'Zero Delay' if delayed_dockout_shipments == 0 else f"{delayed_dockout_shipments} Delayed",
+            'status_type': 'green' if delayed_dockout_shipments == 0 else 'amber',
+            'icon': 'fa-exclamation-circle',
+        },
+        {
+            'particular': 'New Customer On-board',
+            'type': 'Manual / WMS',
+            'count': new_customers_count,
+            'time_text': 'Registered in Period',
+            'status': f"{new_customers_count} On-boarded",
+            'status_type': 'green',
+            'icon': 'fa-user-plus',
+        },
+        {
+            'particular': 'Lost Customer',
+            'type': 'Manual / Inactive',
+            'count': lost_customers_count,
+            'time_text': 'No Inward Activity',
+            'status': f"{lost_customers_count} Inactive",
+            'status_type': 'amber' if lost_customers_count > 0 else 'green',
+            'icon': 'fa-user-minus',
+        },
+    ]
+
+    dock_summary = {
+        'avg_inbound_time': f"{avg_gate_to_dock_mins}m",
+        'avg_outbound_time': f"{avg_dockout_mins}m",
+        'delayed_inbound': delayed_dockin_shipments,
+        'delayed_outbound': delayed_dockout_shipments,
+    }
+
     compliance_controls = [
         {
             'parameter': 'High-Value Cargo Approvals',
@@ -759,6 +946,8 @@ def get_wms_kpi_dashboard_data(request):
         'pipeline': pipeline,
         'compliance_controls': compliance_controls,
         'compliance_summary': compliance_summary,
+        'dock_operations': dock_operations,
+        'dock_summary': dock_summary,
         'revenue_breakdown': revenue_breakdown,
         'calendar_data': calendar_map,
         'thresholds': {
