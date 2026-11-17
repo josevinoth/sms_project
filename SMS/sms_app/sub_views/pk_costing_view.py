@@ -494,24 +494,32 @@ def load_stock_description(request):
     return HttpResponse(json.dumps(data), content_type='application/json')
 @login_required(login_url='login_page')
 def load_pk_wood_description(request):
-    stock_type = request.GET.get('stock_type')
-    if stock_type == '0' or stock_type == '':
-        pk_wood_description_objs = Pkwooddescription.objects.none()
+    # Support single ID, array (stock_type[]), or comma-delimited string
+    stock_type_list = request.GET.getlist('stock_type[]') or request.GET.getlist('stock_type')
+    if not stock_type_list and request.GET.get('stock_type'):
+        stock_type_list = [x.strip() for x in str(request.GET.get('stock_type')).split(',') if x.strip()]
+
+    valid_ids = [int(x) for x in stock_type_list if str(x).isdigit() and int(x) > 0]
+
+    if not valid_ids:
+        pk_wood_description_objs = Pkwooddescription.objects.all().order_by('pk_wood_type_id', 'pk_wood_description')
     else:
-        # Include records with matching type OR where type is NULL
-        pk_wood_description_objs = Pkwooddescription.objects.filter(Q(pk_wood_type_id=stock_type) | Q(pk_wood_type_id__isnull=True)).order_by('pk_wood_description')
+        pk_wood_description_objs = Pkwooddescription.objects.filter(pk_wood_type_id__in=valid_ids).order_by('pk_wood_type_id', 'pk_wood_description')
 
     wood_description = []
     wood_description_id = []
+    wood_type_names = []
     for i in pk_wood_description_objs:
         wood_description.append(i.pk_wood_description)
         wood_description_id.append(i.id)
+        wood_type_names.append(str(i.pk_wood_type) if i.pk_wood_type else '')
 
     data = {
         'stock_description': wood_description,
         'stock_description_id': wood_description_id,
+        'wood_type_names': wood_type_names,
     }
-    return HttpResponse(json.dumps(data))
+    return HttpResponse(json.dumps(data), content_type='application/json')
 
 @login_required(login_url='login_page')
 def costing_cancel(request):

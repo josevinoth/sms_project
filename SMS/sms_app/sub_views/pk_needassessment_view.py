@@ -363,11 +363,11 @@ def na_dimension_add(request, na_dimension_id=0):
             if last_assessment_id and str(last_assessment_id) == str(na_assessment_num_id):
                 wood_type_ids = request.session.get('last_nad_wood_type_list', [])
                 wood_desc_ids = request.session.get('last_nad_wood_description_list', [])
+                consumables_ids = request.session.get('last_nad_consumables_list', [])
 
                 initial_data = {
                     'nad_type_of_req': Natypeofreq.objects.filter(id=request.session.get('last_nad_type_of_req')).first(),
                     'nad_quantity': request.session.get('last_nad_quantity'),
-                    'nad_consumables': Naconsumables.objects.filter(id=request.session.get('last_nad_consumables')).first(),
                     'nad_vechicle_type': VehicletypeInfo.objects.filter(id=request.session.get('last_nad_vechicle_type')).first(),
                     'nad_uom': Unitofmeasure.objects.filter(id=request.session.get('last_nad_uom')).first(),
                     'nad_dimension_type': Nadimensiontype.objects.filter(id=request.session.get('last_nad_dimension_type')).first(),
@@ -380,6 +380,8 @@ def na_dimension_add(request, na_dimension_id=0):
                     form.fields['nad_wood_type'].initial = Pkstocktype.objects.filter(id__in=wood_type_ids)
                 if wood_desc_ids:
                     form.fields['nad_wood_description'].initial = Pkwooddescription.objects.filter(id__in=wood_desc_ids)
+                if consumables_ids:
+                    form.fields['nad_consumables'].initial = Naconsumables.objects.filter(id__in=consumables_ids)
             else:
                 form = NadimensionForm()
 
@@ -413,44 +415,69 @@ def na_dimension_add(request, na_dimension_id=0):
                 na_item_num_next = generate_next_number(Nadimension, 'nad_item', prefix, 6)
                 Nadimension.objects.filter(id=instance.id).update(nad_item=na_item_num_next)
 
-                # Optional: Save to Customer Box Item Master in the same click
+                # Save/Sync to Customer Box Item Master
                 if request.POST.get('save_to_master') == 'on':
                     from ..models import CustomerBoxItemMaster
-                    master_code = (request.POST.get('master_item_code') or '').strip()
-                    master_name = (request.POST.get('master_item_name') or '').strip() or str(instance.nad_type_of_req)
+                    master_name = (request.POST.get('master_item_name') or '').strip() or str(instance.nad_type_of_req or 'Standard Box')
                     cust_obj = instance.nad_assess_num.na_customer_name if instance.nad_assess_num else None
-                    cbm_code = generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
-                    master_obj = CustomerBoxItemMaster.objects.create(
-                        cbm_customer=cust_obj,
-                        cbm_bvm_code=cbm_code,
-                        cbm_item_code=master_code or na_item_num_next,
-                        cbm_item_name=master_name,
-                        cbm_type_of_req=instance.nad_type_of_req,
-                        cbm_dimension_type=instance.nad_dimension_type,
-                        cbm_length=instance.nad_length,
-                        cbm_width=instance.nad_width,
-                        cbm_height=instance.nad_height,
-                        cbm_clearance=instance.nad_clearance or 0.0,
-                        cbm_plywood_thickness=instance.nad_plywood_thickness or 0.0,
-                        cbm_clr_length=instance.nad_clr_length,
-                        cbm_clr_width=instance.nad_clr_width,
-                        cbm_clr_top=instance.nad_clr_top,
-                        cbm_thk_length=instance.nad_thk_length,
-                        cbm_thk_width=instance.nad_thk_width,
-                        cbm_thk_height=instance.nad_thk_height,
-                        cbm_uom=instance.nad_uom,
-                        cbm_job_weight=instance.nad_job_weight,
-                        cbm_consumables=instance.nad_consumables,
-                        cbm_vechicle_type=instance.nad_vechicle_type,
-                        cbm_updated_by=instance.nad_updated_by,
-                    )
-                    master_obj.cbm_wood_type.set(instance.nad_wood_type.all())
-                    master_obj.cbm_wood_description.set(instance.nad_wood_description.all())
-                    part_label = f"{master_obj.cbm_item_code} - {master_obj.cbm_item_name}".strip(' -')
-                    Nadimension.objects.filter(id=instance.id).update(
-                        nad_master_item=master_obj,
-                        nad_customer_part_code=part_label[:120],
-                    )
+
+                    if instance.nad_master_item:
+                        master_obj = instance.nad_master_item
+                        if master_name:
+                            master_obj.cbm_item_name = master_name
+                        master_obj.cbm_length = instance.nad_length
+                        master_obj.cbm_width = instance.nad_width
+                        master_obj.cbm_height = instance.nad_height
+                        master_obj.cbm_clearance = instance.nad_clearance or 0.0
+                        master_obj.cbm_plywood_thickness = instance.nad_plywood_thickness or 0.0
+                        master_obj.cbm_clr_length = instance.nad_clr_length
+                        master_obj.cbm_clr_width = instance.nad_clr_width
+                        master_obj.cbm_clr_top = instance.nad_clr_top
+                        master_obj.cbm_thk_length = instance.nad_thk_length
+                        master_obj.cbm_thk_width = instance.nad_thk_width
+                        master_obj.cbm_thk_height = instance.nad_thk_height
+                        master_obj.cbm_uom = instance.nad_uom
+                        master_obj.cbm_job_weight = instance.nad_job_weight
+                        master_obj.cbm_dimension_type = instance.nad_dimension_type
+                        master_obj.cbm_type_of_req = instance.nad_type_of_req
+                        master_obj.cbm_vechicle_type = instance.nad_vechicle_type
+                        master_obj.save()
+                        master_obj.cbm_wood_type.set(instance.nad_wood_type.all())
+                        master_obj.cbm_wood_description.set(instance.nad_wood_description.all())
+                        master_obj.cbm_consumables.set(instance.nad_consumables.all())
+                    else:
+                        cbm_code = generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
+                        master_obj = CustomerBoxItemMaster.objects.create(
+                            cbm_customer=cust_obj,
+                            cbm_bvm_code=cbm_code,
+                            cbm_item_code=cbm_code,
+                            cbm_item_name=master_name,
+                            cbm_type_of_req=instance.nad_type_of_req,
+                            cbm_dimension_type=instance.nad_dimension_type,
+                            cbm_length=instance.nad_length,
+                            cbm_width=instance.nad_width,
+                            cbm_height=instance.nad_height,
+                            cbm_clearance=instance.nad_clearance or 0.0,
+                            cbm_plywood_thickness=instance.nad_plywood_thickness or 0.0,
+                            cbm_clr_length=instance.nad_clr_length,
+                            cbm_clr_width=instance.nad_clr_width,
+                            cbm_clr_top=instance.nad_clr_top,
+                            cbm_thk_length=instance.nad_thk_length,
+                            cbm_thk_width=instance.nad_thk_width,
+                            cbm_thk_height=instance.nad_thk_height,
+                            cbm_uom=instance.nad_uom,
+                            cbm_job_weight=instance.nad_job_weight,
+                            cbm_vechicle_type=instance.nad_vechicle_type,
+                            cbm_updated_by=instance.nad_updated_by,
+                        )
+                        master_obj.cbm_wood_type.set(instance.nad_wood_type.all())
+                        master_obj.cbm_wood_description.set(instance.nad_wood_description.all())
+                        master_obj.cbm_consumables.set(instance.nad_consumables.all())
+                        part_label = f"{master_obj.cbm_bvm_code} - {master_obj.cbm_item_name}".strip(' -')
+                        Nadimension.objects.filter(id=instance.id).update(
+                            nad_master_item=master_obj,
+                            nad_customer_part_code=part_label[:120],
+                        )
 
                 # Store last submitted values in session
                 request.session['last_nad_type_of_req'] = form.cleaned_data['nad_type_of_req'].id if form.cleaned_data.get('nad_type_of_req') else None
@@ -458,8 +485,8 @@ def na_dimension_add(request, na_dimension_id=0):
 
                 request.session['last_nad_wood_type_list'] = [obj.id for obj in form.cleaned_data.get('nad_wood_type')] if form.cleaned_data.get('nad_wood_type') else []
                 request.session['last_nad_wood_description_list'] = [obj.id for obj in form.cleaned_data.get('nad_wood_description')] if form.cleaned_data.get('nad_wood_description') else []
+                request.session['last_nad_consumables_list'] = [obj.id for obj in form.cleaned_data.get('nad_consumables')] if form.cleaned_data.get('nad_consumables') else []
 
-                request.session['last_nad_consumables'] = form.cleaned_data['nad_consumables'].id if form.cleaned_data.get('nad_consumables') else None
                 request.session['last_nad_vechicle_type'] = form.cleaned_data['nad_vechicle_type'].id if form.cleaned_data.get('nad_vechicle_type') else None
                 request.session['last_nad_uom'] = form.cleaned_data['nad_uom'].id if form.cleaned_data.get('nad_uom') else None
                 request.session['last_nad_dimension_type'] = form.cleaned_data['nad_dimension_type'].id if form.cleaned_data.get('nad_dimension_type') else None
