@@ -12,10 +12,11 @@ class NadimensionForm(forms.ModelForm):
         self.fields['nad_type_of_req'].empty_label = "--Select--"
         self.fields['nad_uom'].empty_label = "--Select--"
         self.fields['nad_plywood_thickness'].empty_label = "--Select--"
-        self.fields['nad_wood_type'].empty_label = "--Select--"
-        self.fields['nad_wood_type'].queryset = Pkstocktype.objects.filter(id__in=[1, 4])
+        if 'nad_wood_type' in self.fields:
+            self.fields['nad_wood_type'].queryset = Pkstocktype.objects.filter(id__in=[1, 4])
         self.fields['nad_dimension_type'].empty_label = "--Select--"
-        self.fields['nad_consumables'].empty_label = "--Select--"
+        if 'nad_consumables' in self.fields:
+            self.fields['nad_consumables'].required = False
         self.fields['nad_vechicle_type'].empty_label = "--Select--"
         if 'nad_master_item' in self.fields:
             self.fields['nad_master_item'].empty_label = "--Select Master Item--"

@@ -297,7 +297,7 @@
         <div class="row align-items-center">
             <div class="col-12 col-md-4 mb-2 mb-md-0">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <div class="spec-label mb-0">Select Box / Job Item</div>
+                    <div class="spec-label mb-0">Select Box / Job Item <span class="badge badge-success px-2 py-0 ml-1" id="badge_active_wood" style="font-size: 0.68rem; background: #dcfce7; color: #15803d; border: 1px solid #86efac;" title="Active Timber Type from Need Assessment"><i class="fas fa-tree mr-1"></i><span id="badge_active_wood_text">PineWood (P)</span></span></div>
                     <div class="custom-control custom-checkbox small">
                         <input type="checkbox" class="custom-control-input" id="chk_quoted_only">
                         <label class="custom-control-label font-weight-bold text-primary" for="chk_quoted_only" style="font-size: 0.75rem; cursor: pointer;">
@@ -309,7 +309,7 @@
                     <select id="matrix_requirement_select" class="form-control form-control-sm font-weight-bold flex-grow-1">
                         <option value="" {% if not selected_requirement_id %}selected{% endif %}>-- Select Box / Job Item to Cost --</option>
                         {% for req in requirements_list %}
-                        <option value="{{ req.id }}" data-l="{{ req.nad_length }}" data-w="{{ req.nad_width }}" data-h="{{ req.nad_height }}" data-uom="{{ req.nad_uom }}" data-qty="{{ req.nad_quantity }}" data-clearance="{{ req.nad_clearance }}" data-ply-thick="{{ req.nad_plywood_thickness }}" data-clr-l="{{ req.nad_clr_length|default:0 }}" data-clr-w="{{ req.nad_clr_width|default:0 }}" data-clr-top="{{ req.nad_clr_top|default:0 }}" data-thk-l="{{ req.nad_thk_length|default:7 }}" data-thk-w="{{ req.nad_thk_width|default:7 }}" data-thk-h="{{ req.nad_thk_height|default:20 }}" data-dim-type="{{ req.nad_dimension_type }}" data-weight="{{ req.nad_job_weight|default:0 }}" data-req-type-id="{{ req.nad_type_of_req_id|default:'' }}" data-quoted="{{ req.is_quoted|yesno:'true,false' }}" {% if selected_requirement_id and selected_requirement_id == req.id %}selected{% endif %}>
+                        <option value="{{ req.id }}" data-l="{{ req.nad_length }}" data-w="{{ req.nad_width }}" data-h="{{ req.nad_height }}" data-uom="{{ req.nad_uom }}" data-qty="{{ req.nad_quantity }}" data-clearance="{{ req.nad_clearance }}" data-ply-thick="{{ req.nad_plywood_thickness }}" data-clr-l="{{ req.nad_clr_length|default:0 }}" data-clr-w="{{ req.nad_clr_width|default:0 }}" data-clr-top="{{ req.nad_clr_top|default:0 }}" data-thk-l="{{ req.nad_thk_length|default:7 }}" data-thk-w="{{ req.nad_thk_width|default:7 }}" data-thk-h="{{ req.nad_thk_height|default:20 }}" data-dim-type="{{ req.nad_dimension_type }}" data-weight="{{ req.nad_job_weight|default:0 }}" data-req-type-id="{{ req.nad_type_of_req_id|default:'' }}" data-quoted="{{ req.is_quoted|yesno:'true,false' }}" data-wood-prefix="{{ req.wood_prefix|default:'P' }}" data-wood-desc="{{ req.wood_descriptions|default:'PineWood' }}" {% if selected_requirement_id and selected_requirement_id == req.id %}selected{% endif %}>
                             {{ req.nad_item }} - {{ req.nad_type_of_req }} ({{ req.nad_length|floatformat:0 }}x{{ req.nad_width|floatformat:0 }}x{{ req.nad_height|floatformat:0 }} cm) {% if req.is_quoted %}✓ [Quoted]{% else %}(Not Quoted){% endif %}
                         </option>
                         {% empty %}
@@ -1216,16 +1216,20 @@
         }
     }
 
-    // Helper to auto-derive standard timber Part Code (e.g. K4030110 for H=4, W=3, L=11)
-    function derivePartCode(mat, h, w, l) {
+    // Helper to auto-derive standard timber Part Code (e.g. P404040 for Pine, K404040 for Kiln-dry)
+    function derivePartCode(mat, h, w, l, customPrefix) {
         if (mat === 'wood') {
             const h_val = parseFloat(h) || 1.0;
             const w_val = parseFloat(w) || 4.0;
             const l_val = parseFloat(l) || 10.0;
             const h_code = Math.round(h_val * 10);
             const w_code = Math.round(w_val * 10);
-            const l_code = Math.round(l_val * 10);
-            return `K${h_code}${w_code}${l_code}`;
+            const opt = $('#matrix_requirement_select option:selected');
+            const prefix = (customPrefix || opt.attr('data-wood-prefix') || 'P').toUpperCase();
+            // Standard lengths in 0.5 ft increments (e.g. 4.0 -> 40, 4.5 -> 45, 10.5 -> 105)
+            const l_half = Math.round(l_val * 2) / 2;
+            const l_code = Math.round(l_half * 10);
+            return `${prefix}${h_code}${w_code}${l_code}`;
         } else {
             return 'PY1410';
         }
@@ -1476,7 +1480,7 @@
         if (!nails || nails.length === 0) return;
 
         nails.forEach((n, idx) => {
-            const codeDisplay = n.code || '';
+            const codeDisplay = n.code || n.part_code || '';
             const nameDisplay = n.name || '';
 
             tbody.append(`
@@ -2092,6 +2096,10 @@
 
         // When selected box/job requirement changes
         $('#matrix_requirement_select').on('change', function() {
+        const selOpt = $(this).find('option:selected');
+        const woodDesc = selOpt.attr('data-wood-desc') || 'PineWood';
+        const woodPref = selOpt.attr('data-wood-prefix') || 'P';
+        $('#badge_active_wood_text').text(woodDesc + ' (' + woodPref + ')');
             const reqId = $(this).val();
             if (!reqId) {
                 renderEmptyMatrixState();
@@ -2265,6 +2273,8 @@
                 contentType: "application/json",
                 headers: { "X-CSRFToken": "{{ csrf_token }}" },
                 data: JSON.stringify({
+                    req_id: opt.val() || '',
+                    wood_prefix: opt.attr('data-wood-prefix') || 'P',
                     l_cm: l_cm,
                     w_cm: w_cm,
                     h_cm: h_cm,

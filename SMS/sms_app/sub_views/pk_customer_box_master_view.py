@@ -51,8 +51,8 @@ def customer_box_master_list(request):
     search_q = request.GET.get('q', '').strip()
 
     items = CustomerBoxItemMaster.objects.select_related(
-        'cbm_customer', 'cbm_type_of_req', 'cbm_dimension_type', 'cbm_uom', 'cbm_consumables'
-    ).prefetch_related('cbm_wood_type', 'cbm_wood_description').all()
+        'cbm_customer', 'cbm_type_of_req', 'cbm_dimension_type', 'cbm_uom'
+    ).prefetch_related('cbm_wood_type', 'cbm_wood_description', 'cbm_consumables').all()
 
     if customer_id:
         if customer_id == 'global':
@@ -115,21 +115,28 @@ def customer_box_master_save(request, pk=0):
     instance.cbm_thk_width = float(request.POST.get('cbm_thk_width') or 7.0)
     instance.cbm_thk_height = float(request.POST.get('cbm_thk_height') or 20.0)
     instance.cbm_job_weight = float(request.POST.get('cbm_job_weight') or 0.0)
-    instance.cbm_consumables_id = request.POST.get('cbm_consumables') or None
     instance.cbm_vechicle_type_id = request.POST.get('cbm_vechicle_type') or None
     instance.cbm_notes = (request.POST.get('cbm_notes') or '').strip()
     instance.cbm_is_active = request.POST.get('cbm_is_active', 'on') in ('on', 'true', '1', 'True')
     instance.cbm_updated_by = user_obj
 
     if not instance.cbm_bvm_code:
-        instance.cbm_bvm_code = generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
+        instance.cbm_bvm_code = (request.POST.get('cbm_bvm_code') or '').strip() or generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
+
+    if not instance.cbm_item_code:
+        instance.cbm_item_code = instance.cbm_bvm_code
+
+    if not instance.cbm_item_name:
+        instance.cbm_item_name = f"Box Item {instance.cbm_bvm_code}"
 
     instance.save()
 
     wood_type_ids = [int(x) for x in request.POST.getlist('cbm_wood_type') if str(x).isdigit()]
     wood_desc_ids = [int(x) for x in request.POST.getlist('cbm_wood_description') if str(x).isdigit()]
+    consumables_ids = [int(x) for x in request.POST.getlist('cbm_consumables') if str(x).isdigit()]
     instance.cbm_wood_type.set(wood_type_ids)
     instance.cbm_wood_description.set(wood_desc_ids)
+    instance.cbm_consumables.set(consumables_ids)
 
     messages.success(request, f"Customer Box Item '{instance.cbm_item_code or instance.cbm_item_name}' saved.")
     return redirect(request.POST.get('next') or 'customer_box_master_list')
@@ -146,8 +153,11 @@ def customer_box_master_form_view(request, pk=0):
         CustomerBoxItemMaster.objects.prefetch_related('cbm_wood_type', 'cbm_wood_description'), pk=pk
     ) if pk else None
 
+    next_item_number = item.cbm_bvm_code if item and item.cbm_bvm_code else generate_next_number(CustomerBoxItemMaster, 'cbm_bvm_code', 'CBM_', 5)
+
     context = {
         'item': item,
+        'next_item_number': next_item_number,
         'selected_wood_type_ids': list(item.cbm_wood_type.values_list('id', flat=True)) if item else [],
         'selected_wood_desc_ids': list(item.cbm_wood_description.values_list('id', flat=True)) if item else [],
         'customers': CustomerInfo.objects.all().order_by('cu_name'),
@@ -179,8 +189,8 @@ def api_customer_box_items(request):
     search_q = request.GET.get('q', '').strip()
 
     qs = CustomerBoxItemMaster.objects.filter(cbm_is_active=True).select_related(
-        'cbm_customer', 'cbm_type_of_req', 'cbm_dimension_type', 'cbm_uom', 'cbm_consumables', 'cbm_vechicle_type'
-    ).prefetch_related('cbm_wood_type', 'cbm_wood_description')
+        'cbm_customer', 'cbm_type_of_req', 'cbm_dimension_type', 'cbm_uom', 'cbm_vechicle_type'
+    ).prefetch_related('cbm_wood_type', 'cbm_wood_description', 'cbm_consumables')
 
     if customer_id and customer_id.isdigit():
         qs = qs.filter(Q(cbm_customer_id=int(customer_id)) | Q(cbm_customer__isnull=True))
@@ -222,7 +232,7 @@ def api_customer_box_items(request):
             'wood_type_ids': list(item.cbm_wood_type.values_list('id', flat=True)),
             'wood_type_names': ', '.join(str(w) for w in item.cbm_wood_type.all()),
             'wood_desc_ids': list(item.cbm_wood_description.values_list('id', flat=True)),
-            'consumables_id': item.cbm_consumables_id,
+            'consumables_ids': list(item.cbm_consumables.values_list('id', flat=True)),
             'vechicle_type_id': item.cbm_vechicle_type_id,
             'notes': item.cbm_notes or '',
         })
@@ -272,7 +282,8 @@ def api_na_tag_box_items(request):
                 continue
 
             next_item_num = generate_next_number(Nadimension, 'nad_item', prefix, 6)
-            part_label = f"{master.cbm_item_code} - {master.cbm_item_name}".strip(' -')
+            item_ref = master.cbm_bvm_code or master.cbm_item_code or 'BOX'
+            part_label = f"{item_ref} - {master.cbm_item_name}".strip(' -') if master.cbm_item_name else item_ref
 
             nad = Nadimension.objects.create(
                 nad_assess_num=assessment,
@@ -294,13 +305,13 @@ def api_na_tag_box_items(request):
                 nad_thk_width=master.cbm_thk_width,
                 nad_thk_height=master.cbm_thk_height,
                 nad_dimension_type=master.cbm_dimension_type or Nadimensiontype.objects.filter(pk=4).first(),
-                nad_consumables=master.cbm_consumables,
                 nad_vechicle_type=master.cbm_vechicle_type,
                 nad_master_item=master,
                 nad_customer_part_code=part_label[:120],
             )
             nad.nad_wood_type.set(master.cbm_wood_type.all())
             nad.nad_wood_description.set(master.cbm_wood_description.all())
+            nad.nad_consumables.set(master.cbm_consumables.all())
             created_ids.append(nad.id)
 
     return JsonResponse({'status': 'success', 'created_count': len(created_ids), 'created_ids': created_ids})
@@ -652,13 +663,34 @@ def bom_rule_master_import_csv(request):
     return redirect('bom_rule_master_list')
 
 
-def _derive_part_code(mat, h_val, w_val, l_ft):
+def _derive_part_code(mat, h_val, w_val, l_ft, prefix='P'):
     if mat == 'wood':
-        return f"K{int(round(h_val * 10))}{int(round(w_val * 10))}{int(round(l_ft * 10))}"
+        prefix = (prefix or 'P').upper()
+        h_code = int(round(h_val * 10))
+        w_code = int(round(w_val * 10))
+        stem = f"{prefix}{h_code}{w_code}"
+        # Standard timber stock in BVM is stocked in 0.5 ft increments (e.g. 4.0 -> 40, 4.5 -> 45, 10.5 -> 105)
+        l_half = round(round(l_ft * 2) / 2, 1)
+        candidate = f"{stem}{int(round(l_half * 10))}"
+        if PkpartcodeInfo.objects.filter(pc_code=candidate).exists():
+            return candidate
+        l_ceil = math.ceil(l_ft * 2) / 2
+        candidate_ceil = f"{stem}{int(round(l_ceil * 10))}"
+        if PkpartcodeInfo.objects.filter(pc_code=candidate_ceil).exists():
+            return candidate_ceil
+        matching = PkpartcodeInfo.objects.filter(pc_code__startswith=stem)
+        if matching.exists():
+            return matching.first().pc_code
+        return candidate
     mm = int(round(h_val))
-    # Map standard plywood thicknesses if available
     if mm == 10:
         return 'PY1410'
+    elif mm == 18:
+        return 'PY8418'
+    elif mm == 15:
+        return 'PY8415'
+    elif mm == 6:
+        return 'PY846'
     return f"PY14{mm:02d}"
 
 
@@ -736,6 +768,22 @@ def api_auto_generate_bom(request):
         req_type_id = payload.get('req_type_id') or None
         wood_rate = float(payload.get('wood_rate') or 0.0)
         ply_rate = float(payload.get('ply_rate') or 0.0)
+        wood_prefix = (payload.get('wood_prefix') or '').strip().upper()
+        req_id = payload.get('req_id') or payload.get('requirement_id')
+        if not wood_prefix and req_id:
+            req_obj = Nadimension.objects.filter(id=req_id).first()
+            if req_obj:
+                wood_descs = list(req_obj.nad_wood_description.values_list('pk_wood_description', flat=True))
+                if any('kiln' in w.lower() for w in wood_descs):
+                    wood_prefix = 'K'
+                elif any('pine' in w.lower() for w in wood_descs):
+                    wood_prefix = 'P'
+                elif any('hard' in w.lower() for w in wood_descs):
+                    wood_prefix = 'H'
+                elif any('rubber' in w.lower() for w in wood_descs):
+                    wood_prefix = 'R'
+        if not wood_prefix:
+            wood_prefix = 'P'
     except Exception as exc:
         return JsonResponse({'status': 'error', 'message': str(exc)}, status=400)
 
@@ -762,7 +810,7 @@ def api_auto_generate_bom(request):
     deck_h = 1.0 if deck_mat == 'wood' else rule.br_deck_thickness
 
     def make_row(section, sec_class, name, mat, l_val, w_val, h_val, nos):
-        pcode = _derive_part_code(mat, h_val, w_val, l_val)
+        pcode = _derive_part_code(mat, h_val, w_val, l_val, prefix=wood_prefix)
         fallback = ply_rate if mat == 'plywood' else wood_rate
         resolved_code, resolved_rate = _lookup_part_rate(pcode, fallback)
         if not resolved_rate:
@@ -892,9 +940,13 @@ def api_auto_generate_bom(request):
     strap_count = max(2, math.ceil(l_ft / max(rule.br_strapping_pitch_ft, 1.0)))
     strapping_mtr = round(2.0 * (w_m + h_m) * strap_count, 2)
 
-    # Pick default Nail / Consumable part codes if present in PkpartcodeInfo
-    nail_pc = PkpartcodeInfo.objects.filter(pc_code__istartswith='N').first()
-    nail_code, nail_rate = _lookup_part_rate(nail_pc.pc_code if nail_pc else 'N300', 110.0)
+    # Pick default Nail (Wire Nails, e.g. N65S) from PkpartcodeInfo
+    nail_pc = (
+        PkpartcodeInfo.objects.filter(pc_code='N65S').first()
+        or PkpartcodeInfo.objects.filter(pc_stock_description__stock_description__icontains='nail').first()
+        or PkpartcodeInfo.objects.filter(pc_code__istartswith='N').first()
+    )
+    nail_code, nail_rate = _lookup_part_rate(nail_pc.pc_code if nail_pc else 'N65S', 110.0)
 
     nails = [
         {
@@ -905,20 +957,54 @@ def api_auto_generate_bom(request):
         }
     ]
 
-    consumables = [
-        {
-            'part_code': 'VCI-WRAP',
-            'name': f'VCI / Polythene Sheet ({vci_sqm} sqm)',
-            'qty': vci_sqm,
-            'rate': 0.0,
-        },
-        {
-            'part_code': 'STRAP-PET',
-            'name': f'PET / Steel Strapping ({strap_count} straps, {strapping_mtr} mtr)',
-            'qty': strapping_mtr,
-            'rate': 0.0,
-        },
-    ]
+    consumables = []
+    req_obj = Nadimension.objects.filter(id=req_id).first() if req_id else None
+    if req_obj and req_obj.nad_consumables.exists():
+        for c_item in req_obj.nad_consumables.all():
+            c_name = c_item.consumables.strip()
+            clean_token = c_name.split('-')[0].strip()
+            pc = PkpartcodeInfo.objects.filter(pc_stock_description__stock_description__icontains=clean_token).first()
+            if not pc:
+                pc = PkpartcodeInfo.objects.filter(pc_stock_description__stock_description__icontains=c_name[:8]).first()
+            pcode = pc.pc_code if pc else 'CONS-AUTO'
+            pdesc = str(pc.pc_stock_description) if pc else c_name
+            c_lower = c_name.lower()
+            if any(w in c_lower for w in ['bubble', 'tarpaulin', 'foil', 'vci', 'sheet', 'film', 'ldpe', 'foam', 'roll']):
+                qty = vci_sqm
+                display_name = f"{pdesc} ({qty} sqm)"
+            elif any(w in c_lower for w in ['band', 'strap', 'belt', 'tape']):
+                qty = strapping_mtr
+                display_name = f"{pdesc} ({strap_count} straps, {qty} mtr)"
+            elif any(w in c_lower for w in ['silica', 'desiccant', 'buckle', 'clip', 'box']):
+                qty = 4.0
+                display_name = f"{pdesc} (4 nos)"
+            else:
+                qty = 1.0
+                display_name = f"{pdesc} (1 unit)"
+
+            _, c_rate = _lookup_part_rate(pcode, 0.0)
+            consumables.append({
+                'part_code': pcode,
+                'name': display_name,
+                'qty': qty,
+                'rate': c_rate,
+            })
+    else:
+        # Fallback to standard protective wrap & strap if none specified in Need Assessment
+        consumables = [
+            {
+                'part_code': 'VCI-WRAP',
+                'name': f'VCI / Polythene Sheet ({vci_sqm} sqm)',
+                'qty': vci_sqm,
+                'rate': 0.0,
+            },
+            {
+                'part_code': 'STRAP-PET',
+                'name': f'PET / Steel Strapping ({strap_count} straps, {strapping_mtr} mtr)',
+                'qty': strapping_mtr,
+                'rate': 0.0,
+            },
+        ]
 
     return JsonResponse({
         'status': 'success',

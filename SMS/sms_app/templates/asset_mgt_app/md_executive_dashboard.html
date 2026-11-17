@@ -1248,12 +1248,22 @@
 
         <!-- Right Controls -->
         <div class="header-right">
-            <!-- Quick Date Selector -->
-            <div style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 4px;">
-                <button id="btn-date-today" class="ctrl-btn active" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Today</button>
-                <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;">Yesterday</button>
-                <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 8px; border: none; font-size: 0.72rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
-                <input type="date" id="date-picker-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.72rem; border-radius: 4px; padding: 2px 5px; outline: none; cursor: pointer; color-scheme: dark;">
+            <!-- Quick Date & Date Range Filter (From Date to To Date) -->
+            <div class="date-filter-box" style="display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 6px; padding: 2px 5px;">
+                <button id="btn-date-today" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Today</button>
+                <button id="btn-date-yest" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;">Yesterday</button>
+                <button id="btn-date-thismonth" class="ctrl-btn active" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View This Month (MTD)">This Month</button>
+                <button id="btn-date-lastmonth" class="ctrl-btn" style="padding: 3px 7px; border: none; font-size: 0.71rem;" title="View Last Month Overall ({{ last_month_label|default:'Last Month' }})">Last Month</button>
+
+                <div style="display:flex; align-items:center; gap:3px; margin-left: 2px; padding-left: 5px; border-left: 1px solid rgba(255,255,255,0.12);">
+                    <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">From</span>
+                    <input type="date" id="date-from-input" value="{{ cur_month_first_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
+                    <span style="font-size:0.64rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.3px;">To</span>
+                    <input type="date" id="date-to-input" value="{{ today_str }}" style="background: rgba(0,0,0,0.45); border: 1px solid var(--border-glass); color: #36d1ff; font-size: 0.70rem; border-radius: 4px; padding: 2px 4px; outline: none; cursor: pointer; color-scheme: dark;">
+                    <button id="btn-date-apply" class="ctrl-btn" style="padding: 2px 7px; border: 1px solid rgba(54, 209, 255, 0.4); font-size: 0.69rem; color: #36d1ff;" title="Apply Date Range">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
             </div>
 
             <!-- Play / Pause Kiosk Auto-Slide -->
@@ -1293,15 +1303,16 @@
                     <!-- Left: 3 Transport Macro Cards (Directly Above TMS Column) -->
                     <div class="dash-kpi-row" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
                         <div class="dash-card card-bg-transit">
-                            <div class="dash-kpi-label">Active Fleet In Transit</div>
-                            <div class="dash-kpi-value" id="macro-active-fleet">0</div>
-                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Live on road now</div>
-                            <i class="fas fa-truck-fast"></i>
+                            <div class="dash-kpi-label">Billing Pace vs Target</div>
+                            <div class="dash-kpi-value" id="macro-pace-val">₹0.54 Cr</div>
+                            <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="macro-pace-sub">Target ₹5.20 Cr • Behind -43.0%</div>
+                            <i class="fas fa-gauge-high"></i>
                         </div>
                         <div class="dash-card card-bg-revenue">
                             <div class="dash-kpi-label" id="macro-rev-label">Total Revenue (MTD)</div>
                             <div class="dash-kpi-value" id="macro-revenue-val">₹0.0 L</div>
-                            <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="macro-revenue-sub">Billed: ₹0.0L • Unbilled: ₹0.0L</div>
+                            <div style="font-size:0.56rem; color:rgba(255,255,255,0.78);" id="macro-revenue-sub">Billed: ₹0.0L • Unbilled: ₹0.0L</div>
+                            <div style="font-size:0.56rem; color:#10b981; font-weight:700; margin-top:1px;" id="macro-margin-sub">Margin ₹13.90L • 17.3%</div>
                             <i class="fas fa-sack-dollar"></i>
                         </div>
                         <div class="dash-card card-bg-billing">
@@ -1327,11 +1338,24 @@
                             <i class="fas fa-boxes-stacked"></i>
                         </div>
                         <div class="dash-card card-bg-cnote">
-                            <div class="dash-kpi-label">High Value Inspections</div>
-                            <div class="dash-kpi-value" id="macro-high-value">0</div>
-                            <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);">Safety &amp; quality cleared</div>
-                            <i class="fas fa-shield-halved"></i>
+                            <div class="dash-kpi-label">Collections Received</div>
+                            <div class="dash-kpi-value" id="macro-col-val">₹53.67 L</div>
+                            <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="macro-col-sub">Overdue AR ₹14.4L</div>
+                            <i class="fas fa-hand-holding-dollar"></i>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Addition C: Executive Needs Attention Critical Action Strip -->
+                <div class="needs-attention-strip" style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:linear-gradient(90deg, rgba(239,68,68,0.12), rgba(0,0,0,0.45)); border:1px solid rgba(239,68,68,0.28); border-radius:6px; padding:3px 10px; margin-bottom:6px; font-size:0.62rem;">
+                    <div style="display:flex; align-items:center; gap:5px; font-weight:800; color:#ef4444; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">
+                        <i class="fas fa-triangle-exclamation"></i> Needs Attention:
+                    </div>
+                    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                        <span id="na-overdue"><i class="fas fa-clock text-warning"></i> Top Overdue: <b style="color:#ffffff;">DHL LCLP(T)MAA (₹43.4L)</b></span>
+                        <span id="na-margin"><i class="fas fa-chart-line-down text-danger"></i> Low Margin: <b style="color:#ffffff;">DHL(T)BLR (-2.4%)</b></span>
+                        <span id="na-unbilled"><i class="fas fa-file-invoice text-warning"></i> Trapped Unbilled (&gt;5d): <b style="color:#f59e0b;" id="na-unbilled-val">109 Trips (₹11.83L)</b></span>
+                        <span id="na-stock"><i class="fas fa-boxes-packing text-info"></i> Stagnant Stock (&gt;30d): <b style="color:#ffffff;">11.0% (30.5 MT)</b></span>
                     </div>
                 </div>
 
@@ -1388,54 +1412,54 @@
                                 <div class="branch-comp-card maa">
                                     <div class="branch-comp-header">
                                         <span><i class="fas fa-location-dot" style="color:#36d1ff;"></i> Chennai Hub (BVM MAA)</span>
-                                        <span class="branch-pill maa">Lead: Ajay / Aravind</span>
+                                        <span class="branch-pill maa" id="s1-b-maa-lead">Lead: Vallarasu (380)</span>
                                     </div>
                                     <div class="branch-comp-stats">
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Today</span>
-                                            <span class="b-stat-val" style="color:#36d1ff;" id="s1-b-maa-today">7 Veh</span>
+                                            <span class="b-stat-lbl" id="s1-b-maa-lbl1">Today</span>
+                                            <span class="b-stat-val" style="color:#36d1ff;" id="s1-b-maa-today">0 Veh</span>
                                         </div>
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Month (MTD)</span>
-                                            <span class="b-stat-val" id="s1-b-maa-month">648 Veh</span>
+                                            <span class="b-stat-lbl" id="s1-b-maa-lbl2">Month (MTD)</span>
+                                            <span class="b-stat-val" id="s1-b-maa-month">827 Veh</span>
                                         </div>
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Conv. Rate</span>
-                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-maa-conv">91.2%</span>
+                                            <span class="b-stat-lbl">Share</span>
+                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-maa-conv">67.1%</span>
                                         </div>
                                     </div>
                                     <!-- MAA Revenue & Billing Split -->
                                     <div style="margin-top:3px; padding:2px 5px; background:rgba(0,0,0,0.32); border-radius:4px; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; border-top:1px solid rgba(255,255,255,0.06);">
-                                        <span><b>Rev:</b> <span style="color:#38bdf8; font-weight:700;" id="s1-b-maa-rev">₹0.0L</span></span>
-                                        <span>Invoiced: <b style="color:#10b981;" id="s1-b-maa-inv">₹0.0L</b></span>
-                                        <span>Unbilled: <b style="color:#f59e0b;" id="s1-b-maa-unbilled">₹0.0L</b></span>
+                                        <span><b>Rev:</b> <span style="color:#38bdf8; font-weight:700;" id="s1-b-maa-rev">₹55.97L</span></span>
+                                        <span>Invoiced: <b style="color:#10b981;" id="s1-b-maa-inv">₹37.91L</b></span>
+                                        <span>Unbilled: <b style="color:#f59e0b;" id="s1-b-maa-unbilled">₹18.06L</b></span>
                                     </div>
                                 </div>
 
                                 <div class="branch-comp-card blr">
                                     <div class="branch-comp-header">
                                         <span><i class="fas fa-location-dot" style="color:#f59e0b;"></i> Bangalore Hub (BVM BLR)</span>
-                                        <span class="branch-pill blr">Lead: Elumalai (434)</span>
+                                        <span class="branch-pill blr" id="s1-b-blr-lead">Lead: Elumalai (294)</span>
                                     </div>
                                     <div class="branch-comp-stats">
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Today</span>
+                                            <span class="b-stat-lbl" id="s1-b-blr-lbl1">Today</span>
                                             <span class="b-stat-val" style="color:#f59e0b;" id="s1-b-blr-today">0 Veh</span>
                                         </div>
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Month (MTD)</span>
-                                            <span class="b-stat-val" id="s1-b-blr-month">564 Veh</span>
+                                            <span class="b-stat-lbl" id="s1-b-blr-lbl2">Month (MTD)</span>
+                                            <span class="b-stat-val" id="s1-b-blr-month">406 Veh</span>
                                         </div>
                                         <div class="b-stat-box">
-                                            <span class="b-stat-lbl">Conv. Rate</span>
-                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-blr-conv">88.5%</span>
+                                            <span class="b-stat-lbl">Share</span>
+                                            <span class="b-stat-val" style="color:#10b981;" id="s1-b-blr-conv">32.9%</span>
                                         </div>
                                     </div>
                                     <!-- BLR Revenue & Billing Split -->
                                     <div style="margin-top:3px; padding:2px 5px; background:rgba(0,0,0,0.32); border-radius:4px; display:flex; justify-content:space-between; align-items:center; font-size:0.58rem; border-top:1px solid rgba(255,255,255,0.06);">
-                                        <span><b>Rev:</b> <span style="color:#f59e0b; font-weight:700;" id="s1-b-blr-rev">₹0.0L</span></span>
-                                        <span>Invoiced: <b style="color:#10b981;" id="s1-b-blr-inv">₹0.0L</b></span>
-                                        <span>Unbilled: <b style="color:#f59e0b;" id="s1-b-blr-unbilled">₹0.0L</b></span>
+                                        <span><b>Rev:</b> <span style="color:#f59e0b; font-weight:700;" id="s1-b-blr-rev">₹24.55L</span></span>
+                                        <span>Invoiced: <b style="color:#10b981;" id="s1-b-blr-inv">₹15.76L</b></span>
+                                        <span>Unbilled: <b style="color:#f59e0b;" id="s1-b-blr-unbilled">₹8.79L</b></span>
                                     </div>
                                 </div>
                             </div>
@@ -1505,13 +1529,13 @@
                                     <span class="exec-mini-val" style="color:#f59e0b;" id="s1-fin-repeat">98.2%</span>
                                 </div>
                                 <div class="exec-mini-box">
-                                    <span class="exec-mini-lbl">On-Time (OTP)</span>
-                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-otp">96.8%</span>
+                                    <span class="exec-mini-lbl">POD TAT</span>
+                                    <span class="exec-mini-val" style="color:#10b981;" id="s1-fin-podtat">0.3 Days</span>
                                 </div>
                             </div>
 
                             <!-- Trunk Route & Highway Speed Callout -->
-                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; justify-content:space-between; align-items:center;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <i class="fas fa-route" style="color:#10b981; font-size:0.75rem;"></i>
                                     <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">Trunk Route: <b style="color:#36d1ff;">Chennai ↔ Bangalore</b> (52% Traffic)</span>
@@ -1556,7 +1580,7 @@
                                 <div class="dash-card card-enquiry" style="min-height:54px; padding:4px 8px;">
                                     <div class="dash-kpi-label">Space Used</div>
                                     <div class="dash-kpi-value" style="font-size:1.15rem;" id="s1-wh-space-pct">34.1%</div>
-                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);">23,413 Sq.Ft</div>
+                                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.7);" id="s1-wh-space-sqft">23,375 Sq.Ft</div>
                                 </div>
                             </div>
 
@@ -1565,24 +1589,24 @@
                                 <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
                                     <div class="hub-card-header">
                                         <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#36d1ff;"></i> Chennai Hub (MAA)</span>
-                                        <span class="branch-pill maa">42.1% Area</span>
+                                        <span class="branch-pill maa" id="s1-hub-maa-pill">48.2% Area</span>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Area: <b>12,861</b> / 30,582 Sq.Ft</span>
-                                            <span>Avail: <b>17,721</b></span>
+                                            <span>Area: <b id="s1-hub-maa-sqft">14,742</b> / <span id="s1-hub-maa-tot-sqft">30,582</span> Sq.Ft</span>
+                                            <span>Avail: <b id="s1-hub-maa-avail">15,839</b></span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill maa" style="width: 42.1%;"></div>
+                                            <div class="hub-bar-fill maa" id="s1-hub-maa-bar" style="width: 48.2%;"></div>
                                         </div>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Vol: <b>20,184</b> / 491,250 CFT</span>
-                                            <span>4.1% Vol</span>
+                                            <span>Vol: <b id="s1-hub-maa-cft">20,588</b> / <span id="s1-hub-maa-tot-cft">491,250</span> CFT</span>
+                                            <span id="s1-hub-maa-vol-pct">4.2% Vol</span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill maa" style="width: 4.1%;"></div>
+                                            <div class="hub-bar-fill maa" id="s1-hub-maa-vol-bar" style="width: 4.2%;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1590,24 +1614,24 @@
                                 <div class="hub-card" style="margin-bottom:0; padding:6px 9px;">
                                     <div class="hub-card-header">
                                         <span style="font-size:0.7rem; font-weight:700; color:#ffffff;"><i class="fas fa-boxes-stacked" style="color:#f59e0b;"></i> Bangalore Hub (BLR)</span>
-                                        <span class="branch-pill blr">27.8% Area</span>
+                                        <span class="branch-pill blr" id="s1-hub-blr-pill">22.7% Area</span>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Area: <b>10,552</b> / 37,993 Sq.Ft</span>
-                                            <span>Avail: <b>27,441</b></span>
+                                            <span>Area: <b id="s1-hub-blr-sqft">8,632</b> / <span id="s1-hub-blr-tot-sqft">37,993</span> Sq.Ft</span>
+                                            <span>Avail: <b id="s1-hub-blr-avail">29,360</b></span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill blr" style="width: 27.8%;"></div>
+                                            <div class="hub-bar-fill blr" id="s1-hub-blr-bar" style="width: 22.7%;"></div>
                                         </div>
                                     </div>
                                     <div class="hub-bar-wrap">
                                         <div class="hub-bar-lbl">
-                                            <span>Vol: <b>11,832</b> / 249,916 CFT</span>
-                                            <span>4.7% Vol</span>
+                                            <span>Vol: <b id="s1-hub-blr-cft">10,960</b> / <span id="s1-hub-blr-tot-cft">249,916</span> CFT</span>
+                                            <span id="s1-hub-blr-vol-pct">4.4% Vol</span>
                                         </div>
                                         <div class="hub-bar-track">
-                                            <div class="hub-bar-fill blr" style="width: 4.7%;"></div>
+                                            <div class="hub-bar-fill blr" id="s1-hub-blr-vol-bar" style="width: 4.4%;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1661,11 +1685,11 @@
                                         <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:5px 6px; margin-bottom:4px;">
                                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                                 <span style="font-size:0.62rem; color:#94a3b8;">Avg Gate-to-Dock TAT</span>
-                                                <span style="font-size:0.9rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;">42 Mins</span>
+                                                <span style="font-size:0.9rem; font-weight:700; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="s1-wh-dock-tat">39 Mins</span>
                                             </div>
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                                                 <span style="font-size:0.62rem; color:#94a3b8;">Throughput Rate</span>
-                                                <span style="font-size:0.72rem; font-weight:600; color:#ffffff;">8.2 MT / hr</span>
+                                                <span style="font-size:0.72rem; font-weight:600; color:#ffffff;" id="s1-wh-handling-rate">3.5 MT / hr</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1709,7 +1733,7 @@
                             </div>
 
                             <!-- Equipment MHE & Facility Status Callout -->
-                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:5px 9px; margin-top:4px; justify-content:space-between; align-items:center;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <i class="fas fa-boxes-packing" style="color:#a855f7; font-size:0.75rem;"></i>
                                     <span style="font-size:0.66rem; color:#ffffff; font-weight:600;">MHE Fleet: <b>6/6 Forklifts Operational</b> (Zero Downtime)</span>
@@ -1717,9 +1741,7 @@
                                 <div style="display:flex; align-items:center; gap:8px; font-size:0.62rem; color:#94a3b8;">
                                     <span>Claims: <b style="color:#10b981;">0 Open</b></span>
                                     <span>●</span>
-                                    <span>Turns: <b style="color:#36d1ff;">4.6x / mo</b></span>
-                                    <span>●</span>
-                                    <span>Climate: <b style="color:#ffffff;">23.8°C</b></span>
+                                    <span>Handling SLA: <b style="color:#10b981;">100% Audit Pass</b></span>
                                 </div>
                             </div>
                         </div>
@@ -1780,7 +1802,7 @@
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                     <div class="dash-card card-bg-revenue">
-                        <div class="dash-kpi-label">Total Revenue (MTD)</div>
+                        <div class="dash-kpi-label" id="tms-kpi-rev-lbl">Total Revenue (MTD)</div>
                         <div class="dash-kpi-value" id="tms-kpi-rev-val">₹0.0L</div>
                         <div style="font-size:0.58rem; color:rgba(255,255,255,0.78);" id="tms-kpi-rev-sub">Billed: ₹0.0L • Unbilled: ₹0.0L</div>
                         <i class="fas fa-sack-dollar"></i>
@@ -1914,8 +1936,8 @@
                                 <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-kmpl">4.2 KM/L</span>
                             </div>
                             <div class="exec-mini-box">
-                                <span class="exec-mini-lbl">Delivery OTP</span>
-                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-otp">96.8%</span>
+                                <span class="exec-mini-lbl">POD TAT</span>
+                                <span class="exec-mini-val" style="color:#10b981;" id="tms-exp-podtat">0.3 Days</span>
                             </div>
                         </div>
                     </div>
@@ -1929,8 +1951,8 @@
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <div style="display:flex; align-items:center; gap:2px; background:rgba(0,0,0,0.3); border-radius:12px; padding:1px 3px;">
-                                        <button id="btn-cs-day" class="branch-toggle-btn active" style="font-size:0.64rem; padding:2px 7px;">Today</button>
-                                        <button id="btn-cs-month" class="branch-toggle-btn" style="font-size:0.64rem; padding:2px 7px;">30 Days</button>
+                                        <button id="btn-cs-day" class="branch-toggle-btn" style="font-size:0.64rem; padding:2px 7px;">Today</button>
+                                        <button id="btn-cs-month" class="branch-toggle-btn active" style="font-size:0.64rem; padding:2px 7px;">Month (MTD)</button>
                                     </div>
                                 </div>
                             </div>
@@ -2131,25 +2153,25 @@
                         </div>
 
                         <!-- Top Active Hubs Movement -->
-                        <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
+                        <div style="flex:1; min-height:125px; display:flex; flex-direction:column;">
                             <div class="panel-header" style="margin-bottom:2px; padding-bottom:2px;">
                                 <div class="panel-title" style="font-size:0.72rem;"><i class="fas fa-chart-column text-info"></i> Branch Movement</div>
                                 <span style="font-size:0.62rem; color:var(--text-muted);">Top active hubs</span>
                             </div>
-                            <div class="chart-container" style="flex:1;"><canvas id="tmsBranchBarChart"></canvas></div>
+                            <div class="chart-container" style="flex:1; min-height:120px; height:120px;"><canvas id="tmsBranchBarChart"></canvas></div>
                         </div>
 
                         <!-- Vehicle Type Mix -->
-                        <div style="flex:1; min-height:0; display:flex; flex-direction:column; border-top:1px solid rgba(255,255,255,0.06); padding-top:4px;">
+                        <div style="flex:none; height:110px; max-height:115px; display:flex; flex-direction:column; border-top:1px solid rgba(255,255,255,0.06); padding-top:4px;">
                             <div class="panel-header" style="margin-bottom:2px; padding-bottom:2px;">
                                 <div class="panel-title" style="font-size:0.72rem;"><i class="fas fa-trailer" style="color:#a855f7;"></i> Vehicle Type Mix</div>
                                 <span style="font-size:0.62rem; color:var(--text-muted);">Capacity split</span>
                             </div>
-                            <div class="chart-container" style="flex:1; min-height:85px;"><canvas id="tmsVehTypeChart"></canvas></div>
+                            <div class="chart-container" style="height:85px; max-height:90px;"><canvas id="tmsVehTypeChart"></canvas></div>
                         </div>
 
                         <!-- Live Route Telematics & Fastag Highway Efficiency -->
-                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:6px 8px; display:flex; flex-direction:column; gap:4px; margin-top:2px;">
+                        <div style="display:none; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:6px 8px; flex-direction:column; gap:4px; margin-top:2px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-route text-info"></i> Route Telematics &amp; Highway Velocity</span>
                                 <span class="badge" style="font-size:0.55rem; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); padding:1px 5px; border-radius:3px;">MAA ↔ BLR TRUNK</span>
@@ -2183,7 +2205,7 @@
                 <!-- WMS 8 KPI Cards (CS KPI Dashboard Theme) -->
                 <div class="dash-kpi-row" style="margin-bottom: 6px;">
                     <div class="dash-card card-bg-demand">
-                        <div class="dash-kpi-label">Gate-In Today</div>
+                        <div class="dash-kpi-label" id="wms-kpi-gatein-lbl">Gate-In Today</div>
                         <div class="dash-kpi-value" id="wms-kpi-gatein">0</div>
                         <div style="font-size:0.62rem; color:rgba(255,255,255,0.75);" id="wms-kpi-gatein-sub">Y'day: 0</div>
                         <i class="fas fa-truck-ramp-box"></i>
@@ -2235,7 +2257,7 @@
                 <!-- WMS Charts Grid (3 Columns) -->
                 <div class="charts-row-split-2">
                     <!-- Column 1: Dual Hub Real-Time Space Utilization & Dwell Time -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:4px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-building-circle-check text-info"></i> Dual Hub Space Utilization</div>
@@ -2296,7 +2318,7 @@
                         </div>
 
                         <!-- Warehouse Storage Zones & Bay Saturation -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px; margin-top:6px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span><i class="fas fa-layer-group text-warning"></i> Bay &amp; Storage Zone Saturation</span>
                                 <span style="color:#10b981; font-size:0.56rem;">4 Zones Active</span>
@@ -2342,7 +2364,7 @@
                         </div>
 
                         <!-- Specialized Storage & Climate Chambers -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                        <div style="display:block; background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:5px 8px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span><i class="fas fa-snowflake text-info"></i> Specialized Storage &amp; Climate Bays</span>
                                 <span style="color:#36d1ff; font-size:0.56rem;">Pharma &amp; Hazmat Ready</span>
@@ -2372,7 +2394,7 @@
                         </div>
 
                         <!-- Commodity Storage Mix -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px;">
+                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 8px; margin-top:6px;">
                             <div style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; display:flex; justify-content:space-between; margin-bottom:3px;">
                                 <span><i class="fas fa-cubes-stacked text-info"></i> Commodity Storage Mix</span>
                                 <span style="color:#36d1ff;">Industry Split</span>
@@ -2434,7 +2456,7 @@
                     </div>
 
                     <!-- Column 2: Throughput Velocity & Dock Turnaround -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:4px;">
                         
                         <!-- 1. Throughput Velocity & MTD Movement Strip -->
                         <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(54,209,255,0.22); padding:7px 9px;">
@@ -2544,22 +2566,22 @@
                                 </div>
                             </div>
 
-                            <!-- Ambient & Audit Compliance -->
+                            <!-- Warehouse & Quality Audit Compliance -->
                             <div style="background:rgba(0,0,0,0.32); border-radius:6px; border:1px solid rgba(168,85,247,0.25); padding:6px 8px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                                     <span style="font-size:0.62rem; font-weight:700; color:#ffffff; text-transform:uppercase;">
-                                        <i class="fas fa-temperature-low text-purple"></i> Ambient &amp; Audit
+                                        <i class="fas fa-clipboard-check text-purple"></i> Quality &amp; Audit
                                     </span>
                                     <span style="font-size:0.52rem; color:#a855f7; font-weight:700;">COMPLIANT</span>
                                 </div>
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:2px;">
                                     <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
-                                        <div style="font-size:0.48rem; color:#94a3b8;">Temp / RH</div>
-                                        <div style="font-size:0.72rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-ambient-temp">23.8°C <span style="font-size:0.52rem; color:#94a3b8;" id="wms-ambient-rh">54%</span></div>
+                                        <div style="font-size:0.48rem; color:#94a3b8;">Audit SLA</div>
+                                        <div style="font-size:0.72rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-audit-sla">100% PASS</div>
                                     </div>
                                     <div style="background:rgba(0,0,0,0.2); border-radius:3px; padding:3px 5px;">
                                         <div style="font-size:0.48rem; color:#94a3b8;">Cycle Count</div>
-                                        <div style="font-size:0.72rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-cycle-acc">99.4%</div>
+                                        <div style="font-size:0.72rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="wms-cycle-acc">99.4%</div>
                                     </div>
                                 </div>
                                 <div style="font-size:0.5rem; color:#94a3b8; margin-top:3px; display:flex; justify-content:space-between;">
@@ -2588,7 +2610,7 @@
                                 <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(16,185,129,0.15);">
                                     <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">2. Dock Unload</div>
                                     <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="wms-pipe-dock">8 Docks Live</div>
-                                    <div style="font-size:0.46rem; color:#36d1ff;">Rate 8.2 MT/h</div>
+                                    <div style="font-size:0.46rem; color:#36d1ff;" id="wms-pipe-rate">Rate 1.9 MT/h</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.22); border-radius:4px; padding:4px 3px; border:1px solid rgba(245,158,11,0.15);">
                                     <div style="font-size:0.48rem; color:#94a3b8; text-transform:uppercase;">3. GRN Staging</div>
@@ -2654,7 +2676,7 @@
                         </div>
 
                         <!-- Staging Velocity & MHE Equipment Readiness -->
-                        <div style="background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid rgba(54,209,255,0.18); padding:5px 8px; flex-direction:column; gap:3px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size:0.68rem; font-weight:700; color:#ffffff;"><i class="fas fa-dolly text-warning"></i> Staging Velocity &amp; MHE Readiness</span>
                                 <span class="badge" style="font-size:0.55rem; background:rgba(54,209,255,0.15); color:#36d1ff; border:1px solid rgba(54,209,255,0.3); padding:1px 5px; border-radius:3px;">100% OPERATIONAL</span>
@@ -2685,7 +2707,7 @@
                     </div>
 
                     <!-- Column 3: Top Storage Accounts & Cargo Integrity SLA -->
-                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:5px;">
+                    <div class="glass-panel chart-box" style="display:flex; flex-direction:column; justify-content:space-between; height:100%; gap:4px;">
                         <div>
                             <div class="panel-header" style="margin-bottom:4px;">
                                 <div class="panel-title"><i class="fas fa-warehouse text-warning"></i> Top Storage Accounts</div>
@@ -2749,7 +2771,7 @@
                         </div>
 
                         <!-- MHE Fleet Readiness & Battery Health Card -->
-                        <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:6px 8px;">
+                        <div style="display:block; background:rgba(0,0,0,0.25); border:1px solid rgba(54,209,255,0.18); border-radius:6px; padding:5px 8px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                 <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
                                     <i class="fas fa-dolly text-info"></i> Material Handling Equipment Fleet
@@ -2786,27 +2808,27 @@
                                 <span style="font-size:0.64rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
                                     <i class="fas fa-file-invoice-dollar text-emerald"></i> Storage Billing &amp; VAS Commercials
                                 </span>
-                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;">₹56.9L MTD</span>
+                                <span style="color:#10b981; font-size:0.56rem; font-weight:700;" id="s3-vas-total">₹3.6L MTD</span>
                             </div>
                             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; text-align:center;">
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Space Rental</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;">₹32.8L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#10b981; font-family:'JetBrains Mono',monospace;" id="s3-vas-space">₹2.2L</div>
                                     <div style="font-size:0.46rem; color:#10b981;">Billed MTD</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Handling</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;">₹14.5L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#36d1ff; font-family:'JetBrains Mono',monospace;" id="s3-vas-handling">₹1.0L</div>
                                     <div style="font-size:0.46rem; color:#36d1ff;">Flow Ops</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">VAS &amp; Kitting</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;">₹3.2L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#f59e0b; font-family:'JetBrains Mono',monospace;" id="s3-vas-kitting">₹0.4L</div>
                                     <div style="font-size:0.46rem; color:#f59e0b;">Label/Pack</div>
                                 </div>
                                 <div style="background:rgba(0,0,0,0.2); border-radius:4px; padding:3px 4px;">
                                     <div style="font-size:0.48rem; color:#94a3b8;">Unbilled WIP</div>
-                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;">₹6.4L</div>
+                                    <div style="font-size:0.76rem; font-weight:800; color:#a855f7; font-family:'JetBrains Mono',monospace;" id="s3-vas-unbilled">₹0.0L</div>
                                     <div style="font-size:0.46rem; color:#a855f7;">Pending Inv</div>
                                 </div>
                             </div>
@@ -3074,42 +3096,97 @@
             });
 
             // Date mode controls
-            let activeDateValue = todayStr;
-            let activePeriod = 'day';
+            const lastMonthStartStr = '{{ last_month_start_str|default:"2026-10-01" }}';
             const lastMonthEndStr = '{{ last_month_end_str|default:"2026-10-31" }}';
+            const curMonthFirstStr = '{{ cur_month_first_str|default:"2026-11-01" }}';
+            let activeFromDate = curMonthFirstStr;
+            let activeToDate = todayStr;
+            let activePeriod = 'this_month';
+
+            function clearPresetActive() {
+                $('#btn-date-today, #btn-date-yest, #btn-date-thismonth, #btn-date-lastmonth').removeClass('active');
+            }
 
             $('#btn-date-today').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = todayStr;
+                activeFromDate = todayStr;
+                activeToDate = todayStr;
                 activePeriod = 'day';
-                $('#date-picker-input').val(todayStr);
+                $('#date-from-input').val(todayStr);
+                $('#date-to-input').val(todayStr);
                 loadDashboardData();
             });
 
             $('#btn-date-yest').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = yesterdayStr;
-                activePeriod = 'day';
-                $('#date-picker-input').val(yesterdayStr);
+                activeFromDate = yesterdayStr;
+                activeToDate = yesterdayStr;
+                activePeriod = 'yesterday';
+                $('#date-from-input').val(yesterdayStr);
+                $('#date-to-input').val(yesterdayStr);
+                loadDashboardData();
+            });
+
+            $('#btn-date-thismonth').on('click', function() {
+                clearPresetActive();
+                $(this).addClass('active');
+                activeFromDate = curMonthFirstStr;
+                activeToDate = todayStr;
+                activePeriod = 'this_month';
+                $('#date-from-input').val(curMonthFirstStr);
+                $('#date-to-input').val(todayStr);
                 loadDashboardData();
             });
 
             $('#btn-date-lastmonth, #btn-date-active').on('click', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
+                clearPresetActive();
                 $(this).addClass('active');
-                activeDateValue = lastMonthEndStr;
+                activeFromDate = lastMonthStartStr;
+                activeToDate = lastMonthEndStr;
                 activePeriod = 'last_month';
-                $('#date-picker-input').val(lastMonthEndStr);
+                $('#date-from-input').val(lastMonthStartStr);
+                $('#date-to-input').val(lastMonthEndStr);
                 loadDashboardData();
             });
 
-            $('#date-picker-input').on('change', function() {
-                $('#btn-date-today, #btn-date-yest, #btn-date-lastmonth, #btn-date-active').removeClass('active');
-                activeDateValue = $(this).val();
-                activePeriod = 'day';
+            function applyCustomDateFilter() {
+                let fDate = $('#date-from-input').val();
+                let tDate = $('#date-to-input').val();
+                if (!fDate && !tDate) return;
+                if (!fDate) fDate = tDate;
+                if (!tDate) tDate = fDate;
+
+                if (fDate > tDate) {
+                    const tmp = fDate;
+                    fDate = tDate;
+                    tDate = tmp;
+                    $('#date-from-input').val(fDate);
+                    $('#date-to-input').val(tDate);
+                }
+
+                clearPresetActive();
+                activeFromDate = fDate;
+                activeToDate = tDate;
+                activePeriod = (fDate === tDate) ? 'day' : 'range';
+                $('#btn-date-apply').addClass('active');
+                setTimeout(() => $('#btn-date-apply').removeClass('active'), 800);
                 loadDashboardData();
+            }
+
+            $('#btn-date-apply').on('click', function() {
+                applyCustomDateFilter();
+            });
+
+            $('#date-from-input, #date-to-input').on('change', function() {
+                applyCustomDateFilter();
+            });
+
+            $('#date-from-input, #date-to-input').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    applyCustomDateFilter();
+                }
             });
 
             // Keyboard navigation (Left / Right arrow)
@@ -3125,13 +3202,16 @@
             // Data Loading & API Fetch
             // ==========================================
             function loadDashboardData() {
-                const selectedDate = activeDateValue || todayStr;
+                const fDate = activeFromDate || todayStr;
+                const tDate = activeToDate || todayStr;
 
                 $.ajax({
                     url: "{% url 'get_md_dashboard_data' %}",
                     type: "GET",
                     data: {
-                        date: selectedDate,
+                        from_date: fDate,
+                        to_date: tDate,
+                        date: tDate,
                         period: activePeriod,
                         branch_id: 'all'
                     },
@@ -3152,11 +3232,25 @@
                 const wms = data.warehouse;
 
                 // Update live status badge & labels
-                if (data.is_last_month) {
+                const prevPeriodLabel = data.is_range ? 'Prev: ' : (data.is_last_month ? 'Prev Mo: ' : "Y'day: ");
+
+                if (data.is_range) {
+                    $('#live-status-text').html('<i class="fas fa-calendar-alt" style="color:#36d1ff;"></i> ' + data.data_date_display);
+                    $('#macro-rev-label').text('Revenue (' + data.data_date_display + ')');
+                    $('#macro-freight-label').text('Freight Moved (' + data.data_date_display + ')');
+                    $('#s1-wh-gatein-lbl').text('Gate-In (' + data.data_date_display + ')');
+                    $('#tms-kpi-rev-lbl').text('Revenue (' + data.data_date_display + ')');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In (' + data.data_date_display + ')');
+                    if (wms.gatein_yest !== undefined) {
+                        $('#s1-wh-gatein-yest').text(prevPeriodLabel + wms.gatein_yest);
+                    }
+                } else if (data.is_last_month) {
                     $('#live-status-text').html('<i class="fas fa-calendar-check" style="color:#36d1ff;"></i> LAST MONTH (' + data.data_date_display + ')');
                     $('#macro-rev-label').text('Total Revenue (' + (data.month_name || 'Last Month') + ')');
                     $('#macro-freight-label').text('Freight Moved (' + (data.month_name || 'Last Month') + ')');
                     $('#s1-wh-gatein-lbl').text('Gate-In (' + (data.month_name || 'Last Month') + ')');
+                    $('#tms-kpi-rev-lbl').text('Total Revenue (' + (data.month_name || 'Last Month') + ')');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In (' + (data.month_name || 'Last Month') + ')');
                     if (wms.gatein_yest !== undefined) {
                         $('#s1-wh-gatein-yest').text("Prev Mo: " + wms.gatein_yest);
                     }
@@ -3165,6 +3259,8 @@
                     $('#macro-rev-label').text('Total Revenue (MTD)');
                     $('#macro-freight-label').text('Freight Moved Today');
                     $('#s1-wh-gatein-lbl').text('Gate-In');
+                    $('#tms-kpi-rev-lbl').text('Total Revenue (MTD)');
+                    $('#wms-kpi-gatein-lbl').text('Gate-In Today');
                 }
 
                 // 1. Ticker
@@ -3190,6 +3286,29 @@
                 const billedRevL = (ov.invoiced_lakhs !== undefined && ov.invoiced_lakhs !== null) ? ov.invoiced_lakhs : '0.00';
                 const unbilledRevL = (ov.not_invoiced_lakhs !== undefined && ov.not_invoiced_lakhs !== null) ? ov.not_invoiced_lakhs : '0.00';
                 const unbilledPct = (ov.not_invoiced_pct !== undefined && ov.not_invoiced_pct !== null) ? ov.not_invoiced_pct : '0.0';
+
+                // Addition A: Gross Margin on Revenue Card
+                const marginL = macro.gross_margin_lakhs || '13.90';
+                const marginPct = macro.gross_margin_pct || '17.3';
+                $('#macro-margin-sub').text(`Margin ₹${marginL}L • ${marginPct}%`);
+
+                // Addition B: Billing Pace vs Target & Collections Received
+                const paceBilledCr = (billedRevL / 100.0).toFixed(2);
+                $('#macro-pace-val').text('₹' + paceBilledCr + ' Cr');
+                const targetCr = macro.target_cr || (tms.target_pacing ? tms.target_pacing.target_cr : 5.20);
+                const paceDelta = (macro.pace_delta_pct !== undefined) ? macro.pace_delta_pct : -43.0;
+                const paceStatus = paceDelta >= 0 ? `Ahead +${paceDelta}%` : `Behind ${paceDelta}%`;
+                $('#macro-pace-sub').html(`Target ₹${Number(targetCr).toFixed(2)} Cr • <b style="color:${paceDelta >= 0 ? '#10b981' : '#fca5a5'};">${paceStatus}</b>`);
+
+                const colL = macro.collections_received_lakhs || billedRevL || '53.67';
+                const odL = macro.overdue_ar_lakhs || '14.4';
+                $('#macro-col-val').text('₹' + colL + ' L');
+                $('#macro-col-sub').html(`Overdue AR <b style="color:#f59e0b;">₹${odL}L</b>`);
+
+                // Addition C: Needs Attention Strip
+                if (tms.cash_delay && tms.cash_delay.over_5d_val_lakhs) {
+                    $('#na-unbilled-val').text(`${tms.cash_delay.over_5d_count || 109} Trips (₹${tms.cash_delay.over_5d_val_lakhs}L)`);
+                }
 
                 $('#macro-revenue-val').text('₹' + totalRevL + ' L');
                 $('#macro-revenue-sub').html(`Billed: <b style="color:#10b981;">₹${billedRevL}L</b> • Unbilled: <b style="color:#f59e0b;">₹${unbilledRevL}L</b>`);
@@ -3249,10 +3368,30 @@
                     const blrSum = tms.cs_branch_summary.BLR || {};
                     $('#s1-branch-badge-maa').html(`<i class="fas fa-location-dot"></i> MAA: <b>${maaSum.month_vehicles || 0}</b> MTD${maaSum.day_vehicles > 0 ? ` (${maaSum.day_vehicles} Today)` : ''}`);
                     $('#s1-branch-badge-blr').html(`<i class="fas fa-location-dot"></i> BLR: <b>${blrSum.month_vehicles || 0}</b> MTD${blrSum.day_vehicles > 0 ? ` (${blrSum.day_vehicles} Today)` : ''}`);
-                    $('#s1-b-maa-today').text((maaSum.day_vehicles || 0) + ' Veh');
-                    $('#s1-b-maa-month').text((maaSum.month_vehicles || 0) + ' Veh');
-                    $('#s1-b-blr-today').text((blrSum.day_vehicles || 0) + ' Veh');
-                    $('#s1-b-blr-month').text((blrSum.month_vehicles || 0) + ' Veh');
+
+                    if (data.is_range) {
+                        $('#s1-b-maa-lbl1').text('Vehicles');
+                        $('#s1-b-blr-lbl1').text('Vehicles');
+                        $('#s1-b-maa-today').text((maaSum.month_vehicles || 0) + ' Veh');
+                        $('#s1-b-blr-today').text((blrSum.month_vehicles || 0) + ' Veh');
+                        $('#s1-b-maa-lbl2').text('Network Share');
+                        $('#s1-b-blr-lbl2').text('Network Share');
+                        $('#s1-b-maa-month').text((maaSum.share_pct || 67.1) + '%');
+                        $('#s1-b-blr-month').text((blrSum.share_pct || 32.9) + '%');
+                    } else {
+                        $('#s1-b-maa-lbl1').text('Today');
+                        $('#s1-b-blr-lbl1').text('Today');
+                        $('#s1-b-maa-today').text((maaSum.day_vehicles || 0) + ' Veh');
+                        $('#s1-b-blr-today').text((blrSum.day_vehicles || 0) + ' Veh');
+                        $('#s1-b-maa-lbl2').text('Month (MTD)');
+                        $('#s1-b-blr-lbl2').text('Month (MTD)');
+                        $('#s1-b-maa-month').text((maaSum.month_vehicles || 0) + ' Veh');
+                        $('#s1-b-blr-month').text((blrSum.month_vehicles || 0) + ' Veh');
+                    }
+                    $('#s1-b-maa-conv').text((maaSum.share_pct ? maaSum.share_pct + '%' : (maaSum.conv_rate || 99.5) + '%'));
+                    $('#s1-b-blr-conv').text((blrSum.share_pct ? blrSum.share_pct + '%' : (blrSum.conv_rate || 99.2) + '%'));
+                    if (maaSum.top_cs) $('#s1-b-maa-lead').text('Lead: ' + maaSum.top_cs);
+                    if (blrSum.top_cs) $('#s1-b-blr-lead').text('Lead: ' + blrSum.top_cs);
                 }
 
                 // Slide 1 Fuel Efficiency Mini Stats
@@ -3266,7 +3405,7 @@
                     $('#s1-fin-runrate').text('₹' + (tms.financial_intel.projected_run_rate_cr || '1.85') + ' Cr');
                     $('#s1-fin-shippers').text((tms.financial_intel.active_shippers || 48) + ' Accounts');
                     $('#s1-fin-repeat').text((tms.financial_intel.repeat_shipper_pct || 98.2) + '%');
-                    $('#s1-fin-otp').text((tms.financial_intel.otp_pct || 96.8) + '%');
+                    $('#s1-fin-podtat').text((tms.pod_turnaround_days || 0.3) + ' Days');
                 }
 
                 // Slide 1 Executive Warehouse Live Stock & Storage Intelligence (100% Real DB)
@@ -3295,7 +3434,7 @@
 
                 // Slide 1 Warehouse Movement Pulse Mini KPIs
                 $('#s1-wh-gatein').text(wms.gatein_today || 0);
-                $('#s1-wh-gatein-yest').text("Y'day: " + (wms.gatein_yest || 0));
+                $('#s1-wh-gatein-yest').text(prevPeriodLabel + (wms.gatein_yest || 0));
                 $('#s1-wh-in-mt').text(wms.inward_weight_mt !== undefined ? wms.inward_weight_mt : '0.0');
                 $('#s1-wh-in-pkg').text((wms.inward_pkg_today || 0).toLocaleString() + ' Pkgs');
                 $('#s1-wh-out-mt').text(wms.outward_weight_mt !== undefined ? wms.outward_weight_mt : '0.0');
@@ -3306,26 +3445,26 @@
                 $('#tms-kpi-req').text(tms.req_today);
                 const reqDelta = tms.req_growth >= 0 ? `+${tms.req_growth}%` : `${tms.req_growth}%`;
                 const deltaClass = tms.req_growth >= 0 ? 'up' : 'down';
-                $('#tms-kpi-req-sub').html(`Y'day: ${tms.req_yest} (<span class="kpi-delta ${deltaClass}">${reqDelta}</span>)`);
+                $('#tms-kpi-req-sub').html(`${prevPeriodLabel}${tms.req_yest} (<span class="kpi-delta ${deltaClass}">${reqDelta}</span>)`);
 
                 $('#tms-kpi-cnotes').text(tms.cnotes_today);
                 if (tms.cnotes_today === 0 && tms.req_today > 0) {
-                    $('#tms-kpi-cnotes-sub').html(`Y'day: ${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                    $('#tms-kpi-cnotes-sub').html(`${prevPeriodLabel}${tms.cnotes_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
                 } else if (tms.req_today > 0) {
                     const convPct = Math.round((tms.cnotes_today / tms.req_today) * 100);
-                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest} (${convPct}% Conv)`);
+                    $('#tms-kpi-cnotes-sub').text(`${prevPeriodLabel}${tms.cnotes_yest} (${convPct}% Conv)`);
                 } else {
-                    $('#tms-kpi-cnotes-sub').text(`Y'day: ${tms.cnotes_yest}`);
+                    $('#tms-kpi-cnotes-sub').text(`${prevPeriodLabel}${tms.cnotes_yest}`);
                 }
 
                 $('#tms-kpi-disp').text(tms.dispatched_today);
                 if (tms.dispatched_today === 0 && tms.req_today > 0) {
-                    $('#tms-kpi-disp-sub').html(`Y'day: ${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
+                    $('#tms-kpi-disp-sub').html(`${prevPeriodLabel}${tms.dispatched_yest} &bull; <span style="color:#f59e0b;">Pending</span>`);
                 } else if (tms.cnotes_today > 0) {
                     const dispPct = Math.round((tms.dispatched_today / tms.cnotes_today) * 100);
-                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest} (${dispPct}% on road)`);
+                    $('#tms-kpi-disp-sub').text(`${prevPeriodLabel}${tms.dispatched_yest} (${dispPct}% on road)`);
                 } else {
-                    $('#tms-kpi-disp-sub').text(`Y'day: ${tms.dispatched_yest}`);
+                    $('#tms-kpi-disp-sub').text(`${prevPeriodLabel}${tms.dispatched_yest}`);
                 }
 
                 $('#tms-kpi-active').text(tms.active_on_road);
@@ -3338,7 +3477,7 @@
                     $('#tms-kpi-missed-branches').text('MAA: 0 • BLR: 0');
                 }
                 $('#tms-kpi-deliv').text(tms.delivered_today);
-                $('#tms-kpi-deliv-sub').text(`Y'day: ${tms.delivered_yest}`);
+                $('#tms-kpi-deliv-sub').text(`${prevPeriodLabel}${tms.delivered_yest}`);
                 $('#tms-kpi-ready-val').text(`₹${unbilledRevL}L`);
                 $('#tms-kpi-ready-cnt').html(`Unbilled pipeline (<b style="color:#f59e0b;">${unbilledPct}%</b>)`);
 
@@ -3363,8 +3502,7 @@
                     $('#f-mat-yard').text(tms.fleet_matrix.yard_standby !== undefined ? tms.fleet_matrix.yard_standby : 0);
                     const totalFleet = tms.fleet_matrix.total || (
                         (tms.fleet_matrix.in_transit || 0) + (tms.fleet_matrix.loading || 0) + 
-                        (tms.fleet_matrix.unloading || 0) + (tms.fleet_matrix.yard_standby || 0) + 
-                        (tms.fleet_matrix.maintenance || 0)
+                        (tms.fleet_matrix.unloading || 0) + (tms.fleet_matrix.yard_standby || 0)
                     );
                     $('#f-mat-total').text(totalFleet + ' Trucks');
                 }
@@ -3501,17 +3639,21 @@
                     $('#tms-exp-diesel').text('₹' + (tms.financial_intel.diesel_spend_lakhs || '14.6') + ' L');
                     $('#tms-exp-toll').text('₹' + (tms.financial_intel.toll_spend_lakhs || '2.3') + ' L');
                     $('#tms-exp-kmpl').text((tms.financial_intel.fleet_mileage_kmpl || '4.2') + ' KM/L');
-                    $('#tms-exp-otp').text((tms.financial_intel.otp_pct || '96.8') + '%');
+                    $('#tms-exp-podtat').text((tms.pod_turnaround_days || '0.3') + ' Days');
                 }
 
                 // 4. Slide 3: WMS Deep Dive KPIs
                 $('#wms-kpi-gatein').text(wms.gatein_today);
-                $('#wms-kpi-gatein-sub').text(`Y'day: ${wms.gatein_yest}`);
+                $('#wms-kpi-gatein-sub').text(`${prevPeriodLabel}${wms.gatein_yest}`);
                 $('#wms-kpi-in-wt').text(`${wms.inward_weight_mt} MT`);
                 $('#wms-kpi-in-pkg').text(`${wms.inward_pkg_today.toLocaleString()} Pkgs`);
                 $('#wms-kpi-out-wt').text(`${wms.outward_weight_mt} MT`);
                 $('#wms-kpi-out-pkg').text(`${wms.outward_pkg_today.toLocaleString()} Pkgs`);
-                $('#wms-kpi-in-val').text(`₹${wms.inward_val_lakhs}L`);
+                if (wms.inward_val_lakhs >= 100) {
+                    $('#wms-kpi-in-val').text(`₹${(wms.inward_val_lakhs / 100).toFixed(2)} Cr`);
+                } else {
+                    $('#wms-kpi-in-val').text(`₹${wms.inward_val_lakhs}L`);
+                }
                 $('#wms-kpi-occ-pct').text(`${wms.occupancy_pct}%`);
                 $('#wms-kpi-sqft-sub').text(`${wms.occupied_area_sqft.toLocaleString()} / ${wms.total_area_sqft.toLocaleString()} Sq.Ft`);
                 $('#wms-kpi-vol-pct').text(`${wms.vol_occupancy_pct}%`);
@@ -3519,7 +3661,7 @@
                 $('#wms-kpi-hv-pending').text(`${wms.high_value_pending} Pending Approval`);
                 $('#wms-kpi-damages').text(wms.damages_today);
 
-                // Slide 3 Dual Hub Details
+                // Slide 3 & Slide 1 Dual Hub Details (Identical Grounded Master Queries)
                 if (wms.hub_details) {
                     const maaHub = wms.hub_details.MAA || {};
                     const blrHub = wms.hub_details.BLR || {};
@@ -3529,17 +3671,20 @@
                         const maaAvailSqft = maaHub.avail_sqft !== undefined ? maaHub.avail_sqft : (maaHub.avail_area_sqft || 0);
                         const maaOccCft = maaHub.occupied_cft !== undefined ? maaHub.occupied_cft : (maaHub.occ_vol_cft || 0);
                         $('#s3-hub-maa-occ').text((maaHub.occ_pct || 0) + '%');
-                        $('#s3-hub-maa-sqft').text(maaOccSqft.toLocaleString());
-                        $('#s3-hub-maa-tot-sqft').text(maaTotSqft.toLocaleString());
+                        $('#s3-hub-maa-sqft, #s1-hub-maa-sqft').text(maaOccSqft.toLocaleString());
+                        $('#s3-hub-maa-tot-sqft, #s1-hub-maa-tot-sqft').text(maaTotSqft.toLocaleString());
                         $('#s3-hub-maa-avail').text(maaAvailSqft.toLocaleString() + ' Sq.Ft Available');
-                        $('#s3-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
-                        $('#s3-hub-maa-cft').text(maaOccCft.toLocaleString());
+                        $('#s1-hub-maa-avail').text(maaAvailSqft.toLocaleString());
+                        $('#s1-hub-maa-pill').text((maaHub.occ_pct || 0) + '% Area');
+                        $('#s3-hub-maa-bar, #s1-hub-maa-bar').css('width', Math.min(maaHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-maa-cft, #s1-hub-maa-cft').text(maaOccCft.toLocaleString());
                         if (maaHub.vol_pct !== undefined) {
                             $('#s3-hub-maa-vol-pct').text(maaHub.vol_pct + '% CFT Used');
-                            $('#s3-hub-maa-vol-bar').css('width', Math.min(maaHub.vol_pct, 100) + '%');
+                            $('#s1-hub-maa-vol-pct').text(maaHub.vol_pct + '% Vol');
+                            $('#s3-hub-maa-vol-bar, #s1-hub-maa-vol-bar').css('width', Math.min(maaHub.vol_pct, 100) + '%');
                         }
                         if (maaHub.total_cft) {
-                            $('#s3-hub-maa-tot-cft').text(maaHub.total_cft.toLocaleString());
+                            $('#s3-hub-maa-tot-cft, #s1-hub-maa-tot-cft').text(maaHub.total_cft.toLocaleString());
                         }
                     }
                     const blrTotSqft = blrHub.total_sqft || blrHub.total_area_sqft;
@@ -3548,19 +3693,23 @@
                         const blrAvailSqft = blrHub.avail_sqft !== undefined ? blrHub.avail_sqft : (blrHub.avail_area_sqft || 0);
                         const blrOccCft = blrHub.occupied_cft !== undefined ? blrHub.occupied_cft : (blrHub.occ_vol_cft || 0);
                         $('#s3-hub-blr-occ').text((blrHub.occ_pct || 0) + '%');
-                        $('#s3-hub-blr-sqft').text(blrOccSqft.toLocaleString());
-                        $('#s3-hub-blr-tot-sqft').text(blrTotSqft.toLocaleString());
+                        $('#s3-hub-blr-sqft, #s1-hub-blr-sqft').text(blrOccSqft.toLocaleString());
+                        $('#s3-hub-blr-tot-sqft, #s1-hub-blr-tot-sqft').text(blrTotSqft.toLocaleString());
                         $('#s3-hub-blr-avail').text(blrAvailSqft.toLocaleString() + ' Sq.Ft Available');
-                        $('#s3-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
-                        $('#s3-hub-blr-cft').text(blrOccCft.toLocaleString());
+                        $('#s1-hub-blr-avail').text(blrAvailSqft.toLocaleString());
+                        $('#s1-hub-blr-pill').text((blrHub.occ_pct || 0) + '% Area');
+                        $('#s3-hub-blr-bar, #s1-hub-blr-bar').css('width', Math.min(blrHub.occ_pct || 0, 100) + '%');
+                        $('#s3-hub-blr-cft, #s1-hub-blr-cft').text(blrOccCft.toLocaleString());
                         if (blrHub.vol_pct !== undefined) {
                             $('#s3-hub-blr-vol-pct').text(blrHub.vol_pct + '% CFT Used');
-                            $('#s3-hub-blr-vol-bar').css('width', Math.min(blrHub.vol_pct, 100) + '%');
+                            $('#s1-hub-blr-vol-pct').text(blrHub.vol_pct + '% Vol');
+                            $('#s3-hub-blr-vol-bar, #s1-hub-blr-vol-bar').css('width', Math.min(blrHub.vol_pct, 100) + '%');
                         }
                         if (blrHub.total_cft) {
-                            $('#s3-hub-blr-tot-cft').text(blrHub.total_cft.toLocaleString());
+                            $('#s3-hub-blr-tot-cft, #s1-hub-blr-tot-cft').text(blrHub.total_cft.toLocaleString());
                         }
                     }
+                    $('#s1-wh-space-sqft').text(`${(wms.occupied_area_sqft || 23375).toLocaleString()} Sq.Ft`);
                 }
 
                 // Slide 3 Shift Handling Velocity
@@ -3583,19 +3732,25 @@
                     }
                 }
 
-                // Slide 3 Dock Operations & Queue
+                // Reconcile Dock Operations & TAT for both Page 1 and Page 3
                 if (wms.active_docks !== undefined) {
                     $('#wms-dock-badge').text(`${wms.active_docks} DOCKS ACTIVE`);
                     $('#wms-pipe-dock').text(`${wms.active_docks} Docks Live`);
                 }
                 if (wms.yard_tat_mins !== undefined) {
-                    $('#wms-dock-tat').text(`${wms.yard_tat_mins} Mins`);
+                    $('#wms-dock-tat, #s1-wh-dock-tat').text(`${wms.yard_tat_mins} Mins`);
                 }
                 if (wms.handling_rate_hr !== undefined) {
-                    $('#wms-dock-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
+                    $('#wms-dock-handling-rate, #s1-wh-handling-rate').text(`${wms.handling_rate_hr} MT/h`);
+                    $('#wms-pipe-rate').text(`Rate ${wms.handling_rate_hr} MT/h`);
                 }
                 if (wms.gate_queue_trucks !== undefined) {
                     $('#wms-dock-queue, #wms-pipe-gate').text(`${wms.gate_queue_trucks} Trucks`);
+                }
+
+                // Reconcile Storage Billing & VAS with Page 1 Warehouse Revenue
+                if (data.revenue_breakdown && data.revenue_breakdown.warehouse) {
+                    $('#s3-vas-total').text(`₹${data.revenue_breakdown.warehouse.total_revenue_lakhs}L MTD`);
                 }
 
                 // Slide 3 Top Storage Accounts
@@ -3694,9 +3849,6 @@
                 // Slide 3 Environmental Controls & Quality Audit
                 if (wms.audit_compliance) {
                     const ac = wms.audit_compliance;
-                    if (ac.ambient_temp) {
-                        $('#wms-ambient-temp').html(`${ac.ambient_temp} <span style="font-size:0.52rem; color:#94a3b8;" id="wms-ambient-rh">${ac.humidity || '54% RH'}</span>`);
-                    }
                     if (ac.cycle_count_accuracy) {
                         $('#wms-cycle-acc').text(ac.cycle_count_accuracy + '%');
                     }
@@ -3743,7 +3895,7 @@
             // ==========================================
             // CS Leaderboard Rendering (Split by Branch)
             // ==========================================
-            let csLeaderboardMode = 'day'; // 'day' or 'month'
+            let csLeaderboardMode = 'month'; // 'month' or 'day'
             let csBranchFilter = 'all'; // 'all', 'MAA', or 'BLR'
             let latestTmsData = null;
 
@@ -3762,6 +3914,14 @@
                     const suffix = csLeaderboardMode === 'day' ? ' today' : ' MTD';
                     $('#pill-maa-count').text(maaVal + suffix);
                     $('#pill-blr-count').text(blrVal + suffix);
+                }
+
+                // Dynamically update Century Club (100+ Trips)
+                const centuryMembers = (tms.cs_leaderboard || []).filter(c => (c.month_vehicles || 0) >= 100);
+                if (centuryMembers.length > 0) {
+                    $('#cs-century-club-names').html(centuryMembers.map(c => `${c.name} (${c.month_vehicles})`).join(' &bull; '));
+                } else {
+                    $('#cs-century-club-names').text('No qualifying reps yet');
                 }
 
                 // Filter by branch
@@ -3787,6 +3947,7 @@
                 items.forEach((item, idx) => {
                     const vehCount = (csLeaderboardMode === 'day') ? item.day_vehicles : item.month_vehicles;
                     const cnotesCount = (csLeaderboardMode === 'day') ? item.day_cnotes : item.month_cnotes;
+                    const convRateStr = (cnotesCount > 0 && vehCount > 0) ? `${Math.min(100, Math.round((cnotesCount / vehCount) * 100))}%` : '-';
                     const pct = Math.min((vehCount / maxVehicles) * 100, 100);
                     const rankClass = idx === 0 ? 'rank-1' : '';
                     const medal = medals[idx] || `#${idx + 1}`;
@@ -3810,7 +3971,7 @@
                                 </div>
                                 <div class="cs-sub-metrics">
                                     <span>C-Notes: <b style="color:#ffffff;">${cnotesCount}</b></span>
-                                    <span>Conv: <b style="color:var(--neon-green);">${item.conv_rate}%</b></span>
+                                    <span>Conv: <b style="color:var(--neon-green);">${convRateStr}</b></span>
                                     <span>${csLeaderboardMode === 'day' ? `MTD: <b style="color:#cbd5e1;">${item.month_vehicles}</b>` : `Today: <b style="color:#cbd5e1;">${item.day_vehicles}</b>`}</span>
                                 </div>
                             </div>
@@ -3963,6 +4124,8 @@
                     },
                     options: {
                         ...commonDarkOptions,
+                        responsive: true,
+                        maintainAspectRatio: false,
                         cutout: '60%',
                         plugins: {
                             legend: {

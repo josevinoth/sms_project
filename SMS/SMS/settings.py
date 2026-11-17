@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-fy%y4cs@r2rbthvr*oge*z_sm*4a0)9!(7ya-gkiv*g0a!)d=t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-_default_allowed_hosts = 'sms.thebvmgroup.com,www.sms.thebvmgroup.com,3.110.26.240,13.126.40.20,172.31.9.154,localhost,127.0.0.1'
+_default_allowed_hosts = 'sms.thebvmgroup.com,www.sms.thebvmgroup.com,3.110.26.240,13.126.40.20,172.31.9.154,localhost,127.0.0.1,13.202.162.240,13.206.245.169'
 _allowed_hosts_raw = config('ALLOWED_HOSTS', default=_default_allowed_hosts)
 if not _allowed_hosts_raw.strip():
     _allowed_hosts_raw = _default_allowed_hosts
@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'widget_tweaks',
     'smart_selects',
-    'django_extensions'
+    'django_extensions',
+    'audit.apps.AuditConfig',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'audit.middleware.AuditUserMiddleware',
 ]
 
 ROOT_URLCONF = 'SMS.urls'
@@ -97,7 +99,7 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset_mgt_001',
+        'NAME': 'asset_mgt_002',
         'USER': 'postgres',
         'PASSWORD': '244613',
         'HOST': 'localhost',
@@ -161,7 +163,9 @@ CSRF_COOKIE_HTTPONLY = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (os.path.join(BASE_DIR, ''),)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATICFILES_DIRS is not needed in production unless you have extra static folders
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'your_static_folder')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -184,6 +188,13 @@ ITADMIN_EMAIL_HOST_PASSWORD = config('ITADMIN_EMAIL_HOST_PASSWORD', default='')
 # Sender used by forgot-password OTP emails.
 PASSWORD_RESET_FROM_EMAIL = config('PASSWORD_RESET_FROM_EMAIL', default=ITADMIN_EMAIL_HOST_USER)
 
+# AR (Accounts Receivable) email — sent via Office 365 from Accountsreceivable@thebvmgroup.com
+AR_EMAIL_HOST = config('AR_EMAIL_HOST', default='smtp.office365.com')
+AR_EMAIL_PORT = config('AR_EMAIL_PORT', default=587, cast=int)
+AR_EMAIL_USE_TLS = config('AR_EMAIL_USE_TLS', default=True, cast=bool)
+AR_EMAIL_HOST_USER = config('AR_EMAIL_HOST_USER', default='Accountsreceivable@thebvmgroup.com')
+AR_EMAIL_HOST_PASSWORD = config('AR_EMAIL_HOST_PASSWORD', default='')
+
 DEPARTMENT_EMAILS = {
     'sales': {
         'EMAIL_HOST': 'smtp.gmail.com',
@@ -204,7 +215,7 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Bvm!123456789',
+        'EMAIL_HOST_PASSWORD' : 'BVM$123456789',
     },
     'itadmin': {
         'EMAIL_HOST' : ITADMIN_EMAIL_HOST,
@@ -219,3 +230,7 @@ DEPARTMENT_EMAILS = {
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Increase the maximum number of fields allowed in a GET/POST request
+# Prevents TooManyFieldsSent exception on large forms (e.g. Market Bill)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
