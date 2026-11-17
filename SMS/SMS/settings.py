@@ -34,8 +34,6 @@ if not _allowed_hosts_raw.strip():
     _allowed_hosts_raw = _default_allowed_hosts
 
 ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_raw.split(',') if host.strip()]
-if 'testserver' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('testserver')
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip() for origin in config(
@@ -73,7 +71,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'audit.middleware.AuditUserMiddleware',
-    'sms_app.middleware.GlobalModuleAuthorizationMiddleware',
 ]
 
 ROOT_URLCONF = 'SMS.urls'
@@ -102,9 +99,9 @@ WSGI_APPLICATION = 'SMS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sms_055',
+        'NAME': 'asset_mgt_002',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': '244613',
         'HOST': 'localhost',
     }
 }
@@ -182,9 +179,6 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-# Default login URL for @login_required decorators
-LOGIN_URL = '/SMS/login_page'
-
 ITADMIN_EMAIL_HOST = config('ITADMIN_EMAIL_HOST', default='smtp.office365.com')
 ITADMIN_EMAIL_PORT = config('ITADMIN_EMAIL_PORT', default=587, cast=int)
 ITADMIN_EMAIL_USE_TLS = config('ITADMIN_EMAIL_USE_TLS', default=True, cast=bool)
@@ -193,6 +187,13 @@ ITADMIN_EMAIL_HOST_PASSWORD = config('ITADMIN_EMAIL_HOST_PASSWORD', default='')
 
 # Sender used by forgot-password OTP emails.
 PASSWORD_RESET_FROM_EMAIL = config('PASSWORD_RESET_FROM_EMAIL', default=ITADMIN_EMAIL_HOST_USER)
+
+# AR (Accounts Receivable) email — sent via Office 365 from Accountsreceivable@thebvmgroup.com
+AR_EMAIL_HOST = config('AR_EMAIL_HOST', default='smtp.office365.com')
+AR_EMAIL_PORT = config('AR_EMAIL_PORT', default=587, cast=int)
+AR_EMAIL_USE_TLS = config('AR_EMAIL_USE_TLS', default=True, cast=bool)
+AR_EMAIL_HOST_USER = config('AR_EMAIL_HOST_USER', default='Accountsreceivable@thebvmgroup.com')
+AR_EMAIL_HOST_PASSWORD = config('AR_EMAIL_HOST_PASSWORD', default='')
 
 DEPARTMENT_EMAILS = {
     'sales': {
@@ -214,7 +215,7 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Bvm#123456789',
+        'EMAIL_HOST_PASSWORD' : 'BVM$123456789',
     },
     'itadmin': {
         'EMAIL_HOST' : ITADMIN_EMAIL_HOST,
@@ -222,31 +223,13 @@ DEPARTMENT_EMAILS = {
         'EMAIL_USE_TLS' : ITADMIN_EMAIL_USE_TLS,
         'EMAIL_HOST_USER' : ITADMIN_EMAIL_HOST_USER,
         'EMAIL_HOST_PASSWORD' : ITADMIN_EMAIL_HOST_PASSWORD,
-    },
-    'STOCK': {
-        'EMAIL_HOST': 'smtp.office365.com',
-        'EMAIL_PORT': 587,
-        'EMAIL_USE_TLS': True,
-        'EMAIL_HOST_USER': config('STOCK_EMAIL_USER', default='wms@thebvmgroup.com'),
-        'EMAIL_HOST_PASSWORD': config('STOCK_EMAIL_PASSWORD', default='Bvm#123456789'),
     }
 }
-
-# Stock Team email notification recipients (set via dialog box)
-STOCK_TEAM_EMAILS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Increase the maximum number of fields allowed in a GET/POST request
-# Prevents TooManyFieldsSent exception on large forms (e.g. Market Bill)
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
-
-# Executive MD Dashboard Configurable Monthly Billing Target (in Crores)
-MD_MONTHLY_BILLING_TARGET_CR = 5.20
-
 
 # Increase the maximum number of fields allowed in a GET/POST request
 # Prevents TooManyFieldsSent exception on large forms (e.g. Market Bill)
