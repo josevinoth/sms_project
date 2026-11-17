@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime
 from django.utils import timezone
-from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
+from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo, TMSPettyCashAttachment
 from ..sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
@@ -261,18 +261,39 @@ def tms_petty_cash_add(request, tpc_id=0):
         if form.instance and form.instance.tpc_bill_attachment:
             bill_filename = os.path.basename(form.instance.tpc_bill_attachment.name)
 
+        # Sync single legacy attachment to TMSPettyCashAttachment if not already synced
+        attachments = []
+        if tpc_id != 0:
+            if tpc.tpc_bill_attachment and bool(tpc.tpc_bill_attachment.name):
+                if not TMSPettyCashAttachment.objects.filter(petty_cash=tpc).exists():
+                    try:
+                        TMSPettyCashAttachment.objects.create(
+                            petty_cash=tpc,
+                            file=tpc.tpc_bill_attachment,
+                            filename=os.path.basename(tpc.tpc_bill_attachment.name),
+                            uploaded_by=tpc.tpc_created_by
+                        )
+                    except Exception:
+                        pass
+            attachments = TMSPettyCashAttachment.objects.filter(petty_cash=tpc).order_by('-uploaded_at')
+
         context = {
             'form': form,
             'tpc_id': tpc_id,
             'from_location': from_location,
             'to_location': to_location,
             'bill_filename': bill_filename,
+            'attachments': attachments,
         }
 
         if form.is_valid():
             saved_tpc = form.save(commit=False)
             if post_data.get('tpc_bill_attachment-clear') in ['on', '1', 'true']:
                 saved_tpc.tpc_bill_attachment = None
+
+            # Auto-populate Remarks with From-To route if blank and trip details exist
+            if not saved_tpc.tpc_remarks and (from_location or to_location):
+                saved_tpc.tpc_remarks = f"{from_location}-{to_location}"
             voucher_date = saved_tpc.tpc_transaction_date
             if not voucher_date:
                 messages.error(request, "Voucher Date is strictly required to generate voucher number.")
@@ -306,6 +327,27 @@ def tms_petty_cash_add(request, tpc_id=0):
                     saved_tpc.tpc_created_by = created_user
             saved_tpc.tpc_updated_by = created_user
             saved_tpc.save()
+
+            # Handle Multi-attachments
+            uploaded_files = request.FILES.getlist('tpc_bill_attachments')
+            if not uploaded_files and 'tpc_bill_attachment' in request.FILES:
+                uploaded_files = request.FILES.getlist('tpc_bill_attachment')
+
+            for f in uploaded_files:
+                TMSPettyCashAttachment.objects.create(
+                    petty_cash=saved_tpc,
+                    file=f,
+                    filename=f.name,
+                    uploaded_by=created_user
+                )
+
+            # Sync legacy field if present or set from first attachment
+            if uploaded_files and not saved_tpc.tpc_bill_attachment:
+                first_att = saved_tpc.attachments.first()
+                if first_att and first_att.file:
+                    saved_tpc.tpc_bill_attachment = first_att.file
+                    saved_tpc.save(update_fields=['tpc_bill_attachment'])
+
             messages.success(request, "Petty Cash saved successfully.")
             return redirect('tms_petty_cash_list')
         else:
@@ -328,12 +370,29 @@ def tms_petty_cash_add(request, tpc_id=0):
         if form.instance and form.instance.tpc_bill_attachment:
             bill_filename = os.path.basename(form.instance.tpc_bill_attachment.name)
 
+        # Sync single legacy attachment to TMSPettyCashAttachment if not already synced
+        attachments = []
+        if tpc_id != 0:
+            if tpc.tpc_bill_attachment and bool(tpc.tpc_bill_attachment.name):
+                if not TMSPettyCashAttachment.objects.filter(petty_cash=tpc).exists():
+                    try:
+                        TMSPettyCashAttachment.objects.create(
+                            petty_cash=tpc,
+                            file=tpc.tpc_bill_attachment,
+                            filename=os.path.basename(tpc.tpc_bill_attachment.name),
+                            uploaded_by=tpc.tpc_created_by
+                        )
+                    except Exception:
+                        pass
+            attachments = TMSPettyCashAttachment.objects.filter(petty_cash=tpc).order_by('-uploaded_at')
+
         context = {
             'form': form,
             'tpc_id': tpc_id,
             'from_location': from_location,
             'to_location': to_location,
             'bill_filename': bill_filename,
+            'attachments': attachments,
         }
     return render(request, "asset_mgt_app/tms_petty_cash_add.html", context)
 
@@ -500,12 +559,6 @@ def tms_petty_cash_list(request):
                 except ValueError:
                     pass
 
-            attachment_btn = ""
-            if tpc.tpc_bill_attachment:
-                attachment_btn = f'''<a href="{tpc.tpc_bill_attachment.url}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #6c757d; color: white; border-color: #6c757d;" title="View Attachment">
-                    <i class="fas fa-paperclip"></i>
-                </a>'''
-
             combined_pdf_btn = f'''<a href="/SMS/tms_petty_cash_combined_pdf/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #dc3545; color: white; border-color: #dc3545;" title="Combined Voucher & Bill PDF">
                 <i class="fas fa-file-pdf"></i>
             </a>'''
@@ -528,7 +581,6 @@ def tms_petty_cash_list(request):
                         <i class="fas fa-print"></i>
                     </a>
                     {combined_pdf_btn}
-                    {attachment_btn}
                     <a href="{edit_url}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;">
                         <i class="far fa-edit"></i>
                     </a>
@@ -613,6 +665,28 @@ def tms_petty_cash_voucher_print(request, tpc_id):
         'clean_remarks': clean_remarks,
     }
     return render(request, 'asset_mgt_app/tms_petty_cash_voucher.html', context)
+
+def tms_petty_cash_attachment_delete(request, attachment_id):
+    if request.method in ["POST", "DELETE"]:
+        attachment = get_object_or_404(TMSPettyCashAttachment, pk=attachment_id)
+        tpc = attachment.petty_cash
+        if attachment.file:
+            try:
+                attachment.file.delete(save=False)
+            except Exception:
+                pass
+        attachment.delete()
+
+        # Update or clean legacy field if needed
+        if tpc:
+            remaining = TMSPettyCashAttachment.objects.filter(petty_cash=tpc).first()
+            tpc.tpc_bill_attachment = remaining.file if remaining else None
+            tpc.save(update_fields=['tpc_bill_attachment'])
+
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
 
 def tms_petty_cash_delete(request, tpc_id):
     tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)

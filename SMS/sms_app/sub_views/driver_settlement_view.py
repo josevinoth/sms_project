@@ -70,6 +70,18 @@ def driver_settlement_add(request, ds_id=0):
                     if matched_trip and matched_trip.tr_vehiclenumber
                     else ''
                 )
+                if not exp.de_remarks:
+                    if matched_trip:
+                        from_loc = matched_trip.tr_departedlocation.place_name if matched_trip.tr_departedlocation else ""
+                        to_loc = matched_trip.tr_reportedlocation.place_name if matched_trip.tr_reportedlocation else ""
+                        if from_loc or to_loc:
+                            exp.display_remarks = f"{from_loc}-{to_loc}"
+                        else:
+                            exp.display_remarks = "-"
+                    else:
+                        exp.display_remarks = "-"
+                else:
+                    exp.display_remarks = exp.de_remarks
 
         return render(request, "asset_mgt_app/driver_settlement_add.html", {
             'form': form,

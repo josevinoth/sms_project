@@ -38,3 +38,22 @@ class Driverexpense(models.Model):
 
     def __str__(self):
         return self.driver_name
+
+
+def driver_expense_attachment_path(instance, filename):
+    exp_id = instance.expense_id if instance.expense_id else "temp"
+    return f"driver_expense_bills/{exp_id}/{filename}"
+
+
+class DriverExpenseAttachment(models.Model):
+    expense = models.ForeignKey(Driverexpense, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=driver_expense_attachment_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey('MyUser', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Expense {self.expense_id} - {self.filename or self.file.name}"

@@ -237,7 +237,7 @@ from .sub_models.Consignmenttype_mod import Consignment_type
 from .sub_models.haltingcharges_mod import Haltingcharges
 from .sub_models.emailmaster_mod import  Emailmaster
 from .sub_models.emailtype_mod import Email_type
-from .sub_models.driver_expense_mod import Driverexpense
+from .sub_models.driver_expense_mod import Driverexpense, DriverExpenseAttachment
 from .sub_models.driver_master_mod import DrivermasterInfo
 from .sub_models.trans_invoice_mod import TransInvoiceInfo
 from .sub_models.maintenance_mod import MaintenanceInfo
@@ -268,12 +268,12 @@ from .sub_models.prime_enquirynote_mod import PrimeEnquirynoteInfo
 from .sub_models.prime_vehicle_allotment_mod import PrimeVehicleAllotmentInfo
 from .sub_models.prime_trip_mod import PrimeTripInfo
 from .sub_models.credit_ledger_mod import CreditLedgerInfo
-from .sub_models.tms_petty_cash_mod import TMSPettyCashInfo
+from .sub_models.tms_petty_cash_mod import TMSPettyCashInfo, TMSPettyCashAttachment
 from .sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
 from .sub_models.rtratemaster_history_mod import RtratemasterHistory
 from .sub_models.wms_expense_type_mod import WMSExpenseTypeInfo
-from .sub_models.wms_petty_cash_mod import WMSPettyCashInfo
-from .sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+from .sub_models.wms_petty_cash_mod import WMSPettyCashInfo, WMSPettyCashAttachment
+from .sub_models.pms_petty_cash_mod import PMSPettyCashInfo, PMSPettyCashAttachment
 from .sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
 from .sub_models.pms_vehicle_mod import PMSVehicleInfo
 from .sub_models.agreementtype_mod import AgreementType

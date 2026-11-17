@@ -8,7 +8,7 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo, PMSPettyCashAttachment
 from ..sub_models.pms_expense_type_mod import PMSExpenseTypeInfo
 from ..sub_models.pms_vehicle_mod import PMSVehicleInfo
 from django.views.decorators.csrf import csrf_exempt
@@ -284,6 +284,27 @@ def pms_petty_cash_add(request, ppc_id=0):
                     saved_wpc.ppc_created_by = created_user
             saved_wpc.ppc_updated_by = created_user
             saved_wpc.save()
+
+            # Handle Multi-attachments
+            uploaded_files = request.FILES.getlist('ppc_bill_attachments')
+            if not uploaded_files and 'ppc_bill_attachment' in request.FILES:
+                uploaded_files = request.FILES.getlist('ppc_bill_attachment')
+
+            for f in uploaded_files:
+                PMSPettyCashAttachment.objects.create(
+                    petty_cash=saved_wpc,
+                    file=f,
+                    filename=f.name,
+                    uploaded_by=created_user
+                )
+
+            # Sync legacy field if present or set from first attachment
+            if uploaded_files and not saved_wpc.ppc_bill_attachment:
+                first_att = saved_wpc.attachments.first()
+                if first_att and first_att.file:
+                    saved_wpc.ppc_bill_attachment = first_att.file
+                    saved_wpc.save(update_fields=['ppc_bill_attachment'])
+
             messages.success(request, "PMS Petty Cash saved successfully.")
             return redirect('pms_petty_cash_list')
         else:
@@ -294,10 +315,26 @@ def pms_petty_cash_add(request, ppc_id=0):
     if form.instance and form.instance.ppc_bill_attachment:
         bill_filename = os.path.basename(form.instance.ppc_bill_attachment.name)
 
+    attachments = []
+    if ppc_id != 0:
+        if form.instance.ppc_bill_attachment and bool(form.instance.ppc_bill_attachment.name):
+            if not PMSPettyCashAttachment.objects.filter(petty_cash=form.instance).exists():
+                try:
+                    PMSPettyCashAttachment.objects.create(
+                        petty_cash=form.instance,
+                        file=form.instance.ppc_bill_attachment,
+                        filename=os.path.basename(form.instance.ppc_bill_attachment.name),
+                        uploaded_by=form.instance.ppc_created_by
+                    )
+                except Exception:
+                    pass
+        attachments = PMSPettyCashAttachment.objects.filter(petty_cash=form.instance).order_by('-uploaded_at')
+
     context = {
         'form': form,
         'ppc_id': ppc_id,
         'bill_filename': bill_filename,
+        'attachments': attachments,
     }
     return render(request, "asset_mgt_app/pms_petty_cash_add.html", context)
 
@@ -379,6 +416,28 @@ def pms_petty_cash_list(request):
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/pms_petty_cash_list.html", context)
+
+
+def pms_petty_cash_attachment_delete(request, attachment_id):
+    if request.method in ["POST", "DELETE"]:
+        attachment = get_object_or_404(PMSPettyCashAttachment, pk=attachment_id)
+        ppc = attachment.petty_cash
+        if attachment.file:
+            try:
+                attachment.file.delete(save=False)
+            except Exception:
+                pass
+        attachment.delete()
+
+        # Update or clean legacy field if needed
+        if ppc:
+            remaining = PMSPettyCashAttachment.objects.filter(petty_cash=ppc).first()
+            ppc.ppc_bill_attachment = remaining.file if remaining else None
+            ppc.save(update_fields=['ppc_bill_attachment'])
+
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
 
 def pms_petty_cash_delete(request, ppc_id):

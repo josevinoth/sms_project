@@ -2937,7 +2937,8 @@ def vendor_p_l_mkt_report_ajax_view(request):
     all_bills = MarketBillInfo.objects.all().only(
         'mb_bill_no', 'mb_selected_trips', 'mb_trip_details',
         'mb_trip_cost', 'mb_loading_cost', 'mb_unloading_cost',
-        'mb_parking_cost', 'mb_halting_cost', 'mb_total_cost', 'mb_vendor'
+        'mb_parking_cost', 'mb_halting_cost', 'mb_weighment_cost',
+        'mb_handling_cost', 'mb_total_cost', 'mb_vendor'
     )
     bill_obj_map = {}
     for b in all_bills:
@@ -3018,12 +3019,16 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 buying_unloading = safe_num(details.get('unloading_cost', 0))
                 buying_parking = safe_num(details.get('parking_cost', 0))
                 buying_halting = safe_num(details.get('halting_cost', 0))
+                buying_weighment = safe_num(details.get('weighment_cost', 0))
+                buying_handling = safe_num(details.get('handling_cost', 0))
             else:
                 buying_trip_cost = safe_num(mb_bill.mb_trip_cost)
                 buying_loading = safe_num(mb_bill.mb_loading_cost)
                 buying_unloading = safe_num(mb_bill.mb_unloading_cost)
                 buying_parking = safe_num(mb_bill.mb_parking_cost)
                 buying_halting = safe_num(mb_bill.mb_halting_cost)
+                buying_weighment = safe_num(getattr(mb_bill, 'mb_weighment_cost', 0))
+                buying_handling = safe_num(getattr(mb_bill, 'mb_handling_cost', 0))
         else:
             # Fallback when trip does not have a Market Bill yet
             if allotment:
@@ -3324,7 +3329,8 @@ def vendor_p_l_mkt_report_export_view(request):
         for b in MarketBillInfo.objects.values(
             'id', 'mb_bill_no', 'mb_selected_trips', 'mb_trip_details',
             'mb_trip_cost', 'mb_loading_cost', 'mb_unloading_cost',
-            'mb_parking_cost', 'mb_halting_cost', 'mb_total_cost', 'mb_vendor__vend_name'
+            'mb_parking_cost', 'mb_halting_cost', 'mb_weighment_cost',
+            'mb_handling_cost', 'mb_total_cost', 'mb_vendor__vend_name'
         ):
             if b['mb_selected_trips']:
                 ids = [tid.strip() for tid in b['mb_selected_trips'].split(',') if tid.strip()]
@@ -3336,6 +3342,8 @@ def vendor_p_l_mkt_report_export_view(request):
                 d.mb_unloading_cost = b['mb_unloading_cost']
                 d.mb_parking_cost = b['mb_parking_cost']
                 d.mb_halting_cost = b['mb_halting_cost']
+                d.mb_weighment_cost = b.get('mb_weighment_cost', 0)
+                d.mb_handling_cost = b.get('mb_handling_cost', 0)
                 d.mb_vendor = b['mb_vendor__vend_name']
                 for tid in ids:
                     try:
@@ -4942,6 +4950,7 @@ def daily_trip_count_report_ajax_view(request):
 @login_required(login_url='login_page')
 def own_vehicle_pl_report_view(request):
     first_name = request.session.get('first_name')
+    from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 
     # -------------------------------
     # FILTER FORM (GET)
@@ -5435,6 +5444,21 @@ def own_vehicle_pl_report_view(request):
             if date_to: m_bills = m_bills.filter(mnb_bill_date__lte=date_to)
             for mb in m_bills:
                 maintenance_cost += safe_num(mb.mnb_total_amount)
+
+            pc_maint = TMSPettyCashInfo.objects.filter(
+                tpc_expense_type__tms_exp_type_name__icontains='maintenance'
+            ).filter(
+                Q(tpc_vehicle_number__vm_registrationnumber=vehicle_number) |
+                Q(tpc_vehicle_number_manual=vehicle_number)
+            )
+            for pc in pc_maint:
+                dt = pc.tpc_transaction_date if (pc.tpc_transaction_date and pc.tpc_transaction_date.year >= 2000) else (
+                    pc.tpc_trip_date or (pc.tpc_created_on.date() if pc.tpc_created_on else None)
+                )
+                if not dt: continue
+                if date_from and str(dt) < date_from: continue
+                if date_to and str(dt) > date_to: continue
+                maintenance_cost += safe_num(pc.tpc_amount)
         else:
             unique_veh_nos = set(trip.tr_vehiclenumber for trip in trips_list if trip.tr_vehiclenumber)
             for vno in unique_veh_nos:
@@ -5450,6 +5474,24 @@ def own_vehicle_pl_report_view(request):
             if date_to: m_bills = m_bills.filter(mnb_bill_date__lte=date_to)
             for mb in m_bills:
                 maintenance_cost += safe_num(mb.mnb_total_amount)
+
+            # Direct Petty Cash Maintenance Vouchers for OWN vehicles
+            own_regs = set(VehiclemasterInfo.objects.filter(vm_ownership_id=1).values_list('vm_registrationnumber', flat=True))
+            pc_maint = TMSPettyCashInfo.objects.filter(
+                tpc_expense_type__tms_exp_type_name__icontains='maintenance'
+            ).filter(
+                Q(tpc_vehicle_number__vm_registrationnumber__in=own_regs) |
+                Q(tpc_vehicle_number__vm_ownership_id=1) |
+                Q(tpc_vehicle_source_id=1)
+            )
+            for pc in pc_maint:
+                dt = pc.tpc_transaction_date if (pc.tpc_transaction_date and pc.tpc_transaction_date.year >= 2000) else (
+                    pc.tpc_trip_date or (pc.tpc_created_on.date() if pc.tpc_created_on else None)
+                )
+                if not dt: continue
+                if date_from and str(dt) < date_from: continue
+                if date_to and str(dt) > date_to: continue
+                maintenance_cost += safe_num(pc.tpc_amount)
 
         # General Expenses from ExpenseExtinfo
         general_expenses = 0.0
@@ -8243,6 +8285,7 @@ def customerwise_pl_report_export_view(request):
 def location_pl_report_view(request):
     first_name = request.session.get('first_name')
     from ..forms import DmrForm
+    from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 
     form = DmrForm(request.GET or None)
 
@@ -8610,12 +8653,16 @@ def location_pl_report_view(request):
                 buying_unloading = safe_num(details.get('unloading_cost', 0))
                 buying_parking = safe_num(details.get('parking_cost', 0))
                 buying_halting = safe_num(details.get('halting_cost', 0))
+                buying_weighment = safe_num(details.get('weighment_cost', 0))
+                buying_handling = safe_num(details.get('handling_cost', 0))
             else:
                 buying_trip_cost = safe_num(mb_bill.mb_trip_cost)
                 buying_loading = safe_num(mb_bill.mb_loading_cost)
                 buying_unloading = safe_num(mb_bill.mb_unloading_cost)
                 buying_parking = safe_num(mb_bill.mb_parking_cost)
                 buying_halting = safe_num(mb_bill.mb_halting_cost)
+                buying_weighment = safe_num(getattr(mb_bill, 'mb_weighment_cost', 0))
+                buying_handling = safe_num(getattr(mb_bill, 'mb_handling_cost', 0))
         else:
             if allotment:
                 if allotment.va_vendor:
@@ -8708,6 +8755,23 @@ def location_pl_report_view(request):
     if date_to: m_bills = m_bills.filter(mnb_bill_date__lte=date_to)
     for mb in m_bills:
         maintenance_cost += safe_num(mb.mnb_total_amount)
+
+    own_regs = set(VehiclemasterInfo.objects.filter(vm_ownership_id=1).values_list('vm_registrationnumber', flat=True))
+    pc_maint = TMSPettyCashInfo.objects.filter(
+        tpc_expense_type__tms_exp_type_name__icontains='maintenance'
+    ).filter(
+        Q(tpc_vehicle_number__vm_registrationnumber__in=own_regs) |
+        Q(tpc_vehicle_number__vm_ownership_id=1) |
+        Q(tpc_vehicle_source_id=1)
+    )
+    for pc in pc_maint:
+        dt = pc.tpc_transaction_date if (pc.tpc_transaction_date and pc.tpc_transaction_date.year >= 2000) else (
+            pc.tpc_trip_date or (pc.tpc_created_on.date() if pc.tpc_created_on else None)
+        )
+        if not dt: continue
+        if date_from and str(dt) < date_from: continue
+        if date_to and str(dt) > date_to: continue
+        maintenance_cost += safe_num(pc.tpc_amount)
 
     non_op_exp = insurance + road_tax + permit + maintenance_cost
 
@@ -9795,6 +9859,9 @@ def transport_mis(request):
             expense_dict[unloading_cat][dt.month] += float(de.de_unloadingcost or 0)
             expense_dict[weighment_cat][dt.month] += float(de.de_weighmentcost or 0)
             expense_dict[handling_exp_cat][dt.month] += float(de.de_supervisorcost or 0)
+            exp_type_str = str(getattr(de, 'de_expense_type', '') or '').lower()
+            if ('handling' in exp_type_str or 'supervisor' in exp_type_str) and not de.de_supervisorcost:
+                expense_dict[handling_exp_cat][dt.month] += float(getattr(de, 'de_total_cost', 0) or 0)
 
     # 2. Direct Petty Cash (TMSPettyCashInfo) - Excluding auto-generated Driver Settlement vouchers
     from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo
@@ -9810,7 +9877,7 @@ def transport_mis(request):
         pc_qs = pc_qs.filter(
             Q(tpc_vehicle_source__ow_ownership=selected_vehicle_source) |
             Q(tpc_vehicle_number__vm_ownership__ow_ownership=selected_vehicle_source) |
-            Q(tpc_vehicle_source__isnull=True)
+            (Q(tpc_vehicle_source__isnull=True) & Q(tpc_vehicle_number__isnull=True))
         )
 
     if selected_branch:
@@ -9837,6 +9904,7 @@ def transport_mis(request):
 
         if dt.month in display_months_indices:
             exp_name = (pc.tpc_expense_type.tms_exp_type_name if pc.tpc_expense_type else '').lower()
+            remarks_str = (pc.tpc_remarks or '').lower()
             amt = float(pc.tpc_amount or 0)
             if 'betta' in exp_name or 'batta' in exp_name or 'bata' in exp_name:
                 expense_dict[betta_cat][dt.month] += amt
@@ -9848,7 +9916,7 @@ def transport_mis(request):
                 expense_dict[unloading_cat][dt.month] += amt
             elif 'weighment' in exp_name:
                 expense_dict[weighment_cat][dt.month] += amt
-            elif 'handling' in exp_name:
+            elif 'handling' in exp_name or 'supervisor' in exp_name or 'supervisor' in remarks_str:
                 expense_dict[handling_exp_cat][dt.month] += amt
 
     # --- Add Driver Salary actuals to "Salaries & Wages-Drivers" ---

@@ -1940,7 +1940,7 @@ def trip_report_ajax(request):
     except Exception:
         order_col_idx, order_dir = 0, 'asc'
 
-        col_header = headers[order_col_idx].strip().lower() if (0 <= order_col_idx < len(headers)) else ""
+    col_header = headers[order_col_idx].strip().lower() if (0 <= order_col_idx < len(headers)) else ""
 
     if 'date' in col_header or not col_header or col_header in ('s.no', 'sr. no.', 'so no', 'se.no'):
         if order_dir == 'desc':

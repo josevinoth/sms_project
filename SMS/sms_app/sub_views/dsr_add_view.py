@@ -50,7 +50,7 @@ def dsr_reports(request):
 
     goods_list = Warehouse_goods_info.objects.select_related(
         'wh_gate_injob_no_id', 'wh_lb_job_no_id'
-    ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+    ).order_by('-wh_gate_injob_no_id__gatein_arrival_date', 'wh_gate_injob_no_id__gatein_invoice', 'wh_job_no', 'id')
 
     if customer_name:
         goods_list = goods_list.filter(wh_customer_name=customer_name)
@@ -386,7 +386,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         if stock_values is not None:
             stock_values = stock_values.filter(
                 wh_check_in_out="1"
-            ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+            ).order_by('-wh_gate_injob_no_id__gatein_arrival_date', 'wh_gate_injob_no_id__gatein_invoice', 'wh_job_no', 'id')
 
             # 👇 ADD HERE
             print("Total stock rows:", stock_values.count())
