@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -5,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from ..forms import SaleEnquiryForm
-from ..models import SaleEnquiry, RoleInfo, User_extInfo, SalesmultipleitemInfo
+from ..models import SaleEnquiry, RoleInfo, User_extInfo, SalesmultipleitemInfo, Mc_vehicletype
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from ..sub_models.customer_mod import CustomerInfo
 
@@ -77,6 +78,7 @@ def sale_enquiry_add(request, enquiry_id=0):
             'role_id': role_id,
             'enquiry_id': enquiry_id,
             'first_name': first_name,
+            'mc_vehicle_types': Mc_vehicletype.objects.all().order_by('mc_vehicletype'),
         }
         
         if enquiry_id != 0:
@@ -91,6 +93,10 @@ def sale_enquiry_add(request, enquiry_id=0):
             form = SaleEnquiryForm(request.POST, request.FILES)
             if form.is_valid():
                 enquiry_instance = form.save(commit=False)
+                if enquiry_instance.mc_vehicle_source and 'BVM' in str(enquiry_instance.mc_vehicle_source).upper():
+                    dropdown_val = request.POST.get('mc_vehicle_type_select')
+                    if dropdown_val:
+                        enquiry_instance.mc_vehicle_type = dropdown_val
                 
                 fy = get_financial_year()
                 branch_id = enquiry_instance.branch.id if enquiry_instance.branch else get_session_branch_id(request)
@@ -114,6 +120,10 @@ def sale_enquiry_add(request, enquiry_id=0):
             form = SaleEnquiryForm(request.POST, request.FILES, instance=enquiry)
             if form.is_valid():
                 enquiry_instance = form.save(commit=False)
+                if enquiry_instance.mc_vehicle_source and 'BVM' in str(enquiry_instance.mc_vehicle_source).upper():
+                    dropdown_val = request.POST.get('mc_vehicle_type_select')
+                    if dropdown_val:
+                        enquiry_instance.mc_vehicle_type = dropdown_val
                 enquiry_instance.updated_by_id = user_id
                 enquiry_instance.save()
                 messages.success(request, 'Record Updated Successfully')
@@ -194,51 +204,119 @@ def mc_tours_calendar_events(request):
     enquiries = SaleEnquiry.objects.filter(mc_customer_type__isnull=False)
     events = []
 
-    # Keys are lowercase for case-insensitive matching
     STATUS_CONFIG = {
-        'business won':  {'label': 'Business Won',  'bg': '#28a745', 'border': '#28a745'},
-        'in discussion': {'label': 'In Discussion', 'bg': '#fd7e14', 'border': '#fd7e14'},
+        'business won':  {
+            'label': 'Business Won',
+            'bg': '#10b981',
+            'border': '#059669',
+            'icon': 'fa-check-circle',
+        },
+        'in discussion': {
+            'label': 'In Discussion',
+            'bg': '#f59e0b',
+            'border': '#d97706',
+            'icon': 'fa-comments',
+        },
     }
 
     for enq in enquiries:
-        latest_quote = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enq).order_by('-sm_updated_at').first()
+        if not enq.mc_travel_date:
+            continue
+
+        quotes = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enq)
+        latest_quote = quotes.order_by('-sm_updated_at').first()
         if not latest_quote or not latest_quote.sm_quote_status:
             continue
 
         raw_status = latest_quote.sm_quote_status.quote_status
         status_key = raw_status.strip().lower()
-        if status_key not in STATUS_CONFIG:
-            continue
 
-        if not enq.mc_travel_date:
-            continue
+        if status_key not in STATUS_CONFIG:
+            won_quote = quotes.filter(sm_quote_status__quote_status__iexact='Business Won').order_by('-sm_updated_at').first()
+            if won_quote:
+                status_key = 'business won'
+            else:
+                continue
 
         cust_name = enq.effective_customer_name
         cfg = STATUS_CONFIG[status_key]
-        
+
         is_tours = False
         if enq.mc_customer_type and enq.mc_customer_type.tt_requirement.strip().lower() == 'tours':
             is_tours = True
 
-        description = (
-            f"<b>[{cfg['label']}]</b><br>"
-            f"Customer: {cust_name}<br>"
-            f"From: {enq.mc_from or '-'}<br>"
-            f"To: {enq.mc_to or '-'}"
-        )
+        travel_date_str = enq.mc_travel_date.strftime('%d-%m-%Y')
+        return_date_str = enq.mc_return_date.strftime('%d-%m-%Y') if enq.mc_return_date else '-'
+
+        vehicle_info = ''
         if not is_tours:
             vehicle_source = str(enq.mc_vehicle_source) if enq.mc_vehicle_source else '-'
             vehicle_type = enq.mc_vehicle_type or '-'
-            description += f"<br>Vehicle: {vehicle_source} / {vehicle_type}"
+            vehicle_info = f"{vehicle_source} / {vehicle_type}"
 
-        events.append({
-            'title': f"{enq.enquiry_id} - {cust_name}",
-            'start': enq.mc_travel_date.isoformat(),
+        description = (
+            f"<b>[{cfg['label']}]</b><br>"
+            f"Enquiry No: {enq.enquiry_id or enq.id}<br>"
+            f"Customer: {cust_name}<br>"
+            f"Travel Date: {travel_date_str}<br>"
+            f"Return Date: {return_date_str}<br>"
+            f"From: {enq.mc_from or '-'}<br>"
+            f"To: {enq.mc_to or '-'}"
+        )
+        if vehicle_info:
+            description += f"<br>Vehicle: {vehicle_info}"
+
+        start_date = enq.mc_travel_date
+        return_date = enq.mc_return_date
+
+        status_slug = 'business-won' if status_key == 'business won' else 'in-discussion'
+
+        duration_days = 1
+        if return_date and return_date >= start_date:
+            duration_days = (return_date - start_date).days + 1
+
+        vehicle_src = str(enq.mc_vehicle_source.ow_ownership) if enq.mc_vehicle_source else ''
+        vehicle_tp = str(enq.mc_vehicle_type or '')
+
+        event_data = {
+            'id': str(enq.id),
+            'title': str(enq.enquiry_id or f"Enquiry #{enq.id}"),
+            'start': start_date.isoformat(),
             'description': description,
             'url': f"/SMS/sale_enquiry_update/{enq.id}",
             'backgroundColor': cfg['bg'],
             'borderColor': cfg['border'],
-            'textColor': '#fff'
-        })
+            'textColor': '#ffffff',
+            'allDay': True,
+            'classNames': [f"fc-event-status-{status_slug}"],
+            'extendedProps': {
+                'status': status_key,
+                'statusLabel': cfg['label'],
+                'customer': cust_name,
+                'from': enq.mc_from or '-',
+                'to': enq.mc_to or '-',
+                'travelDate': travel_date_str,
+                'returnDate': return_date_str,
+                'durationDays': duration_days,
+                'vehicle': vehicle_info,
+                'vehicleSource': vehicle_src,
+                'vehicleType': vehicle_tp,
+                'passengers': enq.mc_no_of_passengers or '-',
+                'hotelReq': str(enq.mc_hotel_req or '-'),
+                'packageReq': str(enq.mc_package_req or '-'),
+                'remarks': str(enq.mc_remarks or ''),
+                'enquiryId': enq.enquiry_id or str(enq.id),
+                'icon': cfg['icon'],
+            }
+        }
+
+        # FullCalendar end date is exclusive for all-day events.
+        # Adding 1 day ensures the return date is visually included in the span.
+        if return_date and return_date >= start_date:
+            event_data['end'] = (return_date + timedelta(days=1)).isoformat()
+        else:
+            event_data['end'] = (start_date + timedelta(days=1)).isoformat()
+
+        events.append(event_data)
 
     return JsonResponse(events, safe=False)
