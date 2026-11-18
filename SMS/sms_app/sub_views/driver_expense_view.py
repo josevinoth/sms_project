@@ -158,6 +158,7 @@ def driver_expense_add(request, expense_id=0):
                     (exp.de_supervisorcost, 'Supervisor Cost'),
                     (exp.de_rtocost, 'RTO Expense'),
                     (exp.de_battacost, 'Driver Betta'),
+                    (exp.de_handlingcost, 'Handling Cost'),
                 ]
                 
                 for amount, type_name in expense_mapping:

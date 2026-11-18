@@ -203,7 +203,8 @@ def get_driver_details_from_master(request):
 
 def recalc_driver_settlement(settlement):
     """
-    Recalculate total advance, total expense, and balance
+    Recalculate total advance, total expense, salary advance, and balance.
+    Balance = Advance - Expense - Salary Advance
     """
 
     advance_total = Driverexpense.objects.filter(
@@ -216,9 +217,14 @@ def recalc_driver_settlement(settlement):
         de_expense_type__id=2   # EXPENSE
     ).aggregate(total=Sum('de_total_cost'))['total'] or 0
 
+    # Sum salary advance across ALL expense records for this driver
+    salary_advance_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+    ).aggregate(total=Sum('de_salary_advance'))['total'] or 0
+
     settlement.ds_tripadvance = advance_total
     settlement.ds_tripexpense = expense_total
-    settlement.ds_balance = advance_total - expense_total
+    settlement.ds_balance = advance_total - expense_total - salary_advance_total
     settlement.save(update_fields=[
         'ds_tripadvance',
         'ds_tripexpense',

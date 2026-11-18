@@ -495,9 +495,57 @@ def get_branch_filter_q(branch_val):
         b_code = s_val.upper()
     return (
         Q(tr_consignmentnumber__co_consignmentnumber__icontains=b_code) |
-        Q(tr_consignmentnumber__isnull=True, tr_tripnumber__icontains=f"_{b_code}_") |
-        Q(tr_consignmentnumber__isnull=True, tr_enquirynumber__en_customername__cu_name__icontains=b_code)
+        Q(tr_tripnumber__icontains=f"_{b_code}_") |
+        Q(tr_tripnumber__icontains=b_code) |
+        Q(tr_enquirynumber__en_customername__cu_name__icontains=b_code)
     )
+
+
+def get_trip_branch_display(trip, default=""):
+    """
+    Standardized branch resolver for Trip records.
+    Resolves branch by checking C-note first, then Trip number, then Customer name.
+    Returns 'MAA', 'BLR', 'PNY', 'HYD', or fallback / full name if needed.
+    """
+    cnote_str = ""
+    if hasattr(trip, 'tr_consignmentnumber') and trip.tr_consignmentnumber:
+        cnote_str = str(getattr(trip.tr_consignmentnumber, 'co_consignmentnumber', '') or '').upper()
+    elif isinstance(trip, dict):
+        cnote_str = str(trip.get('tr_consignmentnumber__co_consignmentnumber') or trip.get('co_consignmentnumber') or '').upper()
+    
+    trip_str = ""
+    if hasattr(trip, 'tr_tripnumber'):
+        trip_str = str(trip.tr_tripnumber or '').upper()
+    elif isinstance(trip, dict):
+        trip_str = str(trip.get('tr_tripnumber') or '').upper()
+
+    ref = f"{cnote_str} {trip_str}"
+    if 'MAA' in ref:
+        return 'MAA'
+    if 'BLR' in ref:
+        return 'BLR'
+    if 'PNY' in ref:
+        return 'PNY'
+    if 'HYD' in ref:
+        return 'HYD'
+
+    # Fallback to customer name suffix or containment
+    cust_str = ""
+    if hasattr(trip, 'tr_enquirynumber') and trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername:
+        cust_str = str(trip.tr_enquirynumber.en_customername).strip().upper()
+    elif isinstance(trip, dict):
+        cust_str = str(trip.get('tr_enquirynumber__en_customername__cu_name') or trip.get('customer_name') or '').strip().upper()
+
+    if cust_str.endswith("MAA") or "MAA" in cust_str:
+        return 'MAA'
+    if cust_str.endswith("BLR") or "BLR" in cust_str:
+        return 'BLR'
+    if cust_str.endswith("PNY") or "PNY" in cust_str:
+        return 'PNY'
+    if cust_str.endswith("HYD") or "HYD" in cust_str:
+        return 'HYD'
+
+    return default
 
 
 def get_trip_selling_breakdown(trip, inv=None, allotment=None):
@@ -1284,14 +1332,14 @@ def vehicle_log_report_ajax_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            if b_id == 2:  # MAA
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
+            elif b_id == 1:  # BLR
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
             elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='PNY') | Q(tr_tripnumber__icontains='PNY'))
             elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='HYD') | Q(tr_tripnumber__icontains='HYD'))
             else:
                 loc = Location_info.objects.get(id=b_id)
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
@@ -1489,8 +1537,7 @@ def trip_cancellation_report_ajax_view(request):
     
     for idx, trip in enumerate(page_trips, start=start + 1):
         cons_no = get_trip_cnote_or_fallback(trip)
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-        branch = "MAA" if cust_name.endswith("MAA") else ("BLR" if cust_name.endswith("BLR") else "")
+        branch = get_trip_branch_display(trip, default="")
         
         dates = [
             trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
@@ -1623,10 +1670,7 @@ def trip_cancellation_report_view(request):
 
         cons_no = get_trip_cnote_or_fallback(trip)
 
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-        branch = "MAA" if cust_name.endswith("MAA") else (
-            "BLR" if cust_name.endswith("BLR") else ""
-        )
+        branch = get_trip_branch_display(trip, default="")
 
         # Filter-aware date selection
         dates = [
@@ -2005,8 +2049,7 @@ def ref_no_pending_report_ajax_view(request):
         
     for idx, trip in enumerate(page_trips, start=start + 1):
         cons_no = get_trip_cnote_or_fallback(trip)
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-        branch = "MAA" if cust_name.endswith("MAA") else ("BLR" if cust_name.endswith("BLR") else "")
+        branch = get_trip_branch_display(trip, default="")
         
         dates = [
             trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
@@ -4720,14 +4763,7 @@ def whatsapp_delivery_status_report_ajax_view(request):
         )
 
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-        except (ValueError, TypeError):
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
@@ -4757,12 +4793,8 @@ def whatsapp_delivery_status_report_ajax_view(request):
         department = safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else ""
         cnote_no = get_trip_cnote_or_fallback(trip)
 
-        cust_name = customer_name.strip().upper()
-        branch_name = (
-            "Chennai" if cust_name.endswith("MAA")
-            else "Bangalore" if cust_name.endswith("BLR")
-            else ""
-        )
+        b_code = get_trip_branch_display(trip, default="")
+        branch_name = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
 
         dates = [
             trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
@@ -4862,18 +4894,7 @@ def daily_trip_count_report_ajax_view(request):
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_filter)
 
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:  # BLR
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:  # MAA
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-            elif b_id == 3:  # PNY
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
-            elif b_id == 4:  # HYD
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
-        except:
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
@@ -4884,6 +4905,8 @@ def daily_trip_count_report_ajax_view(request):
     trips = trips.order_by('-tr_created_at').values(
         'resolved_date', 
         'tr_vehiclenumber', 
+        'tr_tripnumber',
+        'tr_consignmentnumber__co_consignmentnumber',
         'tr_enquirynumber__en_customername__cu_name', 
         'tr_vehicletype_placed__vt_vehicletype', 
         'tr_vehicletype__vt_vehicletype', 
@@ -4917,13 +4940,8 @@ def daily_trip_count_report_ajax_view(request):
         date_str = trip_date.strftime("%d-%m-%Y")
         vehicle_no = safe_str(trip['tr_vehiclenumber'])
 
-        cust_name = safe_str(trip['tr_enquirynumber__en_customername__cu_name']).upper().strip()
-
-        branch_name = (
-            "Chennai" if cust_name.endswith("MAA")
-            else "Bangalore" if cust_name.endswith("BLR")
-            else ""
-        )
+        b_code = get_trip_branch_display(trip, default="")
+        branch_name = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
 
         key = (date_str, vehicle_no, branch_name)
 
@@ -6414,11 +6432,8 @@ def diesel_vs_revenue_report_ajax_view(request):
     processed_rows = []
     
     for idx, trip in enumerate(page_trips, start=start + 1):
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper() if trip.tr_enquirynumber else ""
-        row_branch = "Chennai" if "MAA" in cust_name or (
-                trip.tr_consignmentnumber and "MAA" in str(trip.tr_consignmentnumber)) else \
-            ("Bangalore" if "BLR" in cust_name or (
-                    trip.tr_consignmentnumber and "BLR" in str(trip.tr_consignmentnumber)) else "")
+        b_code = get_trip_branch_display(trip, default="")
+        row_branch = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
         display_date = trip.tr_departeddate_pickup
         if display_date and timezone.is_aware(display_date):
             display_date = timezone.localtime(display_date)
@@ -7047,14 +7062,7 @@ def pod_pending_report_ajax_view(request):
         trips = trips.filter(tr_departeddate_pickup__date__lte=to_date)
 
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:  # BLR
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:  # MAA
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-        except:
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehiclesource_id:
         trips = trips.filter(tr_vehiclesource_id=vehiclesource_id)
@@ -8933,14 +8941,14 @@ def time_analysis_report_ajax_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            if b_id == 2:  # MAA
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
+            elif b_id == 1:  # BLR
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
             elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='PNY') | Q(tr_tripnumber__icontains='PNY'))
             elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='HYD') | Q(tr_tripnumber__icontains='HYD'))
             else:
                 loc = Location_info.objects.get(id=b_id)
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
@@ -9908,14 +9916,14 @@ def invoice_pending_report_export_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            if b_id == 2:  # MAA
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
+            elif b_id == 1:  # BLR
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
             elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='PNY') | Q(tr_tripnumber__icontains='PNY'))
             elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='HYD') | Q(tr_tripnumber__icontains='HYD'))
             else:
                 loc = Location_info.objects.get(id=b_id)
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
@@ -9976,12 +9984,21 @@ def invoice_pending_report_export_view(request):
         cons = trip.tr_consignmentnumber
         g_data = goods_dict.get(trip.tr_consignmentnumber_id)
 
-        branch_name = ""
-        c_name_upper = safe_str(trip.tr_enquirynumber.en_customername).strip().upper() if trip.tr_enquirynumber else ""
-        if c_name_upper.endswith("MAA"):
-            branch_name = "MAA"
-        elif c_name_upper.endswith("BLR"):
-            branch_name = "BLR"
+        # Branch — use C-note first, fallback to trip number, then customer name
+        branch_name = "OTH"
+        cnote_str = str(cons.co_consignmentnumber if cons else "").upper()
+        trip_num_str = str(trip.tr_tripnumber or "").upper()
+        ref_str = cnote_str or trip_num_str
+        if 'MAA' in ref_str:
+            branch_name = 'MAA'
+        elif 'BLR' in ref_str:
+            branch_name = 'BLR'
+        else:
+            c_name_upper = safe_str(trip.tr_enquirynumber.en_customername).strip().upper() if trip.tr_enquirynumber else ""
+            if c_name_upper.endswith("MAA"):
+                branch_name = "MAA"
+            elif c_name_upper.endswith("BLR"):
+                branch_name = "BLR"
 
         display_date = trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""
         trip_status_display = safe_str(trip.tc_financestatus)
@@ -10439,14 +10456,14 @@ def vehicle_log_report_export_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            if b_id == 2:  # MAA
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
+            elif b_id == 1:  # BLR
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
             elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='PNY') | Q(tr_tripnumber__icontains='PNY'))
             elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='HYD') | Q(tr_tripnumber__icontains='HYD'))
             else:
                 loc = Location_info.objects.get(id=b_id)
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
@@ -10599,18 +10616,7 @@ def pod_pending_report_export_view(request):
         trips = trips.filter(tr_departeddate_pickup__date__lte=to_date)
 
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-            elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
-            elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
-        except:
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehiclesource_id:
         trips = trips.filter(tr_vehiclesource_id=vehiclesource_id)
@@ -11120,24 +11126,15 @@ def daily_trip_count_report_export_view(request):
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_filter)
 
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-            elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
-            elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
-        except:
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
 
     trips_values = trips.order_by('-tr_created_at').values(
         'resolved_date', 'tr_vehiclenumber',
+        'tr_tripnumber',
+        'tr_consignmentnumber__co_consignmentnumber',
         'tr_enquirynumber__en_customername__cu_name',
         'tr_vehicletype_placed__vt_vehicletype',
         'tr_vehicletype__vt_vehicletype',
@@ -11158,8 +11155,8 @@ def daily_trip_count_report_export_view(request):
         trip_date = loc_date.date() if hasattr(loc_date, 'date') else loc_date
         date_str = trip_date.strftime("%d-%m-%Y")
         vehicle_no = safe_str(trip['tr_vehiclenumber'])
-        cust_name = safe_str(trip['tr_enquirynumber__en_customername__cu_name']).upper().strip()
-        branch_name = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
+        b_code = get_trip_branch_display(trip, default="")
+        branch_name = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
 
         key = (date_str, vehicle_no, branch_name)
         if key not in aggregated_data:
@@ -11406,14 +11403,14 @@ def time_analysis_report_export_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            if b_id == 2:  # MAA
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') | Q(tr_tripnumber__icontains='MAA'))
+            elif b_id == 1:  # BLR
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') | Q(tr_tripnumber__icontains='BLR'))
             elif b_id == 3:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='PNY') | Q(tr_tripnumber__icontains='PNY'))
             elif b_id == 4:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+                trips = trips.filter(Q(tr_consignmentnumber__co_consignmentnumber__icontains='HYD') | Q(tr_tripnumber__icontains='HYD'))
             else:
                 loc = Location_info.objects.get(id=b_id)
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
@@ -11567,14 +11564,7 @@ def whatsapp_delivery_status_report_export_view(request):
             Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
     if branch_id:
-        try:
-            b_id = int(branch_id)
-            if b_id == 1:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-        except (ValueError, TypeError):
-            pass
+        trips = trips.filter(get_branch_filter_q(branch_id))
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
@@ -11589,8 +11579,8 @@ def whatsapp_delivery_status_report_export_view(request):
         customer_name = safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else ""
         department = safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else ""
         cnote_no = get_trip_cnote_or_fallback(trip)
-        cust_name = customer_name.strip().upper()
-        branch_name = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
+        b_code = get_trip_branch_display(trip, default="")
+        branch_name = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
 
         dates = [
             trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
@@ -11949,8 +11939,8 @@ def diesel_vs_revenue_report_export_view(request):
     ws.append(DIESEL_VS_REVENUE_HEADERS)
 
     for idx, trip in enumerate(trips_list, start=1):
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper() if trip.tr_enquirynumber else ""
-        row_branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
+        b_code = get_trip_branch_display(trip, default="")
+        row_branch = "Chennai" if b_code == 'MAA' else ("Bangalore" if b_code == 'BLR' else b_code)
         trip_date_str = _fmt_dt(trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_created_at, date_only=True)
 
         inv_sell = get_tms_report_transport_charge(trip)
