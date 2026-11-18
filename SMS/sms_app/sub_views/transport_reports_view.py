@@ -3898,8 +3898,11 @@ def _calculate_vendor_pl_attached_summary(base_trips, search_value, date_from, d
             if att_b:
                 tot_km_ab = safe_num(att_b.ab_total_km_run)
                 bill_amt = safe_num(att_b.ab_bill_amount)
-                if tot_km_ab > 0 and bill_amt > 0 and trip_km > 0:
-                    b_trip_cost = trip_km * (bill_amt / tot_km_ab)
+                toll_amt = safe_num(att_b.ab_toll_cost)
+                veh_cost = bill_amt - toll_amt if bill_amt >= toll_amt else bill_amt
+                effective_tot_km = tot_km_ab if tot_km_ab > 0 else total_km
+                if effective_tot_km > 0 and veh_cost > 0 and trip_km > 0:
+                    b_trip_cost = trip_km * (veh_cost / effective_tot_km)
                 else:
                     tot_trips_ab = len([x for x in str(att_b.ab_selected_trips).split(',') if x.strip()])
                     if tot_trips_ab > 0:
@@ -3940,16 +3943,40 @@ def _calculate_vendor_pl_attached_summary(base_trips, search_value, date_from, d
         num_idle_days = max(0, (total_days_in_period * unique_veh_count) - num_days_working)
 
     loaded_km = total_km - empty_km_val - business_empty_km_val
-    cost_per_km = 0.0
-    if loaded_km > 0 and total_buy_cost > 0:
-        cost_per_km = total_buy_cost / loaded_km
-    elif total_km > 0 and total_buy_cost > 0:
-        cost_per_km = total_buy_cost / total_km
 
-    empty_km_cost = round(empty_km_val * cost_per_km, 2)
-    business_empty_km_cost = round(business_empty_km_val * cost_per_km, 2)
+    # Reconcile summary expenses strictly with the Attached Bills of the selected trips
+    trips_attached_bills = {}
+    for t in summary_trips:
+        t_id = t.id
+        t_num = str(t.tr_tripnumber or '').strip()
+        att_b = attached_bill_map.get(t_id) or (attached_bill_map.get(t_num) if t_num else None)
+        if att_b and getattr(att_b, 'id', None):
+            trips_attached_bills[att_b.id] = att_b
 
-    total_expenses_all = round(total_buy_cost + total_toll_cost + empty_km_cost + business_empty_km_cost, 2)
+    if trips_attached_bills:
+        tot_bill_amt = sum(safe_num(b.ab_bill_amount) for b in trips_attached_bills.values())
+        tot_bill_toll = sum(safe_num(b.ab_toll_cost) for b in trips_attached_bills.values())
+        tot_bill_km = sum(safe_num(b.ab_total_km_run) for b in trips_attached_bills.values())
+        
+        per_km_amount = ((tot_bill_amt - tot_bill_toll) / tot_bill_km) if tot_bill_km > 0 else 0.0
+        empty_km_cost = round(empty_km_val * per_km_amount, 2)
+        business_empty_km_cost = round(business_empty_km_val * per_km_amount, 2)
+        total_toll_cost = round(tot_bill_toll, 2)
+        
+        # Buy Cost (Loaded / Business Cost) = exact remainder of the vehicle bill amount
+        total_buy_cost = round((tot_bill_amt - tot_bill_toll) - empty_km_cost - business_empty_km_cost, 2)
+        total_expenses_all = round(tot_bill_amt, 2)
+    else:
+        cost_per_km = 0.0
+        if total_km > 0 and total_buy_cost > 0:
+            if loaded_km > 0:
+                cost_per_km = total_buy_cost / loaded_km
+            else:
+                cost_per_km = total_buy_cost / total_km
+
+        empty_km_cost = round(empty_km_val * cost_per_km, 2)
+        business_empty_km_cost = round(business_empty_km_val * cost_per_km, 2)
+        total_expenses_all = round(total_buy_cost + total_toll_cost + empty_km_cost + business_empty_km_cost, 2)
 
     profit = round(total_revenue - total_expenses_all, 2)
     profit_pct = round((profit / total_revenue * 100), 2) if total_revenue > 0 else 0
@@ -4349,9 +4376,11 @@ def vendor_p_l_attached_report_ajax_view(request):
             total_trips = len([t for t in str(att_bill.ab_selected_trips).split(',') if t.strip()])
             
             bill_amt = safe_num(att_bill.ab_bill_amount)
+            toll_amt = safe_num(att_bill.ab_toll_cost)
+            veh_cost = bill_amt - toll_amt if bill_amt >= toll_amt else bill_amt
             total_km = safe_num(att_bill.ab_total_km_run)
             
-            if total_km > 0 and bill_amt > 0:
+            if total_km > 0 and veh_cost > 0:
                 trip_km = 0
                 start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
                 closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
@@ -4359,7 +4388,7 @@ def vendor_p_l_attached_report_ajax_view(request):
                     diff = closing_km - start_km
                     if 0 < diff < 15000:
                         trip_km = diff
-                cost_per_km = bill_amt / total_km
+                cost_per_km = veh_cost / total_km
                 buying_trip_cost = round(trip_km * cost_per_km, 2)
             elif total_trips > 0:
                 buying_trip_cost = round(safe_num(att_bill.ab_buy_cost) / total_trips, 2)
