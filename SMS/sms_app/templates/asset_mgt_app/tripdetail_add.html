@@ -86,15 +86,15 @@
 
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Enquiry Number</label>
-                            {% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Trip Number</label>
-                            {% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Number</label>
-                            <select name="tr_vehiclenumber" id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm {% if vehicle_allotment_id or trip_instance.id %}disable_a_href{% endif %}" {% if vehicle_allotment_id or trip_instance.id %}disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;"{% endif %} onchange="onVehicleSelect(this.value)">
+                            <select name="tr_vehiclenumber" id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm {% if vehicle_allotment_id %}disable_a_href{% endif %}" {% if vehicle_allotment_id %}style="pointer-events: none; background-color: #e9ecef;"{% endif %} onchange="onVehicleSelect(this.value)">
                                 <option value="">--Select Vehicle--</option>
                                 {% for v_item in allotted_vehicle_list %}
                                 <option value="{{ v_item.reg_number }}" {% if trip_instance.tr_vehiclenumber == v_item.reg_number or selected_vehicle_number == v_item.reg_number %}selected{% endif %}>
@@ -109,7 +109,7 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Consignment Number</label>
-                            <select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;">
+                            <select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href">
                                 <option value="">--None (Created After Dock-Out)--</option>
                                 {% for item in consignment_list %}
                                 <option value="{{ item.id }}" {% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}selected{% endif %}>
@@ -120,7 +120,7 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Source</label>
-                            {% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Tracking Link</label>
@@ -135,28 +135,28 @@
                         <div class="form-section-title mb-3"><i class="fas fa-truck"></i> Vehicle & Driver</div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
-                            {% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Placed</label>
-                            {% render_field trip_det_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Driver Name</label>
-                            {% render_field trip_det_form.tr_drivername id="tr_drivername" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_drivername id="tr_drivername" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Driver Number</label>
-                            {% render_field trip_det_form.tr_drivernumber id="tr_drivernumber" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_drivernumber id="tr_drivernumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Driver License</label>
-                            {% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control form-control-modern form-control-sm disable_a_href" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Trip Category</label>
                             {% if trip_instance.pk %}
-                            {% render_field trip_det_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
+                            {% render_field trip_det_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
                             {% else %}
                             {% render_field trip_det_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm" onchange="trip_type()" %}
                             {% endif %}
@@ -577,24 +577,19 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		}
 		else if (window.location.href.includes("tripdetail_update")) {
-			// Enable submit buttons
-			$('#tripdetail_id, #tripdetail_submit_id')
-				.removeClass('disable_a_href')
-				.prop('disabled', false);
+			// Enable fields
+			$('#tripdetail_id, #tripdetail_submit_id, #tr_consignmentnumber, #tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
+				.prop('disabled', false)
+				.prop('readonly', false);
 
-			// 🔒 Strictly Lock Header, Vehicle & Driver fields: disable + readonly + tabindex -1
-			$('#tr_enquirynumber, #tr_tripnumber, #tr_vehiclenumber, #tr_consignmentnumber, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_category')
-				.prop('disabled', true)
-				.prop('readonly', true)
-				.attr('tabindex', '-1')
-				.addClass('disable_a_href')
-				.css({
-					'pointer-events': 'none',
-					'background-color': '#f1f5f9',
-					'cursor': 'not-allowed'
-				});
+			// ✅ Restore the "locked" look (green color) but allow clicks on the dropdown
+			$('#tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
+				.addClass('disable_a_href');
 
-			// AUTO-REFRESH Truck Details on page load for existing active trips (NOT closed trips)
+			// Keep consignment number interactive but with the color if possible
+			$('#tr_consignmentnumber').css('background-color', '#CCFFCC');
+
+			// ✅ AUTO-REFRESH Truck Details on page load for existing active trips (NOT closed trips)
 			var curStatus = $("#tc_financestatus").val();
 			var isTripClosed = ["2", "3", "4", "5", "7", "9", "10", "11"].includes(curStatus);
 			if (!isTripClosed) {
@@ -1452,9 +1447,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         $(this).data('submitted', true);
         
-        // 🔓 Temporarily enable disabled fields so their values submit cleanly to Django POST
-        enableTripForm(this);
-
         // Visual feedback on the submit button
         $('#tripdetail_submit_id').html('<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...').css('opacity', '0.7');
 	});
