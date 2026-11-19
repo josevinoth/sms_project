@@ -46,6 +46,7 @@ class BilingInfo(models.Model):
     bill_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, null=True,default=6)
     bill_sale_person = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True,blank=True,related_name='bill_sale_person',db_column='bill_sale_person')
     bill_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, default=1)
+    bill_remarks = models.TextField(blank=True, null=True, default='')
 
     class Meta:
         ordering = ["-bill_invoice_ref"]

@@ -1,77 +1,271 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260609-01">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261118-01">
 
 <style>
-    /* Specific overrides for this dashboard if any */
+    /* CS Dashboard Cockpit Visual Theme Overrides */
     @media screen and (min-width: 992px) {
         html, body {
             overflow: hidden !important;
             height: 100% !important;
-            background: #060b26 !important;
-            font-family: 'Inter', sans-serif !important;
+            background: #04081e !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
-        #main-content {
+        #main-content, .container-fluid {
             padding: 0 !important;
-        }
-        .container-fluid {
-            padding-top: 8px !important;
-            padding-bottom: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
         }
     }
     @media screen and (max-width: 991px) {
         html, body {
             overflow: auto !important;
             height: auto !important;
-            background: #060b26 !important;
-            font-family: 'Inter', sans-serif !important;
+            background: #04081e !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
     }
 
-    /* Disable pointer events and visual feedback for disabled dropdowns */
-    select:disabled {
-        pointer-events: none !important;
-        opacity: 0.6;
-        cursor: not-allowed;
+    /* Master Container Fitting Viewport */
+    .home-dashboard-wrap {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: calc(100vh - 65px) !important;
+        display: flex;
+        flex-direction: column;
+        padding: 0.25rem 0.5rem 0.25rem 0.5rem !important;
+        gap: 0.30rem !important;
+        box-sizing: border-box;
+        background: #04081e !important;
+        overflow: hidden;
+        position: relative;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     }
 
-    /* Style scrollbar for the custom tooltip to be visible but modern */
-    #custom-progress-tooltip::-webkit-scrollbar {
-        width: 6px;
+    /* Top Control Bar (matching CS Dashboard .cs-top-bar) */
+    .cs-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.45rem;
+        width: 100%;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(14, 25, 71, 0.95) 0%, rgba(8, 14, 45, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        height: 36px;
+        box-sizing: border-box;
     }
-    #custom-progress-tooltip::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: nowrap;
+    }
+
+    .filter-pill {
+        background: rgba(4, 9, 32, 0.9);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 5px;
+        padding: 0.12rem 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        height: 28px;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-pill:focus-within {
+        border-color: #36d1ff;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.35);
+    }
+
+    .filter-pill label {
+        font-size: 0.62rem;
+        color: #36d1ff;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        letter-spacing: 0.4px;
+    }
+
+    .filter-pill select, .filter-pill input[type="date"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.74rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 2px;
+        height: 22px;
+        line-height: 1;
+        flex: 1;
+    }
+
+    .filter-pill select option {
+        background: #091336;
+        color: #fff;
+    }
+
+    .filter-pill input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+    }
+
+    .filter-branch-pill { min-width: 155px; }
+    .filter-emp-pill { min-width: 190px; }
+    .filter-date-field { min-width: 140px; }
+
+    /* Performance Benchmark Color Scale Legend Bar (Matching CS Dashboard) */
+    .cs-legend-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(4, 9, 32, 0.92);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 5px;
+        padding: 0.12rem 0.55rem;
+        height: 28px;
+        box-sizing: border-box;
+        margin-left: auto;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .legend-title {
+        font-size: 0.62rem;
+        color: #36d1ff;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+
+    .cs-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.60rem;
+        font-weight: 800;
+        padding: 2px 6px;
         border-radius: 3px;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
     }
-    #custom-progress-tooltip::-webkit-scrollbar-thumb {
-        background: rgba(54, 209, 255, 0.4);
-        border-radius: 3px;
+
+    .leg-red { background: rgba(239, 68, 68, 0.22); border: 1px solid #ef4444; color: #fca5a5; }
+    .leg-orange { background: rgba(245, 158, 11, 0.22); border: 1px solid #f59e0b; color: #fde68a; }
+    .leg-green { background: rgba(16, 185, 129, 0.22); border: 1px solid #10b981; color: #86efac; }
+    .leg-blue { background: rgba(59, 130, 246, 0.22); border: 1px solid #3b82f6; color: #93c5fd; }
+
+    /* 8 Top KPI Highlight Cards (Strict Single Row, matching CS Dashboard) */
+    .cs-top-cards-row {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 0.40rem;
+        width: 100%;
+        flex-shrink: 0;
     }
-    #custom-progress-tooltip::-webkit-scrollbar-thumb:hover {
-        background: rgba(54, 209, 255, 0.7);
-        border-radius: 3px;
+
+    .top-kpi-card {
+        position: relative;
+        border-radius: 7px;
+        padding: 0.38rem 0.60rem;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 58px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        min-width: 0;
+        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    #custom-progress-tooltip {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(54, 209, 255, 0.4) rgba(255, 255, 255, 0.05);
+
+    .top-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
     }
-    #progress-back-btn:hover {
-        background: rgba(54, 209, 255, 0.2) !important;
-        box-shadow: 0 0 8px rgba(54, 209, 255, 0.5);
+
+    .top-kpi-content {
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+        min-width: 0;
+        overflow: hidden;
+        line-height: 1.15;
     }
+
+    .top-kpi-title {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.88);
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .top-kpi-title i {
+        font-size: 0.68rem;
+    }
+
+    .top-kpi-main-val {
+        font-size: 1.28rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 2px 0 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.15;
+    }
+
+    .top-kpi-icon {
+        font-size: 1.65rem;
+        opacity: 0.16;
+        position: absolute;
+        right: 0.5rem;
+        top: 0.5rem;
+        pointer-events: none;
+    }
+
+    /* Card Color Themes (CS Dashboard Palettes) */
+    .card-bg-requested { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); border-color: rgba(59, 130, 246, 0.5); }
+    .card-bg-cnote { background: linear-gradient(135deg, #0e7490 0%, #083344 100%); border-color: rgba(6, 182, 212, 0.5); }
+    .card-bg-missed { background: linear-gradient(135deg, #9a3412 0%, #451a03 100%); border-color: rgba(249, 115, 22, 0.5); }
+    .card-bg-enq-canc { background: linear-gradient(135deg, #6b21a8 0%, #3b0764 100%); border-color: rgba(168, 85, 247, 0.5); }
+    .card-bg-trip-canc { background: linear-gradient(135deg, #991b1b 0%, #4c0519 100%); border-color: rgba(239, 68, 68, 0.5); }
+    .card-bg-settled { background: linear-gradient(135deg, #065f46 0%, #022c22 100%); border-color: rgba(16, 185, 129, 0.5); }
+    .card-bg-ready { background: linear-gradient(135deg, #1e40af 0%, #0f172a 100%); border-color: rgba(96, 165, 250, 0.5); }
+    .card-bg-invoiced { background: linear-gradient(135deg, #854d0e 0%, #3b1d03 100%); border-color: rgba(234, 179, 8, 0.5); }
 
     /* KPI Card Tooltips */
-    .dash-card[data-tip] {
+    .top-kpi-card[data-tip], .dash-card[data-tip] {
         cursor: default;
     }
-    .dash-card[data-tip]::after {
+    .top-kpi-card[data-tip]::after, .dash-card[data-tip]::after {
         content: attr(data-tip);
         position: absolute;
         bottom: calc(100% + 10px);
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(6, 11, 38, 0.97);
+        background: rgba(4, 9, 32, 0.98);
         color: #d9e3ff;
         font-size: 0.62rem;
         font-weight: 400;
@@ -88,7 +282,7 @@
         box-shadow: 0 6px 18px rgba(0,0,0,0.6);
         text-align: left;
     }
-    .dash-card[data-tip]::before {
+    .top-kpi-card[data-tip]::before, .dash-card[data-tip]::before {
         content: '';
         position: absolute;
         bottom: calc(100% + 4px);
@@ -101,40 +295,295 @@
         transition: opacity 0.25s ease;
         z-index: 9999;
     }
-    .dash-card[data-tip]:hover::after,
-    .dash-card[data-tip]:hover::before {
+    .top-kpi-card[data-tip]:hover::after, .top-kpi-card[data-tip]:hover::before,
+    .dash-card[data-tip]:hover::after, .dash-card[data-tip]:hover::before {
         opacity: 1;
+    }
+
+    /* Charts Container Layout */
+    .dash-charts-container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 0.35rem;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .dash-left-col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    .dash-donuts-row {
+        display: flex;
+        gap: 0.35rem;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+    }
+
+    .dash-donuts-row .cs-card-panel {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* CS Card Panel (Cockpit Dark Glass Style) */
+    .cs-card-panel {
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 7px;
+        border: 1px solid rgba(54, 209, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .cs-card-header {
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 0.22rem 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        height: 28px;
+        box-sizing: border-box;
+    }
+
+    .cs-card-title {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.3px;
+        margin: 0;
+    }
+
+    .cs-card-title i {
+        color: #36d1ff;
+        font-size: 0.78rem;
+    }
+
+    .cs-card-badge {
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .chart-panel-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0.35rem 0.55rem;
+        min-height: 0;
+        min-width: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .chart-canvas-wrap {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* Vehicle Dropdown Pill Inside Donut Panels */
+    .veh-select-pill {
+        position: absolute;
+        top: 6px;
+        left: 8px;
+        z-index: 10;
+        background: rgba(4, 9, 32, 0.92);
+        border: 1px solid rgba(54, 209, 255, 0.4);
+        border-radius: 4px;
+        padding: 1px 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        transition: all 0.2s ease;
+    }
+
+    .veh-select-pill:focus-within {
+        border-color: #36d1ff;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.35);
+    }
+
+    .veh-select-pill select {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.68rem;
+        font-weight: 700;
+        outline: none;
+        cursor: pointer;
+        padding: 0;
+        height: 18px;
+        line-height: 1;
+        max-width: 80px;
+    }
+
+    .veh-select-pill select option {
+        background: #091336;
+        color: #fff;
+    }
+
+    .km-legend-group {
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+    }
+
+    .filter-month-pill {
+        background: rgba(4, 9, 32, 0.9);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 4px;
+        padding: 1px 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 22px;
+    }
+
+    .filter-month-pill input[type="month"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.70rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        width: 105px;
+        height: 20px;
+    }
+
+    .filter-month-pill input[type="month"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+    }
+
+    .cs-back-btn {
+        padding: 2px 7px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 4px;
+        background: rgba(54, 209, 255, 0.12);
+        border: 1px solid #36d1ff;
+        color: #36d1ff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .cs-back-btn:hover {
+        background: #36d1ff;
+        color: #04081e;
+        box-shadow: 0 0 10px rgba(54, 209, 255, 0.5);
+    }
+
+    /* Style scrollbar for custom progress tooltip */
+    #custom-progress-tooltip::-webkit-scrollbar { width: 6px; }
+    #custom-progress-tooltip::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 3px; }
+    #custom-progress-tooltip::-webkit-scrollbar-thumb { background: rgba(54, 209, 255, 0.4); border-radius: 3px; }
+    #custom-progress-tooltip::-webkit-scrollbar-thumb:hover { background: rgba(54, 209, 255, 0.7); border-radius: 3px; }
+
+    /* Responsive Overrides */
+    @media screen and (max-width: 991px) {
+        .home-dashboard-wrap {
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0.35rem !important;
+        }
+        .cs-top-bar {
+            height: auto !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.35rem !important;
+        }
+        .filter-group {
+            flex-wrap: wrap !important;
+        }
+        .cs-legend-bar {
+            margin-left: 0;
+        }
+        .cs-top-cards-row {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+        .dash-charts-container {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        .dash-donuts-row {
+            flex-direction: column !important;
+            height: auto !important;
+        }
+        .cs-card-panel {
+            min-height: 260px !important;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .cs-top-cards-row {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    select:disabled {
+        pointer-events: none !important;
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>
 
 <div class="home-dashboard-wrap">
     <div class="dash-kpi-container">
-        <!-- Filter Bar (top horizontal row) -->
-        <div class="dash-filter-bar">
-            <div class="dash-dropdown-card">
-                <label><i class="fas fa-calendar-alt"></i> From Date</label>
-                <div class="dash-select-wrap" style="flex:1;">
+        <!-- Top Control Bar (matching CS Dashboard .cs-top-bar) -->
+        <div class="cs-top-bar">
+            <div class="filter-group">
+                <!-- From Date -->
+                <div class="filter-pill filter-date-field">
+                    <label><i class="fas fa-calendar-alt"></i> From Date</label>
                     <input type="date" id="from-date" class="dash-date-input">
                 </div>
-            </div>
-            <div class="dash-dropdown-card">
-                <label><i class="fas fa-calendar-alt"></i> To Date</label>
-                <div class="dash-select-wrap" style="flex:1;">
+                <!-- To Date -->
+                <div class="filter-pill filter-date-field">
+                    <label><i class="fas fa-calendar-alt"></i> To Date</label>
                     <input type="date" id="to-date" class="dash-date-input">
                 </div>
-            </div>
-            <div class="dash-dropdown-card" style="flex:1.2;">
-                <label><i class="fas fa-user-tie"></i> CS Representative</label>
-                <div class="dash-select-wrap" style="flex:1;">
+                <!-- CS Representative -->
+                <div class="filter-pill filter-emp-pill">
+                    <label><i class="fas fa-user-tie"></i> CS Rep</label>
                     <select id="cs-employee-select" {% if dropdown_disabled %}disabled{% endif %} data-disabled="{{ dropdown_disabled|lower }}" data-default="{{ default_employee_id }}">
                         <option value="all">All Representatives</option>
                         {% for emp in cs_employees %}<option value="{{ emp.user.id }}">{{ emp.user.first_name }}</option>{% endfor %}
                     </select>
                 </div>
-            </div>
-            <div class="dash-dropdown-card" style="flex:1.2;">
-                <label><i class="fas fa-code-branch"></i> Branch</label>
-                <div class="dash-select-wrap" style="flex:1;">
+                <!-- Branch -->
+                <div class="filter-pill filter-branch-pill">
+                    <label><i class="fas fa-code-branch"></i> Branch</label>
                     <select id="branch-select">
                         <option value="all">All Branches</option>
                         {% for branch in branches %}
@@ -143,91 +592,225 @@
                     </select>
                 </div>
             </div>
+
+            <!-- Performance Benchmark Color Scale Legend Bar (Matching CS Dashboard) -->
+            <div class="cs-legend-bar" title="Performance Scale Benchmark">
+                <span class="legend-title"><i class="fas fa-tachometer-alt"></i> Scale:</span>
+                <span class="cs-legend-item leg-red"><i class="fas fa-exclamation-circle"></i> Critical</span>
+                <span class="cs-legend-item leg-orange"><i class="fas fa-hourglass-half"></i> In-Progress</span>
+                <span class="cs-legend-item leg-green"><i class="fas fa-check-circle"></i> Completed</span>
+                <span class="cs-legend-item leg-blue"><i class="fas fa-bolt"></i> Invoiced</span>
+            </div>
         </div>
-        <!-- KPI Cards Row (single line, 8 cards) -->
-        <div class="dash-kpi-row">
-            <div class="dash-card card-enquiry" data-tip="Total count of enquiries created within the selected date range, CS rep, and branch filters."><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="kpi-enquiries">0</div></div>
-            <div class="dash-card card-cnote" data-tip="Count of enquiries (from Vehicle Requested) that have at least one Consignment Note (C-Note) created."><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="kpi-cnotes">0</div></div>
-            <div class="dash-card card-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Shows unallotted vehicle quantity."><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Vehicles Missed</div><div class="dash-kpi-value" id="kpi-missed">0</div></div>
-            <div class="dash-card card-cancelled" data-tip="Enquiries without a C-Note where the associated trip is marked as cancelled, or the enquiry itself is directly cancelled."><i class="fas fa-times-circle"></i><div class="dash-kpi-label">Enquiries Cancelled</div><div class="dash-kpi-value" id="kpi-enquiries-cancelled">0</div></div>
-            <div class="dash-card card-trips-cancelled" data-tip="Count of individual trip records marked as cancelled (finance status = Cancelled), regardless of whether the enquiry also has a C-Note."><i class="fas fa-ban"></i><div class="dash-kpi-label">Trips Cancelled</div><div class="dash-kpi-value" id="kpi-trips-cancelled">0</div></div>
-            <div class="dash-card card-settled" data-tip="Count of trips linked to the filtered enquiries that have finance status 'Trip Settled'."><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="kpi-settled">0</div></div>
-            <div class="dash-card card-ready" data-tip="Trips with finance status 'Ready to Invoice' that have not yet been invoiced."><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="kpi-ready">0</div></div>
-            <div class="dash-card card-invoiced" data-tip="Count of Trans Invoice records raised for trips linked to the filtered enquiries."><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="kpi-invoiced">0</div></div>
+
+        <!-- 8 Top KPI Highlight Cards (Strict Single Row, matching CS Dashboard) -->
+        <div class="cs-top-cards-row">
+            <!-- 1. Vehicle Requested -->
+            <div class="top-kpi-card card-bg-requested" data-tip="Total count of enquiries created within the selected date range, CS rep, and branch filters.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-truck-pickup text-info"></i> Vehicle Requested</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-enquiries">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-clipboard-list top-kpi-icon"></i>
+            </div>
+
+            <!-- 2. C-Notes -->
+            <div class="top-kpi-card card-bg-cnote" data-tip="Count of enquiries (from Vehicle Requested) that have at least one Consignment Note (C-Note) created.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-file-invoice" style="color: #22d3ee;"></i> C-Notes</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-cnotes" style="color: #67e8f9;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-file-invoice top-kpi-icon"></i>
+            </div>
+
+            <!-- 3. Vehicles Missed -->
+            <div class="top-kpi-card card-bg-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Shows unallotted vehicle quantity.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-exclamation-circle" style="color: #fb923c;"></i> Vehicles Missed</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-missed" style="color: #fdba74;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-exclamation-triangle top-kpi-icon"></i>
+            </div>
+
+            <!-- 4. Enquiries Cancelled -->
+            <div class="top-kpi-card card-bg-enq-canc" data-tip="Enquiries without a C-Note where the associated trip is marked as cancelled, or the enquiry itself is directly cancelled.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-times-circle" style="color: #c084fc;"></i> Enquiries Cancelled</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-enquiries-cancelled" style="color: #e9d5ff;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-times-circle top-kpi-icon"></i>
+            </div>
+
+            <!-- 5. Trips Cancelled -->
+            <div class="top-kpi-card card-bg-trip-canc" data-tip="Count of individual trip records marked as cancelled (finance status = Cancelled), regardless of whether the enquiry also has a C-Note.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-ban" style="color: #f87171;"></i> Trips Cancelled</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-trips-cancelled" style="color: #fca5a5;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-ban top-kpi-icon"></i>
+            </div>
+
+            <!-- 6. Trip Settled -->
+            <div class="top-kpi-card card-bg-settled" data-tip="Count of trips linked to the filtered enquiries that have finance status 'Trip Settled'.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-check-double text-success"></i> Trip Settled</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-settled" style="color: #86efac;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-handshake top-kpi-icon"></i>
+            </div>
+
+            <!-- 7. Ready to Invoice -->
+            <div class="top-kpi-card card-bg-ready" data-tip="Trips with finance status 'Ready to Invoice' that have not yet been invoiced.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-hourglass-half text-warning"></i> Ready to Invoice</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-ready" style="color: #93c5fd;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-receipt top-kpi-icon"></i>
+            </div>
+
+            <!-- 8. Invoiced -->
+            <div class="top-kpi-card card-bg-invoiced" data-tip="Count of Trans Invoice records raised for trips linked to the filtered enquiries.">
+                <div class="top-kpi-content">
+                    <span class="top-kpi-title"><i class="fas fa-file-signature" style="color: #facc15;"></i> Invoiced</span>
+                    <div class="top-kpi-main-val">
+                        <span id="kpi-invoiced" style="color: #fef08a;">0</span>
+                    </div>
+                </div>
+                <i class="fas fa-file-contract top-kpi-icon"></i>
+            </div>
         </div>
     </div>
 
     <div class="dash-charts-container">
         <!-- Left Column: Business Trip Distribution and KM Details side-by-side below it -->
         <div class="dash-left-col">
-            <div class="chart-panel" style="flex: 0.95; min-height: 0;">
-                <div class="chart-title"><i class="fas fa-chart-bar"></i> Business Trip Distribution</div>
-                <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
-            </div>
-            <div class="dash-donuts-row">
-                <div class="chart-panel" style="position: relative;">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 4px;">
-                        <div><i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details</div>
-                        <div style="display: flex; gap: 0.3rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #10b981; border-radius: 50%;"></span>Bus.</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #f59e0b; border-radius: 50%;"></span>Emp.</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #ef4444; border-radius: 50%;"></span>B-Emp.</span>
-                        </div>
+            <!-- Business Trip Distribution -->
+            <div class="cs-card-panel" style="flex: 0.95; min-height: 0;">
+                <div class="cs-card-header">
+                    <div class="cs-card-title">
+                        <i class="fas fa-chart-bar"></i> Business Trip Distribution
                     </div>
-                    <!-- Responsive width to prevent overlap when menu bar expands -->
-                    <div class="dash-select-wrap" style="position: absolute; top: 32px; left: 10px; z-index: 10; width: 28%; max-width: 95px; min-width: 75px;">
-                        <select id="own-vehicle-select" style="padding: 2px 4px; font-size: 10px; height: 22px; line-height: 1;">
-                            <option value="all">Veh No.</option>
-                            {% for veh in own_vehicles %}
-                                <option value="{{ veh }}">{{ veh }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
+                    <span class="cs-card-badge" style="color:#60a5fa; border-color:rgba(96,165,250,0.35); background:rgba(59,130,246,0.12);">
+                        <i class="fas fa-route"></i> Local / Outstation
+                    </span>
                 </div>
-                <div class="chart-panel" style="position: relative;">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 4px;">
-                        <div><i class="fas fa-truck"></i> Att. Vehicle KM Details</div>
-                        <div style="display: flex; gap: 0.3rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #10b981; border-radius: 50%;"></span>Bus.</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #f59e0b; border-radius: 50%;"></span>Emp.</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #ef4444; border-radius: 50%;"></span>B-Emp.</span>
+                <div class="chart-panel-body">
+                    <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Donuts Row: Own & Attached Vehicle KM Details -->
+            <div class="dash-donuts-row">
+                <!-- Own Vehicle KM Details -->
+                <div class="cs-card-panel" style="position: relative;">
+                    <div class="cs-card-header">
+                        <div class="cs-card-title">
+                            <i class="fas fa-tachometer-alt"></i> Own Vehicle KM
+                        </div>
+                        <div class="km-legend-group">
+                            <span class="cs-legend-item leg-green"><i class="fas fa-circle" style="font-size:5px;"></i> Bus.</span>
+                            <span class="cs-legend-item leg-orange"><i class="fas fa-circle" style="font-size:5px;"></i> Emp.</span>
+                            <span class="cs-legend-item leg-red"><i class="fas fa-circle" style="font-size:5px;"></i> B-Emp.</span>
                         </div>
                     </div>
-                    <!-- Responsive width to prevent overlap when menu bar expands -->
-                    <div class="dash-select-wrap" style="position: absolute; top: 32px; left: 10px; z-index: 10; width: 28%; max-width: 95px; min-width: 75px;">
-                        <select id="attached-vehicle-select" style="padding: 2px 4px; font-size: 10px; height: 22px; line-height: 1;">
-                            <option value="all">Veh No.</option>
-                            {% for veh in attached_vehicles %}
-                                <option value="{{ veh }}">{{ veh }}</option>
-                            {% endfor %}
-                        </select>
+                    <div class="chart-panel-body" style="position: relative;">
+                        <!-- Filter Pill for Vehicle Select -->
+                        <div class="veh-select-pill">
+                            <i class="fas fa-truck" style="color:#36d1ff; font-size:9px;"></i>
+                            <select id="own-vehicle-select">
+                                <option value="all">Veh No.</option>
+                                {% for veh in own_vehicles %}
+                                    <option value="{{ veh }}">{{ veh }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
                     </div>
-                    <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
+                </div>
+
+                <!-- Attached Vehicle KM Details -->
+                <div class="cs-card-panel" style="position: relative;">
+                    <div class="cs-card-header">
+                        <div class="cs-card-title">
+                            <i class="fas fa-truck"></i> Att. Vehicle KM
+                        </div>
+                        <div class="km-legend-group">
+                            <span class="cs-legend-item leg-green"><i class="fas fa-circle" style="font-size:5px;"></i> Bus.</span>
+                            <span class="cs-legend-item leg-orange"><i class="fas fa-circle" style="font-size:5px;"></i> Emp.</span>
+                            <span class="cs-legend-item leg-red"><i class="fas fa-circle" style="font-size:5px;"></i> B-Emp.</span>
+                        </div>
+                    </div>
+                    <div class="chart-panel-body" style="position: relative;">
+                        <!-- Filter Pill for Vehicle Select -->
+                        <div class="veh-select-pill">
+                            <i class="fas fa-truck-pickup" style="color:#36d1ff; font-size:9px;"></i>
+                            <select id="attached-vehicle-select">
+                                <option value="all">Veh No.</option>
+                                {% for veh in attached_vehicles %}
+                                    <option value="{{ veh }}">{{ veh }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Right Column: Vehicle Type wise Monthly Progress and CS Representative C-Notes Count -->
+
+        <!-- Right Column: Monthly Progress and CS Rep C-Notes -->
         <div class="dash-left-col" style="min-width: 0; overflow: hidden;">
-            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
-                <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
+            <!-- Vehicle Trip wise Monthly Progress -->
+            <div class="cs-card-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="cs-card-header">
                     <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
-                        <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
+                        <button id="progress-back-btn" class="cs-back-btn" style="display: none;">
                             <i class="fas fa-arrow-left"></i> Back
                         </button>
-                        <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+                        <div class="cs-card-title" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">
+                            <i class="fas fa-chart-line"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span>
+                        </div>
                     </div>
-                    <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
+                    <div class="filter-month-pill">
+                        <i class="fas fa-calendar" style="color:#36d1ff; font-size:10px;"></i>
+                        <input type="month" id="progress-month" class="dash-date-input">
+                    </div>
                 </div>
-                <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
-                    <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
-                        <canvas id="progressChart"></canvas>
+                <div class="chart-panel-body" style="overflow-x: auto; overflow-y: hidden;">
+                    <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
+                        <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
+                            <canvas id="progressChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
-                <div class="chart-title"><i class="fas fa-user-tie"></i> C-Note Count by CS Representative</div>
-                <div class="chart-canvas-wrap"><canvas id="csCnoteChart"></canvas></div>
+
+            <!-- C-Note Count by CS Representative -->
+            <div class="cs-card-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="cs-card-header">
+                    <div class="cs-card-title">
+                        <i class="fas fa-user-tie"></i> C-Note Count by CS Representative
+                    </div>
+                    <span class="cs-card-badge" style="color:#22d3ee; border-color:rgba(34,211,238,0.35); background:rgba(6,182,212,0.12);">
+                        <i class="fas fa-chart-bar"></i> CS Breakdown
+                    </span>
+                </div>
+                <div class="chart-panel-body">
+                    <div class="chart-canvas-wrap"><canvas id="csCnoteChart"></canvas></div>
+                </div>
             </div>
         </div>
     </div>
@@ -710,7 +1293,7 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Business', 'Empty', 'B-Empty'],
-                    datasets: [{ data: data.donut_own, backgroundColor: donutColors, borderWidth: 2, borderColor: '#0b1537' }]
+                    datasets: [{ data: data.donut_own, backgroundColor: donutColors, borderWidth: 2, borderColor: '#060b24' }]
                 },
                 options: {
                     ...commonOptions,
@@ -730,7 +1313,7 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Business', 'Empty', 'B-Empty'],
-                    datasets: [{ data: data.donut_attached, backgroundColor: donutColors, borderWidth: 2, borderColor: '#0b1537' }]
+                    datasets: [{ data: data.donut_attached, backgroundColor: donutColors, borderWidth: 2, borderColor: '#060b24' }]
                 },
                 options: {
                     ...commonOptions,
@@ -844,12 +1427,13 @@
             $('.dash-charts-container').css('overflow', isMobile ? 'visible' : 'hidden');
 
             $('.home-dashboard-wrap').css({
-                'padding': '0.5rem',
+                'padding': '0.25rem 0.5rem',
                 'width': '100%',
                 'max-width': '100%',
                 'margin': '0',
-                'height': isMobile ? 'auto' : 'calc(100vh - 77px)',
-                'overflow': isMobile ? 'visible' : 'hidden'
+                'height': isMobile ? 'auto' : 'calc(100vh - 65px)',
+                'overflow': isMobile ? 'visible' : 'hidden',
+                'background': '#04081e'
             });
         }
 

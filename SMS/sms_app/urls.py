@@ -1409,4 +1409,12 @@ urlpatterns = [
     path('bom_rule_master_delete/<int:pk>/', views.bom_rule_master_delete, name='bom_rule_master_delete'),
     path('bom_rule_master_import_csv/', views.bom_rule_master_import_csv, name='bom_rule_master_import_csv'),
     path('api/auto_generate_bom/', views.api_auto_generate_bom, name='api_auto_generate_bom'),
+
+    # New Customer Master
+    path('new_customer_master_list/', views.new_customer_master_list, name='new_customer_master_list'),
+    path('new_customer_master_add/', views.new_customer_master_add, name='new_customer_master_add'),
+    path('new_customer_master_update/<int:customer_id>/', views.new_customer_master_add, name='new_customer_master_update'),
+    path('new_customer_master_delete/<int:customer_id>/', views.new_customer_master_delete, name='new_customer_master_delete'),
+    path('new_customer_master_toggle/<int:customer_id>/', views.new_customer_master_toggle_status, name='new_customer_master_toggle'),
+    path('api/new_customer_master/', views.new_customer_master_api_list, name='new_customer_master_api'),
 ]

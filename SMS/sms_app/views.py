@@ -234,3 +234,8 @@ from .sub_views.pk_customer_box_master_view import (
     bom_rule_master_list, bom_rule_master_save, bom_rule_master_delete,
     bom_rule_master_import_csv, bom_rule_form_view, api_auto_generate_bom
 )
+from .sub_views.new_customer_master_view import (
+    new_customer_master_add, new_customer_master_list,
+    new_customer_master_delete, new_customer_master_toggle_status,
+    new_customer_master_api_list
+)

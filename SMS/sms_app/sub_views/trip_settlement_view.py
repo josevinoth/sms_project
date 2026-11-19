@@ -277,9 +277,6 @@ def trip_settlement_edit(request, trip_id):
         if form.is_valid() and files_form.is_valid():
 
             trip_obj = form.save(commit=False)
-            # 🔒 IMMUTABLE VEHICLE TYPE LOCK: Protect vehicle type requested and placed from client-side overrides
-            trip_obj.tr_vehicletype = trip.tr_vehicletype
-            trip_obj.tr_vehicletype_placed = trip.tr_vehicletype_placed
             if float(trip_obj.tc_haltingcost or 0) > 0:
                 days = float(trip_obj.tc_no_of_days_halting or 0)
                 if days <= 0:

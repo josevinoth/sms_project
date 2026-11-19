@@ -468,9 +468,6 @@ def tripclosure_add(request, tripclosure_id=0):
                         return redirect(request.META.get('HTTP_REFERER', 'tripclosure_list'))
 
                 obj = tripclosure_form.save(commit=False)
-                # 🔒 IMMUTABLE VEHICLE TYPE LOCK: Protect vehicle type requested and placed from client-side overrides
-                obj.tr_vehicletype = tripclosure.tr_vehicletype
-                obj.tr_vehicletype_placed = tripclosure.tr_vehicletype_placed
                 # 🔒 BOSS RULE PROTECTION: Trip Closure must NEVER overwrite the trip cost in the DB.
                 # If the user overrode it in Invoice Documents, we must preserve that override.
                 obj.tc_tripcost = tripclosure.tc_tripcost

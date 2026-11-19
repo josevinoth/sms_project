@@ -152,3 +152,4 @@ from .sub_forms.stock_description_form import StockdescriptionForm
 from .sub_forms.prime_enquiry_vehicle_form import PrimeEnquiryVehicleForm
 from .sub_forms.prime_enquirynote_form import PrimeEnquirynoteaddForm
 from .sub_forms.prime_vehicle_allotment_form import PrimeVehicleAllotmentForm
+from .sub_forms.new_customer_master_form import NewCustomerMasterForm
