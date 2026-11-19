@@ -7,11 +7,98 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from ..forms import SalescommentForm,SalesinfoaddForm,SalesmultipleitemForm
-from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo,SalesmultipleitemInfo
+from ..models import RoleInfo,Sales_Comments_Info,User_extInfo,SalesInfo,SalesmultipleitemInfo,CustomertypeInfo,NewCustomerMaster
 from django.shortcuts import render, redirect
 from random import randint
-
+from django.utils import timezone
 from ..sub_models.customer_mod import CustomerInfo
+
+
+def handle_business_won_customer(sales_instance):
+    """
+    If Business Won is 'Yes' (id=1):
+    1. Check if a new customer name was used (s_customer_new_name).
+    2. Add/find the customer in CustomerInfo (Customer Name master).
+    3. Update sales_instance.s_customer_name to this CustomerInfo record so the won customer is set in Customer Name.
+    4. Mark NewCustomerMaster for this customer as inactive (is_active=False),
+       is_business_won=True, business_won_date=..., and link it.
+    """
+    if not sales_instance or not sales_instance.s_bus_won_not:
+        return
+
+    is_won = (sales_instance.s_bus_won_not_id == 1 or str(sales_instance.s_bus_won_not).strip().lower() == 'yes')
+    if not is_won:
+        return
+
+    new_cust_name = (sales_instance.s_customer_new_name or '').strip()
+    if not new_cust_name:
+        return
+
+    won_date = sales_instance.s_yesdate_business or timezone.now().date()
+
+    # 1. Find or create in CustomerInfo (Customer Name field master)
+    cust_obj = CustomerInfo.objects.filter(cu_name__iexact=new_cust_name).first()
+    if not cust_obj:
+        cust_type = None
+        try:
+            if sales_instance.s_customer_type_id:
+                cust_type = sales_instance.s_customer_type
+        except Exception:
+            cust_type = None
+        if not cust_type:
+            cust_type = CustomertypeInfo.objects.first()
+
+        industry_type = None
+        try:
+            if sales_instance.s_industry_type_id:
+                industry_type = sales_instance.s_industry_type
+        except Exception:
+            industry_type = None
+
+        cust_code = getattr(sales_instance, 's_customer_code', '') or new_cust_name[:50]
+        cust_obj = CustomerInfo.objects.create(
+            cu_name=new_cust_name,
+            cu_nameshort=new_cust_name[:100],
+            cu_customercode=cust_code,
+            cu_type=cust_type,
+            cu_industry_type=industry_type,
+            cu_customerperson=sales_instance.s_Person_name or '',
+            cu_designation=sales_instance.s_designation or '',
+            cu_contactno=sales_instance.s_contact_no or '',
+            cu_email=sales_instance.s_email_id or '',
+            cu_business_sol=sales_instance.s_company,
+            cu_lastmodifiedby=sales_instance.s_created_by or sales_instance.s_updated_by,
+            cu_gstexcepmtion_id=1,
+            cu_gstmodel_id=1,
+            cu_paymenttype_id=1,
+            cu_creditcountfrom_id=1,
+            cu_businessmodel_id=1,
+        )
+
+    # 2. Update sales_instance to have this won customer in the Customer Name field
+    if sales_instance.s_customer_name_id != cust_obj.id:
+        SalesInfo.objects.filter(pk=sales_instance.pk).update(s_customer_name=cust_obj)
+        sales_instance.s_customer_name = cust_obj
+
+    # 3. Mark NewCustomerMaster record as inactive with business won date
+    ncm_records = NewCustomerMaster.objects.filter(customer_name__iexact=new_cust_name)
+    if ncm_records.exists():
+        ncm_records.update(
+            is_active=False,
+            is_business_won=True,
+            business_won_date=won_date,
+            linked_customer=cust_obj
+        )
+    else:
+        NewCustomerMaster.objects.create(
+            customer_name=new_cust_name,
+            is_active=False,
+            is_business_won=True,
+            business_won_date=won_date,
+            linked_customer=cust_obj,
+            created_by=sales_instance.s_created_by or sales_instance.s_updated_by
+        )
+
 
 
 @login_required(login_url='login_page')
@@ -110,6 +197,7 @@ def sales_add(request, sales_id=0):
                 prefix = f"{fy}_{branch_code}_SL_"
                 sales_instance.s_sale_number = generate_next_number(SalesInfo, 's_sale_number', prefix, 6)
                 sales_instance.save()
+                handle_business_won_customer(sales_instance)
 
                 messages.success(request, 'Record Saved Successfully')
                 request.session['ses_sales_id'] = sales_instance.id
@@ -130,7 +218,8 @@ def sales_add(request, sales_id=0):
             salesinfo = SalesInfo.objects.get(pk=sales_id)
             form = SalesinfoaddForm(request.POST, request.FILES, instance=salesinfo)
             if form.is_valid():
-                form.save()
+                saved_sales = form.save()
+                handle_business_won_customer(saved_sales)
                 print("Sales Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:

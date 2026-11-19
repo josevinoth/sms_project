@@ -1,0 +1,147 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+{% block title %}{% if is_edit %}Update New Customer Master{% else %}Add New Customer Master{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .custom-switch-lg .custom-control-label {
+        padding-left: 2.75rem;
+        padding-top: 0.15rem;
+    }
+    .custom-switch-lg .custom-control-label::before {
+        left: -2.75rem;
+        width: 2.25rem;
+        height: 1.25rem;
+        border-radius: 1rem;
+    }
+    .custom-switch-lg .custom-control-label::after {
+        left: calc(-2.75rem + 2px);
+        width: calc(1.25rem - 4px);
+        height: calc(1.25rem - 4px);
+        border-radius: 50%;
+    }
+    .custom-switch-lg .custom-control-input:checked ~ .custom-control-label::after {
+        transform: translateX(1rem);
+    }
+    .status-badge-active {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .status-badge-inactive {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-user-plus mr-2"></i> {% if is_edit %}Update New Customer Master{% else %}Add New Customer Master{% endif %}
+        </h3>
+        <div class="d-flex align-items-center">
+            <a href="{% url 'new_customer_master_list' %}" class="btn-modern btn-cancel py-1 px-3 mr-2" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-list mr-1"></i> Customer List
+            </a>
+            <a href="{% url 'sales_insert' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-chart-line mr-1"></i> Back to Sales
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Form Container ══ -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="modern-card p-4 shadow-sm">
+                <form method="POST" action="" id="new_customer_master_form">
+                    {% csrf_token %}
+
+                    <div class="form-section p-3 mb-3">
+                        <div class="form-section-title mb-3">
+                            <i class="fas fa-id-card text-primary mr-1"></i> Customer Details
+                        </div>
+
+                        <!-- Customer Name Field -->
+                        <div class="form-group-modern mb-3">
+                            <label class="form-label-modern font-weight-bold" for="customer_name">
+                                Customer Name <span class="text-danger">*</span>
+                            </label>
+                            {% render_field form.customer_name class="form-control form-control-modern" id="customer_name" placeholder="Enter new customer name..." autofocus="autofocus" %}
+                            {% if form.customer_name.errors %}
+                                <div class="text-danger small mt-1 font-weight-bold">
+                                    {{ form.customer_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status Toggle Field -->
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold d-block">
+                                Status (Active / Inactive)
+                            </label>
+                            <div class="custom-control custom-switch custom-switch-lg mt-2">
+                                <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" {% if not customer or customer.is_active %}checked{% endif %}>
+                                <label class="custom-control-label" for="is_active" id="status_label_container" style="cursor: pointer; user-select: none;">
+                                    {% if not customer or customer.is_active %}
+                                        <span class="status-badge-active" id="status_badge"><i class="fas fa-check-circle mr-1"></i> Active</span>
+                                    {% else %}
+                                        <span class="status-badge-inactive" id="status_badge"><i class="fas fa-times-circle mr-1"></i> Inactive</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1 text-primary"></i>
+                                Toggle switch to set whether this customer is <strong>Active</strong> or <strong>Inactive</strong>.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <a href="{% url 'new_customer_master_list' %}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 8px;">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm" style="border-radius: 8px;">
+                            <i class="fas fa-save mr-1"></i> {% if is_edit %}Update Customer{% else %}Save Customer{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    function updateStatusLabel() {
+        if ($('#is_active').is(':checked')) {
+            $('#status_badge')
+                .removeClass('status-badge-inactive')
+                .addClass('status-badge-active')
+                .html('<i class="fas fa-check-circle mr-1"></i> Active');
+        } else {
+            $('#status_badge')
+                .removeClass('status-badge-active')
+                .addClass('status-badge-inactive')
+                .html('<i class="fas fa-times-circle mr-1"></i> Inactive');
+        }
+    }
+
+    $('#is_active').on('change', updateStatusLabel);
+});
+</script>
+{% endblock %}
