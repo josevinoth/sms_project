@@ -425,12 +425,7 @@ def sales_metrics_dashboard(request):
 
     today_str = timezone.localtime(timezone.now()).strftime('%Y-%m-%d')
 
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
-    base_template = "asset_mgt_app/base_empty.html" if is_ajax else "asset_mgt_app/base_1.html"
-
     context = {
-        'base_template': base_template,
-        'is_ajax': is_ajax,
         'first_name': first_name,
         'companies': companies,
         'branches': branches,
