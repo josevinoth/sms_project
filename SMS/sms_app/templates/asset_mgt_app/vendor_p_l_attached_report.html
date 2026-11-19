@@ -41,7 +41,7 @@
                 {% render_field form.customer_department class="form-control" value=dept_id %}
             </div>
             
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">Vendor Name</label>
                 <select name="vendor_id" id="vendor_select" class="form-control form-control-modern select2">
                     <option value="">Select Vendor</option>
@@ -51,7 +51,7 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">Vehicle No</label>
                 <select name="veh_no" id="vehicle_number" class="form-control form-control-modern select2">
                     <option value="">Select Vehicle</option>
@@ -61,29 +61,36 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">From Date</label>
                 <input type="date" name="date_from" class="form-control form-control-modern" value="{{ date_from }}">
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">To Date</label>
                 <input type="date" name="date_to" class="form-control form-control-modern" value="{{ date_to }}">
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">From Location</label>
                 {% render_field form.from_location class="form-control form-control-modern select2" value=from_loc_id %}
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-2 mb-2">
                 <label class="form-label font-weight-bold">To Location</label>
                 {% render_field form.to_location class="form-control form-control-modern select2" value=to_loc_id %}
             </div>
-        </div>
 
-        <div class="row align-items-end">
-            <div class="col-md-12 d-flex justify-content-end gap-2 mt-2">
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">Branch</label>
+                <select name="branch" id="branch_select" class="form-control form-control-modern select2">
+                    <option value="">-- All --</option>
+                    <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                    <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+                </select>
+            </div>
+
+            <div class="col-md-10 mb-2 d-flex justify-content-end gap-2 align-items-end">
                 <button type="submit" class="btn btn-primary mr-1">
                     <i class="fas fa-filter mr-1"></i> Filter
                 </button>
@@ -172,6 +179,7 @@
                     d.date_to = $('input[name="date_to"]').val();
                     d.from_location = $('select[name="from_location"]').val();
                     d.to_location = $('select[name="to_location"]').val();
+                    d.branch = $('#branch_select').val() || '';
                 },
                 dataSrc: function (json) {
                     return json.data;
@@ -225,6 +233,7 @@
                     date_to: $('input[name="date_to"]').val(),
                     from_location: $('select[name="from_location"]').val(),
                     to_location: $('select[name="to_location"]').val(),
+                    branch: $('#branch_select').val() || '',
                     'search[value]': table.search() || ''
                 },
                 success: function (json) {
@@ -283,6 +292,10 @@
         });
 
         $('#vehicle_number').on('change', function () {
+            table.ajax.reload();
+        });
+
+        $('#branch_select').on('change', function () {
             table.ajax.reload();
         });
     });

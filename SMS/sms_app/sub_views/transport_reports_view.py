@@ -3722,6 +3722,7 @@ def vendor_p_l_attached_report_view(request):
     date_to = (request.POST.get('date_to') or request.GET.get('date_to', '')).strip()
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
+    branch = (request.POST.get('branch') or request.GET.get('branch', '')).strip()
     vendor_id = request.POST.get('vendor_id') or request.GET.get('vendor_id')
 
     if vendor_id:
@@ -3802,6 +3803,7 @@ def vendor_p_l_attached_report_view(request):
         'date_to': date_to,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'branch': branch,
         'vehicle_type': vehicle_type_id,
         'vendor_id': vendor_id,
         'veh_no': veh_no,
@@ -4170,7 +4172,22 @@ def vendor_p_l_attached_report_ajax_view(request):
         base_trips = base_trips.filter(tr_reportedlocation_id=to_loc_id)
 
     if branch:
-        base_trips = base_trips.filter(get_branch_filter_q(branch))
+        b_code = branch.upper().replace('BVM ', '').strip()
+        if b_code in ['1', 'BLR']:
+            b_code = 'BLR'
+        elif b_code in ['2', 'MAA']:
+            b_code = 'MAA'
+
+        if b_code in ['MAA', 'BLR']:
+            base_trips = base_trips.filter(
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=b_code) |
+                (
+                    (Q(tr_consignmentnumber__isnull=True) | Q(tr_consignmentnumber__co_consignmentnumber="")) &
+                    Q(tr_tripnumber__icontains=b_code)
+                )
+            )
+        else:
+            base_trips = base_trips.filter(get_branch_filter_q(branch))
 
     if vehicle_type_id:
         base_trips = base_trips.filter(tr_vehicletype_id=vehicle_type_id)
