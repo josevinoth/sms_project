@@ -8,7 +8,7 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo
+from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo, WMSPettyCashAttachment
 from ..sub_models.wms_expense_type_mod import WMSExpenseTypeInfo
 from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
@@ -282,6 +282,27 @@ def wms_petty_cash_add(request, wpc_id=0):
                     saved_wpc.wpc_created_by = created_user
             saved_wpc.wpc_updated_by = created_user
             saved_wpc.save()
+
+            # Handle Multi-attachments
+            uploaded_files = request.FILES.getlist('wpc_bill_attachments')
+            if not uploaded_files and 'wpc_bill_attachment' in request.FILES:
+                uploaded_files = request.FILES.getlist('wpc_bill_attachment')
+
+            for f in uploaded_files:
+                WMSPettyCashAttachment.objects.create(
+                    petty_cash=saved_wpc,
+                    file=f,
+                    filename=f.name,
+                    uploaded_by=created_user
+                )
+
+            # Sync legacy field if present or set from first attachment
+            if uploaded_files and not saved_wpc.wpc_bill_attachment:
+                first_att = saved_wpc.attachments.first()
+                if first_att and first_att.file:
+                    saved_wpc.wpc_bill_attachment = first_att.file
+                    saved_wpc.save(update_fields=['wpc_bill_attachment'])
+
             messages.success(request, "WMS Petty Cash saved successfully.")
             return redirect('wms_petty_cash_list')
         else:
@@ -292,10 +313,26 @@ def wms_petty_cash_add(request, wpc_id=0):
     if form.instance and form.instance.wpc_bill_attachment:
         bill_filename = os.path.basename(form.instance.wpc_bill_attachment.name)
 
+    attachments = []
+    if wpc_id != 0:
+        if form.instance.wpc_bill_attachment and bool(form.instance.wpc_bill_attachment.name):
+            if not WMSPettyCashAttachment.objects.filter(petty_cash=form.instance).exists():
+                try:
+                    WMSPettyCashAttachment.objects.create(
+                        petty_cash=form.instance,
+                        file=form.instance.wpc_bill_attachment,
+                        filename=os.path.basename(form.instance.wpc_bill_attachment.name),
+                        uploaded_by=form.instance.wpc_created_by
+                    )
+                except Exception:
+                    pass
+        attachments = WMSPettyCashAttachment.objects.filter(petty_cash=form.instance).order_by('-uploaded_at')
+
     context = {
         'form': form,
         'wpc_id': wpc_id,
         'bill_filename': bill_filename,
+        'attachments': attachments,
     }
     return render(request, "asset_mgt_app/wms_petty_cash_add.html", context)
 
@@ -377,6 +414,28 @@ def wms_petty_cash_list(request):
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/wms_petty_cash_list.html", context)
+
+
+def wms_petty_cash_attachment_delete(request, attachment_id):
+    if request.method in ["POST", "DELETE"]:
+        attachment = get_object_or_404(WMSPettyCashAttachment, pk=attachment_id)
+        wpc = attachment.petty_cash
+        if attachment.file:
+            try:
+                attachment.file.delete(save=False)
+            except Exception:
+                pass
+        attachment.delete()
+
+        # Update or clean legacy field if needed
+        if wpc:
+            remaining = WMSPettyCashAttachment.objects.filter(petty_cash=wpc).first()
+            wpc.wpc_bill_attachment = remaining.file if remaining else None
+            wpc.save(update_fields=['wpc_bill_attachment'])
+
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
 
 def wms_petty_cash_delete(request, wpc_id):

@@ -168,11 +168,6 @@
                                 <a href="{% url 'wms_petty_cash_combined_pdf' wpc.id %}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #dc3545; color: white; border-color: #dc3545;" title="Combined Voucher & Bill PDF">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
-                                {% if wpc.wpc_bill_attachment %}
-                                <a href="{{ wpc.wpc_bill_attachment.url }}" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #6c757d; color: white; border-color: #6c757d;" title="View Attachment">
-                                    <i class="fas fa-paperclip"></i>
-                                </a>
-                                {% endif %}
                                 <a href="{% url 'wms_petty_cash_update' wpc.id %}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;" title="Edit">
                                     <i class="far fa-edit"></i>
                                 </a>
@@ -211,7 +206,7 @@
             dom: '<"d-flex justify-content-between align-items-center mb-2"l f><"d-flex justify-content-between align-items-center mb-2"B>rtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
             pageLength: 25,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             order: [[0, 'asc']],
             initComplete: function () {
                 $('.filter-row input').on('keyup change', function () {

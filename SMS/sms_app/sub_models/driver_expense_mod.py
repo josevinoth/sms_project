@@ -26,6 +26,8 @@ class Driverexpense(models.Model):
     de_supervisorcost = models.FloatField(default=0.0)
     de_rtocost = models.FloatField(default=0.0)
     de_battacost = models.FloatField(default=0.0)
+    de_handlingcost = models.FloatField(default=0.0, verbose_name='Handling Cost')
+    de_salary_advance = models.FloatField(default=0.0, verbose_name='Salary Advance')
     de_total_cost=models.FloatField(default=0.0)
     de_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
     trip_date = models.DateField(null=True, blank=True)
@@ -38,3 +40,22 @@ class Driverexpense(models.Model):
 
     def __str__(self):
         return self.driver_name
+
+
+def driver_expense_attachment_path(instance, filename):
+    exp_id = instance.expense_id if instance.expense_id else "temp"
+    return f"driver_expense_bills/{exp_id}/{filename}"
+
+
+class DriverExpenseAttachment(models.Model):
+    expense = models.ForeignKey(Driverexpense, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=driver_expense_attachment_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey('MyUser', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Expense {self.expense_id} - {self.filename or self.file.name}"

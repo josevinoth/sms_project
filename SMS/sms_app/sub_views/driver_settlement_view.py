@@ -70,6 +70,18 @@ def driver_settlement_add(request, ds_id=0):
                     if matched_trip and matched_trip.tr_vehiclenumber
                     else ''
                 )
+                if not exp.de_remarks:
+                    if matched_trip:
+                        from_loc = matched_trip.tr_departedlocation.place_name if matched_trip.tr_departedlocation else ""
+                        to_loc = matched_trip.tr_reportedlocation.place_name if matched_trip.tr_reportedlocation else ""
+                        if from_loc or to_loc:
+                            exp.display_remarks = f"{from_loc}-{to_loc}"
+                        else:
+                            exp.display_remarks = "-"
+                    else:
+                        exp.display_remarks = "-"
+                else:
+                    exp.display_remarks = exp.de_remarks
 
         return render(request, "asset_mgt_app/driver_settlement_add.html", {
             'form': form,
@@ -191,7 +203,8 @@ def get_driver_details_from_master(request):
 
 def recalc_driver_settlement(settlement):
     """
-    Recalculate total advance, total expense, and balance
+    Recalculate total advance, total expense, salary advance, and balance.
+    Balance = Advance - Expense - Salary Advance
     """
 
     advance_total = Driverexpense.objects.filter(
@@ -204,9 +217,14 @@ def recalc_driver_settlement(settlement):
         de_expense_type__id=2   # EXPENSE
     ).aggregate(total=Sum('de_total_cost'))['total'] or 0
 
+    # Sum salary advance across ALL expense records for this driver
+    salary_advance_total = Driverexpense.objects.filter(
+        de_driver_id=settlement,
+    ).aggregate(total=Sum('de_salary_advance'))['total'] or 0
+
     settlement.ds_tripadvance = advance_total
     settlement.ds_tripexpense = expense_total
-    settlement.ds_balance = advance_total - expense_total
+    settlement.ds_balance = advance_total - expense_total - salary_advance_total
     settlement.save(update_fields=[
         'ds_tripadvance',
         'ds_tripexpense',

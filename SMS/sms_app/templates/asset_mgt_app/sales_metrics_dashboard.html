@@ -86,7 +86,8 @@
         box-shadow: 0 0 8px rgba(54, 209, 255, 0.3);
     }
 
-    .filter-branch-pill { max-width: 140px; }
+    .filter-company-pill { max-width: 175px; }
+    .filter-branch-pill { max-width: 135px; }
     .filter-emp-pill { max-width: 170px; }
     .filter-date-range { max-width: 250px; }
 
@@ -293,11 +294,11 @@
     .leg-green { background: rgba(16, 185, 129, 0.22); color: #86efac; border: 1px solid #10b981; }
     .leg-blue { background: rgba(59, 130, 246, 0.22); color: #93c5fd; border: 1px solid #3b82f6; }
 
-    /* Top KPI 8-Card Strip (Strict Single Horizontal Row) */
+    /* Top KPI 10-Card Strip (Strict Single Horizontal Row) */
     .cs-top-cards-row {
         display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-        gap: 0.30rem;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 0.25rem;
         width: 100%;
         flex-shrink: 0;
     }
@@ -305,7 +306,7 @@
     .top-kpi-card {
         position: relative;
         border-radius: 5px;
-        padding: 0.20rem 0.40rem;
+        padding: 0.20rem 0.35rem;
         color: #fff;
         display: flex;
         align-items: center;
@@ -326,6 +327,8 @@
     .card-bg-transit { background: linear-gradient(135deg, #065f46 0%, #022c22 100%); border-color: rgba(16, 185, 129, 0.4); }
     .card-bg-closed { background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%); border-color: rgba(45, 212, 191, 0.4); }
     .card-bg-billing { background: linear-gradient(135deg, #0369a1 0%, #082f49 100%); border-color: rgba(56, 189, 248, 0.4); }
+    .card-bg-custmet { background: linear-gradient(135deg, #0e7490 0%, #155e75 100%); border-color: rgba(6, 182, 212, 0.45); }
+    .card-bg-newcust { background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%); border-color: rgba(249, 115, 22, 0.45); }
     .card-bg-pod { background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%); border-color: rgba(56, 189, 248, 0.4); }
     .card-bg-revenue { background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100%); border-color: rgba(168, 85, 247, 0.45); }
 
@@ -337,7 +340,7 @@
     }
 
     .top-kpi-title {
-        font-size: 0.52rem;
+        font-size: 0.50rem;
         font-weight: 700;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.82);
@@ -1130,7 +1133,20 @@
     <!-- ══════ TOP CONTROL BAR (Ultra-sleek single-row layout) ══════ -->
     <div class="cs-top-bar">
         <div class="filter-group-left">
-            <!-- 1. Branch Dropdown (Location_info) -->
+            <!-- 1. Company Dropdown (Business_Sol_info) -->
+            <div class="filter-pill filter-company-pill">
+                <label><i class="fas fa-building"></i> Company:</label>
+                <select id="filter-company">
+                    <option value="all">All Companies</option>
+                    {% for comp in companies %}
+                    <option value="{{ comp.id }}" {% if comp.id|stringformat:"s" == default_company_id %}selected{% endif %}>
+                        {{ comp.bvm_business }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 2. Branch Dropdown (Location_info) -->
             <div class="filter-pill filter-branch-pill">
                 <label><i class="fas fa-map-marker-alt"></i> Branch:</label>
                 <select id="filter-branch">
@@ -1143,20 +1159,20 @@
                 </select>
             </div>
 
-            <!-- 2. Sales Representative Dropdown -->
+            <!-- 3. Sales Representative Dropdown -->
             <div class="filter-pill filter-emp-pill">
                 <label><i class="fas fa-user-tie"></i> Rep:</label>
                 <select id="filter-employee">
                     <option value="all">All Active Reps</option>
                     {% for emp in sales_employees %}
-                    <option value="{{ emp.id }}" data-branch="{{ emp.branch_id }}">
+                    <option value="{{ emp.id }}" data-branch="{{ emp.branch_id }}" data-company="{{ emp.company_id }}">
                         {{ emp.name }} ({{ emp.branch_name }})
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- 3. Streamlined Date Range Pill unified by Date of Call -->
+            <!-- 4. Streamlined Date Range Pill unified by Date of Call -->
             <div class="filter-pill filter-date-range" title="All dashboard metrics unified by Date of Call (sc_date_of_call)">
                 <label><i class="fas fa-calendar-alt"></i> Call Date:</label>
                 <input type="date" id="filter-from-date" value="" title="From Call Date">
@@ -1195,7 +1211,7 @@
         </div>
     </div>
 
-    <!-- ══════ TOP 8 KPI HIGHLIGHT CARDS (Single Slim Row) ══════ -->
+    <!-- ══════ TOP 10 KPI HIGHLIGHT CARDS (Single Slim Row) ══════ -->
     <div class="cs-top-cards-row">
         <!-- 1. Total Calls -->
         <div class="top-kpi-card card-bg-demand">
@@ -1257,7 +1273,27 @@
             <i class="fas fa-coins top-kpi-icon"></i>
         </div>
 
-        <!-- 7. Existing In-Person Customers -->
+        <!-- 7. Customers Met (In-Person Calls) -->
+        <div class="top-kpi-card card-bg-custmet" title="Total unique customer accounts met in person">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">CUSTOMERS MET (IN-PERSON)</span>
+                <span class="top-kpi-main-val" id="card-customers-met">0</span>
+                <span class="top-kpi-subtext" id="card-customers-met-sub">Accounts Met</span>
+            </div>
+            <i class="fas fa-handshake top-kpi-icon"></i>
+        </div>
+
+        <!-- 8. New Customers In-Person -->
+        <div class="top-kpi-card card-bg-newcust" title="New customer accounts visited in person">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title">NEW CUSTOMER IN-PERSON</span>
+                <span class="top-kpi-main-val" id="card-new-customers-met">0</span>
+                <span class="top-kpi-subtext" id="card-new-customers-met-sub">New Accounts Met</span>
+            </div>
+            <i class="fas fa-user-plus top-kpi-icon"></i>
+        </div>
+
+        <!-- 9. Existing In-Person Customers -->
         <div class="top-kpi-card card-bg-pod">
             <div class="top-kpi-content">
                 <span class="top-kpi-title">EXISTING IN-PERSON</span>
@@ -1267,7 +1303,7 @@
             <i class="fas fa-user-check top-kpi-icon"></i>
         </div>
 
-        <!-- 8. New Onboarded (Won) -->
+        <!-- 10. New Onboarded (Won) -->
         <div class="top-kpi-card card-bg-revenue" style="cursor:pointer;" onclick="openWonClientsModal()" title="Click to view newly onboarded clients with Business Won: Yes status">
             <div class="top-kpi-content">
                 <span class="top-kpi-title">NEW ONBOARDED (WON)</span>
@@ -1490,21 +1526,30 @@ $(document).ready(function() {
     // Active Sales Representatives passed from backend (strictly active with recorded activity)
     const activeEmployees = [
         {% for emp in sales_employees %}
-        { id: "{{ emp.id }}", name: "{{ emp.name|escapejs }}", branch_id: "{{ emp.branch_id }}", branch_name: "{{ emp.branch_name|escapejs }}" },
+        {
+            id: "{{ emp.id }}",
+            name: "{{ emp.name|escapejs }}",
+            branch_id: "{{ emp.branch_id }}",
+            branch_name: "{{ emp.branch_name|escapejs }}",
+            company_id: "{{ emp.company_id }}",
+            company_name: "{{ emp.company_name|escapejs }}"
+        },
         {% endfor %}
     ];
 
-    // Dynamically rebuild Sales Rep dropdown based on selected branch
-    function updateEmployeeDropdown(branchId, selectedEmpId) {
+    // Dynamically rebuild Sales Rep dropdown based on selected company & branch
+    function updateEmployeeDropdown(companyId, branchId, selectedEmpId) {
         const empSelect = $('#filter-employee');
         const currentVal = selectedEmpId || empSelect.val() || 'all';
         empSelect.empty();
         empSelect.append('<option value="all">All Active Reps</option>');
 
         activeEmployees.forEach(function(emp) {
-            if (branchId === 'all' || String(emp.branch_id) === String(branchId)) {
+            const matchCompany = (companyId === 'all' || !companyId || String(emp.company_id) === String(companyId));
+            const matchBranch = (branchId === 'all' || !branchId || String(emp.branch_id) === String(branchId));
+            if (matchCompany && matchBranch) {
                 const isSel = (String(emp.id) === String(currentVal)) ? 'selected' : '';
-                empSelect.append(`<option value="${emp.id}" data-branch="${emp.branch_id}" ${isSel}>${emp.name} (${emp.branch_name})</option>`);
+                empSelect.append(`<option value="${emp.id}" data-branch="${emp.branch_id}" data-company="${emp.company_id}" ${isSel}>${emp.name} (${emp.branch_name})</option>`);
             }
         });
 
@@ -1514,12 +1559,17 @@ $(document).ready(function() {
     }
 
     // Initialize with active sales reps
-    updateEmployeeDropdown($('#filter-branch').val(), '{{ default_employee_id }}');
+    updateEmployeeDropdown($('#filter-company').val(), $('#filter-branch').val(), '{{ default_employee_id }}');
     fetchDashboardData();
 
     // Event handlers
+    $('#filter-company').on('change', function() {
+        updateEmployeeDropdown($(this).val(), $('#filter-branch').val(), 'all');
+        fetchDashboardData();
+    });
+
     $('#filter-branch').on('change', function() {
-        updateEmployeeDropdown($(this).val(), 'all');
+        updateEmployeeDropdown($('#filter-company').val(), $(this).val(), 'all');
         fetchDashboardData();
     });
 
@@ -1551,12 +1601,14 @@ $(document).ready(function() {
 
     // Export Excel Button
     $('#btn-export-excel').on('click', function() {
+        const companyId = $('#filter-company').val() || 'all';
         const branchId = $('#filter-branch').val() || 'all';
         const employeeId = $('#filter-employee').val() || 'all';
         const fromDate = $('#filter-from-date').val() || '';
         const toDate = $('#filter-to-date').val() || '';
 
-        const url = "{% url 'sales_metrics_export_excel' %}?branch_id=" + encodeURIComponent(branchId) +
+        const url = "{% url 'sales_metrics_export_excel' %}?company_id=" + encodeURIComponent(companyId) +
+                    "&branch_id=" + encodeURIComponent(branchId) +
                     "&employee_id=" + encodeURIComponent(employeeId) +
                     "&from_date=" + encodeURIComponent(fromDate) +
                     "&to_date=" + encodeURIComponent(toDate);
@@ -1575,6 +1627,7 @@ $(document).ready(function() {
 
     // Main fetch function
     function fetchDashboardData() {
+        const companyId = $('#filter-company').val() || 'all';
         const branchId = $('#filter-branch').val() || 'all';
         const employeeId = $('#filter-employee').val() || 'all';
         const fromDate = $('#filter-from-date').val() || '';
@@ -1584,6 +1637,7 @@ $(document).ready(function() {
             url: "{% url 'get_sales_metrics_dashboard_data' %}",
             method: "GET",
             data: {
+                company_id: companyId,
                 branch_id: branchId,
                 employee_id: employeeId,
                 from_date: fromDate,
@@ -1630,6 +1684,16 @@ $(document).ready(function() {
 
         $('#card-actual-rev').text(cards.actual_rev.val);
         $('#card-actual-rev-sub').text(cards.actual_rev.sub);
+
+        if (cards.customers_met) {
+            $('#card-customers-met').text(cards.customers_met.val);
+            $('#card-customers-met-sub').text(cards.customers_met.sub);
+        }
+
+        if (cards.new_customers_met) {
+            $('#card-new-customers-met').text(cards.new_customers_met.val);
+            $('#card-new-customers-met-sub').text(cards.new_customers_met.sub);
+        }
 
         $('#card-target-cust').text(cards.target_cust.val);
         $('#card-target-cust-sub').text(cards.target_cust.sub);

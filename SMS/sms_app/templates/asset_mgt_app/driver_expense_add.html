@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<form method="POST" action="" id="driver_expense_add_form">
+<form method="POST" action="" id="driver_expense_add_form" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.de_receiver_signature.as_hidden }}
 
@@ -72,7 +72,47 @@
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Remarks</label>
-                            {% render_field form.de_remarks class="form-control form-control-modern" rows="2" %}
+                            {% render_field form.de_remarks id="id_de_remarks" class="form-control form-control-modern" rows="2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern mb-0">AAI/Bill attachment</label>
+                                {% if attachments %}
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold" data-toggle="collapse" data-target="#collapseDriverAttachments" aria-expanded="false" aria-controls="collapseDriverAttachments" style="font-size:0.75rem; border-radius: 6px; display:inline-flex; align-items:center; gap:4px;">
+                                    <i class="fas fa-paperclip"></i> Files ({{ attachments|length }}) <i class="fas fa-chevron-down ml-1" style="font-size:0.65rem;"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="custom-file-upload-wrapper">
+                                <input type="file" name="de_bill_attachments" id="id_de_bill_attachments" class="form-control form-control-modern" style="height: 36px; padding: 4px 6px; font-size: 0.85rem;" multiple accept="image/*,.pdf">
+                            </div>
+                            
+                            {% if attachments %}
+                            <div id="collapseDriverAttachments" class="collapse mt-2">
+                                <div class="border rounded p-2" style="background:#f8fafc; border-color:#e2e8f0 !important; max-height: 180px; overflow-y: auto;">
+                                    <div class="font-weight-bold text-muted small mb-2"><i class="fas fa-paperclip mr-1"></i> Attached Files ({{ attachments|length }}):</div>
+                                    <div class="d-flex flex-column" style="gap: 6px;">
+                                        {% for att in attachments %}
+                                        <div class="d-flex align-items-center justify-content-between bg-white border rounded px-2 py-1" id="exp-att-row-{{ att.id }}" style="font-size:0.8rem;">
+                                            <span class="text-truncate mr-2 font-weight-bold" style="max-width:70%; color:#334155;" title="{{ att.filename|default:att.file.name }}">
+                                                <i class="far fa-file-alt text-primary mr-1"></i>
+                                                {{ att.filename|default:att.file.name }}
+                                            </span>
+                                            <span class="d-flex align-items-center" style="gap: 8px;">
+                                                <a href="{{ att.file.url }}" target="_blank" class="text-primary" title="View attachment">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a role="button" class="text-danger" onclick="deleteExpenseAttachment({{ att.id }})" title="Delete attachment" style="cursor:pointer;">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                            </span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -150,6 +190,19 @@
                                 <label class="form-label-modern">Batta Expense</label>
                                 {% render_field form.de_battacost id="id_de_battacost" class="form-control form-control-modern cost-field" %}
                             </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Handling Cost</label>
+                                {% render_field form.de_handlingcost id="id_de_handlingcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                        </div>
+
+                        <!-- Salary Advance (always visible, deducted from advance balance) -->
+                        <div class="form-group-modern mt-2">
+                            <label class="form-label-modern font-weight-bold">
+                                <i class="fas fa-hand-holding-usd mr-1"></i>Salary Advance
+                                <small class="text-muted font-weight-normal ml-1">(deducted from balance)</small>
+                            </label>
+                            {% render_field form.de_salary_advance id="id_de_salary_advance" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
@@ -339,6 +392,9 @@
         const supervisor = el("id_de_supervisorcost");
         const rto = el("id_de_rtocost");
         const batta = el("id_de_battacost");
+        const handling = el("id_de_handlingcost");
+        const salaryAdv = el("id_de_salary_advance");
+        const remarksField = el("id_de_remarks");
         const filterTripNumSelect = el("filter_trip_num");
         const filterVehicleNumSelect = el("filter_vehicle_num");
         const filterDateInput = el("filter_date");
@@ -353,9 +409,12 @@
 
             let currentBal = baseBalance;
             const enteredCost = parseFloat(totalCost.value) || 0;
+            const salaryAdvAmt = parseFloat(salaryAdv?.value) || 0;
 
             if (isAdvance) currentBal += enteredCost;
             if (isExpense) currentBal -= enteredCost;
+            // Salary Advance always reduces balance regardless of type
+            currentBal -= salaryAdvAmt;
 
             balanceBox.innerText = currentBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
@@ -369,7 +428,8 @@
                           (parseFloat(weighment?.value) || 0) +
                           (parseFloat(supervisor?.value) || 0) +
                           (parseFloat(rto?.value) || 0) +
-                          (parseFloat(batta?.value) || 0);
+                          (parseFloat(batta?.value) || 0) +
+                          (parseFloat(handling?.value) || 0);
             totalCost.value = total.toFixed(2);
             updateBalance();
         }
@@ -481,6 +541,13 @@
                     if (supervisor) supervisor.value = data.supervisor ?? 0;
                     if (rto) rto.value = data.rto ?? 0;
                     if (batta) batta.value = data.batta ?? 0;
+                    if (remarksField && !remarksField.value) {
+                        const fromL = data.from_location || "";
+                        const toL = data.to_location || "";
+                        if (fromL || toL) {
+                            remarksField.value = `${fromL}-${toL}`;
+                        }
+                    }
                     calculateTotal();
                 });
         }
@@ -489,7 +556,7 @@
             if (vehicleField) vehicleField.value = "";
             if (fromField) fromField.value = "";
             if (toField) toField.value = "";
-            [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(f => { if(f) f.value = 0; });
+            [parking, loading, unloading, weighment, supervisor, rto, batta, handling].forEach(f => { if(f) f.value = 0; });
             calculateTotal();
         }
         function executeTableFilter() {
@@ -519,8 +586,9 @@
             $('#de_expense_type').on('change', function() { toggleFields(true); });
         }
 
-        [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(i => i?.addEventListener("input", calculateTotal));
+        [parking, loading, unloading, weighment, supervisor, rto, batta, handling].forEach(i => i?.addEventListener("input", calculateTotal));
         if (totalCost) totalCost.addEventListener("input", updateBalance);
+        if (salaryAdv) salaryAdv.addEventListener("input", updateBalance);
         
         if (filterTripNumSelect) filterTripNumSelect.addEventListener("input", executeTableFilter);
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);
@@ -600,6 +668,27 @@
             if (window.jQuery?.fn?.select2) $(tripNumberSelect).trigger('change.select2');
             fetchTripCharges(autoID);
         }
+
+        // Delete expense attachment
+        window.deleteExpenseAttachment = function(attId) {
+            if (confirm('Are you sure you want to delete this attachment?')) {
+                $.ajax({
+                    url: `/SMS/driver_expense_attachment_delete/${attId}/`,
+                    type: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    success: function(resp) {
+                        if (resp.status === 'success') {
+                            $(`#exp-att-row-${attId}`).fadeOut(300, function() { $(this).remove(); });
+                        } else {
+                            alert(resp.message || 'Error deleting attachment');
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to delete attachment.');
+                    }
+                });
+            }
+        };
 
         // Fetch Credit Ledger balance on change
         if (window.jQuery) {

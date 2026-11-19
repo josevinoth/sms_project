@@ -622,13 +622,21 @@
                             <label class="form-label-modern font-weight-bold">Return Date</label>
                             {% render_field form.mc_return_date type="date" class="form-control form-control-modern" %}
                         </div>
-                        <div class="form-group-modern mb-2">
+                        <div class="form-group-modern mb-2" id="mc_vehicle_source_group">
                             <label class="form-label-modern font-weight-bold">Vehicle Source</label>
                             {% render_field form.mc_vehicle_source class="form-control form-control-modern" id="mc_vehicle_source_select" %}
                         </div>
-                        <div class="form-group-modern mb-2">
+                        <div class="form-group-modern mb-2" id="mc_vehicle_type_group">
                             <label class="form-label-modern font-weight-bold">Vehicle Type</label>
-                            {% render_field form.mc_vehicle_type class="form-control form-control-modern" id="mc_vehicle_type_input" %}
+                            <!-- Dropdown for BVM OWN -->
+                            <select class="form-control form-control-modern" id="mc_vehicle_type_select" name="mc_vehicle_type_select" style="display: none;">
+                                <option value="">--Select Vehicle Type--</option>
+                                {% for vt in mc_vehicle_types %}
+                                    <option value="{{ vt.mc_vehicletype }}" {% if form.mc_vehicle_type.value|stringformat:"s"|lower == vt.mc_vehicletype|lower %}selected{% endif %}>{{ vt.mc_vehicletype }}</option>
+                                {% endfor %}
+                            </select>
+                            <!-- Typable Input for MARKET -->
+                            {% render_field form.mc_vehicle_type class="form-control form-control-modern" id="mc_vehicle_type_input" placeholder="Enter vehicle type" %}
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -929,29 +937,96 @@
             if (customerType === '1') {
                 $('#mc_tour_type_select').closest('.form-group-modern').show();
                 $('#mc_mode_of_transport_select').closest('.form-group-modern').show();
-                $('#mc_vehicle_source_select').closest('.form-group-modern').hide();
-                $('#mc_vehicle_type_input').closest('.form-group-modern').hide();
+                $('#mc_vehicle_source_group').hide();
+                $('#mc_vehicle_type_group').hide();
                 $('#mc_travel_type_select').closest('.form-group-modern').hide();
             } else if (customerType === '2') {
                 $('#mc_tour_type_select').closest('.form-group-modern').hide();
                 $('#mc_mode_of_transport_select').closest('.form-group-modern').hide();
-                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
-                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_vehicle_source_group').show();
+                $('#mc_vehicle_type_group').show();
+                toggleVehicleTypeControl();
                 $('#mc_travel_type_select').closest('.form-group-modern').show();
             } else if (customerType === '3') {
                 $('#mc_tour_type_select').closest('.form-group-modern').show();
                 $('#mc_mode_of_transport_select').closest('.form-group-modern').show();
-                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
-                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_vehicle_source_group').show();
+                $('#mc_vehicle_type_group').show();
+                toggleVehicleTypeControl();
                 $('#mc_travel_type_select').closest('.form-group-modern').show();
             } else {
                 $('#mc_tour_type_select').closest('.form-group-modern').hide();
                 $('#mc_mode_of_transport_select').closest('.form-group-modern').hide();
-                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
-                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_vehicle_source_group').show();
+                $('#mc_vehicle_type_group').show();
+                toggleVehicleTypeControl();
                 $('#mc_travel_type_select').closest('.form-group-modern').hide();
             }
         }
+
+        // MC Vehicle Source -> Vehicle Type Toggle
+        function toggleVehicleTypeControl() {
+            var sourceVal = $('#mc_vehicle_source_select').val();
+            var sourceText = $('#mc_vehicle_source_select option:selected').text().trim().toUpperCase();
+            var isBvmOwn = (sourceVal === '1') || (sourceText.indexOf('BVM') !== -1);
+            var isMarket = (sourceVal === '3') || (sourceText.indexOf('MARKET') !== -1);
+
+            if (isBvmOwn) {
+                // When vehicle source is BVM OWN: show dropdown, hide typable input
+                $('#mc_vehicle_type_input').hide();
+                $('#mc_vehicle_type_select').show();
+
+                // If input has an existing value, ensure it is selected in dropdown
+                var currentVal = $('#mc_vehicle_type_input').val();
+                if (currentVal && currentVal.trim() !== '') {
+                    var matched = false;
+                    $('#mc_vehicle_type_select option').each(function() {
+                        if ($(this).val().toLowerCase() === currentVal.trim().toLowerCase()) {
+                            $('#mc_vehicle_type_select').val($(this).val());
+                            matched = true;
+                            return false;
+                        }
+                    });
+                    if (!matched) {
+                        $('#mc_vehicle_type_select').append(new Option(currentVal, currentVal, true, true));
+                    }
+                }
+                // Sync dropdown value to input field
+                if ($('#mc_vehicle_type_select').val()) {
+                    $('#mc_vehicle_type_input').val($('#mc_vehicle_type_select').val());
+                }
+            } else if (isMarket) {
+                // When vehicle source is MARKET: show typable input, hide dropdown
+                $('#mc_vehicle_type_select').hide();
+                $('#mc_vehicle_type_input').show().prop('readonly', false);
+                $('#mc_vehicle_type_input').attr('placeholder', 'Enter vehicle type (e.g. Innova, Tempo)');
+            } else {
+                // Default: not selected yet
+                $('#mc_vehicle_type_select').hide();
+                $('#mc_vehicle_type_input').show();
+                $('#mc_vehicle_type_input').attr('placeholder', 'Enter vehicle type');
+            }
+        }
+
+        $('#mc_vehicle_source_select').on('change', function() {
+            toggleVehicleTypeControl();
+        });
+
+        $('#mc_vehicle_type_select').on('change', function() {
+            $('#mc_vehicle_type_input').val($(this).val());
+        });
+
+        $('form').on('submit', function() {
+            var sourceVal = $('#mc_vehicle_source_select').val();
+            var sourceText = $('#mc_vehicle_source_select option:selected').text().trim().toUpperCase();
+            var isBvmOwn = (sourceVal === '1') || (sourceText.indexOf('BVM') !== -1);
+            if (isBvmOwn) {
+                var selectedVal = $('#mc_vehicle_type_select').val();
+                if (selectedVal) {
+                    $('#mc_vehicle_type_input').val(selectedVal);
+                }
+            }
+        });
 
         $('#mc_customer_type_select').change(function() {
             toggleMcFields();
@@ -959,6 +1034,7 @@
 
         // Run on load
         toggleMcFields();
+        toggleVehicleTypeControl();
 
         // Initialize DataTable for added quotes
         if ($.fn.DataTable) {

@@ -77,3 +77,23 @@ class PMSPettyCashInfo(models.Model):
 
     def __str__(self):
         return self.ppc_number if self.ppc_number else 'No PMS Petty Cash Number'
+
+
+def pms_petty_cash_multi_file_path(instance, filename):
+    voucher_no = instance.petty_cash.ppc_number if instance.petty_cash and instance.petty_cash.ppc_number else f"temp_{instance.petty_cash_id or 'unknown'}"
+    return f"pms_petty_cash_bills/{voucher_no}/{filename}"
+
+
+class PMSPettyCashAttachment(models.Model):
+    petty_cash = models.ForeignKey(PMSPettyCashInfo, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=pms_petty_cash_multi_file_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"{self.petty_cash.ppc_number or 'PMS'} - {self.filename or self.file.name}"
+

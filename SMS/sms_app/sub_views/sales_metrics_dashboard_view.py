@@ -90,10 +90,10 @@ def _get_active_sales_rep_ids():
            set(BusinessrevenueInfo.objects.values_list('br_sale_person_id', flat=True))
 
 
-def _build_metrics_rows(branch_id=None, employee_id=None, from_date=None, to_date=None):
+def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_date=None, to_date=None):
     """
     Computes all 26 metrics + performance indicators across active sales executives.
-    Uses branch_id (Location_info) and employee_id (User_extInfo / MyUser) identical to CS Dashboard.
+    Uses branch_id (Location_info), company_id (Business_Sol_info), and employee_id (User_extInfo / MyUser) identical to CS Dashboard.
     """
     active_ids = _get_active_sales_rep_ids()
 
@@ -101,7 +101,10 @@ def _build_metrics_rows(branch_id=None, employee_id=None, from_date=None, to_dat
         user_extinfo__department_id=SALES_DEPARTMENT_ID,
         is_active=True,
         id__in=active_ids
-    ).distinct().select_related('user_extinfo', 'user_extinfo__emp_branch')
+    ).distinct().select_related('user_extinfo', 'user_extinfo__emp_branch', 'user_extinfo__emp_organisation')
+
+    if company_id and company_id != 'all':
+        users_query = users_query.filter(user_extinfo__emp_organisation_id=company_id)
 
     if branch_id and branch_id != 'all':
         users_query = users_query.filter(user_extinfo__emp_branch_id=branch_id)
@@ -122,6 +125,11 @@ def _build_metrics_rows(branch_id=None, employee_id=None, from_date=None, to_dat
         call_filter &= Q(sc_date_of_call__lte=to_date)
         revenue_filter &= Q(br_from_date__lte=to_date)
         target_filter &= Q(st_start_date__lte=to_date)
+
+    if company_id and company_id != 'all':
+        call_filter &= Q(sc_sales_number__s_company_id=company_id)
+        revenue_filter &= Q(br_business_id=company_id)
+        target_filter &= (Q(st_company_id=company_id) | Q(st_company__isnull=True, st_sales_person__user_extinfo__emp_organisation_id=company_id))
 
     rows = []
 
@@ -195,16 +203,33 @@ def _build_metrics_rows(branch_id=None, employee_id=None, from_date=None, to_dat
         # All customer metrics are unified with calls on the filtered Date of Call
         inperson_calls = calls.filter(sc_call_type__call_type__icontains='person')
         inperson_sales_ids = inperson_calls.values_list('sc_sales_number_id', flat=True).distinct()
-        inperson_sales = SalesInfo.objects.filter(id__in=inperson_sales_ids)
+        inperson_sales = SalesInfo.objects.filter(id__in=inperson_sales_ids).select_related('s_customer_name')
 
-        # Existing customers visited in-person by this rep
-        act_cust_exist = inperson_sales.exclude(s_customer_name_id=210).filter(s_customer_name__isnull=False).values('s_customer_name_id').distinct().count()
+        unique_exist_set = set()
+        unique_new_set = set()
+        unique_total_set = set()
 
-        # New customer accounts visited in-person by this rep
-        act_cust_new = inperson_sales.filter(Q(s_customer_name_id=210) | Q(s_customer_new_name__isnull=False)).values('s_customer_new_name').distinct().count()
+        for s in inperson_sales:
+            c_exist_id = s.s_customer_name_id
+            c_new_name = (s.s_customer_new_name or '').strip().upper()
 
-        # Total accounts visited in person
-        act_cust_total = act_cust_exist + act_cust_new
+            if c_exist_id and c_exist_id != 210:
+                c_name = (s.s_customer_name.cu_name or '').strip().upper() if s.s_customer_name else str(c_exist_id)
+                if c_name and c_name != 'NEW CUSTOMER':
+                    unique_exist_set.add(c_name)
+                    unique_total_set.add(c_name)
+                    continue
+
+            if c_new_name and c_new_name != 'NEW CUSTOMER':
+                unique_new_set.add(c_new_name)
+                unique_total_set.add(c_new_name)
+            else:
+                unique_total_set.add(f'DEAL_{s.id}')
+                unique_new_set.add(f'DEAL_{s.id}')
+
+        act_cust_exist = len(unique_exist_set)
+        act_cust_new = len(unique_new_set)
+        act_cust_total = len(unique_total_set)
         if act_cust_total == 0 and total_calls > 0:
             act_cust_total = calls.values('sc_sales_number').distinct().count()
 
@@ -213,6 +238,9 @@ def _build_metrics_rows(branch_id=None, employee_id=None, from_date=None, to_dat
             s_updated_by=u,
             s_bus_won_not__yesno_name='Yes'
         ).exclude(s_status__status='Customer Response Pending')
+
+        if company_id and company_id != 'all':
+            won_base = won_base.filter(s_company_id=company_id)
 
         if from_date or to_date:
             date_q = Q()
@@ -324,7 +352,7 @@ def sales_metrics_dashboard(request):
         except Exception:
             pass
 
-    # Active Sales representatives with branch mapping (strictly active reps with recorded activity)
+    # Active Sales representatives with company and branch mapping (strictly active reps with recorded activity)
     sales_employees_data = []
     try:
         active_ids = _get_active_sales_rep_ids()
@@ -332,7 +360,7 @@ def sales_metrics_dashboard(request):
             department_id=SALES_DEPARTMENT_ID,
             user__is_active=True,
             user_id__in=active_ids
-        ).only('id', 'user_id', 'department_id', 'emp_branch_id', 'emp_role_id').select_related('user', 'emp_branch').order_by('user__first_name')
+        ).select_related('user', 'emp_branch', 'emp_organisation').order_by('user__first_name')
 
         for emp in sales_qs:
             full_name = f"{emp.user.first_name or ''} {emp.user.last_name or ''}".strip() or emp.user.username
@@ -340,20 +368,25 @@ def sales_metrics_dashboard(request):
                 'id': emp.user.id,
                 'name': full_name,
                 'branch_id': str(emp.emp_branch_id) if emp.emp_branch_id else '',
-                'branch_name': emp.emp_branch.loc_name if emp.emp_branch else 'BVM MAA'
+                'branch_name': emp.emp_branch.loc_name if emp.emp_branch else 'BVM MAA',
+                'company_id': str(emp.emp_organisation_id) if emp.emp_organisation_id else '',
+                'company_name': emp.emp_organisation.bvm_business if emp.emp_organisation else '',
             })
     except Exception:
         pass
 
-    # Branches (identical to cs_kpi_dashboard)
+    # Companies & Branches
+    companies = Business_Sol_info.objects.all().order_by('bvm_business')
     branches = Location_info.objects.all().order_by('loc_name')
 
     today_str = timezone.localtime(timezone.now()).strftime('%Y-%m-%d')
 
     context = {
         'first_name': first_name,
+        'companies': companies,
         'branches': branches,
         'sales_employees': sales_employees_data,
+        'default_company_id': 'all',
         'default_branch_id': default_branch_id,
         'default_employee_id': default_employee_id,
         'today_date': today_str,
@@ -370,12 +403,13 @@ def get_sales_metrics_dashboard_data(request):
     Returns summary cards, channel distribution, pipeline funnel, target achievement gauges,
     and the full 26-metric salesperson data grid with totals.
     """
+    company_id = request.GET.get('company_id', '').strip()
     branch_id = request.GET.get('branch_id', '').strip()
     employee_id = request.GET.get('employee_id', '').strip()
     from_date = request.GET.get('from_date', '').strip()
     to_date = request.GET.get('to_date', '').strip()
 
-    rows = _build_metrics_rows(branch_id, employee_id, from_date, to_date)
+    rows = _build_metrics_rows(branch_id, company_id, employee_id, from_date, to_date)
 
     total_calls = sum(r['no_of_calls'] for r in rows)
     total_in_person = sum(r['in_person'] for r in rows)
@@ -405,29 +439,54 @@ def get_sales_metrics_dashboard_data(request):
     total_target_cust_ex = sum(r['target_cust_exist'] for r in rows)
     total_target_onboard = sum(r['target_cust_onboard'] for r in rows)
 
-    # 1. Existing Customers Visited In-Person (Scoped to selected branch/rep/date)
+    # 1. Existing Customers Visited In-Person (Scoped to selected branch/rep/date/company)
     rep_ids = [r['salesperson_id'] for r in rows]
     inperson_calls_scope = Sales_Comments_Info.objects.filter(sc_updated_by_id__in=rep_ids, sc_call_type__call_type__icontains='person')
 
+    if company_id and company_id != 'all':
+        inperson_calls_scope = inperson_calls_scope.filter(sc_sales_number__s_company_id=company_id)
     if from_date:
         inperson_calls_scope = inperson_calls_scope.filter(sc_date_of_call__gte=from_date)
     if to_date:
         inperson_calls_scope = inperson_calls_scope.filter(sc_date_of_call__lte=to_date)
 
     inperson_sales_ids = inperson_calls_scope.values_list('sc_sales_number_id', flat=True).distinct()
-    distinct_exist_inperson_count = SalesInfo.objects.filter(
-        id__in=inperson_sales_ids
-    ).exclude(s_customer_name_id=210).filter(s_customer_name__isnull=False).values('s_customer_name_id').distinct().count()
+    inperson_scope_sales = SalesInfo.objects.filter(id__in=inperson_sales_ids).select_related('s_customer_name')
 
-    total_actual_cust_ex = distinct_exist_inperson_count
-    total_actual_cust_new = sum(r['actual_cust_new'] for r in rows)
-    total_actual_cust = total_actual_cust_ex + total_actual_cust_new
+    scope_exist_set = set()
+    scope_new_set = set()
+    scope_total_set = set()
+
+    for s in inperson_scope_sales:
+        c_exist_id = s.s_customer_name_id
+        c_new_name = (s.s_customer_new_name or '').strip().upper()
+
+        if c_exist_id and c_exist_id != 210:
+            c_name = (s.s_customer_name.cu_name or '').strip().upper() if s.s_customer_name else str(c_exist_id)
+            if c_name and c_name != 'NEW CUSTOMER':
+                scope_exist_set.add(c_name)
+                scope_total_set.add(c_name)
+                continue
+
+        if c_new_name and c_new_name != 'NEW CUSTOMER':
+            scope_new_set.add(c_new_name)
+            scope_total_set.add(c_new_name)
+        else:
+            scope_total_set.add(f'DEAL_{s.id}')
+            scope_new_set.add(f'DEAL_{s.id}')
+
+    total_actual_cust_ex = len(scope_exist_set)
+    total_actual_cust_new = len(scope_new_set)
+    total_actual_cust = len(scope_total_set)
 
     # 2. Newly Onboarded / Won Customers (Business Won Status = Yes, excluding Customer Response Pending)
     won_qs = SalesInfo.objects.filter(
         s_bus_won_not__yesno_name='Yes',
         s_updated_by_id__in=rep_ids
     ).exclude(s_status__status='Customer Response Pending')
+
+    if company_id and company_id != 'all':
+        won_qs = won_qs.filter(s_company_id=company_id)
 
     if from_date or to_date:
         date_q = Q()
@@ -512,6 +571,18 @@ def get_sales_metrics_dashboard_data(request):
             'sub': f"{overall_rev_pct}% Achieved",
             'badge': f"Ex: ₹{total_actual_rev_ex:.1f}L",
             'icon': "fa-coins"
+        },
+        'customers_met': {
+            'val': f"{total_actual_cust:,}",
+            'sub': f"Ex: {total_actual_cust_ex} · Nw: {total_actual_cust_new}",
+            'badge': "Customers Met",
+            'icon': "fa-handshake"
+        },
+        'new_customers_met': {
+            'val': f"{total_actual_cust_new:,}",
+            'sub': f"Target: {total_target_cust_new}" if total_target_cust_new > 0 else "New Accounts Met",
+            'badge': "New In-Person",
+            'icon': "fa-user-plus"
         },
         'target_cust': {
             'val': f"{total_actual_cust_ex:,}",
@@ -709,12 +780,13 @@ def sales_metrics_export_excel(request):
     Exports the exact 26-column metrics extracted directly from the dashboard data into an Excel spreadsheet.
     Triggered via the 'Export Excel' button on the dashboard itself.
     """
+    company_id = request.GET.get('company_id', '').strip()
     branch_id = request.GET.get('branch_id', '').strip()
     employee_id = request.GET.get('employee_id', '').strip()
     from_date = request.GET.get('from_date', '').strip()
     to_date = request.GET.get('to_date', '').strip()
 
-    rows = _build_metrics_rows(branch_id, employee_id, from_date, to_date)
+    rows = _build_metrics_rows(branch_id, company_id, employee_id, from_date, to_date)
 
     wb = openpyxl.Workbook()
     ws = wb.active

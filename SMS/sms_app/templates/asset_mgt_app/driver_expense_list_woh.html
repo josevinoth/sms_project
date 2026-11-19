@@ -61,6 +61,7 @@
                     <th>RTO</th>
                     <th>Batta</th>
                     <th>Total Cost</th>
+                    <th>Remarks</th>
                     <th>Edit</th>
                     <th>Delete</th>
                 </tr>
@@ -84,6 +85,7 @@
                     <td>{{ exp.de_rtocost }}</td>
                     <td>{{ exp.de_battacost }}</td>
                     <td><strong>{{ exp.de_total_cost }}</strong></td>
+                    <td>{{ exp.display_remarks|default:exp.de_remarks|default:"-" }}</td>
 
                     <td>
                         <a href="{% url 'driver_expense_add' exp.id %}?settlement_id={{ exp.de_driver_id.id }}"
@@ -122,7 +124,7 @@
                     className: 'btn btn-primary btn-sm btn-driver-expense-excel',
                     title: 'Driver Expense List',
                     exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
                     }
                 }
             ],
