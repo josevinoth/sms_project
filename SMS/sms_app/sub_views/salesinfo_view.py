@@ -110,7 +110,14 @@ def sales_list(request):
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id=RoleInfo.objects.get(role_name=role).id
 
-    sales_data_query = SalesInfo.objects.all()
+    sales_data_query = SalesInfo.objects.select_related(
+        's_created_by',
+        's_customer_name',
+        's_industry_type',
+        's_bus_won_not',
+        's_status',
+        's_updated_by'
+    )
     if from_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
     if to_date:
@@ -124,7 +131,7 @@ def sales_list(request):
         sales_list = (sales_data_query.filter(s_created_by=user_id)).order_by('-s_created_at')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_list, 10000)
+    paginator = Paginator(sales_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
         # 'sales_list': sales_list,
@@ -338,7 +345,14 @@ def sales_search(request):
     to_date = request.GET.get('to_date', None)
     role = User_extInfo.objects.get(user=user_id).emp_role
     role_id = RoleInfo.objects.get(role_name=role).id
-    sales_data_query = SalesInfo.objects.all()
+    sales_data_query = SalesInfo.objects.select_related(
+        's_created_by',
+        's_customer_name',
+        's_industry_type',
+        's_bus_won_not',
+        's_status',
+        's_updated_by'
+    )
     if from_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
     if to_date:
@@ -355,7 +369,7 @@ def sales_search(request):
         sales_list = sales_data_query.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('-s_created_at')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_list, 10000)
+    paginator = Paginator(sales_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
         # 'sales_list': sales_list,

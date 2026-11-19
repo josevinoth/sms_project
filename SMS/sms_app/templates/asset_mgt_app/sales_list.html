@@ -173,10 +173,28 @@
             scrollX: true,
             order: [[0, 'desc']],
             dom: 'lBfrtip',
+            pageLength: 50,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             buttons: [
                 'copy', 'csv', 'excel', 'print'
-            ]
+            ],
+            infoCallback: function(settings, start, end, max, total, pre) {
+                {% if page_obj.paginator.count %}
+                var pageStart = {{ page_obj.start_index }};
+                var totalEntries = {{ page_obj.paginator.count }};
+                if (total === 0) {
+                    return 'Showing 0 to 0 of ' + totalEntries + ' entries';
+                }
+                if (max > 0 && total < max) {
+                    return 'Showing ' + start + ' to ' + end + ' of ' + total + ' entries (filtered from ' + totalEntries + ' total entries)';
+                }
+                var actualStart = pageStart + start - 1;
+                var actualEnd = pageStart + end - 1;
+                return 'Showing ' + actualStart + ' to ' + actualEnd + ' of ' + totalEntries + ' entries';
+                {% else %}
+                return 'Showing 0 to 0 of 0 entries';
+                {% endif %}
+            }
         });
     });
 </script>
