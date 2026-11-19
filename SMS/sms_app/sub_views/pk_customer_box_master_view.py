@@ -663,7 +663,7 @@ def bom_rule_master_import_csv(request):
     return redirect('bom_rule_master_list')
 
 
-def _derive_part_code(mat, h_val, w_val, l_ft, prefix='P'):
+def _derive_part_code(mat, h_val, w_val, l_ft, prefix='P', ply_prefix='PY'):
     if mat == 'wood':
         prefix = (prefix or 'P').upper()
         h_code = int(round(h_val * 10))
@@ -682,16 +682,42 @@ def _derive_part_code(mat, h_val, w_val, l_ft, prefix='P'):
         if matching.exists():
             return matching.first().pc_code
         return candidate
+
+    # For Plywood:
+    ply_pfx = (ply_prefix or 'PY').upper()
     mm = int(round(h_val))
-    if mm == 10:
-        return 'PY1410'
-    elif mm == 18:
-        return 'PY8418'
-    elif mm == 15:
-        return 'PY8415'
-    elif mm == 6:
-        return 'PY846'
-    return f"PY14{mm:02d}"
+    candidates = []
+    if ply_pfx == 'MPY':
+        candidates = [f"MPY84{mm}", f"MPY84{mm:02d}", f"MPY44{mm}", "MPY8410", "MPY848", "MPY8425"]
+    elif ply_pfx == 'SPY':
+        candidates = [f"SPY84{mm}", f"SPY84{mm:02d}", "SPY8410"]
+    elif ply_pfx == 'TPY':
+        candidates = [f"TPY85{mm}", "TPY8512"]
+    elif ply_pfx == 'REPY':
+        candidates = ["REPY3", "REPY4"]
+    else:
+        # Standard commercial PY
+        if mm == 10:
+            candidates = ['PY1410', 'PY8410']
+        elif mm == 18:
+            candidates = ['PY8418', 'PY42518']
+        elif mm == 15:
+            candidates = ['PY8415', 'PY6415']
+        elif mm == 6:
+            candidates = ['PY846', 'PY836']
+        elif mm == 12:
+            candidates = ['PY1412', 'PY8412', 'PY1410']
+        else:
+            candidates = [f"PY14{mm:02d}", f"PY84{mm:02d}", f"PY84{mm}"]
+
+    for cand in candidates:
+        if PkpartcodeInfo.objects.filter(pc_code=cand).exists():
+            return cand
+
+    matching = PkpartcodeInfo.objects.filter(pc_code__startswith=ply_pfx)
+    if matching.exists():
+        return matching.first().pc_code
+    return candidates[0] if candidates else f"{ply_pfx}14{mm:02d}"
 
 
 def _lookup_part_rate(part_code, fallback_rate=0.0):
@@ -770,20 +796,41 @@ def api_auto_generate_bom(request):
         ply_rate = float(payload.get('ply_rate') or 0.0)
         wood_prefix = (payload.get('wood_prefix') or '').strip().upper()
         req_id = payload.get('req_id') or payload.get('requirement_id')
-        if not wood_prefix and req_id:
-            req_obj = Nadimension.objects.filter(id=req_id).first()
-            if req_obj:
-                wood_descs = list(req_obj.nad_wood_description.values_list('pk_wood_description', flat=True))
-                if any('kiln' in w.lower() for w in wood_descs):
-                    wood_prefix = 'K'
-                elif any('pine' in w.lower() for w in wood_descs):
-                    wood_prefix = 'P'
-                elif any('hard' in w.lower() for w in wood_descs):
-                    wood_prefix = 'H'
-                elif any('rubber' in w.lower() for w in wood_descs):
-                    wood_prefix = 'R'
+
+        req_obj = Nadimension.objects.filter(id=req_id).first() if req_id else None
+        wood_descs = list(req_obj.nad_wood_description.values_list('pk_wood_description', flat=True)) if req_obj else []
+        req_type_name = (req_obj.nad_type_of_req.type_of_req or '').strip().lower() if (req_obj and req_obj.nad_type_of_req) else ''
+
         if not wood_prefix:
-            wood_prefix = 'P'
+            if any('kiln' in w.lower() for w in wood_descs):
+                wood_prefix = 'K'
+            elif any('pine' in w.lower() for w in wood_descs):
+                wood_prefix = 'P'
+            elif any('hard' in w.lower() for w in wood_descs):
+                wood_prefix = 'H'
+            elif any('rubber' in w.lower() for w in wood_descs):
+                wood_prefix = 'R'
+            else:
+                wood_prefix = 'P'
+
+        # Derive Plywood prefix if plywood sheathing is used (e.g. MPY for Marine, SPY, REPY, PY)
+        ply_prefix = 'PY'
+        if any('marine' in w.lower() for w in wood_descs):
+            ply_prefix = 'MPY'
+        elif any('semi' in w.lower() or 'soft' in w.lower() for w in wood_descs):
+            ply_prefix = 'SPY'
+        elif any('re-used' in w.lower() or 'reuse' in w.lower() for w in wood_descs):
+            ply_prefix = 'REPY'
+        elif any('tran' in w.lower() for w in wood_descs):
+            ply_prefix = 'TPY'
+
+        # Check whether this item is 100% Solid Timber Planks Box vs Plywood Box
+        has_ply_in_desc = any('ply' in w.lower() for w in wood_descs)
+        is_solid_wood_box = (
+            (template_type == 'wooden_box' or 'wooden' in req_type_name)
+            and not has_ply_in_desc
+            and not ('plywood' in req_type_name)
+        )
     except Exception as exc:
         return JsonResponse({'status': 'error', 'message': str(exc)}, status=400)
 
@@ -806,11 +853,11 @@ def api_auto_generate_bom(request):
     runner_nos = max(3, math.ceil(l_ft / max(rule.br_base_runner_pitch_ft, 0.5)) + 1)
     l_batten_nos = max(2, math.ceil(l_ft / max(rule.br_batten_pitch_ft, 0.5)) + 1) * 2
     w_batten_nos = max(2, math.ceil(w_ft / max(rule.br_batten_pitch_ft, 0.5)) + 1) * 2
-    deck_mat = 'wood' if is_pine_ply else rule.br_deck_mat
+    deck_mat = 'wood' if (is_solid_wood_box or is_pine_ply) else rule.br_deck_mat
     deck_h = 1.0 if deck_mat == 'wood' else rule.br_deck_thickness
 
     def make_row(section, sec_class, name, mat, l_val, w_val, h_val, nos):
-        pcode = _derive_part_code(mat, h_val, w_val, l_val, prefix=wood_prefix)
+        pcode = _derive_part_code(mat, h_val, w_val, l_val, prefix=wood_prefix, ply_prefix=ply_prefix)
         fallback = ply_rate if mat == 'plywood' else wood_rate
         resolved_code, resolved_rate = _lookup_part_rate(pcode, fallback)
         if not resolved_rate:
@@ -826,7 +873,7 @@ def api_auto_generate_bom(request):
             'l': round(float(l_val), 2),
             'w': round(float(w_val), 2),
             'h': round(float(h_val), 2),
-            'nos': int(nos),
+            'nos': round(float(nos), 2) if (float(nos) % 1 != 0) else int(nos),
             'rate': round(float(resolved_rate), 2),
         }
 
@@ -870,7 +917,7 @@ def api_auto_generate_bom(request):
             elif c.brc_qty_mode == 'PITCH_W_2S':
                 c_nos = max(2, math.ceil(w_ft / max(c.brc_qty_val, 0.5)) + 1) * 2
             else:
-                c_nos = max(1, int(round(c.brc_qty_val or 1)))
+                c_nos = float(c.brc_qty_val) if (float(c.brc_qty_val or 1) % 1 != 0) else max(1, int(round(c.brc_qty_val or 1)))
 
             rows.append(make_row(
                 c.brc_section,
@@ -883,48 +930,115 @@ def api_auto_generate_bom(request):
                 c_nos,
             ))
     else:
-        rows = [
-            make_row('BASE', 'sec-base', 'BASE RUNNER', 'wood', w_ft, rule.br_base_runner_w_in, rule.br_base_runner_h_in, runner_nos),
-            make_row('BASE', 'sec-base', 'LIFTING RUNNER', 'wood', l_ft, rule.br_lifting_runner_w_in, rule.br_lifting_runner_h_in, rule.br_lifting_runner_nos),
-            make_row('BASE', 'sec-base', 'DECK BOARD', deck_mat, l_ft, w_ft, deck_h, 1),
-        ]
+        if is_solid_wood_box:
+            # 100% Solid Wood / Timber Planks Box (CFT) - Zero Plywood
+            deck_thk = 1.5 if weight_kg >= 3000 else 1.0
+            deck_plank_nos = math.ceil((l_ft * 12.0) / 4.0)
+            rows = [
+                make_row('BASE', 'sec-base', 'BASE RUNNER', 'wood', w_ft, rule.br_base_runner_w_in, rule.br_base_runner_h_in, runner_nos),
+                make_row('BASE', 'sec-base', 'LIFTING RUNNER', 'wood', l_ft, rule.br_lifting_runner_w_in, rule.br_lifting_runner_h_in, rule.br_lifting_runner_nos),
+                make_row('BASE', 'sec-base', 'DECK PLANK', 'wood', w_ft, 4.0, deck_thk, deck_plank_nos),
+            ]
 
-        if not is_skid_only:
-            # LENGTH (2 SIDES)
-            l_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
-            rows.extend([
-                make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH PANEL', 'plywood', l_ft, h_ft, rule.br_wall_ply_mm, 2),
-                make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH FRAME (HORIZ)', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_horiz_nos),
-                make_row('LENGTH (2 SIDES)', 'sec-length', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_batten_nos),
-            ])
+            if not is_skid_only:
+                l_plank_nos = math.ceil((h_ft * 12.0) / 4.0) * 2
+                l_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
+                rows.extend([
+                    make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH WALL PLANK', 'wood', l_ft, 4.0, 1.0, l_plank_nos),
+                    make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH FRAME (HORIZ)', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_horiz_nos),
+                    make_row('LENGTH (2 SIDES)', 'sec-length', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_batten_nos),
+                ])
 
-            # WIDTH (2 SIDES)
-            w_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
-            rows.extend([
-                make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH PANEL', 'plywood', w_ft, h_ft, rule.br_wall_ply_mm, 2),
-                make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH FRAME (HORIZ)', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_horiz_nos),
-                make_row('WIDTH (2 SIDES)', 'sec-width', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_batten_nos),
-            ])
+                w_plank_nos = math.ceil((h_ft * 12.0) / 4.0) * 2
+                w_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
+                rows.extend([
+                    make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH WALL PLANK', 'wood', w_ft, 4.0, 1.0, w_plank_nos),
+                    make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH FRAME (HORIZ)', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_horiz_nos),
+                    make_row('WIDTH (2 SIDES)', 'sec-width', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_batten_nos),
+                ])
 
-            # TOP
-            top_cross_nos = max(4, math.ceil(l_ft / max(rule.br_batten_pitch_ft, 0.5)) + 1) if w_ft > rule.br_top_cross_width_ft else 4
-            rows.extend([
-                make_row('TOP', 'sec-top', 'TOP PANEL', 'plywood', l_ft, w_ft, rule.br_wall_ply_mm, 1),
-                make_row('TOP', 'sec-top', 'TOP LENGTH FRAME', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, 2),
-                make_row('TOP', 'sec-top', 'TOP WIDTH FRAME', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, top_cross_nos),
-            ])
+                top_plank_nos = math.ceil((w_ft * 12.0) / 4.0)
+                top_cross_nos = max(4, math.ceil(l_ft / max(rule.br_batten_pitch_ft, 0.5)) + 1) if w_ft > rule.br_top_cross_width_ft else 4
+                rows.extend([
+                    make_row('TOP', 'sec-top', 'TOP PLANK', 'wood', l_ft, 4.0, 1.0, top_plank_nos),
+                    make_row('TOP', 'sec-top', 'TOP LENGTH FRAME', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, 2),
+                    make_row('TOP', 'sec-top', 'TOP WIDTH FRAME', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, top_cross_nos),
+                ])
 
-            # SUPPORTS & ARREST
-            rows.extend([
-                make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (LENGTH)', 'wood', l_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
-                make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (WIDTH)', 'wood', w_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
-                make_row('SUPPORTS & ARREST', 'sec-supports', 'JOB & TOP ARREST', 'wood', w_ft, rule.br_arrest_w_in, rule.br_arrest_h_in, 4 if rule.br_heavy_bracing else 2),
-            ])
-            if rule.br_heavy_bracing:
-                diag_ft = round(math.hypot(l_ft, h_ft), 2)
-                rows.append(
-                    make_row('SUPPORTS & ARREST', 'sec-supports', 'HEAVY DIAGONAL BRACING', 'wood', diag_ft, rule.br_frame_w_in, rule.br_frame_h_in, 4)
-                )
+                rows.extend([
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (LENGTH)', 'wood', l_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (WIDTH)', 'wood', w_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'JOB & TOP ARREST', 'wood', w_ft, rule.br_arrest_w_in, rule.br_arrest_h_in, 4 if rule.br_heavy_bracing else 2),
+                ])
+                if rule.br_heavy_bracing:
+                    diag_ft = round(math.hypot(l_ft, h_ft), 2)
+                    rows.append(
+                        make_row('SUPPORTS & ARREST', 'sec-supports', 'HEAVY DIAGONAL BRACING', 'wood', diag_ft, rule.br_frame_w_in, rule.br_frame_h_in, 4)
+                    )
+        else:
+            # Plywood Sheathing + Timber Frame
+            rows = [
+                make_row('BASE', 'sec-base', 'BASE RUNNER', 'wood', w_ft, rule.br_base_runner_w_in, rule.br_base_runner_h_in, runner_nos),
+                make_row('BASE', 'sec-base', 'LIFTING RUNNER', 'wood', l_ft, rule.br_lifting_runner_w_in, rule.br_lifting_runner_h_in, rule.br_lifting_runner_nos),
+                make_row('BASE', 'sec-base', 'DECK BOARD', deck_mat, l_ft, w_ft, deck_h, 1),
+            ]
+
+            if not is_skid_only:
+                # LENGTH (2 SIDES) - Check if panel height > 8ft standard commercial plywood sheet size
+                l_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
+                if h_ft > 8.0:
+                    bot_cut_h = round(h_ft - 8.0, 2)
+                    rows.extend([
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH PANEL (8FT TOP)', 'plywood', l_ft, 8.0, rule.br_wall_ply_mm, 2),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', f'LENGTH PANEL (BOT CUT {bot_cut_h}FT)', 'plywood', l_ft, bot_cut_h, rule.br_wall_ply_mm, 2),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'PLY SEAM JOINING BATTEN', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, 2),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH FRAME (HORIZ)', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_horiz_nos),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_batten_nos),
+                    ])
+                else:
+                    rows.extend([
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH PANEL', 'plywood', l_ft, h_ft, rule.br_wall_ply_mm, 2),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'LENGTH FRAME (HORIZ)', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_horiz_nos),
+                        make_row('LENGTH (2 SIDES)', 'sec-length', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, l_batten_nos),
+                    ])
+
+                # WIDTH (2 SIDES) - Check if panel height > 8ft standard commercial plywood sheet size
+                w_horiz_nos = 6 if h_ft > rule.br_mid_rail_height_ft else 4
+                if h_ft > 8.0:
+                    bot_cut_h = round(h_ft - 8.0, 2)
+                    rows.extend([
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH PANEL (8FT TOP)', 'plywood', w_ft, 8.0, rule.br_wall_ply_mm, 2),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', f'WIDTH PANEL (BOT CUT {bot_cut_h}FT)', 'plywood', w_ft, bot_cut_h, rule.br_wall_ply_mm, 2),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'PLY SEAM JOINING BATTEN', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, 2),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH FRAME (HORIZ)', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_horiz_nos),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_batten_nos),
+                    ])
+                else:
+                    rows.extend([
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH PANEL', 'plywood', w_ft, h_ft, rule.br_wall_ply_mm, 2),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'WIDTH FRAME (HORIZ)', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_horiz_nos),
+                        make_row('WIDTH (2 SIDES)', 'sec-width', 'HEIGHT FRAME (VERT)', 'wood', h_ft, rule.br_frame_w_in, rule.br_frame_h_in, w_batten_nos),
+                    ])
+
+                # TOP
+                top_cross_nos = max(4, math.ceil(l_ft / max(rule.br_batten_pitch_ft, 0.5)) + 1) if w_ft > rule.br_top_cross_width_ft else 4
+                rows.extend([
+                    make_row('TOP', 'sec-top', 'TOP PANEL', 'plywood', l_ft, w_ft, rule.br_wall_ply_mm, 1),
+                    make_row('TOP', 'sec-top', 'TOP LENGTH FRAME', 'wood', l_ft, rule.br_frame_w_in, rule.br_frame_h_in, 2),
+                    make_row('TOP', 'sec-top', 'TOP WIDTH FRAME', 'wood', w_ft, rule.br_frame_w_in, rule.br_frame_h_in, top_cross_nos),
+                ])
+
+                # SUPPORTS & ARREST
+                rows.extend([
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (LENGTH)', 'wood', l_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'FRAME SUPPORT (WIDTH)', 'wood', w_ft, rule.br_support_w_in, rule.br_support_h_in, 2),
+                    make_row('SUPPORTS & ARREST', 'sec-supports', 'JOB & TOP ARREST', 'wood', w_ft, rule.br_arrest_w_in, rule.br_arrest_h_in, 4 if rule.br_heavy_bracing else 2),
+                ])
+                if rule.br_heavy_bracing:
+                    diag_ft = round(math.hypot(l_ft, h_ft), 2)
+                    rows.append(
+                        make_row('SUPPORTS & ARREST', 'sec-supports', 'HEAVY DIAGONAL BRACING', 'wood', diag_ft, rule.br_frame_w_in, rule.br_frame_h_in, 4)
+                    )
 
     # Calculate totals for Nails & Consumables
     total_cft = sum((r['l'] * r['w'] * r['h'] / 144.0) * r['nos'] for r in rows if r['mat'] == 'wood')
@@ -1011,10 +1125,12 @@ def api_auto_generate_bom(request):
         'rule': {
             'id': rule.id,
             'name': rule.br_name,
+            'box_type': 'Solid Wooden Box' if is_solid_wood_box else 'Plywood Box',
+            'sheathing': f"Solid {wood_prefix}-Wood Planks" if is_solid_wood_box else f"{ply_prefix} ({rule.br_wall_ply_mm}mm)",
             'size_m': f"{round(l_m, 2)} x {round(w_m, 2)} x {round(h_m, 2)} m",
             'weight_kg': weight_kg,
             'runner_spec': f"{rule.br_base_runner_w_in}x{rule.br_base_runner_h_in}\" x {runner_nos} nos",
-            'ply_mm': rule.br_wall_ply_mm,
+            'ply_mm': 0 if is_solid_wood_box else rule.br_wall_ply_mm,
             'heavy_bracing': rule.br_heavy_bracing,
         },
         'rows': rows,

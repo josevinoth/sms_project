@@ -183,6 +183,68 @@
 </script>
 {% endif %}
 
+<!-- 🔒 GLOBAL UNIVERSAL ENFORCER: Completely prevent mouse & keyboard/tab interaction on any disabled or readonly fields -->
+<script>
+$(function() {
+    function enforceDisabledReadonlyLocks() {
+        $('.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled').each(function() {
+            var $el = $(this);
+            $el.attr('tabindex', '-1');
+            if ($el.is('input, textarea')) {
+                $el.attr('readonly', 'readonly');
+            }
+            if ($el.is('select') && $el.hasClass('disable_a_href')) {
+                $el.prop('disabled', true);
+            }
+        });
+    }
+
+    enforceDisabledReadonlyLocks();
+    $(document).ajaxComplete(enforceDisabledReadonlyLocks);
+
+    // Prevent focus from keyboard tab, mouse or scripts
+    $(document).on('focus focusin', '.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled', function(e) {
+        $(this).blur();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent mouse clicks or opening native dropdowns
+    $(document).on('mousedown click', '.disable_a_href, select:disabled, [readonly]', function(e) {
+        $(this).blur();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent any keypresses (Space, Down Arrow, Enter, etc.) from operating on disabled/readonly elements
+    $(document).on('keydown keypress keyup', '.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent clicking on labels of disabled/readonly elements from activating them
+    $(document).on('click mousedown', 'label', function(e) {
+        var forId = $(this).attr('for');
+        if (forId) {
+            var $target = $('#' + forId);
+            if ($target.length && ($target.hasClass('disable_a_href') || $target.is(':disabled, [readonly]'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }
+    });
+
+    // Automatically re-enable disabled inputs right before form submission so Django receives POST data
+    $(document).on('submit', 'form', function() {
+        $(this).find('select:disabled.disable_a_href, input:disabled.disable_a_href').prop('disabled', false);
+    });
+});
+</script>
+
 </body>
 </html>
 

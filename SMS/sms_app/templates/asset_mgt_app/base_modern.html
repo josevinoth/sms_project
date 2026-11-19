@@ -78,6 +78,31 @@
             background: #0d1828;
             box-shadow: 0 2px 16px rgba(0,0,0,0.55);
         }
+
+        /* 🔒 UNIVERSAL DISABLE / READONLY LOCK: Completely prevent mouse & keyboard/tab interaction on disabled fields */
+        .disable_a_href,
+        input[readonly].disable_a_href,
+        select.disable_a_href,
+        textarea.disable_a_href,
+        .disable_a_href:focus,
+        .disable_a_href:active,
+        select:disabled,
+        input:disabled,
+        textarea:disabled {
+            pointer-events: none !important;
+            user-select: none !important;
+            cursor: not-allowed !important;
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+
+        /* Prevent clicking on labels of disabled or locked fields */
+        .form-group-modern:has(.disable_a_href) label,
+        .form-group-modern:has(:disabled) label,
+        .form-group-modern:has([readonly]) label {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -277,6 +302,68 @@
     })();
 </script>
 {% endif %}
+
+<!-- 🔒 GLOBAL UNIVERSAL ENFORCER: Completely prevent mouse & keyboard/tab interaction on any disabled or readonly fields -->
+<script>
+$(function() {
+    function enforceDisabledReadonlyLocks() {
+        $('.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled').each(function() {
+            var $el = $(this);
+            $el.attr('tabindex', '-1');
+            if ($el.is('input, textarea')) {
+                $el.attr('readonly', 'readonly');
+            }
+            if ($el.is('select') && $el.hasClass('disable_a_href')) {
+                $el.prop('disabled', true);
+            }
+        });
+    }
+
+    enforceDisabledReadonlyLocks();
+    $(document).ajaxComplete(enforceDisabledReadonlyLocks);
+
+    // Prevent focus from keyboard tab, mouse or scripts
+    $(document).on('focus focusin', '.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled', function(e) {
+        $(this).blur();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent mouse clicks or opening native dropdowns
+    $(document).on('mousedown click', '.disable_a_href, select:disabled, [readonly]', function(e) {
+        $(this).blur();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent any keypresses (Space, Down Arrow, Enter, etc.) from operating on disabled/readonly elements
+    $(document).on('keydown keypress keyup', '.disable_a_href, [readonly], select:disabled, input:disabled, textarea:disabled', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
+
+    // Prevent clicking on labels of disabled/readonly elements from activating them
+    $(document).on('click mousedown', 'label', function(e) {
+        var forId = $(this).attr('for');
+        if (forId) {
+            var $target = $('#' + forId);
+            if ($target.length && ($target.hasClass('disable_a_href') || $target.is(':disabled, [readonly]'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }
+    });
+
+    // Automatically re-enable disabled inputs right before form submission so Django receives POST data
+    $(document).on('submit', 'form', function() {
+        $(this).find('select:disabled.disable_a_href, input:disabled.disable_a_href').prop('disabled', false);
+    });
+});
+</script>
 
 {% block extra_js %}{% endblock %}
 </body>

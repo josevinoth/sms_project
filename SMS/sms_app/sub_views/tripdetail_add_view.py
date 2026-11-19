@@ -836,6 +836,10 @@ def tripdetail_add(request, tripdetail_id=0):
                                    f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
                     return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
+                # 🔒 IMMUTABLE VEHICLE TYPE LOCK: Protect vehicle type requested and placed from client-side overrides
+                trip.tr_vehicletype = tripdetail.tr_vehicletype
+                trip.tr_vehicletype_placed = tripdetail.tr_vehicletype_placed
+
                 # ✅ Robust Status Matching
                 status_open = Tripstatusinfo.objects.filter(
                     Q(status__iexact='Open') | Q(status__iexact='Started')).first()
@@ -1100,6 +1104,10 @@ def tripdetail_add(request, tripdetail_id=0):
                     messages.error(request,
                                    f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
                     return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
+
+                # 🔒 IMMUTABLE VEHICLE TYPE LOCK: Protect vehicle type requested and placed from client-side overrides
+                trip.tr_vehicletype = tripdetail.tr_vehicletype
+                trip.tr_vehicletype_placed = tripdetail.tr_vehicletype_placed
 
                 # ✅ Robust Status Matching Lookups
                 status_open = Tripstatusinfo.objects.filter(
