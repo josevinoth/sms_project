@@ -570,6 +570,18 @@ document.addEventListener("DOMContentLoaded", function () {
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
 
+			// 🔒 Strictly Lock Header, Vehicle & Driver fields: disable + readonly + tabindex -1
+			$('#tr_enquirynumber, #tr_tripnumber, #tr_consignmentnumber, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed, #tr_drivername, #tr_drivernumber, #tr_driver_lic')
+				.prop('disabled', true)
+				.prop('readonly', true)
+				.attr('tabindex', '-1')
+				.addClass('disable_a_href')
+				.css({
+					'pointer-events': 'none',
+					'background-color': '#f1f5f9',
+					'cursor': 'not-allowed'
+				});
+
 			// If a vehicle is pre-selected, sync its location and KM
 			var preselectedVeh = $('#tr_vehiclenumber').val();
 			if (preselectedVeh) {
@@ -603,6 +615,18 @@ document.addEventListener("DOMContentLoaded", function () {
 			$('#tripdetail_id,#tripdetail_submit_id')
 				.addClass('disable_a_href');
 		}
+
+		// 🔒 Ensure any read-only/disabled fields in tripdetail cannot be accessed via Tab key or keyboard
+		$('.disable_a_href, [readonly], [disabled]').attr('tabindex', '-1');
+
+		$(document).on('focus', '.disable_a_href, select[readonly]', function () {
+			$(this).blur();
+		});
+
+		$(document).on('keydown', '.disable_a_href', function (e) {
+			e.preventDefault();
+			return false;
+		});
 	});
 
 	var tripApprovalApproved = "{{ trip_approvallist|yesno:'true,false' }}" === "true";

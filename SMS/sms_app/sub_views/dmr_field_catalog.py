@@ -24,6 +24,7 @@ DMR_PAGE_CATALOG = [
             {"key": "en_enquirynumber", "label": "Enquiry No", "type": "string", "desc": "Trip enquiry reference"},
             {"key": "en_customername", "label": "Customer Name", "type": "string", "desc": "Customer display name"},
             {"key": "en_customerdepartment", "label": "Department Name", "type": "string", "desc": "Customer division / department"},
+            {"key": "vehicle_category", "label": "Vehicle Category", "type": "string", "desc": "Enquiry vehicle category (e.g. Secured, Normal, Air Ride)"},
             {"key": "pickup_date", "label": "Pickup Date", "type": "date", "desc": "Trip pickup / indent departure date"},
             {"key": "pickup_time", "label": "Pickup Time", "type": "time", "desc": "Trip pickup / indent departure time"},
             {"key": "planning_date", "label": "Planning Received Date", "type": "date", "desc": "Enquiry creation / planning date"},
@@ -298,6 +299,38 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         return _safe_str(trip.tr_enquirynumber.en_customername if trip.tr_enquirynumber else "")
     if fk == "en_customerdepartment":
         return _safe_str(trip.tr_enquirynumber.en_customerdepartment if trip.tr_enquirynumber else "")
+    if fk in ("vehicle_category", "env_vehiclecategory", "en_vehiclecategory", "veh_category"):
+        cat = getattr(trip, 'vehicle_category', None)
+        if cat is not None and str(cat).strip():
+            return _safe_str(cat)
+        try:
+            from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+            from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
+            vt_id = getattr(trip, 'tr_vehicletype_placed_id', None) or getattr(trip, 'tr_vehicletype_id', None)
+            if getattr(trip, 'tr_enquirynumber_id', None):
+                if vt_id:
+                    env = Enquirynotevehicle.objects.filter(
+                        env_enquirynumber_id=trip.tr_enquirynumber_id,
+                        env_vehicletype_id=vt_id
+                    ).select_related('env_vehiclecategory').first()
+                    if env and env.env_vehiclecategory:
+                        cat = env.env_vehiclecategory.vc_vehiclecategory
+                if not cat:
+                    env = Enquirynotevehicle.objects.filter(
+                        env_enquirynumber_id=trip.tr_enquirynumber_id
+                    ).select_related('env_vehiclecategory').first()
+                    if env and env.env_vehiclecategory:
+                        cat = env.env_vehiclecategory.vc_vehiclecategory
+            if not cat and getattr(trip, 'tr_vehiclenumber', None):
+                vm = VehiclemasterInfo.objects.filter(
+                    vm_registrationnumber__iexact=str(trip.tr_vehiclenumber).strip()
+                ).select_related('vm_category').first()
+                if vm and vm.vm_category:
+                    cat = vm.vm_category.vc_vehiclecategory
+        except Exception:
+            pass
+        trip.vehicle_category = cat or ""
+        return _safe_str(trip.vehicle_category)
     if fk == "planning_date":
         en_dt = getattr(trip.tr_enquirynumber, "en_created_at", None)
         return _safe_fmt(en_dt, df or "%d-%m-%Y") if en_dt else ""
@@ -323,19 +356,10 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
     if fk == "co_consignmentnumber":
         val = cons_detail.co_consignmentnumber if cons_detail else ""
         if not val and trip:
-            tc_status = getattr(trip, 'tc_financestatus_id', None)
-            op_status = getattr(trip, 'tr_operational_status_id', None)
-            cancel_check = getattr(trip, 'tc_cancellation_check', False)
-            cancel_charges = getattr(trip, 'tc_cancellation', 0)
-            enquiry = getattr(trip, 'tr_enquirynumber', None)
-            en_status = getattr(enquiry, 'en_status_id', None) if enquiry else None
-            if (
-                tc_status in (3, 10, 11) or
-                op_status in (3, 10, 11) or
-                cancel_check or
-                (cancel_charges and cancel_charges > 0) or
-                en_status in (8, 10)
-            ):
+            cons = getattr(trip, 'tr_consignmentnumber', None)
+            if cons and getattr(cons, 'co_consignmentnumber', None):
+                val = str(cons.co_consignmentnumber).strip()
+            if not val:
                 val = getattr(trip, 'tr_tripnumber', '')
         return _safe_str(val or "")
     if fk in ("cg_consignerinvoice", "consigner_invoice", "invoice_no"):
