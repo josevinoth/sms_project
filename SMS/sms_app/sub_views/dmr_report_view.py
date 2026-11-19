@@ -101,8 +101,7 @@ def apply_dmr_date_filter(qs, from_date_str=None, to_date_str=None, month=None, 
 
 def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
     """
-    Returns consignment number if available; if not available and the trip
-    is cancellation with or without billing, falls back to trip number (tr_tripnumber).
+    Returns consignment number if available; if not available, falls back to trip number (tr_tripnumber).
     """
     if cons_detail and getattr(cons_detail, 'co_consignmentnumber', None):
         val = str(cons_detail.co_consignmentnumber).strip()
@@ -114,22 +113,9 @@ def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
             val = str(cons.co_consignmentnumber).strip()
             if val:
                 return val
-        tc_status = getattr(trip, 'tc_financestatus_id', None)
-        op_status = getattr(trip, 'tr_operational_status_id', None)
-        cancel_check = getattr(trip, 'tc_cancellation_check', False)
-        cancel_charges = getattr(trip, 'tc_cancellation', 0)
-        enquiry = getattr(trip, 'tr_enquirynumber', None)
-        en_status = getattr(enquiry, 'en_status_id', None) if enquiry else None
-        if (
-            tc_status in (3, 10, 11) or
-            op_status in (3, 10, 11) or
-            cancel_check or
-            (cancel_charges and cancel_charges > 0) or
-            en_status in (8, 10)
-        ):
-            val = getattr(trip, 'tr_tripnumber', None)
-            if val:
-                return str(val).strip()
+        val = getattr(trip, 'tr_tripnumber', None)
+        if val:
+            return str(val).strip()
     return default
 
 
@@ -801,6 +787,12 @@ def safe_num(v):
 def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, return_groups=False):
     rows = []
     trip_groups = []
+    # Pre-attach vehicle category to all trips for maximum performance
+    try:
+        from .trans_invoice_view import attach_vehicle_category_to_trips
+        attach_vehicle_category_to_trips(trips)
+    except Exception:
+        pass
     # Fetch all ConsignmentgoodsInfo and Vehicle_allotmentInfo for the current page in bulk
     trip_cons_nums = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
     trip_enq_nums = [t.tr_enquirynumber_id for t in trips]

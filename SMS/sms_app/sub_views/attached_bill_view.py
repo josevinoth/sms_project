@@ -710,16 +710,9 @@ def attached_bill_summary(request, id):
             working_sundays = sum(1 for d in billed_trip_dates if d.weekday() == 6)
             holiday_sundays = max(0, total_sundays - working_sundays)
 
-        # Compute actual empty KM (category 2 or 3) matching Total KM run period
+        # Compute actual empty KM (category 2 or 3) matching Total KM run period (departed date range)
         km_filters = Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
-        km_filters &= (
-            Q(tr_departeddate__date__range=[from_date, to_date]) |
-            Q(tr_departeddate_pickup__date__range=[from_date, to_date]) |
-            Q(tr_reporteddate__date__range=[from_date, to_date]) |
-            Q(tr_reporteddate_pickup__date__range=[from_date, to_date]) |
-            Q(tr_loading_time__date__range=[from_date, to_date]) |
-            Q(tr_unloading_time__date__range=[from_date, to_date])
-        )
+        km_filters &= Q(tr_departeddate__date__range=[from_date, to_date])
         all_km_trips = TripdetailInfo.objects.filter(km_filters).filter(
             tr_vehiclesource_id__in=[1, 2],
             tc_financestatus_id__in=[2, 4, 5, 6, 7, 9, 10]

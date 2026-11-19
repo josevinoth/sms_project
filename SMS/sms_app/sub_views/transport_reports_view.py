@@ -42,8 +42,7 @@ def safe_int(val, default=0):
 def get_trip_cnote_or_fallback(trip, cons=None, default=""):
     """
     Returns the C-Note number.
-    If the trip is a Cancellation with Billing job and has no C-Note,
-    falls back to the Trip Number (tr_tripnumber).
+    If the trip has no C-Note, falls back to the Trip Number (tr_tripnumber).
     """
     if cons is None and trip:
         cons = getattr(trip, 'tr_consignmentnumber', None)
@@ -53,14 +52,7 @@ def get_trip_cnote_or_fallback(trip, cons=None, default=""):
         if val:
             return val
 
-    is_cancel_billing = False
     if trip:
-        is_cancel_billing = (
-            getattr(trip, 'tc_financestatus_id', None) == 10
-            or getattr(trip, 'tr_operational_status_id', None) == 10
-            or getattr(trip, 'tc_cancellation_check', False)
-        )
-    if is_cancel_billing and trip:
         val = safe_str(getattr(trip, 'tr_tripnumber', '') or '').strip()
         if val:
             return val
@@ -785,7 +777,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
 OWN_VEHICLE_PL_HEADERS = [
     "S No", "Trip date", "Vehicle No", "Cnote No", "Trip Category", "Customer Name", "From", "To",
     "Trip Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
-    "Weighment Charges", "Handling charges", "Halting Charges", "Revenue",
+    "Weighment Charges", "Handling charges", "Halting Charges", "Cancellation Charges", "Revenue",
     "Driver Salary", "Fuel Cost", "Acting Driver", "Driver Bata", "Toll Cost",
     "Parking Cost", "Loading Cost", "Unloading Cost", "Weighment Cost", "Handling Cost", "Vehicle Hire", "Total Expense"
 ]
@@ -5351,6 +5343,7 @@ def own_vehicle_pl_report_view(request):
             selling_weighment = round(selling_weighment, 2)
             selling_handling = round(selling_handling, 2)
             selling_halting = round(selling_halting, 2)
+            selling_cancellation = round(selling_cancellation, 2)
             selling_total = round(selling_total, 2)
 
             driver_salary = round(driver_salary, 2)
@@ -5389,7 +5382,7 @@ def own_vehicle_pl_report_view(request):
                 selling_weighment,
                 selling_handling,
                 selling_halting,
-
+                selling_cancellation,
                 selling_total,
                 driver_salary,
                 fuel_expense,
@@ -11446,8 +11439,8 @@ def time_analysis_report_export_view(request):
             if trip.tr_enquirynumber.en_customername:
                 customer_name = safe_str(trip.tr_enquirynumber.en_customername.cu_name)
 
+        cnote_no = get_trip_cnote_or_fallback(trip)
         if trip.tr_consignmentnumber:
-            cnote_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
             cnote_created = trip.tr_consignmentnumber.co_created_at
 
         veh_allotted_dt = None

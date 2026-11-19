@@ -28,7 +28,7 @@
 
 
 
-    <form method="POST" action="" enctype="multipart/form-data">
+    <form method="POST" action="" id="tripclosure_form" enctype="multipart/form-data" onsubmit="return enableTripClosureForm(this);">
 
         {% csrf_token %}
 
@@ -52,7 +52,7 @@
 
                             <label class="form-label-modern small mb-1">Enquiry Number</label>
 
-                            {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -60,7 +60,7 @@
 
                             <label class="form-label-modern small mb-1">Consignment Number</label>
 
-                            {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -68,7 +68,7 @@
 
                             <label class="form-label-modern small mb-1">Trip Number</label>
 
-                            {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -76,7 +76,7 @@
 
                             <label class="form-label-modern small mb-1">Trip Category</label>
 
-                            {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -84,7 +84,7 @@
 
                             <label class="form-label-modern small mb-1">Customer Ref No</label>
 
-                            {% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -92,7 +92,7 @@
 
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
 
-                            {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -116,7 +116,7 @@
 
                             <label class="form-label-modern small mb-1">Customer Name</label>
 
-                            {% render_field tripclosure_form.customer_name class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.customer_name id="customer_name" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -124,7 +124,7 @@
 
                             <label class="form-label-modern small mb-1">Trip Date</label>
 
-                            {% render_field tripclosure_form.trip_date class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.trip_date id="trip_date" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -132,7 +132,7 @@
 
                             <label class="form-label-modern small mb-1">Vehicle Source</label>
 
-                            {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -140,7 +140,7 @@
 
                             <label class="form-label-modern small mb-1">Vehicle Number</label>
 
-                            {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -148,7 +148,7 @@
 
                             <label class="form-label-modern small mb-1">Vehicle Type Placed</label>
 
-                            {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -156,7 +156,7 @@
 
                             <label class="form-label-modern small mb-1">Departed Location</label>
 
-                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -164,7 +164,7 @@
 
                             <label class="form-label-modern small mb-1">Reported Location</label>
 
-                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" disabled="disabled" readonly="readonly" tabindex="-1" style="pointer-events: none; background-color: #f1f5f9;" %}
 
                         </div>
 
@@ -194,7 +194,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" readonly="readonly" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none; flex: 1; min-width: 0;" %}
+                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" disabled="disabled" readonly="readonly" tabindex="-1" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none; flex: 1; min-width: 0;" %}
                                 <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                                     {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
                                 </div>
@@ -345,7 +345,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
                             <div class="d-flex align-items-center w-50">
-                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; flex: 1; min-width: 0;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; flex: 1; min-width: 0; background-color: #e9ecef; pointer-events: none;" readonly disabled tabindex="-1" value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
                                 <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                                     {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
                                 </div>
@@ -2135,6 +2135,53 @@ function deleteTcAtt(attId) {
     }).catch(function(e){ alert('Error: ' + e); });
 
 }
+
+function enableTripClosureForm(formEl) {
+    try {
+        var $form = $(formEl);
+        $form.find(':input').prop('disabled', false);
+        $form.find('select').prop('disabled', false).each(function () {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).trigger('change.select2');
+            }
+        });
+        $form.find('input[type=file]').prop('disabled', false);
+    } catch (e) {
+        console.warn('enableTripClosureForm error', e);
+    }
+    return true;
+}
+
+$(document).ready(function() {
+    var lockedFields = '#tr_enquirynumber, #tr_consignmentnumber, #tr_tripnumber, #tr_category, #tr_customerref, #tr_vehicletype, #customer_name, #trip_date, #tr_vehiclesource, #tr_vehiclenumber, #tr_vehicletype_placed, #tr_departedlocation, #tr_reportedlocation, #tc_tripcost, #tc_total_halting_cost';
+    
+    $(lockedFields)
+        .prop('disabled', true)
+        .prop('readonly', true)
+        .attr('tabindex', '-1')
+        .addClass('disable_a_href')
+        .css({
+            'pointer-events': 'none',
+            'background-color': '#f1f5f9',
+            'cursor': 'not-allowed'
+        });
+
+    // 🔒 Ensure any read-only/disabled fields in tripclosure cannot be accessed via Tab key or keyboard
+    $('.disable_a_href, [readonly], [disabled]').attr('tabindex', '-1');
+
+    $(document).on('focus', '.disable_a_href, select[readonly]', function () {
+        $(this).blur();
+    });
+
+    $(document).on('keydown', '.disable_a_href', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    $('#tripclosure_form').on('submit', function() {
+        enableTripClosureForm(this);
+    });
+});
 
 </script>
 
