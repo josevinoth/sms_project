@@ -1252,19 +1252,41 @@
         ];
 
         if (!isSkidOnly) {
-            // LENGTH (2 SIDES)
-            rows.push(
-                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
-                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
-                { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 6, rate: currentWoodRate }
-            );
+            // LENGTH (2 SIDES) - Auto-split if height > 8ft
+            if (h_ft > 8.0) {
+                const botH = (h_ft - 8.0).toFixed(2);
+                rows.push(
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH PANEL (8FT TOP)', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: (8.0).toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: `LENGTH PANEL (BOT CUT ${botH}FT)`, part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: botH, h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'PLY SEAM JOINING BATTEN', part_code: derivePartCode('wood', 1.5, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.5, nos: 2, rate: currentWoodRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 6, rate: currentWoodRate }
+                );
+            } else {
+                rows.push(
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: l_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'LENGTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, l_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: l_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                    { section: 'LENGTH (2 SIDES)', secClass: 'sec-length', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 6, rate: currentWoodRate }
+                );
+            }
 
-            // WIDTH (2 SIDES)
-            rows.push(
-                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: w_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
-                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
-                { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate }
-            );
+            // WIDTH (2 SIDES) - Auto-split if height > 8ft
+            if (h_ft > 8.0) {
+                const botH = (h_ft - 8.0).toFixed(2);
+                rows.push(
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH PANEL (8FT TOP)', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: w_ft.toFixed(2), w: (8.0).toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: `WIDTH PANEL (BOT CUT ${botH}FT)`, part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: w_ft.toFixed(2), w: botH, h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'PLY SEAM JOINING BATTEN', part_code: derivePartCode('wood', 1.5, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.5, nos: 2, rate: currentWoodRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate }
+                );
+            } else {
+                rows.push(
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH PANEL', part_code: 'PY1410', grn: '', stock_purchase_id: '', mat: 'plywood', l: w_ft.toFixed(2), w: h_ft.toFixed(2), h: 10.0, nos: 2, rate: currentPlyRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'WIDTH FRAME (HORIZ)', part_code: derivePartCode('wood', 1.0, 4.0, w_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: w_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate },
+                    { section: 'WIDTH (2 SIDES)', secClass: 'sec-width', name: 'HEIGHT FRAME (VERT)', part_code: derivePartCode('wood', 1.0, 4.0, h_ft), grn: '', stock_purchase_id: '', mat: 'wood', l: h_ft.toFixed(2), w: 4.0, h: 1.0, nos: 4, rate: currentWoodRate }
+                );
+            }
 
             // TOP
             rows.push(
@@ -1364,13 +1386,14 @@
                         <input type="text" class="matrix-input text-left font-weight-bold f-name" value="${item.name || ''}" style="text-align: left !important; padding-left: 0.5rem;">
                     </td>
                     <td>
-                        <div class="d-flex align-items-center" style="gap: 4px;">
-                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="${defaultPC}" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                        <div class="position-relative partcode-wrapper d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="${defaultPC}" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code" autocomplete="off">
                             <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Warehouse Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
                                 <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
                             </button>
                             <input type="hidden" class="f-stock-purchase-id" value="${item.stock_purchase_id || ''}">
                             <input type="hidden" class="f-grn" value="${item.grn || ''}">
+                            <div class="pc-suggestions shadow-lg p-0" style="display: none;"></div>
                         </div>
                     </td>
                     <td>
@@ -2177,14 +2200,13 @@
                 } else {
                     renderMaterials([]);
                 }
-                const op = operationalCostsMap[reqId] || operationalCostsMap[String(reqId)] || {};
-                loadOperationalCosts(op, initialMarginPct);
-                recalculateMatrix();
-            } else if (String(reqId) === String('{{ selected_requirement_id }}') && (!initialSavedStruct || initialSavedStruct.length === 0)) {
-                renderSectionHeadersOnly();
-                renderNails([]);
-                renderMaterials([]);
-                renderCustomBreakdown([]);
+
+                if (initialSavedCustomBreakdown && initialSavedCustomBreakdown.length > 0) {
+                    renderCustomBreakdown(initialSavedCustomBreakdown);
+                } else {
+                    renderCustomBreakdown([]);
+                }
+
                 const op = operationalCostsMap[reqId] || operationalCostsMap[String(reqId)] || {};
                 loadOperationalCosts(op, initialMarginPct);
                 recalculateMatrix();
@@ -2299,8 +2321,11 @@
                     }
                     recalculateMatrix();
                     if (resp.rule) {
+                        const sheathingInfo = resp.rule.box_type === 'Solid Wooden Box'
+                            ? `Type: <span class="badge badge-success font-weight-bold ml-1 mr-1" style="font-size:0.75rem;">100% Solid Wood Box</span> | Planks: <strong>${resp.rule.sheathing}</strong>`
+                            : `Type: <span class="badge badge-primary font-weight-bold ml-1 mr-1" style="font-size:0.75rem;">Plywood Box</span> | Ply: <strong>${resp.rule.ply_mm}mm (${resp.rule.sheathing})</strong>`;
                         $('#matched_bom_rule_banner')
-                            .html(`<i class="fas fa-check-circle text-success mr-1"></i> Matched Rule: <strong>${resp.rule.name}</strong> | Runner: ${resp.rule.runner_spec} | Ply: ${resp.rule.ply_mm}mm | Est. Nails: ${resp.summary.est_nail_kg} kg`)
+                            .html(`<i class="fas fa-check-circle text-success mr-1"></i> Matched Rule: <strong>${resp.rule.name}</strong> | ${sheathingInfo} | Runner: ${resp.rule.runner_spec} | Est. Nails: ${resp.summary.est_nail_kg} kg`)
                             .show();
                     }
                 },
@@ -2400,13 +2425,14 @@
                 <tr class="struct-row" data-section="BASE">
                     <td><input type="text" class="matrix-input text-left font-weight-bold f-name" value="" placeholder="Component description"></td>
                     <td>
-                        <div class="d-flex align-items-center" style="gap: 4px;">
-                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                        <div class="position-relative partcode-wrapper d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code" autocomplete="off">
                             <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
                                 <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
                             </button>
                             <input type="hidden" class="f-stock-purchase-id" value="">
                             <input type="hidden" class="f-grn" value="">
+                            <div class="pc-suggestions shadow-lg p-0" style="display: none;"></div>
                         </div>
                     </td>
                     <td>
@@ -2444,7 +2470,16 @@
             const row = input.closest('tr');
             row.data('custom-pc', true);
             const query = input.val().trim();
-            const suggestionsBox = input.closest('.partcode-wrapper').find('.pc-suggestions');
+            let wrapper = input.closest('.partcode-wrapper');
+            if (!wrapper.length) {
+                input.wrap('<div class="position-relative partcode-wrapper d-flex align-items-center" style="gap: 4px;"></div>');
+                wrapper = input.closest('.partcode-wrapper');
+            }
+            let suggestionsBox = wrapper.find('.pc-suggestions');
+            if (!suggestionsBox.length) {
+                suggestionsBox = $('<div class="pc-suggestions shadow-lg p-0" style="display: none;"></div>');
+                wrapper.append(suggestionsBox);
+            }
 
             clearTimeout(typeaheadTimer);
             if (query.length < 1) {
@@ -2452,9 +2487,28 @@
                 return;
             }
 
+            // Position suggestions fixed under the input to avoid table overflow clipping
+            const rect = input[0].getBoundingClientRect();
+            suggestionsBox.css({
+                position: 'fixed',
+                top: (rect.bottom + 2) + 'px',
+                left: rect.left + 'px',
+                width: '320px',
+                maxHeight: '260px',
+                overflowY: 'auto',
+                zIndex: 99999,
+                background: '#ffffff',
+                border: '1px solid #94a3b8',
+                borderRadius: '6px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            });
+
             typeaheadTimer = setTimeout(function() {
-                const mat = row.find('.f-mat').val() || '';
-                fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(query)}&type=${encodeURIComponent(mat)}&limit=12`)
+                let mat = row.find('.f-mat').val() || '';
+                if (query.toUpperCase().startsWith('PY')) {
+                    mat = 'plywood';
+                }
+                fetch(`{% url 'matrix_part_code_search' %}?q=${encodeURIComponent(query)}&type=${encodeURIComponent(mat)}&limit=15`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.status === 'success' && data.results && data.results.length > 0) {
@@ -2491,7 +2545,7 @@
                     .catch(err => {
                         console.error('Typeahead search error:', err);
                     });
-            }, 200);
+            }, 180);
         });
 
         // 2. Click on Typeahead Suggestion Item
@@ -2555,7 +2609,10 @@
             activeTargetType = 'struct';
             const compName = activeRowTarget.find('.f-name').val() || 'Component';
             const currPC = activeRowTarget.find('.f-partcode').val() || '';
-            const currMat = activeRowTarget.find('.f-mat').val() || 'wood';
+            let currMat = activeRowTarget.find('.f-mat').val() || 'wood';
+            if (currPC.toUpperCase().startsWith('PY') || compName.toLowerCase().includes('ply')) {
+                currMat = 'plywood';
+            }
 
             $('#modal_target_component_badge').text('Target: ' + compName);
             $('#modal_pc_search_input').val(currPC);
@@ -2742,13 +2799,14 @@
                 <tr class="struct-row" data-section="${secName}">
                     <td><input type="text" class="matrix-input text-left font-weight-bold f-name" value="" placeholder="Component description"></td>
                     <td>
-                        <div class="d-flex align-items-center" style="gap: 4px;">
-                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code">
+                        <div class="position-relative partcode-wrapper d-flex align-items-center" style="gap: 4px;">
+                            <input type="text" class="matrix-input partcode-input f-partcode text-center font-weight-bold" value="" placeholder="Part code" style="border-color: #86efac; background: #f0fdf4; color: #166534; font-size: 0.82rem; height: 28px; border-radius: 4px;" title="Part Code" autocomplete="off">
                             <button type="button" class="btn btn-sm btn-light border btn-search-pc" title="Search Part Code" style="height: 28px; padding: 0 8px; border-color: #cbd5e1; border-radius: 4px; background: #ffffff;">
                                 <i class="fas fa-search text-success" style="font-size: 0.75rem;"></i>
                             </button>
                             <input type="hidden" class="f-stock-purchase-id" value="">
                             <input type="hidden" class="f-grn" value="">
+                            <div class="pc-suggestions shadow-lg p-0" style="display: none;"></div>
                         </div>
                     </td>
                     <td>
@@ -3125,30 +3183,74 @@
                         const maxSheetDim = Math.max(stockL, stockW);
                         const minSheetDim = Math.min(stockL, stockW);
 
-                        // If piece is oversized, split into sub-panels that fit standard commercial sheets
+                        // If piece is oversized, split into standard 8x4 full sheets first + remaining bottom/side cut strips (BVM Industrial Method)
                         if (pL > maxSheetDim || pW > maxSheetDim) {
-                            const tilesL = Math.ceil(pL / maxSheetDim);
-                            const tilesW = Math.ceil(pW / minSheetDim);
-                            const subL = Math.round((pL / tilesL) * 10) / 10;
-                            const subW = Math.round((pW / tilesW) * 10) / 10;
-                            for (let p = 0; p < totalPieces * tilesL * tilesW; p++) {
-                                partsToCut.push({
-                                    name: name + ` (${subL.toFixed(0)}"×${subW.toFixed(0)}")`,
-                                    rawName: name,
-                                    w: subW,
-                                    l: subL,
-                                    sqft: (subW * subL) / 144.0,
-                                    color: colorMap[name]
-                                });
+                            const lengthDim = Math.max(pL, pW);
+                            const heightDim = Math.min(pL, pW);
+
+                            const topH = Math.min(heightDim, maxSheetDim); // 96" (8ft)
+                            const botH = heightDim > maxSheetDim ? Math.round((heightDim - maxSheetDim) * 10) / 10 : 0; // remaining bottom cut
+
+                            const fullCols = Math.floor(lengthDim / minSheetDim); // 48" full sheets
+                            const remW = Math.round((lengthDim - (fullCols * minSheetDim)) * 10) / 10; // remaining side width
+
+                            for (let p = 0; p < totalPieces; p++) {
+                                // 1. Full 8x4 top sheets (96" along length X, 48" along width Y)
+                                for (let c = 0; c < fullCols; c++) {
+                                    partsToCut.push({
+                                        name: name + ` Full Sheet (${maxSheetDim.toFixed(0)}"×${minSheetDim.toFixed(0)}")`,
+                                        rawName: name,
+                                        w: maxSheetDim,
+                                        l: minSheetDim,
+                                        sqft: (maxSheetDim * minSheetDim) / 144.0,
+                                        color: colorMap[name]
+                                    });
+                                }
+                                // 2. Side vertical cut piece if remaining width > 0
+                                if (remW > 0.5) {
+                                    partsToCut.push({
+                                        name: name + ` Side Cut (${topH.toFixed(0)}"×${remW.toFixed(0)}")`,
+                                        rawName: name,
+                                        w: topH,
+                                        l: remW,
+                                        sqft: (remW * topH) / 144.0,
+                                        color: colorMap[name]
+                                    });
+                                }
+                                // 3. Bottom horizontal cut pieces if height > 8ft (96")
+                                if (botH > 0.5) {
+                                    for (let c = 0; c < fullCols; c++) {
+                                        partsToCut.push({
+                                            name: name + ` Bot Cut (${minSheetDim.toFixed(0)}"×${botH.toFixed(0)}")`,
+                                            rawName: name,
+                                            w: minSheetDim,
+                                            l: botH,
+                                            sqft: (minSheetDim * botH) / 144.0,
+                                            color: colorMap[name]
+                                        });
+                                    }
+                                    if (remW > 0.5) {
+                                        partsToCut.push({
+                                            name: name + ` Bot Corner (${remW.toFixed(0)}"×${botH.toFixed(0)}")`,
+                                            rawName: name,
+                                            w: remW,
+                                            l: botH,
+                                            sqft: (remW * botH) / 144.0,
+                                            color: colorMap[name]
+                                        });
+                                    }
+                                }
                             }
                         } else {
                             for (let p = 0; p < totalPieces; p++) {
+                                const pieceL = Math.max(pL, pW);
+                                const pieceW = Math.min(pL, pW);
                                 partsToCut.push({
                                     name: name,
                                     rawName: name,
-                                    w: pW,
-                                    l: pL,
-                                    sqft: (pW * pL) / 144.0,
+                                    w: pieceL,
+                                    l: pieceW,
+                                    sqft: (pieceL * pieceW) / 144.0,
                                     color: colorMap[name]
                                 });
                             }
@@ -3177,9 +3279,9 @@
             function createSheet() {
                 return {
                     sheetIndex: sheets.length + 1,
-                    w: stockW,
-                    l: stockL,
-                    freeRects: [{ x: 0, y: 0, w: stockW, h: stockL }],
+                    w: stockL,
+                    l: stockW,
+                    freeRects: [{ x: 0, y: 0, w: stockL, h: stockW }],
                     placedParts: []
                 };
             }

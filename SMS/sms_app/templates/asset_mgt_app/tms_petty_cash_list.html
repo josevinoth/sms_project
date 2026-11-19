@@ -121,6 +121,7 @@
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Voucher Date"></th>
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Business"></th>
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Branch"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Customer"></th>
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Amount"></th>
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search From - To"></th>
                         <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Vehicle No"></th>
@@ -136,6 +137,7 @@
                         <th>Voucher Date</th>
                         <th>Business</th>
                         <th>Branch</th>
+                        <th>Customer</th>
                         <th>Amount</th>
                         <th>From - To</th>
                         <th>Vehicle No</th>
@@ -194,8 +196,8 @@
                 type: 'GET'
             },
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, 'All']
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
             dom: '<"d-flex justify-content-between align-items-center mb-2"l f><"d-flex justify-content-between align-items-center mb-2"B>rtip',
             buttons: ['copy', 'csv', 'excel', 'print'],

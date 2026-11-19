@@ -190,6 +190,19 @@
                                 <label class="form-label-modern">Batta Expense</label>
                                 {% render_field form.de_battacost id="id_de_battacost" class="form-control form-control-modern cost-field" %}
                             </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Handling Cost</label>
+                                {% render_field form.de_handlingcost id="id_de_handlingcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                        </div>
+
+                        <!-- Salary Advance (always visible, deducted from advance balance) -->
+                        <div class="form-group-modern mt-2">
+                            <label class="form-label-modern font-weight-bold">
+                                <i class="fas fa-hand-holding-usd mr-1"></i>Salary Advance
+                                <small class="text-muted font-weight-normal ml-1">(deducted from balance)</small>
+                            </label>
+                            {% render_field form.de_salary_advance id="id_de_salary_advance" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
@@ -379,6 +392,8 @@
         const supervisor = el("id_de_supervisorcost");
         const rto = el("id_de_rtocost");
         const batta = el("id_de_battacost");
+        const handling = el("id_de_handlingcost");
+        const salaryAdv = el("id_de_salary_advance");
         const remarksField = el("id_de_remarks");
         const filterTripNumSelect = el("filter_trip_num");
         const filterVehicleNumSelect = el("filter_vehicle_num");
@@ -394,9 +409,12 @@
 
             let currentBal = baseBalance;
             const enteredCost = parseFloat(totalCost.value) || 0;
+            const salaryAdvAmt = parseFloat(salaryAdv?.value) || 0;
 
             if (isAdvance) currentBal += enteredCost;
             if (isExpense) currentBal -= enteredCost;
+            // Salary Advance always reduces balance regardless of type
+            currentBal -= salaryAdvAmt;
 
             balanceBox.innerText = currentBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
@@ -410,7 +428,8 @@
                           (parseFloat(weighment?.value) || 0) +
                           (parseFloat(supervisor?.value) || 0) +
                           (parseFloat(rto?.value) || 0) +
-                          (parseFloat(batta?.value) || 0);
+                          (parseFloat(batta?.value) || 0) +
+                          (parseFloat(handling?.value) || 0);
             totalCost.value = total.toFixed(2);
             updateBalance();
         }
@@ -537,7 +556,7 @@
             if (vehicleField) vehicleField.value = "";
             if (fromField) fromField.value = "";
             if (toField) toField.value = "";
-            [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(f => { if(f) f.value = 0; });
+            [parking, loading, unloading, weighment, supervisor, rto, batta, handling].forEach(f => { if(f) f.value = 0; });
             calculateTotal();
         }
         function executeTableFilter() {
@@ -567,8 +586,9 @@
             $('#de_expense_type').on('change', function() { toggleFields(true); });
         }
 
-        [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(i => i?.addEventListener("input", calculateTotal));
+        [parking, loading, unloading, weighment, supervisor, rto, batta, handling].forEach(i => i?.addEventListener("input", calculateTotal));
         if (totalCost) totalCost.addEventListener("input", updateBalance);
+        if (salaryAdv) salaryAdv.addEventListener("input", updateBalance);
         
         if (filterTripNumSelect) filterTripNumSelect.addEventListener("input", executeTableFilter);
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);

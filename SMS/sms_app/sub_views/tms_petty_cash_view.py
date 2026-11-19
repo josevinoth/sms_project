@@ -440,7 +440,7 @@ def tms_petty_cash_list(request):
             filters &= Q(tpc_created_by_id=search_user)
             
     tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
-        'tpc_business', 'tpc_branch', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
+        'tpc_business', 'tpc_branch', 'tpc_customer', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
     ).order_by('-id')
 
     if request.GET.get('draw'):
@@ -456,6 +456,7 @@ def tms_petty_cash_list(request):
                 Q(tpc_number__icontains=search_value) |
                 Q(tpc_business__bvm_business__icontains=search_value) |
                 Q(tpc_branch__loc_name__icontains=search_value) |
+                Q(tpc_customer__cu_name__icontains=search_value) |
                 Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_value) |
                 Q(tpc_vehicle_number_manual__icontains=search_value) |
                 Q(tpc_created_by__first_name__icontains=search_value) |
@@ -464,7 +465,7 @@ def tms_petty_cash_list(request):
             tpc_list = tpc_list.filter(search_filters)
 
         # Check column-specific searches from header inputs
-        for col_idx in range(13):
+        for col_idx in range(14):
             col_search = request.GET.get(f'columns[{col_idx}][search][value]', '').strip()
             if col_search:
                 if col_idx == 1:
@@ -476,12 +477,14 @@ def tms_petty_cash_list(request):
                 elif col_idx == 4:
                     tpc_list = tpc_list.filter(tpc_branch__loc_name__icontains=col_search)
                 elif col_idx == 5:
+                    tpc_list = tpc_list.filter(tpc_customer__cu_name__icontains=col_search)
+                elif col_idx == 6:
                     try:
                         amt_val = float(col_search)
                         tpc_list = tpc_list.filter(tpc_amount=amt_val)
                     except ValueError:
                         tpc_list = tpc_list.filter(tpc_amount__icontains=col_search)
-                elif col_idx == 6:
+                elif col_idx == 7:
                     matching_trips = TripdetailInfo.objects.filter(
                         Q(tr_departedlocation__place_name__icontains=col_search) |
                         Q(tr_reportedlocation__place_name__icontains=col_search)
@@ -491,24 +494,24 @@ def tms_petty_cash_list(request):
                         if c_no: trip_numbers.add(c_no)
                         if t_no: trip_numbers.add(t_no)
                     tpc_list = tpc_list.filter(Q(tpc_job_no__icontains=col_search) | Q(tpc_job_no__in=trip_numbers))
-                elif col_idx == 7:
+                elif col_idx == 8:
                     tpc_list = tpc_list.filter(
                         Q(tpc_vehicle_number__vm_registrationnumber__icontains=col_search) |
                         Q(tpc_vehicle_number_manual__icontains=col_search)
                     )
-                elif col_idx == 8:
-                    tpc_list = tpc_list.filter(tpc_created_on__icontains=col_search)
                 elif col_idx == 9:
+                    tpc_list = tpc_list.filter(tpc_created_on__icontains=col_search)
+                elif col_idx == 10:
                     tpc_list = tpc_list.filter(
                         Q(tpc_created_by__first_name__icontains=col_search) |
                         Q(tpc_created_by__username__icontains=col_search)
                     )
-                elif col_idx == 10:
+                elif col_idx == 11:
                     tpc_list = tpc_list.filter(
                         Q(tpc_updated_by__first_name__icontains=col_search) |
                         Q(tpc_updated_by__username__icontains=col_search)
                     )
-                elif col_idx == 11:
+                elif col_idx == 12:
                     tpc_list = tpc_list.filter(tpc_updated_at__icontains=col_search)
             
         records_filtered = tpc_list.count()
@@ -563,19 +566,25 @@ def tms_petty_cash_list(request):
                 <i class="fas fa-file-pdf"></i>
             </a>'''
 
+            customer_name = tpc.tpc_customer.cu_name if tpc.tpc_customer else "-"
+
             row = [
                 start + i + 1,
                 tpc.tpc_number or "",
                 tpc.tpc_transaction_date.strftime("%Y-%m-%d") if tpc.tpc_transaction_date else "",
                 tpc.tpc_business.bvm_business if tpc.tpc_business else "",
                 tpc.tpc_branch.loc_name if tpc.tpc_branch else "",
+                customer_name,
                 str(tpc.tpc_amount) if tpc.tpc_amount else "0.0",
                 from_to_location,
                 veh_no,
                 timezone.localtime(tpc.tpc_created_on).strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
                 created_by,
                 updated_by,
-                timezone.localtime(tpc.tpc_updated_at).strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
+                (timezone.localtime(tpc.tpc_updated_at).strftime("%Y-%m-%d %H:%M")
+                 if tpc.tpc_updated_at and tpc.tpc_created_on and
+                    abs((tpc.tpc_updated_at - tpc.tpc_created_on).total_seconds()) > 5
+                 else "-") if tpc.tpc_updated_at else "-",
                 f'''<div class="d-flex justify-content-center" style="gap: 5px;">
                     <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
                         <i class="fas fa-print"></i>
@@ -794,7 +803,7 @@ def tms_petty_cash_export_tally(request):
     
     headers = [
         "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY", 
-        "CUSTOMER", "JOB NO", "VEH.NO.", "AMOUNT", "DRIVER NAME", 
+        "CUSTOMER", "JOB NO", "VEH.NO.", "AMOUNT",
         "TRN DATE", "REMARKS"
     ]
     ws.append(headers)
@@ -811,7 +820,15 @@ def tms_petty_cash_export_tally(request):
     for tpc in tpc_list:
         date_str = tpc.tpc_transaction_date.strftime("%d-%m-%Y") if tpc.tpc_transaction_date else ""
         vou_no = tpc.tpc_number or ""
-        debit = tpc.tpc_expense_type.tms_exp_type_name if tpc.tpc_expense_type else ""
+        debit_raw = tpc.tpc_expense_type.tms_exp_type_name if tpc.tpc_expense_type else ""
+        # Tally ledger mapping: Supervisor Cost & Handling Cost → "Handling"
+        TALLY_DEBIT_MAP = {
+            'supervisor cost': 'Handling',
+            'supervisor': 'Handling',
+            'handling cost': 'Handling',
+            'handling': 'Handling',
+        }
+        debit = TALLY_DEBIT_MAP.get(debit_raw.lower().strip(), debit_raw)
         credit = tpc.tpc_credit_ledger.ledger_name if tpc.tpc_credit_ledger else ""
         
         # Primary Cost Category
@@ -842,7 +859,7 @@ def tms_petty_cash_export_tally(request):
         primary_cost_cat = f"{branch_code}-{source_code}" if (branch_code and source_code) else (branch_code or source_code or "")
         
         # Customer
-        customer = tpc.tpc_customer.cu_name if tpc.tpc_customer else ""
+        customer = tpc.tpc_customer.cu_name if tpc.tpc_customer else "NA"
         
         # Job No
         job_no = tpc.tpc_job_no or ""
@@ -863,9 +880,6 @@ def tms_petty_cash_export_tally(request):
         # Amount
         amount = tpc.tpc_amount or 0.0
         
-        # Driver Name
-        driver_name = (tpc.tpc_driver_name.dm_name if tpc.tpc_driver_name else tpc.tpc_driver_name_manual) or ""
-        
         # Trn Date (DD-MMM, e.g. 28-Jul)
         trn_date = tpc.tpc_trip_date.strftime("%d-%b") if tpc.tpc_trip_date else ""
         
@@ -884,7 +898,7 @@ def tms_petty_cash_export_tally(request):
                     
         ws.append([
             date_str, vou_no, debit, credit, primary_cost_cat,
-            customer, job_no, veh_no, amount, driver_name,
+            customer, job_no, veh_no, amount,
             trn_date, remarks
         ])
         

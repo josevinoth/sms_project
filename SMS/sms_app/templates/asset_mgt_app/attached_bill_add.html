@@ -751,9 +751,67 @@
         hiddenElements.forEach(function(el) {
             el.remove();
         });
+
+        // Prefix trip dates with a non-breaking zero-width tick or text format so Excel preserves them literally
+        var rows = clonedTable.querySelectorAll('tr');
+        for (var r = 1; r < rows.length; r++) {
+            var cells = rows[r].querySelectorAll('td');
+            if (cells.length > 1) {
+                // Trip Date is in column index 1
+                var dateText = (cells[1].innerText || '').trim();
+                if (dateText) {
+                    cells[1].innerText = dateText;
+                }
+            }
+        }
         
-        // Generate Excel book
-        var wb = XLSX.utils.table_to_book(clonedTable, {sheet:"Sheet1", raw:false});
+        // Generate Excel sheet with text-preserving cells (raw: true prevents XLSX auto-date parsing)
+        var ws = XLSX.utils.table_to_sheet(clonedTable, {raw: true});
+        
+        // Set wide columns (especially for Trip Date column B = 22 width) so Excel never shows ####
+        var colWidths = [
+            {wch: 8},   // No / Checkbox
+            {wch: 22},  // Trip Date
+            {wch: 25},  // Cnote
+            {wch: 30},  // Customer name
+            {wch: 22},  // From
+            {wch: 22},  // To
+            {wch: 12},  // Trip KM
+            {wch: 15},  // Buy Cost
+            {wch: 12},  // Toll cost
+            {wch: 16}   // Total Buy cost
+        ];
+        ws['!cols'] = colWidths;
+
+        // Ensure numbers (Trip KM, Buy Cost, Toll Cost, Total Buy Cost) are parsed as numbers for Excel SUM()
+        for (var cellRef in ws) {
+            if (cellRef.startsWith('!') || !ws[cellRef]) continue;
+            var colLetter = cellRef.replace(/[0-9]/g, '');
+            var rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''), 10);
+            
+            if (rowNum === 1) continue; // Header row
+
+            if (colLetter === 'B') {
+                // Trip Date: strict string to avoid #####
+                ws[cellRef].t = 's';
+                ws[cellRef].z = '@';
+            } else if (['G', 'H', 'I', 'J'].indexOf(colLetter) !== -1) {
+                // G = Trip KM, H = Buy Cost, I = Toll cost, J = Total Buy cost
+                var numVal = parseFloat(ws[cellRef].v);
+                if (!isNaN(numVal)) {
+                    ws[cellRef].t = 'n';
+                    ws[cellRef].v = numVal;
+                    if (colLetter === 'H') {
+                        ws[cellRef].z = '#,##0.00';
+                    } else if (colLetter === 'I' || colLetter === 'J' || colLetter === 'G') {
+                        ws[cellRef].z = '#,##0.00';
+                    }
+                }
+            }
+        }
+
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
         XLSX.writeFile(wb, (filename ? filename : 'excel_data') + '.xlsx');
     }
 </script>

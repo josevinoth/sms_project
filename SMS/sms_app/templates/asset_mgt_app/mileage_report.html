@@ -53,12 +53,15 @@
             </select>
         </div>
 
-        <div class="col-md-3 mb-2 d-flex gap-2">
-            <button type="submit" class="btn btn-primary btn-block mr-1">
+        <div class="col-12 d-flex justify-content-end align-items-center mt-2 pt-2" style="gap: 8px; border-top: 1px solid var(--border-light, #e2e8f0);">
+            <button type="submit" class="btn btn-primary d-inline-flex align-items-center justify-content-center" style="height: 38px; padding: 0 18px; border-radius: 6px;">
                 <i class="fas fa-filter mr-1"></i> Filter
             </button>
-            <a href="{{ request.path }}" class="btn btn-outline-secondary">
-                <i class="fas fa-undo"></i>
+            <button type="button" id="btnExportExcel" class="btn text-white font-weight-bold shadow-sm d-inline-flex align-items-center justify-content-center" style="background-color: #107c41; border: none; height: 38px; gap: 6px; padding: 0 18px; border-radius: 6px;" title="Export filtered date range to Excel">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+            <a href="{{ request.path }}" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center" style="height: 38px; padding: 0 16px; border-radius: 6px; text-decoration: none;" title="Reset Filters">
+                <i class="fas fa-undo mr-1"></i> Clear
             </a>
         </div>
     </form>
@@ -105,14 +108,17 @@
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100],
+                [10, 25, 50, 100]
             ],
             pageLength: 10,
             buttons: [
                 { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1' },
                 { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1' },
-                { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'Mileage Report' },
+                { text: '<i class="fas fa-file-excel mr-1 text-success"></i> Excel',
+                action: function (e, dt, node, config) {
+                    $('#btnExportExcel').trigger('click');
+                }, className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'Mileage Report' },
                 { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Mileage Report' },
                 { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Mileage Report' }
             ],
@@ -122,6 +128,39 @@
         $(window).on('resize', function () {
             table.columns.adjust();
         });
+
+    $('#btnExportExcel').on('click', function () {
+        var $btn = $(this);
+        var fromDate = $('[name="from_date"]').val();
+        var toDate = $('[name="to_date"]').val();
+
+        if (!fromDate || !toDate) {
+            alert('Please select both From Date and To Date before exporting.');
+            return;
+        }
+
+        if (new Date(fromDate) > new Date(toDate)) {
+            alert('From Date cannot be after To Date.');
+            return;
+        }
+
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Generating Excel...');
+
+        var params = new URLSearchParams({
+            from_date: fromDate,
+            to_date: toDate,
+            vehicle_id: $('[name="vehicle_id"]').val() || '',
+            branch: $('[name="branch"]').val() || ''
+        });
+
+        window.location.href = "{% url 'mileage_report_export' %}?" + params.toString();
+
+        setTimeout(function () {
+            $btn.prop('disabled', false).html(originalHtml);
+        }, 3000);
+    });
+
     });
 </script>
 {% endblock content %}

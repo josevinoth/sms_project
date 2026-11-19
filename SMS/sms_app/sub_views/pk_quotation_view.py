@@ -642,10 +642,15 @@ def load_quotation_matrix(request):
     if not summary_obj:
         summary_obj = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assess_obj, qs_is_latest=True).first()
 
+    quoted_req_ids = set()
     if summary_obj:
-        quoted_req_ids = set(PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_quotation_summary=summary_obj).values_list('pkqt_requirement_id', flat=True))
-    else:
-        quoted_req_ids = set(PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj).values_list('pkqt_requirement_id', flat=True))
+        quoted_req_ids = set(PkquotationInfo.objects.filter(
+            pkqt_assessment_num=assess_obj, pkqt_quotation_summary=summary_obj
+        ).values_list('pkqt_requirement_id', flat=True))
+    if not quoted_req_ids:
+        quoted_req_ids = set(PkquotationInfo.objects.filter(
+            pkqt_assessment_num=assess_obj
+        ).values_list('pkqt_requirement_id', flat=True))
 
     req_list = []
     active_req = None
@@ -718,13 +723,26 @@ def load_quotation_matrix(request):
 
     if active_req:
         active_req_id = active_req['id']
-        q_filter = {
+        req_q = {
             'pkqt_assessment_num': assess_obj,
             'pkqt_requirement_id': active_req_id,
         }
+        rows = PkquotationInfo.objects.none()
         if summary:
-            q_filter['pkqt_quotation_summary'] = summary
-        rows = PkquotationInfo.objects.filter(**q_filter).select_related(
+            sum_rows = PkquotationInfo.objects.filter(**req_q, pkqt_quotation_summary=summary)
+            if sum_rows.exists():
+                rows = sum_rows
+            else:
+                unlinked = PkquotationInfo.objects.filter(**req_q, pkqt_quotation_summary__isnull=True)
+                if unlinked.exists():
+                    unlinked.update(pkqt_quotation_summary=summary)
+                    rows = PkquotationInfo.objects.filter(**req_q, pkqt_quotation_summary=summary)
+                else:
+                    rows = PkquotationInfo.objects.filter(**req_q)
+        else:
+            rows = PkquotationInfo.objects.filter(**req_q)
+
+        rows = rows.select_related(
             'pkqt_cost_type', 'pkqt_stock_type', 'pkqt_stock_description', 'pkqt_item', 'pkqt_itemdescription', 'pkqt_part_code', 'pkqt_uom'
         )
 
@@ -943,19 +961,29 @@ def save_quotation_matrix(request):
     # Clean existing rows for this specific requirement to prevent duplication
     summary_id = data.get('summary_id') or request.session.get('quotationsummary_id')
     summary_record = None
-    if summary_id:
-        summary_record = PkquotationsummaryInfo.objects.filter(id=summary_id).first()
+    if summary_id and str(summary_id).isdigit() and int(summary_id) > 0:
+        summary_record = PkquotationsummaryInfo.objects.filter(id=int(summary_id)).first()
     if not summary_record:
         summary_record = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assess_obj, qs_is_latest=True).first()
     if not summary_record:
-        summary_record = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assess_obj).first()
+        summary_record = PkquotationsummaryInfo.objects.filter(qs_assessment_num=assess_obj).order_by('-id').first()
+    if not summary_record:
+        summary_record = PkquotationsummaryInfo.objects.create(
+            qs_assessment_num=assess_obj,
+            qs_quotation_number=f"QS_{assess_obj.na_assessment_num}",
+            qs_status='Work In Progress',
+            qs_is_latest=True,
+            qs_margin=15.0
+        )
+    if summary_record:
+        request.session['quotationsummary_id'] = summary_record.id
 
     del_qs = PkquotationInfo.objects.filter(
         pkqt_assessment_num=assess_obj,
         pkqt_requirement=req_obj
     )
     if summary_record:
-        del_qs = del_qs.filter(pkqt_quotation_summary=summary_record)
+        del_qs = del_qs.filter(Q(pkqt_quotation_summary=summary_record) | Q(pkqt_quotation_summary__isnull=True))
     del_qs.delete()
 
     created_count = 0
@@ -1271,6 +1299,13 @@ def save_quotation_matrix(request):
         summary.qs_updated_by_id = user_id
     summary.save()
 
+    # Ensure all items for this assessment and requirement are linked to the summary
+    PkquotationInfo.objects.filter(
+        pkqt_assessment_num=assess_obj,
+        pkqt_requirement=req_obj,
+        pkqt_quotation_summary__isnull=True
+    ).update(pkqt_quotation_summary=summary)
+
     recalculate_dependent_costs(assess_obj.id, request)
 
     return JsonResponse({
@@ -1331,8 +1366,14 @@ def matrix_part_code_search(request):
     # Otherwise query standard PkpartcodeInfo catalog
     qs = PkpartcodeInfo.objects.all().select_related('pc_stock_type', 'pc_stock_description', 'pc_uom')
 
-    if stock_type == 'wood':
-        qs = qs.filter(Q(pc_stock_type_id__in=[1, 5]) | Q(pc_code__startswith='K') | Q(pc_code__startswith='RW'))
+    q_lower = query.lower()
+    # Intelligent material prefix detection: user typing PY means Plywood, even if row currently says Wood
+    if q_lower.startswith('py') or q_lower.startswith('mpy') or 'ply' in q_lower:
+        qs = qs.filter(Q(pc_stock_type_id__in=[4, 6]) | Q(pc_code__startswith='PY') | Q(pc_code__startswith='MPY'))
+    elif q_lower.startswith('n') and (len(query) <= 4 or 'nail' in q_lower):
+        qs = qs.filter(Q(pc_code__startswith='N') | Q(pc_stock_description__stock_description__icontains='nail'))
+    elif stock_type == 'wood':
+        qs = qs.filter(Q(pc_stock_type_id__in=[1, 5]) | Q(pc_code__startswith='P') | Q(pc_code__startswith='K') | Q(pc_code__startswith='RW') | Q(pc_code__startswith='H'))
     elif stock_type == 'plywood':
         qs = qs.filter(Q(pc_stock_type_id__in=[4, 6]) | Q(pc_code__startswith='PY') | Q(pc_code__startswith='MPY'))
     elif stock_type == 'nails':
@@ -1340,13 +1381,23 @@ def matrix_part_code_search(request):
     elif stock_type == 'consumables':
         qs = qs.filter(pc_stock_type_id=2)
 
+    from django.db.models import Case, When, Value, IntegerField
     if query:
         qs = qs.filter(
             Q(pc_code__icontains=query) |
             Q(pc_stock_description__stock_description__icontains=query)
-        )
+        ).annotate(
+            match_priority=Case(
+                When(pc_code__iexact=query, then=Value(1)),
+                When(pc_code__istartswith=query, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField()
+            )
+        ).order_by('match_priority', 'pc_code')
+    else:
+        qs = qs.order_by('pc_code')
 
-    partcodes = list(qs.order_by('pc_code')[:limit])
+    partcodes = list(qs[:limit])
     pc_ids = [p.id for p in partcodes]
 
     # Map latest active GRN batch for each part code if exists in warehouse
@@ -1503,11 +1554,20 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
     # Build dictionary of existing operational costs per requirement
     import json
     operational_costs_map = {}
-    q_filter = {'pkqt_assessment_num': assess_obj}
     if summary:
-        q_filter['pkqt_quotation_summary'] = summary
+        sum_op = PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_quotation_summary=summary, pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
+        if sum_op.exists():
+            op_items = sum_op
+        else:
+            unlinked_op = PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_quotation_summary__isnull=True, pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
+            if unlinked_op.exists():
+                unlinked_op.update(pkqt_quotation_summary=summary)
+                op_items = PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_quotation_summary=summary, pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
+            else:
+                op_items = PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
+    else:
+        op_items = PkquotationInfo.objects.filter(pkqt_assessment_num=assess_obj, pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
 
-    op_items = PkquotationInfo.objects.filter(**q_filter).filter(pkqt_cost_type_id__in=[3, 4, 5, 6, 9, 10, 11])
     saved_custom_breakdown = []
     for item in op_items:
         r_id = item.pkqt_requirement_id
@@ -1540,9 +1600,22 @@ def box_costing_matrix_view(request, na_assessment_num_id=0, requirement_id=0):
 
     if requirement_id:
         req_rows_filter = {'pkqt_assessment_num': assess_obj, 'pkqt_requirement_id': requirement_id}
+        req_saved_rows = PkquotationInfo.objects.none()
         if summary:
-            req_rows_filter['pkqt_quotation_summary'] = summary
-        req_saved_rows = PkquotationInfo.objects.filter(**req_rows_filter).select_related(
+            summary_rows = PkquotationInfo.objects.filter(**req_rows_filter, pkqt_quotation_summary=summary)
+            if summary_rows.exists():
+                req_saved_rows = summary_rows
+            else:
+                unlinked_rows = PkquotationInfo.objects.filter(**req_rows_filter, pkqt_quotation_summary__isnull=True)
+                if unlinked_rows.exists():
+                    unlinked_rows.update(pkqt_quotation_summary=summary)
+                    req_saved_rows = PkquotationInfo.objects.filter(**req_rows_filter, pkqt_quotation_summary=summary)
+                else:
+                    req_saved_rows = PkquotationInfo.objects.filter(**req_rows_filter)
+        else:
+            req_saved_rows = PkquotationInfo.objects.filter(**req_rows_filter)
+
+        req_saved_rows = req_saved_rows.select_related(
             'pkqt_cost_type', 'pkqt_stock_type', 'pkqt_stock_description', 'pkqt_item', 'pkqt_itemdescription', 'pkqt_part_code', 'pkqt_uom'
         )
 

@@ -26,6 +26,8 @@ class Driverexpense(models.Model):
     de_supervisorcost = models.FloatField(default=0.0)
     de_rtocost = models.FloatField(default=0.0)
     de_battacost = models.FloatField(default=0.0)
+    de_handlingcost = models.FloatField(default=0.0, verbose_name='Handling Cost')
+    de_salary_advance = models.FloatField(default=0.0, verbose_name='Salary Advance')
     de_total_cost=models.FloatField(default=0.0)
     de_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
     trip_date = models.DateField(null=True, blank=True)

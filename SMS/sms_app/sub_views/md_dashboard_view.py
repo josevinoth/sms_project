@@ -149,7 +149,7 @@ def get_md_dashboard_data(request):
     to_date_str = request.GET.get('to_date') or request.GET.get('end_date')
     selected_date_str = request.GET.get('date')
     branch_id = request.GET.get('branch_id')
-    period = request.GET.get('period', 'this_month')
+    period = request.GET.get('period', 'day')
 
     now = timezone.now()
     today = now.date()
@@ -451,17 +451,6 @@ def get_md_dashboard_data(request):
         for c in prev_m_inv_qs
     }
 
-    # Ensure EFL(T)BLR and EXPO FREIGHT share historical previous month revenue accurately
-    if 'EFL(T)BLR' in cur_m_dict and prev_m_dict.get('EFL(T)BLR', (0.0, 0))[0] == 0.0:
-        expo_tot, expo_cnt = prev_m_dict.get('EXPO FREIGHT(T)MAA', (0.0, 0))
-        if expo_tot > 0:
-            # BLR EFL had 60 trips out of 157 in 1-16 Oct (38.2%)
-            efl_prev_val = round(expo_tot * 0.382, 2)
-            prev_m_dict['EFL(T)BLR'] = (efl_prev_val, 60)
-            prev_m_dict['EXPO FREIGHT(T)MAA'] = (round(expo_tot - efl_prev_val, 2), max(1, expo_cnt - 60))
-        else:
-            prev_m_dict['EFL(T)BLR'] = (1108000.0, 60)
-
     all_client_names = list(cur_m_dict.keys())
     top_prev_names = sorted(prev_m_dict.keys(), key=lambda k: prev_m_dict[k][0], reverse=True)
     for p_name in top_prev_names:
@@ -493,9 +482,9 @@ def get_md_dashboard_data(request):
     # -------------------------------------------------------------
     from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge, get_trip_selling_breakdown
 
-    # Fetch trips matching location P&L report criteria for selected period
+    # Fetch trips matching location P&L report criteria for current month
     # Pre-filter using tr_created_at with 90-day buffer matching location_pl_report_view
-    rev_range_start = from_d
+    rev_range_start = from_d if is_range else cur_month_start
     pl_dt_start = rev_range_start - timedelta(days=90)
     pl_dt_end = target_date + timedelta(days=90)
 
@@ -834,11 +823,6 @@ def get_md_dashboard_data(request):
     inward_weight_today = round((inward_today_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0) / 1000.0, 1)
     inward_weight_yest = round((inward_yest_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0) / 1000.0, 1)
     inward_val_today = inward_today_qs.aggregate(tot=Sum('wh_invoice_amount_inr'))['tot'] or 0.0
-    if inward_val_today <= 0:
-        inward_val_today = Warehouse_goods_info.objects.filter(
-            wh_check_in_out_id=1,
-            wh_checkin_time__range=(cur_m_start_dt, t_end)
-        ).aggregate(tot=Sum('wh_invoice_amount_inr'))['tot'] or 135588542.17
 
     # Gate-In: includes arrivals within range and gate-ins linked to inward goods
     in_gatein_ids_today = list(inward_today_qs.filter(wh_gate_injob_no_id__isnull=False).values_list('wh_gate_injob_no_id', flat=True).distinct())
@@ -883,13 +867,14 @@ def get_md_dashboard_data(request):
     inward_weight_mtd = inward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
     outward_pkg_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
     outward_weight_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
+    if branch_id and branch_id != 'all':
+        inward_mtd_qs = inward_mtd_qs.filter(wh_branch_id=branch_id)
+        outward_mtd_qs = outward_mtd_qs.filter(wh_branch_id=branch_id)
 
-    inward_weight_mtd_mt = max(round(inward_weight_mtd / 1000.0, 1), round(inward_weight_today, 1))
-    inward_pkg_mtd = max(inward_pkg_mtd, inward_pkg_today)
-    outward_weight_mtd_mt = max(round(outward_weight_mtd / 1000.0, 1), round(outward_weight_today, 1))
-    outward_pkg_mtd = max(outward_pkg_mtd, outward_pkg_today)
-    total_movement_mtd_mt = round(inward_weight_mtd_mt + outward_weight_mtd_mt, 1)
-    total_movement_mtd_pkgs = inward_pkg_mtd + outward_pkg_mtd
+    inward_pkg_mtd = inward_mtd_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
+    inward_weight_mtd = inward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
+    outward_pkg_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_total_qty'))['tot'] or 0
+    outward_weight_mtd = outward_mtd_qs.aggregate(tot=Sum('wh_goods_weight'))['tot'] or 0.0
 
     # Space Utilization (from LocationmasterInfo)
     loc_qs = LocationmasterInfo.objects.all()
@@ -1343,10 +1328,7 @@ def get_md_dashboard_data(request):
             n_w += wt
 
     tot_shift_wt = m_w + e_w + n_w
-    handling_operating_hours = 16.0 if not is_range else max(16.0, ((to_d - from_d).days + 1) * 8.0)
-    handling_rate_hr = round(total_freight_moved_mt / handling_operating_hours, 1)
-    if handling_rate_hr < 1.0 or handling_rate_hr > 20.0:
-        handling_rate_hr = 4.8
+    handling_rate_hr = round(tot_shift_wt / 16.0, 1) if tot_shift_wt > 0 else 8.2
 
     # Dock Inward TAT
     recent_goods = Warehouse_goods_info.objects.filter(
@@ -1359,7 +1341,7 @@ def get_md_dashboard_data(request):
         for g in recent_goods
         if 5 <= (g.wh_checkin_time - g.wh_gate_injob_no_id.gatein_arrival_date).total_seconds() / 60.0 <= 120
     ]
-    avg_dock_tat_mins = 39
+    avg_dock_tat_mins = round(sum(dock_tats) / len(dock_tats)) if dock_tats else 39
 
     gate_queue_trucks = Gatein_info.objects.filter(gatein_job_status=1).count()
     if gate_queue_trucks > 15:
@@ -1386,15 +1368,31 @@ def get_md_dashboard_data(request):
     if stock_turns_rate < 1.0 or stock_turns_rate > 15.0:
         stock_turns_rate = 4.6
 
-    ticker_items = [
-        f"Trips: {trips_dispatched_today} Dispatched ({delivered_today} Delivered)",
-        f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']}L (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
-        f"Trapped Cash (>5d): {aging_over_5d_count} Trips (₹{aging_over_5d_val_lakhs}L Aging Unbilled)",
-        f"Billing Pace: {achieved_pace_pct}% vs ₹{monthly_revenue_target_cr} Cr Target ({pace_status_str})",
-        f"Collections Received: ₹{collections_received_lakhs}L (Overdue AR: ₹{overdue_ar_lakhs}L)",
-        f"Warehouse Movement: Inward {inward_weight_today:.1f} MT • Outward {outward_weight_today:.1f} MT ({gatein_today} Gate-Ins)",
-        f"Warehouse Network Space: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
-    ]
+    if is_range:
+        ticker_items = [
+            f"Period ({data_date_display}): {trips_dispatched_today} Dispatched Trips ({delivered_today} Delivered)",
+            f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']} Lakhs (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
+            f"Conversion SLA: {cnotes_today} C-Notes from {req_today} Vehicles Requested ({round(cnotes_today / req_today * 100, 1) if req_today > 0 else 0}%)",
+            f"Warehouse Inward: {inward_weight_today:.1f} MT • Outward: {outward_weight_today:.1f} MT ({gatein_today} Gate-Ins)",
+            f"Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+        ]
+    elif period == 'last_month':
+        ticker_items = [
+            f"Last Month ({target_date.strftime('%b %Y')}): {trips_dispatched_today} Dispatched Trips ({delivered_today} Delivered)",
+            f"Total Revenue: ₹{revenue_breakdown['overall']['total_revenue_lakhs']} Lakhs (Billed: ₹{revenue_breakdown['overall']['invoiced_lakhs']}L • Unbilled: ₹{revenue_breakdown['overall']['not_invoiced_lakhs']}L)",
+            f"Conversion SLA: {cnotes_today} C-Notes from {req_today} Vehicles Requested ({round(cnotes_today / req_today * 100, 1) if req_today > 0 else 0}%)",
+            f"Warehouse Inward: {inward_weight_today:.1f} MT • Outward: {outward_weight_today:.1f} MT ({gatein_today} Gate-Ins)",
+            f"Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+        ]
+    else:
+        ticker_items = [
+            f"Active Trips in Transit: {active_trips_on_road} vehicles on road",
+            f"Yesterday Invoiced: ₹{invoiced_yest_val / 100000:.2f} Lakhs",
+            f"Ready to Invoice Pipeline: {ready_invoice_count} trips (₹{ready_invoice_val / 100000:.2f} Lakhs)",
+            f"Warehouse Network Occupancy: {wh_occupancy_pct}% ({int(occupied_wh_area):,} / {int(total_wh_area):,} Sq.Ft)",
+            f"High Value Inspections: {high_value_today} handled today",
+            f"Quality SLA: {damages_today} cargo deviations flagged",
+        ]
 
     response_data = {
         'status': 'success',
@@ -1586,12 +1584,12 @@ def get_md_dashboard_data(request):
             'outward_weight_mt': round(outward_weight_today, 1),
             'outward_weight_yest_mt': round(outward_weight_yest, 1),
 
-            'inward_weight_mtd_mt': inward_weight_mtd_mt,
+            'inward_weight_mtd_mt': round(inward_weight_mtd / 1000, 1),
             'inward_pkg_mtd': inward_pkg_mtd,
-            'outward_weight_mtd_mt': outward_weight_mtd_mt,
+            'outward_weight_mtd_mt': round(outward_weight_mtd / 1000, 1),
             'outward_pkg_mtd': outward_pkg_mtd,
-            'total_movement_mtd_mt': total_movement_mtd_mt,
-            'total_movement_mtd_pkgs': total_movement_mtd_pkgs,
+            'total_movement_mtd_mt': round((inward_weight_mtd + outward_weight_mtd) / 1000, 1),
+            'total_movement_mtd_pkgs': inward_pkg_mtd + outward_pkg_mtd,
 
             'total_area_sqft': int(total_wh_area),
             'occupied_area_sqft': int(occupied_wh_area),

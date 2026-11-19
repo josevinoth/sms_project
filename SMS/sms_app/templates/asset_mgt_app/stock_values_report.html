@@ -26,12 +26,12 @@
 
     <!-- Stats Badges -->
     <div class="row mb-4">
-        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-            <button type="button" class="btn btn-dark m-1" style="border-radius:20px; font-weight:bold; font-size:0.85rem; color: white;">MAA_TODAY</button>
-            <button type="button" class="btn btn-success m-1" style="color: white; border-radius:20px; font-weight:bold; font-size:0.85rem;"> CHECK-IN: <i class="fas fa-rupee-sign"></i> {{maa_in_stock_value_cud|format_currency}}</button>
+        <div class="col-12 stats-badge-container d-flex flex-nowrap align-items-center py-1">
+            <button type="button" class="btn btn-dark m-1 text-nowrap" style="border-radius:20px; font-weight:bold; font-size:0.85rem; color: white;">MAA_TODAY</button>
+            <button type="button" class="btn btn-success m-1 text-nowrap" style="color: white; border-radius:20px; font-weight:bold; font-size:0.85rem;"> CHECK-IN: <i class="fas fa-rupee-sign"></i> {{maa_in_stock_value_cud|format_currency}}</button>
 
-            <button type="button" class="btn btn-dark m-1 ml-4" style="border-radius:20px; font-weight:bold; font-size:0.85rem; color: white;">BLR_TODAY</button>
-            <button type="button" class="btn btn-success m-1" style="color: white; border-radius:20px; font-weight:bold; font-size:0.85rem;"> CHECK-IN: <i class="fas fa-rupee-sign"></i> {{blr_in_stock_value_cud|format_currency}}</button>
+            <button type="button" class="btn btn-dark m-1 ml-4 text-nowrap" style="border-radius:20px; font-weight:bold; font-size:0.85rem; color: white;">BLR_TODAY</button>
+            <button type="button" class="btn btn-success m-1 text-nowrap" style="color: white; border-radius:20px; font-weight:bold; font-size:0.85rem;"> CHECK-IN: <i class="fas fa-rupee-sign"></i> {{blr_in_stock_value_cud|format_currency}}</button>
         </div>
     </div>
 
@@ -133,6 +133,16 @@
 </div>
 
 <style>
+/* Stats Badges responsive alignment without scrollbar */
+.stats-badge-container {
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+.stats-badge-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
 /* Fix Select2 Outline and Height to match modern inputs */
 .select2-container .select2-selection--single {
     border: 1px solid #cbd5e1 !important;

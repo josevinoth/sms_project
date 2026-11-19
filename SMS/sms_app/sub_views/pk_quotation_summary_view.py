@@ -105,9 +105,9 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             engineer_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 2), 3)
             labour_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id in [3, 9]), 3)
             crane_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 6), 3)
-            ht_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 5), 3)
+            ht_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id in [5, 10]), 3)
             management_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 7), 3)
-            material_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id == 2), 3)
+            material_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if (q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id == 2) or q.pkqt_cost_type_id == 11), 3)
             transport_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 4), 3)
 
             # Grouping by job type in Python memory (0 extra queries)
@@ -131,11 +131,11 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
 
                 if ct == 8 and st in [1, 5]: job_map[jname]['wood'] += val
                 elif ct == 8 and st in [4, 6]: job_map[jname]['plywood'] += val
-                elif ct == 8 and st == 2: job_map[jname]['consumables'] += val
+                elif (ct == 8 and st == 2) or ct == 11: job_map[jname]['consumables'] += val
                 elif ct == 2: job_map[jname]['engineer'] += val
                 elif ct in [3, 9]: job_map[jname]['labour'] += val
                 elif ct == 6: job_map[jname]['crane'] += val
-                elif ct == 5: job_map[jname]['ht'] += val
+                elif ct in [5, 10]: job_map[jname]['ht'] += val
                 elif ct == 4: job_map[jname]['transport'] += val
 
             aggregated_jobs = []
