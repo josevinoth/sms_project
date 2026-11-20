@@ -95,77 +95,180 @@
             display: block;
         }
 
-        /* Progress Bar */
+        /* Stepper & Phases */
         .tracking-timeline {
             position: relative;
-            padding: 2rem 0;
-            margin-bottom: 3rem;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
         }
 
-        .progress-container {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
+        .flow-phase-block {
+            margin: 1.2rem 0 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flow-phase-badge {
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 4px 11px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .flow-phase-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent);
+        }
+
+        .flow-stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
             position: relative;
-            border-radius: 2px;
+        }
+
+        .flow-step-item {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+            padding-bottom: 1.4rem;
+        }
+
+        .flow-step-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .flow-step-line {
+            position: absolute;
+            left: 17px;
+            top: 36px;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flow-step-item.is-done .flow-step-line {
+            background: #22c55e;
+        }
+
+        .flow-step-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            z-index: 2;
+            background: #1e293b;
+            border: 2px solid #475569;
+            color: #94a3b8;
+            transition: all 0.25s;
+        }
+
+        .flow-step-item.is-done .flow-step-icon {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+        }
+
+        .flow-step-item.is-current .flow-step-icon {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: #00f2fe;
+            color: #00f2fe;
+            box-shadow: 0 0 14px rgba(0, 242, 254, 0.6);
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(0, 242, 254, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+        }
+
+        .flow-step-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+        }
+
+        .flow-step-item.is-current .flow-step-content {
+            background: rgba(0, 242, 254, 0.04);
+            border-color: rgba(0, 242, 254, 0.25);
+        }
+
+        .flow-step-item.is-done .flow-step-content {
+            background: rgba(34, 197, 94, 0.03);
+            border-color: rgba(34, 197, 94, 0.15);
+        }
+
+        .flow-step-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 0.2rem;
+        }
+
+        .flow-step-time {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        .flow-step-desc {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            margin-bottom: 0.2rem;
+        }
+
+        .flow-step-sub {
+            font-size: 0.74rem;
+            color: #94a3b8;
+        }
+
+        .step-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .step-badge-done { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .step-badge-current { background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.4); }
+        .step-badge-pending { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
+
+        .progress-container {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
         }
 
         .progress-bar {
             height: 100%;
-            border-radius: 2px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            width: 50%;
-            /* Dynamic */
-        }
-
-        .dots {
-            display: flex;
-            justify-content: space-between;
-            position: absolute;
-            top: -13px;
-            width: 100%;
-        }
-
-        .dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #1e293b;
-            border: 3px solid #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            border-color: var(--primary);
-            background: var(--dark);
-            box-shadow: 0 0 15px var(--primary);
-        }
-
-        .dot.completed {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: var(--dark);
-        }
-
-        .dot-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1.5rem;
-        }
-
-        .label {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            text-align: center;
-            width: 80px;
-        }
-
-        .label.active {
-            color: var(--primary);
-            font-weight: 600;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #38bdf8 0%, #00f2fe 50%, #10b981 100%);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+            transition: width 0.6s ease;
         }
 
         /* Map Placeholder */
@@ -268,41 +371,92 @@
             <a href="{% url 'customer_dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to
                 Dashboard</a>
             <div class="status-pill"
-                style="padding: 0.5rem 1rem; background: rgba(0, 242, 254, 0.1); color: var(--primary); border-radius: 20px; font-weight: 600;">
-                {{ trip.tc_financestatus.status }}
+                style="padding: 0.5rem 1rem; background: rgba(0, 242, 254, 0.1); border: 1px solid {{ flow.stage_color|default:'var(--primary)' }}; color: {{ flow.stage_color|default:'var(--primary)' }}; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas {{ flow.stage_icon|default:'fa-truck' }}"></i> {{ flow.stage_label|default:trip.tc_financestatus.status }}
             </div>
         </div>
 
         <div class="tracking-grid">
             <div class="main-tracking">
                 <div class="card">
-                    <h1>Shipment Status</h1>
-                    <span class="trip-id">TRIP ID: {{ trip.tr_tripnumber }}</span>
+                    <h1>Shipment Status Flow</h1>
+                    <span class="trip-id">TRIP ID: {{ trip.tr_tripnumber }} &bull; BOOKING #{{ trip.tr_enquirynumber.en_enquirynumber }}</span>
 
                     <div class="tracking-timeline">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; font-size: 0.85rem;">
+                            <span style="color: #94a3b8; font-weight: 600; text-transform: uppercase;">Lifecycle Movement Progress</span>
+                            <span style="color: #00f2fe; font-weight: 700; font-family: 'Orbitron', sans-serif;">{{ flow.progress_percent|default:0 }}% &bull; Step {{ flow.current_stage|default:1 }} of 12</span>
+                        </div>
                         <div class="progress-container">
-                            <!-- Progress Width Calculation (example) -->
-                            {% with status=trip.tc_financestatus_id %}
-                            <div class="progress-bar"
-                                style="--p-width: {% if status == 1 %}66%{% elif status == 2 or status == 7 %}100%{% else %}25%{% endif %}; width: var(--p-width);">
-                            </div>
-                            {% endwith %}
+                            <div class="progress-bar" style="width: {{ flow.progress_percent|default:8 }}%;"></div>
                         </div>
-                        <div class="dots">
-                            <div class="dot completed"><i class="fas fa-check"></i></div>
-                            <div class="dot {% if trip.tc_financestatus_id >= 1 %}completed{% else %}active{% endif %}">
-                                <i class="fas fa-truck"></i>
+
+                        <!-- 12-Step Granular Lifecycle Stepper -->
+                        <div class="flow-stepper">
+                            {% for step in flow.steps %}
+                            {% ifchanged step.phase_group %}
+                            <div class="flow-phase-block">
+                                <span class="flow-phase-badge" style="background: rgba(255,255,255,0.05); border: 1px solid {{ step.phase_color|default:'var(--primary)' }}; color: {{ step.phase_color|default:'var(--primary)' }};">
+                                    <i class="fas {{ step.phase_icon }}"></i> {{ step.phase_group }}
+                                </span>
+                                <div class="flow-phase-line"></div>
                             </div>
-                            <div class="dot {% if trip.tc_financestatus_id >= 2 %}completed{% else %}active{% endif %}">
-                                <i class="fas fa-house-chimney"></i>
+                            {% endifchanged %}
+
+                            <div class="flow-step-item {% if step.status == 'done' %}is-done{% elif step.status == 'current' %}is-current{% endif %}">
+                                {% if not forloop.last %}
+                                <div class="flow-step-line"></div>
+                                {% endif %}
+
+                                <div class="flow-step-icon">
+                                    {% if step.status == 'done' %}
+                                    <i class="fas fa-check"></i>
+                                    {% else %}
+                                    <i class="fas {{ step.icon }}"></i>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flow-step-content">
+                                    <div class="flow-step-title">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span>Step {{ step.step }}: {{ step.title }}</span>
+                                            {% if step.status == 'done' %}
+                                            <span class="step-badge step-badge-done"><i class="fas fa-check-circle"></i> Completed</span>
+                                            {% elif step.status == 'current' %}
+                                            <span class="step-badge step-badge-current"><i class="fas fa-spinner fa-spin"></i> In-Progress</span>
+                                            {% else %}
+                                            <span class="step-badge step-badge-pending"><i class="far fa-circle"></i> Pending</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if step.time %}
+                                        <span class="flow-step-time"><i class="far fa-clock"></i> {{ step.time|date:"d M Y, H:i" }}</span>
+                                        {% elif step.status == 'done' %}
+                                        <span class="flow-step-time" style="color: #22c55e;"><i class="fas fa-check-double"></i> Milestone Achieved</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flow-step-desc">{{ step.desc }}</div>
+                                    {% if step.sub %}
+                                    <div class="flow-step-sub">{{ step.sub }}</div>
+                                    {% endif %}
+
+                                    {% if step.track_link and step.status == 'current' %}
+                                    <div style="margin-top: 8px;">
+                                        <a href="{{ step.track_link }}" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 6px; background: rgba(0, 242, 254, 0.15); border: 1px solid #00f2fe; color: #00f2fe; text-decoration: none; font-size: 0.75rem; font-weight: 600;">
+                                            <i class="fas fa-satellite-dish"></i> Live GPS Highway Tracking
+                                        </a>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if step.pod_trip_id and step.status == 'done' %}
+                                    <div style="margin-top: 8px;">
+                                        <a href="{% url 'download_pod' step.pod_trip_id %}" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; text-decoration: none; font-size: 0.75rem; font-weight: 600;">
+                                            <i class="fas fa-file-pdf"></i> View Delivered POD
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                        <div class="dot-labels">
-                            <div class="label active">Booked<br><small>{{ trip.tr_created_at|date:"d M" }}</small></div>
-                            <div class="label {% if trip.tc_financestatus_id >= 1 %}active{% endif %}">
-                                In-Transit<br><small>{{ trip.tr_loading_time|date:"d M" }}</small></div>
-                            <div class="label {% if trip.tc_financestatus_id >= 2 %}active{% endif %}">
-                                Delivered<br><small>{{ trip.tr_reporteddate|date:"d M" }}</small></div>
+                            {% endfor %}
                         </div>
                     </div>
 

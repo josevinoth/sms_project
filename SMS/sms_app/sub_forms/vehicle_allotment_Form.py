@@ -27,7 +27,7 @@ class VehicleallotmentForm(forms.ModelForm):
                     Q(tr_operational_status_id__in=[1, 12]) |
                     (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
                 ).filter(
-                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+                    Q(tr_created_at__date__gte='2026-08-01') & Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
                 ).exclude(
                     tr_enquirynumber__en_status_id=8
                 ).values_list('tr_vehiclenumber', flat=True) if t
@@ -38,7 +38,7 @@ class VehicleallotmentForm(forms.ModelForm):
             ).values_list('id', flat=True)) if open_trip_regs else set()
 
             busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
-                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+                Q(va_created_at__date__gte='2026-08-01') & Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             ).exclude(
                 va_status_id__in=[2, 3, 4, 5]
             ).exclude(
@@ -66,7 +66,8 @@ class VehicleallotmentForm(forms.ModelForm):
             for a in allotments:
                 if not a.va_vehiclenumber:
                     continue
-                key = (a.va_enquirynumber_id, (a.va_vehiclenumber.vm_registrationnumber or '').strip().upper())
+                clean_reg = (a.va_vehiclenumber.vm_registrationnumber or '').strip().upper()
+                key = (a.va_enquirynumber_id, clean_reg)
                 if key in trip_map:
                     has_active_trip = any(
                         (op in [1, 12] or fin == 1 or (op not in closed_status_ids and fin not in closed_status_ids))
@@ -75,8 +76,14 @@ class VehicleallotmentForm(forms.ModelForm):
                     if has_active_trip:
                         busy_vehicle_ids.add(a.va_vehiclenumber_id)
                 else:
-                    # Vehicle is in 'Vehicle Assigned' status with no trip created yet
-                    busy_vehicle_ids.add(a.va_vehiclenumber_id)
+                    # Vehicle is in 'Vehicle Assigned' status with no trip created yet.
+                    # Ignore if the vehicle has already taken newer trips since this allotment.
+                    has_newer_trips = TripdetailInfo.objects.filter(
+                        tr_vehiclenumber__iexact=clean_reg,
+                        tr_created_at__gt=a.va_created_at
+                    ).exists() if a.va_created_at else False
+                    if not has_newer_trips:
+                        busy_vehicle_ids.add(a.va_vehiclenumber_id)
 
             if curr_id:
                 busy_vehicle_ids.discard(curr_id)

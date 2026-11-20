@@ -618,7 +618,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # Filter active checks to only allotments/enquiries created on/after 2026-08-01
             allotments_to_check = allotments_to_check.filter(
-                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+                Q(va_created_at__date__gte='2026-08-01') & Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             )
 
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
@@ -677,7 +677,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             if reg_no:
                 reg_no_clean = str(reg_no).strip()
                 other_trips = TripdetailInfo.objects.filter(
-                    Q(tr_created_at__date__gte='2026-08-01') | Q(
+                    Q(tr_created_at__date__gte='2026-08-01') & Q(
                         tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
                     tr_vehiclenumber__iexact=reg_no_clean
                 ).exclude(tr_enquirynumber_id=enquiry_id).select_related('tr_enquirynumber')
@@ -844,7 +844,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # Filter active checks to only allotments/enquiries created on/after 2026-08-01
             allotments_to_check = allotments_to_check.filter(
-                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+                Q(va_created_at__date__gte='2026-08-01') & Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             ).exclude(id=vehicle_allotment_id)
 
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
@@ -906,7 +906,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             if reg_no:
                 reg_no_clean = str(reg_no).strip()
                 other_trips = TripdetailInfo.objects.filter(
-                    Q(tr_created_at__date__gte='2026-08-01') | Q(
+                    Q(tr_created_at__date__gte='2026-08-01') & Q(
                         tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
                     tr_vehiclenumber__iexact=reg_no_clean
                 ).exclude(tr_enquirynumber_id=obj.va_enquirynumber_id).select_related('tr_enquirynumber')
@@ -1315,7 +1315,7 @@ def load_vehicle_source(request):
             tr_vehiclesource__in=[1, 2],
             tc_financestatus=1
         ).filter(
-            Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+            Q(tr_created_at__date__gte='2026-08-01') & Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
         ).values_list('tr_vehiclenumber', flat=True)
     )
 
@@ -1377,7 +1377,7 @@ def load_vehicle_number(request):
         Q(tr_operational_status_id__in=[1, 12]) |
         (~Q(tc_financestatus_id__in=closed_status_ids) & ~Q(tr_operational_status_id__in=closed_status_ids))
     ).filter(
-        Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
+        Q(tr_created_at__date__gte='2026-08-01') & Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01')
     ).exclude(
         tr_enquirynumber__en_status_id=8
     )
@@ -1393,14 +1393,14 @@ def load_vehicle_number(request):
 
     # 2) Busy allotments: vehicles in 'Vehicle Assigned' status (no trip created yet, or trip still active)
     busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
-        Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+        Q(va_created_at__date__gte='2026-08-01') & Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
     ).exclude(
         va_status_id__in=[2, 3, 4, 5]
     ).exclude(
         va_enquirynumber__en_status_id=8
     ).exclude(
         va_vehiclenumber__isnull=True
-    ).values_list('va_enquirynumber_id', 'va_vehiclenumber_id', 'va_vehiclenumber__vm_registrationnumber')
+    ).values_list('va_enquirynumber_id', 'va_vehiclenumber_id', 'va_vehiclenumber__vm_registrationnumber', 'va_created_at')
 
     busy_vehicle_ids = set()
     allotment_data = list(busy_allotments_qs)
@@ -1423,10 +1423,11 @@ def load_vehicle_number(request):
         fin_status = t['tc_financestatus_id'] if t['tc_financestatus_id'] else 1
         trip_map[key].append((op_status, fin_status))
 
-    for enq_id, veh_id, veh_reg in allotment_data:
+    for enq_id, veh_id, veh_reg, va_created in allotment_data:
         if not veh_id:
             continue
-        key = (enq_id, (veh_reg or '').strip().upper())
+        clean_reg = (veh_reg or '').strip().upper()
+        key = (enq_id, clean_reg)
 
         if key in trip_map:
             # If any trip is active / not closed
@@ -1437,8 +1438,14 @@ def load_vehicle_number(request):
             if has_active_trip:
                 busy_vehicle_ids.add(veh_id)
         else:
-            # No trip exists yet -> vehicle is in 'Vehicle Assigned' status and is busy
-            busy_vehicle_ids.add(veh_id)
+            # No trip exists yet -> vehicle is in 'Vehicle Assigned' status.
+            # Ignore if the vehicle has already taken newer trips since this allotment.
+            has_newer_trips = TripdetailInfo.objects.filter(
+                tr_vehiclenumber__iexact=clean_reg,
+                tr_created_at__gt=va_created
+            ).exists() if va_created else False
+            if not has_newer_trips:
+                busy_vehicle_ids.add(veh_id)
 
     # 3) Prevent vehicles already allotted in this enquiry from being double-allotted
     if enquiry_id:

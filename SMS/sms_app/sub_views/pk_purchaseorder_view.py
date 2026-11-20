@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance, CustomerInfo, PkpartcodeInfo, Packingjobs
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance, CustomerInfo, PkpartcodeInfo, Packingjobs, PkstockpurchasesInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .pk_needassessment_view import Pkcosting_delete, Pkcostingsummary_delete, Pkpurchaseorder_delete, Pkpurchaseorder_dim_delete, get_tracker_flags
@@ -392,6 +392,123 @@ def pk_get_po_requirement_type(request):
 
 
 
+def find_suggested_alternative(pc_obj, needed_qty, limit=3):
+    """
+    Finds best in-stock substitute partcodes for a short material item.
+    Returns a list of top ranked candidates based on exact cross-section (thickness x width),
+    species/stock type, and live yard inventory.
+    """
+    if not pc_obj:
+        return []
+
+    try:
+        inward_pcs = (
+            StockMaintenance.objects
+            .filter(Q(sm_stock_type_id=1) | Q(sm_stock_type_id=3, sm_count__gt=0))
+            .exclude(sm_partcode=pc_obj)
+            .values_list('sm_partcode_id', flat=True)
+            .distinct()
+        )
+
+        pc_desc = (pc_obj.pc_stock_description.stock_description if pc_obj.pc_stock_description else (pc_obj.pc_description or pc_obj.pc_code)).lower()
+        is_ply_obj = any(k in pc_desc for k in ['ply', 'plywood'])
+        is_packaging_obj = any(k in pc_desc for k in ['film', 'stretch', 'tarpaulin', 'handle', 'belt', 'lashing', 'nail', 'screw', 'tape', 'corner', 'strap'])
+        is_wood_obj = not is_ply_obj and not is_packaging_obj and any(k in pc_desc for k in ['wood', 'pine', 'rubber', 'hardwood', 'runner', 'plank'])
+
+        stopwords = {'100', '200', 'per', 'roll', 'mic', 'set', 'inch', 'pkt', 'box', 'and', 'for', 'with'}
+        pc_words = set(w for w in pc_desc.replace('-', ' ').replace('_', ' ').replace('/', ' ').split() if len(w) > 2 and not w.isdigit() and w not in stopwords)
+
+        cand_filter = Q(id__in=list(inward_pcs))
+        if is_ply_obj:
+            cand_filter &= Q(pc_stock_description__stock_description__icontains='ply')
+        elif is_wood_obj:
+            cand_filter &= (Q(pc_stock_description__stock_description__icontains='wood') | Q(pc_stock_description__stock_description__icontains='pine') | Q(pc_stock_description__stock_description__icontains='rubber'))
+        elif pc_words:
+            word_q = Q()
+            for w in pc_words:
+                word_q |= Q(pc_stock_description__stock_description__icontains=w)
+            cand_filter &= word_q
+        else:
+            return []
+
+        candidates = list(PkpartcodeInfo.objects.filter(cand_filter).select_related('pc_stock_description', 'pc_stock_type'))
+        if not candidates:
+            return []
+
+        cand_ids = [c.id for c in candidates]
+        orig_qs = (
+            StockMaintenance.objects.filter(sm_partcode_id__in=cand_ids)
+            .filter(Q(sm_stock_type_id=1) | Q(sm_stock_type_id=3, sm_count__gt=0))
+            .exclude(sm_stock_type_id=3, sm_vendor__isnull=False, sm_description__startswith='Vendor Return')
+            .values('sm_partcode_id').annotate(total=Sum('sm_count'))
+        )
+        ret_qs = StockMaintenance.objects.filter(sm_partcode_id__in=cand_ids, sm_stock_type_id=2).values('sm_partcode_id').annotate(total=Sum('sm_count'))
+        orig_map = {r['sm_partcode_id']: float(r['total'] or 0.0) for r in orig_qs}
+        ret_map = {r['sm_partcode_id']: abs(float(r['total'] or 0.0)) for r in ret_qs}
+
+        req_h = float(pc_obj.pc_height or 0.0)
+        req_w = float(pc_obj.pc_width or 0.0)
+        req_l = float(pc_obj.pc_length or 0.0)
+
+        scored = []
+        for cand in candidates:
+            avail = max(0.0, orig_map.get(cand.id, 0.0) - ret_map.get(cand.id, 0.0))
+            if avail <= 0:
+                continue
+
+            cand_desc = (cand.pc_stock_description.stock_description if cand.pc_stock_description else (cand.pc_description or cand.pc_code)).lower()
+            if not is_wood_obj and not is_ply_obj:
+                cand_words = set(w for w in cand_desc.replace('-', ' ').replace('_', ' ').replace('/', ' ').split() if len(w) > 2 and not w.isdigit() and w not in stopwords)
+                if not (pc_words & cand_words):
+                    continue
+
+            cand_h = float(cand.pc_height or 0.0)
+            cand_w = float(cand.pc_width or 0.0)
+            cand_l = float(cand.pc_length or 0.0)
+
+            score = 10
+            if avail >= needed_qty:
+                score += 40
+            else:
+                score += int((avail / needed_qty) * 20)
+
+            if is_wood_obj:
+                # Height/Thickness match (4" runner must match 4" runner, 1" plank must match 1" plank)
+                if cand_h > 0 and req_h > 0:
+                    if cand_h == req_h:
+                        score += 50
+                    elif abs(cand_h - req_h) <= 1.0:
+                        score += 20
+                    else:
+                        score -= 50 # Disqualify runner vs plank mismatches
+                if cand_w > 0 and req_w > 0:
+                    if cand_w == req_w:
+                        score += 30
+                    elif cand_w >= req_w:
+                        score += 15
+                if cand_l > 0 and req_l > 0 and cand_l >= req_l:
+                    score += 15
+            elif is_ply_obj:
+                if cand_h > 0 and req_h > 0 and cand_h == req_h:
+                    score += 50
+
+            desc = cand.pc_stock_description.stock_description if cand.pc_stock_description else (cand.pc_description or cand.pc_code)
+            scored.append({
+                'part_code_id': cand.id,
+                'part_code': cand.pc_code,
+                'description': desc,
+                'available_qty': round(avail, 2),
+                'score': score
+            })
+
+        scored.sort(key=lambda x: x['score'], reverse=True)
+        return scored[:limit]
+
+    except Exception as e:
+        print(f"Error finding suggested alternatives for {pc_obj}: {e}")
+        return []
+
+
 @login_required(login_url='login_page')
 def pk_create_batch_job(request):
     """
@@ -422,16 +539,24 @@ def pk_create_batch_job(request):
                 qid_k = str(s.get('quotation_id'))
                 sub_map[qid_k] = s
                 for q_extra in s.get('quotation_ids', []):
-                    sub_map[str(q_extra)] = s
+                    q_extra_str = str(q_extra)
+                    if q_extra_str != qid_k:
+                        all_absorbed_ids.add(q_extra_str)
                 for a_id in s.get('absorbed_quotation_ids', []):
                     all_absorbed_ids.add(str(a_id))
         elif isinstance(job_substitutions, dict):
             for qid_k, s in job_substitutions.items():
-                sub_map[str(qid_k)] = s
+                actual_primary = str(s.get('quotation_id') or qid_k)
                 for q_extra in s.get('quotation_ids', []):
-                    sub_map[str(q_extra)] = s
+                    q_extra_str = str(q_extra)
+                    if q_extra_str != actual_primary:
+                        all_absorbed_ids.add(q_extra_str)
                 for a_id in s.get('absorbed_quotation_ids', []):
                     all_absorbed_ids.add(str(a_id))
+            for qid_k, s in job_substitutions.items():
+                actual_primary = str(s.get('quotation_id') or qid_k)
+                if actual_primary not in all_absorbed_ids:
+                    sub_map[actual_primary] = s
 
         # Validate live stock availability for material part codes (Cost Type 8)
         # PART-CODE WISE GROUPING: Group material requirements by part code across all selected items
@@ -512,6 +637,9 @@ def pk_create_batch_job(request):
                     partcode_reqs[pc_id]['selected_batches'] = sub.get('selected_batches')
 
         insufficient_stock_items = []
+        total_wood_cft_shortfall = 0.0
+        total_ply_sqft_shortfall = 0.0
+        hardware_shortfall_count = 0
 
         for pc_id, p_info in partcode_reqs.items():
             pc_obj = p_info['part_code_obj']
@@ -562,6 +690,60 @@ def pk_create_batch_job(request):
             avail_qty = round(avail_qty, 2)
 
             if avail_qty < total_needed:
+                shortfall_qty = round(total_needed - avail_qty, 2)
+                shortfall_cft = 0.0
+                shortfall_sqft = 0.0
+                shortfall_sheets = 0.0
+
+                # Determine dimensional properties for sawmill calculations
+                first_qid = p_info['primary_quotation_id']
+                first_q = PkquotationInfo.objects.filter(id=first_qid).first()
+                l_val = float(first_q.pkqt_length_req if first_q and first_q.pkqt_length_req else (pc_obj.pc_length or 0.0))
+                w_val = float(first_q.pkqt_width_req if first_q and first_q.pkqt_width_req else (pc_obj.pc_width or 0.0))
+                h_val = float(first_q.pkqt_height_req if first_q and first_q.pkqt_height_req else (pc_obj.pc_height or 0.0))
+
+                stock_type_id = pc_obj.pc_stock_type_id if pc_obj.pc_stock_type else (first_q.pkqt_stock_type_id if first_q else None)
+                desc_upper = (p_info['description'] or '').upper()
+                is_ply = (stock_type_id in [4, 6]) or any(k in desc_upper for k in ['PLY', 'PLYWOOD'])
+                is_packaging_or_hardware = any(k in desc_upper for k in ['FILM', 'STRETCH', 'TARPAULIN', 'HANDLE', 'BELT', 'LASHING', 'NAIL', 'SCREW', 'TAPE', 'CORNER', 'STRAP'])
+                is_wood = not is_ply and not is_packaging_or_hardware and ((stock_type_id in [1, 5]) or any(k in desc_upper for k in ['WOOD', 'PINE', 'RUBBER', 'HARDWOOD', 'RUNNER', 'PLANK']))
+
+                # Commercial units rollup across all quotation lines for this part code
+                if is_ply:
+                    total_pc_sqft = 0.0
+                    for q_id_val in p_info['quotation_ids']:
+                        q_obj = PkquotationInfo.objects.filter(id=q_id_val).first()
+                        if q_obj:
+                            ql = float(q_obj.pkqt_length_req or q_obj.pkqt_length or l_val or 8.0)
+                            qw = float(q_obj.pkqt_width_req or q_obj.pkqt_width or w_val or 4.0)
+                            q_req = float(q_obj.pkqt_quantity_req or 1.0)
+                            line_sqft = 32.0 * q_req if (ql == 8.0 and qw == 4.0) else ((ql * qw / 144.0) * q_req)
+                            total_pc_sqft += line_sqft
+                    sqft_ratio = (total_pc_sqft / total_needed) if total_needed > 0 else 32.0
+                    shortfall_sqft = round(sqft_ratio * shortfall_qty, 2)
+                    shortfall_sheets = round(shortfall_sqft / 32.0, 1)
+                    total_ply_sqft_shortfall += shortfall_sqft
+                elif is_wood:
+                    total_pc_cft = 0.0
+                    for q_id_val in p_info['quotation_ids']:
+                        q_obj = PkquotationInfo.objects.filter(id=q_id_val).first()
+                        if q_obj:
+                            ql = float(q_obj.pkqt_length_req or q_obj.pkqt_length or l_val or 0.0)
+                            qw = float(q_obj.pkqt_width_req or q_obj.pkqt_width or w_val or 0.0)
+                            qh = float(q_obj.pkqt_height_req or q_obj.pkqt_height or h_val or 0.0)
+                            q_req = float(q_obj.pkqt_quantity_req or 1.0)
+                            line_cft = (ql * qw * qh / 144.0) * q_req
+                            total_pc_cft += line_cft
+                    cft_ratio = (total_pc_cft / total_needed) if total_needed > 0 else ((l_val * w_val * h_val / 144.0) if (l_val and w_val and h_val) else 0.0)
+                    shortfall_cft = round(cft_ratio * shortfall_qty, 3)
+                    total_wood_cft_shortfall += shortfall_cft
+                else:
+                    hardware_shortfall_count += 1
+
+                # Smart 1-click alternative material recommendation (Top 3)
+                alts = find_suggested_alternative(pc_obj, shortfall_qty, limit=3)
+                suggested_alt = alts[0] if alts else None
+
                 # Group item names with breakdown counts
                 unique_item_names = list(dict.fromkeys([b['item_name'] for b in p_info['items_breakdown']]))
                 insufficient_stock_items.append({
@@ -576,9 +758,24 @@ def pk_create_batch_job(request):
                     'per_unit_req': round(p_info['items_breakdown'][0]['per_unit_req'], 2) if p_info['items_breakdown'] else 1.0,
                     'job_qty': p_info['items_breakdown'][0]['job_qty'] if p_info['items_breakdown'] else 1.0,
                     'available_qty': round(avail_qty, 2),
-                    'shortfall': round(total_needed - avail_qty, 2),
+                    'shortfall': shortfall_qty,
+                    'shortfall_cft': shortfall_cft,
+                    'shortfall_sqft': shortfall_sqft,
+                    'shortfall_sheets': shortfall_sheets,
+                    'is_wood': is_wood,
+                    'is_ply': is_ply,
+                    'suggested_alternative': suggested_alt,
+                    'suggested_alternatives': alts,
                     'items_breakdown': p_info['items_breakdown']
                 })
+
+        summary_metrics = {
+            'total_wood_cft_shortfall': round(total_wood_cft_shortfall, 2),
+            'total_ply_sqft_shortfall': round(total_ply_sqft_shortfall, 2),
+            'total_ply_sheets_shortfall': round(total_ply_sqft_shortfall / 32.0, 1) if total_ply_sqft_shortfall > 0 else 0.0,
+            'hardware_shortfall_count': hardware_shortfall_count,
+            'total_shortfall_items_count': len(insufficient_stock_items)
+        }
 
         # If user did not pass override flag, warn user and offer Partcode change option
         allow_stock_override = data.get('allow_stock_override', False)
@@ -590,10 +787,12 @@ def pk_create_batch_job(request):
                 subject = f"STOCK SHORTFALL ALERT - Sales Order #{po.po_num or po.id}"
                 body = f"<h3>Stock Shortfall Alert for Sales Order #{po.po_num or po.id}</h3>"
                 body += f"<p>Customer: <b>{po.po_customer_name or po.po_customer_new_name}</b></p>"
+                body += f"<p><b>Commercial Sawmill Shortfall:</b> Timber: <b>{summary_metrics['total_wood_cft_shortfall']} CFT</b> | Plywood: <b>{summary_metrics['total_ply_sheets_shortfall']} Sheets (8x4)</b></p>"
                 body += "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse;'>"
-                body += "<tr style='background:#f2f2f2;'><th>Item</th><th>Part Code</th><th>Description</th><th>Needed Qty</th><th>Avail Qty</th><th>Shortfall</th></tr>"
+                body += "<tr style='background:#f2f2f2;'><th>Item</th><th>Part Code</th><th>Description</th><th>Needed Qty</th><th>Avail Qty</th><th>Shortfall</th><th>Commercial Sawmill Units</th></tr>"
                 for item in insufficient_stock_items:
-                    body += f"<tr><td>{item['item_name']}</td><td><b>{item['part_code']}</b></td><td>{item['description']}</td><td>{item['needed_qty']}</td><td style='color:red;'>{item['available_qty']}</td><td style='color:red;'><b>-{item['shortfall']}</b></td></tr>"
+                    comm_unit = f"{item['shortfall_cft']} CFT" if item['is_wood'] else (f"{item['shortfall_sheets']} Sheets" if item['is_ply'] else "-")
+                    body += f"<tr><td>{item['item_name']}</td><td><b>{item['part_code']}</b></td><td>{item['description']}</td><td>{item['needed_qty']}</td><td style='color:red;'>{item['available_qty']}</td><td style='color:red;'><b>-{item['shortfall']}</b></td><td>{comm_unit}</td></tr>"
                 body += "</table>"
                 body += "<p>Please restock or advise alternative materials.</p>"
                 
@@ -620,6 +819,7 @@ def pk_create_batch_job(request):
             return JsonResponse({
                 'success': False,
                 'stock_alert': True,
+                'summary_metrics': summary_metrics,
                 'insufficient_stock_items': insufficient_stock_items,
                 'message': 'Stock shortfall detected for one or more partcodes.'
             }, status=400)
@@ -630,6 +830,32 @@ def pk_create_batch_job(request):
         branch_code = get_branch_code(branch_id)
         prefix = f"{fy}_{branch_code}_JOB_"
         job_no = generate_next_number(PkcostingsummaryInfo, 'cs_job_no', prefix, 4)
+
+        # Generate Auto Purchase Indent if there was a shortfall released with override
+        indent_no = None
+        if allow_stock_override and insufficient_stock_items:
+            try:
+                indent_prefix = f"{fy}_{branch_code}_IND_"
+                indent_no = generate_next_number(PkstockpurchasesInfo, 'sp_purchase_num', indent_prefix, 6)
+                for s_item in insufficient_stock_items:
+                    pc_target = PkpartcodeInfo.objects.filter(id=s_item['part_code_id']).first()
+                    st_type = pc_target.pc_stock_type if (pc_target and pc_target.pc_stock_type) else None
+                    PkstockpurchasesInfo.objects.create(
+                        sp_category_id=1,
+                        sp_source_id=2,
+                        sp_stock_type=st_type,
+                        sp_purchase_num=indent_no,
+                        sp_part_code=pc_target,
+                        sp_quantity=s_item['shortfall'],
+                        sp_total_cft=s_item.get('shortfall_cft', 0.0),
+                        sp_stock_description=pc_target.pc_stock_description if pc_target else None,
+                        sp_uom=pc_target.pc_uom if pc_target else None,
+                        sp_remarks=f"Auto-generated Indent for Sales Order #{po.po_num or po.id} ({po.po_customer_name or po.po_customer_new_name}) | Job #{job_no}",
+                        sp_updated_by_id=request.session.get('ses_userID')
+                    )
+                print(f"Auto-generated Purchase Indent #{indent_no} created with {len(insufficient_stock_items)} items.")
+            except Exception as indent_err:
+                print(f"Error creating auto purchase indent: {indent_err}")
 
         # 2. Get WIP Status (id=6)
         try:
@@ -959,7 +1185,10 @@ def pk_create_batch_job(request):
 
         return JsonResponse({
             'success': True, 
-            'redirect_url': f'/SMS/costingsummary_update/{summary.id}'
+            'redirect_url': f'/SMS/costingsummary_update/{summary.id}',
+            'job_no': job_no,
+            'indent_no': indent_no,
+            'message': f"Job {job_no} created successfully." + (f" Purchase Indent #{indent_no} generated." if indent_no else "")
         })
 
     except Exception as e:
