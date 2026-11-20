@@ -3,7 +3,8 @@ from .general_utils import get_financial_year, generate_next_number, get_branch_
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Concat
 from django.http import JsonResponse
 
 from ..forms import SalescommentForm,SalesinfoaddForm,SalesmultipleitemForm
@@ -12,6 +13,7 @@ from django.shortcuts import render, redirect
 from random import randint
 from django.utils import timezone
 from ..sub_models.customer_mod import CustomerInfo
+from ..sub_models.my_user_mod import MyUser
 
 
 def handle_business_won_customer(sales_instance):
@@ -101,14 +103,9 @@ def handle_business_won_customer(sales_instance):
 
 
 
-@login_required(login_url='login_page')
-def sales_list(request):
-    first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
-    from_date = request.GET.get('from_date', None)
-    to_date = request.GET.get('to_date', None)
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id=RoleInfo.objects.get(role_name=role).id
+def get_sales_queryset(user_id, sales_number=None, salesperson_id=None, search_query=None, from_date=None, to_date=None):
+    user_ext = User_extInfo.objects.get(user=user_id)
+    role_id = RoleInfo.objects.get(role_name=user_ext.emp_role).id
 
     sales_data_query = SalesInfo.objects.select_related(
         's_created_by',
@@ -117,29 +114,103 @@ def sales_list(request):
         's_bus_won_not',
         's_status',
         's_updated_by'
+    ).annotate(
+        creator_full_name=Concat('s_created_by__first_name', Value(' '), 's_created_by__last_name'),
+        updater_full_name=Concat('s_updated_by__first_name', Value(' '), 's_updated_by__last_name')
     )
     if from_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
     if to_date:
         sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
 
-    if role_id==3:
-        sales_list= sales_data_query.order_by('-s_created_at')
-    elif role_id==1:
+    # 1. Sales Number filter (STRICTLY filter by Sale Number)
+    if sales_number and sales_number.strip():
+        sales_data_query = sales_data_query.filter(s_sale_number__icontains=sales_number.strip())
+
+    # 2. Salesperson filter (STRICTLY filter by Salesperson / Created By)
+    if salesperson_id and str(salesperson_id).strip():
+        sp = str(salesperson_id).strip()
+        if sp.isdigit():
+            sales_data_query = sales_data_query.filter(s_created_by_id=int(sp))
+        else:
+            sales_data_query = sales_data_query.filter(
+                Q(creator_full_name__icontains=sp) |
+                Q(s_created_by__first_name__icontains=sp) |
+                Q(s_created_by__last_name__icontains=sp) |
+                Q(s_created_by__username__icontains=sp)
+            )
+
+    # 3. Global search above the table (searches across all fields)
+    if search_query and search_query.strip():
+        terms = search_query.strip().split()
+        for term in terms:
+            q_term = (
+                Q(s_sale_number__icontains=term) |
+                Q(creator_full_name__icontains=term) |
+                Q(s_created_by__username__icontains=term) |
+                Q(s_created_by__first_name__icontains=term) |
+                Q(s_created_by__last_name__icontains=term) |
+                Q(updater_full_name__icontains=term) |
+                Q(s_updated_by__username__icontains=term) |
+                Q(s_customer_name__cu_name__icontains=term) |
+                Q(s_customer_name__cu_customercode__icontains=term) |
+                Q(s_customer_new_name__icontains=term) |
+                Q(s_industry_type__industry_type__icontains=term) |
+                Q(s_status__status__icontains=term) |
+                Q(s_bus_won_not__yesno_name__icontains=term) |
+                Q(s_Person_name__icontains=term) |
+                Q(s_contact_no__icontains=term) |
+                Q(s_email_id__icontains=term)
+            )
+            if term.isdigit():
+                q_term |= Q(id=int(term))
+            sales_data_query = sales_data_query.filter(q_term)
+
+    if role_id in [1, 3]:
         sales_list = sales_data_query.order_by('-s_created_at')
     else:
-        sales_list = (sales_data_query.filter(s_created_by=user_id)).order_by('-s_created_at')
+        sales_list = sales_data_query.filter(s_created_by=user_id).order_by('-s_created_at')
+
+    return sales_list
+
+
+@login_required(login_url='login_page')
+def sales_list(request):
+    first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
+    sales_number = (request.GET.get('sales_number') or '').strip()
+    salesperson_id = (request.GET.get('salesperson') or '').strip()
+    search_query = (request.GET.get('search') or '').strip()
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+    role = User_extInfo.objects.get(user=user_id).emp_role
+
+    salespersons = MyUser.objects.filter(
+        Q(user_extinfo__department__dept_name="Sales") | Q(s_created_by__isnull=False)
+    ).distinct().order_by('first_name', 'last_name')
+
+    sales_list = get_sales_queryset(
+        user_id,
+        sales_number=sales_number,
+        salesperson_id=salesperson_id,
+        search_query=search_query,
+        from_date=from_date,
+        to_date=to_date
+    )
 
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
-        # 'sales_list': sales_list,
         'first_name': first_name,
         'role': role,
         'page_obj': page_obj,
         'from_date': from_date,
         'to_date': to_date,
+        'sales_number': sales_number,
+        'salespersons': salespersons,
+        'selected_salesperson': salesperson_id,
+        'search_query': search_query,
     }
     return render(request, "asset_mgt_app/sales_list.html", context)
 
@@ -289,134 +360,162 @@ def sales_comments_add(request, sales_comments_id=0):
         # return redirect(request.META['HTTP_REFERER'])
 
         # return redirect(request.META['HTTP_REFERER'])
+def get_sales_comments_queryset(user_id, search_query=None, from_date=None, to_date=None):
+    user_ext = User_extInfo.objects.get(user=user_id)
+    role_id = RoleInfo.objects.get(role_name=user_ext.emp_role).id
+
+    comments_data_query = Sales_Comments_Info.objects.select_related(
+        'sc_sales_number',
+        'sc_sales_number__s_created_by',
+        'sc_sales_number__s_customer_name',
+        'sc_call_type',
+        'sc_call_nature',
+        'sc_call_purpose',
+        'sc_updated_by'
+    ).annotate(
+        updater_full_name=Concat('sc_updated_by__first_name', Value(' '), 'sc_updated_by__last_name'),
+        creator_full_name=Concat('sc_sales_number__s_created_by__first_name', Value(' '), 'sc_sales_number__s_created_by__last_name')
+    )
+    if from_date:
+        comments_data_query = comments_data_query.filter(sc_date_of_call__gte=from_date)
+    if to_date:
+        comments_data_query = comments_data_query.filter(sc_date_of_call__lte=to_date)
+
+    if search_query:
+        terms = search_query.strip().split()
+        for term in terms:
+            q_term = (
+                Q(sc_sales_number__s_sale_number__icontains=term) |
+                Q(sc_sales_number__s_customer_name__cu_name__icontains=term) |
+                Q(sc_sales_number__s_customer_new_name__icontains=term) |
+                Q(creator_full_name__icontains=term) |
+                Q(sc_sales_number__s_created_by__username__icontains=term) |
+                Q(updater_full_name__icontains=term) |
+                Q(sc_updated_by__username__icontains=term) |
+                Q(sc_updated_by__first_name__icontains=term) |
+                Q(sc_updated_by__last_name__icontains=term) |
+                Q(sc_call_type__call_type__icontains=term) |
+                Q(sc_call_nature__call_nature__icontains=term) |
+                Q(sc_call_purpose__call_purpose__icontains=term) |
+                Q(sc_comments__icontains=term)
+            )
+            if term.isdigit():
+                q_term |= Q(id=int(term)) | Q(sc_sales_number__id=int(term))
+            comments_data_query = comments_data_query.filter(q_term)
+
+    if role_id in [1, 3]:
+        comments_list = comments_data_query.order_by('-sc_date_of_call', '-sc_created_at')
+    else:
+        comments_list = comments_data_query.filter(sc_updated_by=user_id).order_by('-sc_date_of_call', '-sc_created_at')
+
+    return comments_list
+
+
 @login_required(login_url='login_page')
 def sales_comments_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
+    search_query = (request.GET.get('sales_number') or request.GET.get('search') or '').strip()
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
-
-    # Get user's role
     user_ext = User_extInfo.objects.get(user=user_id)
-    role_id = RoleInfo.objects.get(role_name=user_ext.emp_role).id
 
-    sales_data_query = Sales_Comments_Info.objects.all()
-    if from_date:
-        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
-    if to_date:
-        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
-    # Filtering based on role
-    if role_id in [1, 3]:  # Role ID 1 & 3 should see all records
-        sales_comments_list = sales_data_query.order_by('-sc_date_of_call', '-sc_created_at')  # Latest date of call first
-    else:
-        sales_comments_list = sales_data_query.filter(sc_updated_by=user_id).order_by('-sc_date_of_call', '-sc_created_at')
+    sales_comments_list = get_sales_comments_queryset(user_id, search_query=search_query, from_date=from_date, to_date=to_date)
 
-    # Paginate results
-    if from_date or to_date:
-        paginator = Paginator(sales_comments_list, 10000)  # Load all results when date filter is used
+    if from_date or to_date or search_query:
+        paginator = Paginator(sales_comments_list, 10000)
     else:
-        paginator = Paginator(sales_comments_list, 50)     # Paginate normally without date filter
+        paginator = Paginator(sales_comments_list, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'comments_list': sales_comments_list,  # All records (useful for processing)
+        'comments_list': sales_comments_list,
         'role': user_ext.emp_role,
         'user_id': user_id,
         'first_name': first_name,
-        'page_obj': page_obj,  # Paginated data for the table
+        'page_obj': page_obj,
         'from_date': from_date,
         'to_date': to_date,
+        'sales_number': search_query,
     }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
+
+
 @login_required(login_url='login_page')
 def sales_comments_delete(request, sales_comments_id):
     salescommentsinfo = Sales_Comments_Info.objects.get(pk=sales_comments_id)
     salescommentsinfo.delete()
     return redirect(request.META['HTTP_REFERER'])
-    # return redirect('/SMS/sales_list')
+
 
 @login_required(login_url='login_page')
 def sales_search(request):
     first_name = request.session.get('first_name')
-    sales_number = request.GET.get('sales_number')
     user_id = request.session.get('ses_userID')
+    sales_number = (request.GET.get('sales_number') or '').strip()
+    salesperson_id = (request.GET.get('salesperson') or '').strip()
+    search_query = (request.GET.get('search') or '').strip()
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
     role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = RoleInfo.objects.get(role_name=role).id
-    sales_data_query = SalesInfo.objects.select_related(
-        's_created_by',
-        's_customer_name',
-        's_industry_type',
-        's_bus_won_not',
-        's_status',
-        's_updated_by'
+
+    salespersons = MyUser.objects.filter(
+        Q(user_extinfo__department__dept_name="Sales") | Q(s_created_by__isnull=False)
+    ).distinct().order_by('first_name', 'last_name')
+
+    sales_list = get_sales_queryset(
+        user_id,
+        sales_number=sales_number,
+        salesperson_id=salesperson_id,
+        search_query=search_query,
+        from_date=from_date,
+        to_date=to_date
     )
-    if from_date:
-        sales_data_query = sales_data_query.filter(s_updated_at__date__gte=from_date)
-    if to_date:
-        sales_data_query = sales_data_query.filter(s_updated_at__date__lte=to_date)
-
-    if not sales_number:
-        sales_number = ""
-
-    if role_id == 3:
-        sales_list = sales_data_query.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
-    elif role_id == 1:
-        sales_list = sales_data_query.filter((Q(s_sale_number__icontains=sales_number)) | (Q(s_sale_number__isnull=True))).order_by('-s_created_at')
-    else:
-        sales_list = sales_data_query.filter((Q(s_sale_number__icontains =sales_number,s_created_by=user_id))|(Q(s_sale_number__isnull=True,s_created_by=user_id))).order_by('-s_created_at')
 
     page_number = request.GET.get('page')
     paginator = Paginator(sales_list, 50)
     page_obj = paginator.get_page(page_number)
     context = {
-        # 'sales_list': sales_list,
         'first_name': first_name,
+        'role': role,
         'page_obj': page_obj,
         'from_date': from_date,
         'to_date': to_date,
-        }
+        'sales_number': sales_number,
+        'salespersons': salespersons,
+        'selected_salesperson': salesperson_id,
+        'search_query': search_query,
+    }
     return render(request, "asset_mgt_app/sales_list.html", context)
+
 
 @login_required(login_url='login_page')
 def sales_comments_search(request):
     first_name = request.session.get('first_name')
-    sales_number = request.GET.get('sales_number')
     user_id = request.session.get('ses_userID')
+    search_query = (request.GET.get('sales_number') or request.GET.get('search') or '').strip()
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = RoleInfo.objects.get(role_name=role).id
-    sales_data_query = Sales_Comments_Info.objects.all()
-    if from_date:
-        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
-    if to_date:
-        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
-    if not sales_number:
-        sales_number = ""
+    user_ext = User_extInfo.objects.get(user=user_id)
 
-    if role_id == 3:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_date_of_call', '-sc_created_at')
-    elif role_id == 1:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_date_of_call', '-sc_created_at')
+    sales_comments_list = get_sales_comments_queryset(user_id, search_query=search_query, from_date=from_date, to_date=to_date)
+
+    if from_date or to_date or search_query:
+        paginator = Paginator(sales_comments_list, 10000)
     else:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('-sc_date_of_call', '-sc_created_at')
-
+        paginator = Paginator(sales_comments_list, 50)
     page_number = request.GET.get('page')
-    if from_date or to_date:
-        paginator = Paginator(sales_comments_list, 10000)  # Load all results when date filter is used
-    else:
-        paginator = Paginator(sales_comments_list, 50)     # Paginate normally without date filter
     page_obj = paginator.get_page(page_number)
     context = {
-        # 'sales_list': sales_list,
         'first_name': first_name,
+        'role': user_ext.emp_role,
+        'user_id': user_id,
         'page_obj': page_obj,
         'from_date': from_date,
         'to_date': to_date,
-        }
+        'sales_number': search_query,
+    }
     return render(request, "asset_mgt_app/sales_comments_list.html", context)
 
 @login_required(login_url='login_page')

@@ -27,10 +27,10 @@ def salesperson_chart(request):
         sales_data_query = sales_data_query.filter(sc_updated_by__first_name=selected_salesperson)
 
     if from_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
 
     if to_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
 
     sales_data = sales_data_query.values('sc_updated_by__first_name').annotate(sales_count=Count('id'))
 
@@ -84,9 +84,9 @@ def monthly_summary(request):
     if selected_salesperson:
         calls_filter &= Q(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        calls_filter &= Q(sc_updated_at__date__gte=from_date)
+        calls_filter &= Q(sc_date_of_call__gte=from_date)
     if to_date:
-        calls_filter &= Q(sc_updated_at__date__lte=to_date)
+        calls_filter &= Q(sc_date_of_call__lte=to_date)
 
     revenue_filter = Q()
     if selected_salesperson:
@@ -275,9 +275,9 @@ def salesperson_productivity_performance(request):
     if selected_salesperson:
         calls_filter &= Q(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        calls_filter &= Q(sc_updated_at__date__gte=from_date)
+        calls_filter &= Q(sc_date_of_call__gte=from_date)
     if to_date:
-        calls_filter &= Q(sc_updated_at__date__lte=to_date)
+        calls_filter &= Q(sc_date_of_call__lte=to_date)
 
     revenue_filter = Q()
     if selected_salesperson:
@@ -490,10 +490,10 @@ def salescalls_details(request):
         sales_data_query = sales_data_query.filter(sc_updated_by__first_name=selected_salesperson)
 
     if from_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
 
     if to_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
     if selected_company:
         sales_data_query = sales_data_query.filter(sc_sales_number__s_company__bvm_business=selected_company)
 
@@ -611,9 +611,9 @@ def targets_actuals(request):
     if selected_salesperson:
         calls_filter &= Q(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        calls_filter &= Q(sc_updated_at__date__gte=from_date)
+        calls_filter &= Q(sc_date_of_call__gte=from_date)
     if to_date:
-        calls_filter &= Q(sc_updated_at__date__lte=to_date)
+        calls_filter &= Q(sc_date_of_call__lte=to_date)
 
     revenue_filter = Q()
     if selected_salesperson:
@@ -734,9 +734,9 @@ def sales_call_report(request):
     if selected_salesperson:
         sales_summary = sales_summary.filter(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        sales_summary = sales_summary.filter(sc_updated_at__date__gte=from_date)
+        sales_summary = sales_summary.filter(sc_date_of_call__gte=from_date)
     if to_date:
-        sales_summary = sales_summary.filter(sc_updated_at__date__lte=to_date)
+        sales_summary = sales_summary.filter(sc_date_of_call__lte=to_date)
     if selected_company:
         sales_summary = sales_summary.filter(sc_sales_number__s_company=selected_company)
     if selected_branch:
@@ -903,9 +903,9 @@ def salesperson_wise_chart(request):
     if selected_salesperson:
         sales_summary = sales_summary.filter(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        sales_summary = sales_summary.filter(sc_updated_at__date__gte=from_date)
+        sales_summary = sales_summary.filter(sc_date_of_call__gte=from_date)
     if to_date:
-        sales_summary = sales_summary.filter(sc_updated_at__date__lte=to_date)
+        sales_summary = sales_summary.filter(sc_date_of_call__lte=to_date)
 
     sales_summary = sales_summary.values(
         'sc_updated_by__first_name'  # Salesperson's first name
@@ -1066,9 +1066,9 @@ def salesperson_wise_table(request):
     if selected_salesperson:
         calls_filter &= Q(sc_updated_by__first_name=selected_salesperson)
     if from_date:
-        calls_filter &= Q(sc_updated_at__date__gte=from_date)
+        calls_filter &= Q(sc_date_of_call__gte=from_date)
     if to_date:
-        calls_filter &= Q(sc_updated_at__date__lte=to_date)
+        calls_filter &= Q(sc_date_of_call__lte=to_date)
 
     revenue_filter = Q()
     if selected_salesperson:

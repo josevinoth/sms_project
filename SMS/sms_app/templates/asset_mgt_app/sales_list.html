@@ -30,11 +30,26 @@
         <form class="d-flex flex-wrap align-items-center justify-content-between" action="{% url 'sales_search' %}" method="get" style="gap: 12px;">
             <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
                 <div class="input-group" style="width: auto;">
-                    <input type="search" class="form-control form-control-modern" id="sales_number" placeholder="Sales Number" name="sales_number" value="{{ request.GET.sales_number|default:'' }}" style="height: 38px; min-width: 200px;">
+                    <input type="search" class="form-control form-control-modern" id="sales_number" placeholder="Sales Number" name="sales_number" value="{{ sales_number|default:'' }}" style="height: 38px; min-width: 180px;">
+                </div>
+                <div class="input-group" style="width: auto;">
+                    <select name="salesperson" id="salesperson" class="form-control form-control-modern" style="height: 38px; min-width: 200px;" onchange="updateFilters()">
+                        <option value="">All Salespersons</option>
+                        {% for sp in salespersons %}
+                        <option value="{{ sp.id }}" {% if selected_salesperson == sp.id|stringformat:"s" or selected_salesperson == sp.id %}selected{% endif %}>
+                            {{ sp.first_name }}{% if sp.last_name %} {{ sp.last_name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <button class="btn-modern btn-submit py-1 px-3" type="submit" style="height: 38px;">
                     <i class="fa fa-search mr-1" aria-hidden="true"></i> Search
                 </button>
+                {% if sales_number or selected_salesperson or search_query or from_date or to_date %}
+                <a href="{% url 'sales_search' %}" class="btn-modern btn-cancel py-1 px-3 d-flex align-items-center" style="height: 38px; text-decoration: none;" title="Reset filters">
+                    <i class="fas fa-undo mr-1"></i> Reset
+                </a>
+                {% endif %}
             </div>
             
             <div class="d-flex align-items-center flex-wrap ml-auto" style="gap: 10px;">
@@ -150,15 +165,15 @@
             </div>
             <div class="d-flex" style="gap: 6px;">
                 {% if page_obj.has_previous %}
-                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page=1{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">First</a>
-                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.previous_page_number }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Previous</a>
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page=1{% if sales_number %}&sales_number={{ sales_number }}{% endif %}{% if selected_salesperson %}&salesperson={{ selected_salesperson }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">First</a>
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.previous_page_number }}{% if sales_number %}&sales_number={{ sales_number }}{% endif %}{% if selected_salesperson %}&salesperson={{ selected_salesperson }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Previous</a>
                 {% endif %}
                 <span class="btn-modern py-1 px-3" style="font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); font-weight: 700;">
                     {{ page_obj.number }}
                 </span>
                 {% if page_obj.has_next %}
-                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.next_page_number }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Next</a>
-                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Last</a>
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.next_page_number }}{% if sales_number %}&sales_number={{ sales_number }}{% endif %}{% if selected_salesperson %}&salesperson={{ selected_salesperson }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Next</a>
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.paginator.num_pages }}{% if sales_number %}&sales_number={{ sales_number }}{% endif %}{% if selected_salesperson %}&salesperson={{ selected_salesperson }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Last</a>
                 {% endif %}
             </div>
         </div>
@@ -168,7 +183,7 @@
 
 <script>
     $(document).ready(function() {
-        $('#sales_list').DataTable({
+        var table = $('#sales_list').DataTable({
             scrollY: "600px",
             scrollX: true,
             order: [[0, 'desc']],
@@ -196,6 +211,49 @@
                 {% endif %}
             }
         });
+
+        // ══ Wire the search option above the table to search across all records ══
+        var dtFilter = $('#sales_list_filter');
+        var searchInput = dtFilter.find('input');
+        searchInput.attr('placeholder', 'Search all records...');
+        {% if search_query %}
+        searchInput.val('{{ search_query|escapejs }}');
+        {% endif %}
+
+        function executeGlobalSearch(val) {
+            var query = (val || '').trim();
+            var url = new URL(window.location.href);
+            if (query) {
+                url.searchParams.set('search', query);
+            } else {
+                url.searchParams.delete('search');
+            }
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
+
+        // Add a search button right next to the search input for one-click global search
+        dtFilter.find('label').css({'display': 'inline-flex', 'align-items': 'center', 'gap': '6px'});
+        var searchBtn = $('<button type="button" class="btn-modern btn-submit py-1 px-2" style="height: 32px; font-size: 0.8rem; border-radius: 6px;" title="Search all records"><i class="fa fa-search"></i></button>');
+        searchBtn.appendTo(dtFilter.find('label'));
+        searchBtn.on('click', function(e) {
+            e.preventDefault();
+            executeGlobalSearch(searchInput.val());
+        });
+
+        // Search on Enter key in the search option above the table
+        searchInput.off('keyup.dtSearch keypress.dtSearch input.dtSearch')
+            .on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    executeGlobalSearch(this.value);
+                }
+            })
+            .on('search', function() {
+                if (this.value === '') {
+                    executeGlobalSearch('');
+                }
+            });
     });
 </script>
 
@@ -206,7 +264,23 @@
     function updateFilters() {
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
+        const salesNumberInput = document.getElementById('sales_number');
+        const salesNumber = salesNumberInput ? salesNumberInput.value.trim() : '';
+        const salespersonSelect = document.getElementById('salesperson');
+        const salesperson = salespersonSelect ? salespersonSelect.value : '';
         const url = new URL(window.location.href);
+
+        if (salesNumber) {
+            url.searchParams.set('sales_number', salesNumber);
+        } else {
+            url.searchParams.delete('sales_number');
+        }
+
+        if (salesperson) {
+            url.searchParams.set('salesperson', salesperson);
+        } else {
+            url.searchParams.delete('salesperson');
+        }
 
         if (fromDate) {
             url.searchParams.set('from_date', fromDate);
@@ -219,6 +293,8 @@
         } else {
             url.searchParams.delete('to_date');
         }
+
+        url.searchParams.delete('page');
 
         window.location.href = url.toString();
     }

@@ -12,6 +12,8 @@ from ..models import (
     CustomerInfo,
     TransInvoiceInfo,
     TripdetailInfo,
+    ConsignmentdetailInfo,
+    ConsignmentgoodsInfo,
     Location_info,
     User_extInfo,
     Vendor_info,
@@ -176,43 +178,77 @@ def get_ops_dashboard_data(request):
             user__is_active=True
         ).values_list('user_id', flat=True))
 
-    def filter_allots(start_d, end_d):
-        date_q = (
-            Q(va_created_at__date__gte=start_d, va_created_at__date__lte=end_d) |
-            Q(va_enquirynumber__en_created_at__date__gte=start_d, va_enquirynumber__en_created_at__date__lte=end_d)
+    def filter_enquiries(start_d, end_d):
+        qs = EnquirynoteInfo.objects.filter(
+            en_created_at__date__gte=start_d,
+            en_created_at__date__lte=end_d
         )
-        qs = Vehicle_allotmentInfo.objects.filter(date_q).exclude(va_status_id__in=[2, 4])
-        if branch_id and branch_id != 'all':
-            b_q = Q(va_enquirynumber__en_assignedto_id__in=branch_user_ids)
-            if branch_code:
-                b_q |= Q(va_enquirynumber__en_enquirynumber__icontains=branch_code)
-            qs = qs.filter(b_q)
-        if target_ops_id:
-            qs = qs.filter(va_updated_by_id=target_ops_id)
-        return qs
-
-    def filter_enquiries(start_d, end_d, linked_allots=None):
-        date_q = Q(en_created_at__date__gte=start_d, en_created_at__date__lte=end_d)
-        if linked_allots is not None:
-            linked_enq_ids = linked_allots.values_list('va_enquirynumber_id', flat=True)
-            date_q |= Q(id__in=linked_enq_ids)
-
-        qs = EnquirynoteInfo.objects.filter(date_q)
         if branch_id and branch_id != 'all':
             b_q = Q(en_assignedto_id__in=branch_user_ids)
             if branch_code:
                 b_q |= Q(en_enquirynumber__icontains=branch_code)
             qs = qs.filter(b_q)
         if target_ops_id:
-            if linked_allots is not None:
-                qs = qs.filter(Q(id__in=linked_allots.values_list('va_enquirynumber_id', flat=True)) | Q(en_assignedto_id=target_ops_id))
-            else:
-                qs = qs.filter(Q(vehicle_allotmentinfo__va_updated_by_id=target_ops_id) | Q(en_assignedto_id=target_ops_id)).distinct()
+            qs = qs.filter(
+                Q(vehicle_allotmentinfo__va_updated_by_id=target_ops_id) |
+                Q(en_assignedto_id=target_ops_id)
+            ).distinct()
         return qs
 
+    def filter_allots(enquiries_qs):
+        qs = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber__in=enquiries_qs
+        ).exclude(va_status_id__in=[2, 4])
+        if target_ops_id:
+            qs = qs.filter(va_updated_by_id=target_ops_id)
+        return qs
+
+    # Invoice reconciliation strictly matching CS KPI Dashboard / Billing Pipeline logic
+    invoiced_trip_ids = list(TransInvoiceInfo.objects.filter(
+        ti_trip__isnull=False
+    ).values_list('ti_trip_id', flat=True))
+
+    invoiced_cons_ids = TransInvoiceInfo.objects.filter(
+        ti_consignment__isnull=False
+    ).values_list('ti_consignment_id', flat=True)
+
+    trips_from_cons = TripdetailInfo.objects.filter(
+        tr_consignmentnumber_id__in=invoiced_cons_ids
+    ).values_list('id', flat=True)
+
+    invoiced_goods_ids = TransInvoiceInfo.objects.filter(
+        ti_goods__isnull=False
+    ).values_list('ti_goods_id', flat=True)
+
+    cons_from_goods = ConsignmentgoodsInfo.objects.filter(
+        id__in=invoiced_goods_ids
+    ).values_list('cg_consignmentnumber_id', flat=True)
+
+    trips_from_goods = TripdetailInfo.objects.filter(
+        tr_consignmentnumber_id__in=cons_from_goods
+    ).values_list('id', flat=True)
+
+    all_invoiced_ids = set(invoiced_trip_ids) | set(trips_from_cons) | set(trips_from_goods)
+
+    def calc_invoicing_metrics(enquiries_qs):
+        cnotes_qs = ConsignmentdetailInfo.objects.filter(
+            co_enquirynumber__in=enquiries_qs
+        ).distinct()
+        if branch_code:
+            cnotes_qs = cnotes_qs.filter(co_consignmentnumber__icontains=branch_code)
+
+        trips_qs = TripdetailInfo.objects.filter(
+            tr_consignmentnumber__in=cnotes_qs
+        ).distinct()
+
+        non_inv = trips_qs.exclude(id__in=all_invoiced_ids)
+        ready_inv = non_inv.filter(tc_financestatus_id=9).count()
+        inv_done = trips_qs.filter(id__in=all_invoiced_ids).count()
+        return ready_inv, inv_done, ready_inv + inv_done
+
     # 1. Selected Period Data
-    p_allots = filter_allots(period_start, period_end)
-    p_enquiries = filter_enquiries(period_start, period_end, linked_allots=p_allots)
+    p_enquiries = filter_enquiries(period_start, period_end)
+    p_allots = filter_allots(p_enquiries)
 
     # Booking (Demanded)
     p_booking = Enquirynotevehicle.objects.filter(
@@ -225,13 +261,8 @@ def get_ops_dashboard_data(request):
     p_unplaced = max(p_booking - p_placed, 0)
     p_booking_placed_pct = round((p_placed / p_booking) * 100, 1) if p_booking > 0 else 0.0
 
-    # Invoiced trips linked to period enquiries/allotments
-    p_trips = TripdetailInfo.objects.filter(tr_enquirynumber__in=p_enquiries)
-    p_invoiced = TransInvoiceInfo.objects.filter(
-        Q(ti_trip__in=p_trips) | Q(ti_consignment__co_enquirynumber__in=p_enquiries)
-    ).values('ti_trip_id').distinct().count()
-    p_ready_inv = p_trips.filter(tc_financestatus_id=9).count()
-    p_total_invoiced_or_ready = max(p_invoiced, p_ready_inv)
+    # Invoiced trips linked to period enquiries/allotments (Ready for Invoice + Invoiced Completed)
+    p_ready_inv, p_invoiced, p_total_invoiced_or_ready = calc_invoicing_metrics(p_enquiries)
     p_pending_billing = max(p_placed - p_total_invoiced_or_ready, 0)
     p_placed_invoiced_pct = round((p_total_invoiced_or_ready / p_placed) * 100, 1) if p_placed > 0 else 0.0
 
@@ -281,7 +312,8 @@ def get_ops_dashboard_data(request):
     past_month_start = period_start - timedelta(days=30)
     past_month_end = period_start - timedelta(days=1)
 
-    past_month_allots = filter_allots(past_month_start, past_month_end).filter(va_vendor__isnull=False)
+    past_month_enquiries = filter_enquiries(past_month_start, past_month_end)
+    past_month_allots = filter_allots(past_month_enquiries).filter(va_vendor__isnull=False)
     past_month_vendors = set(past_month_allots.values_list('va_vendor_id', flat=True))
 
     current_period_allots = p_allots.filter(va_vendor__isnull=False)
@@ -292,8 +324,8 @@ def get_ops_dashboard_data(request):
     lost_vendor_names = list(Vendor_info.objects.filter(id__in=lost_vendor_ids).values_list('vend_name', flat=True)[:10])
 
     # 2. Month-till-Date (MTD) Data
-    m_allots = filter_allots(mtd_start, mtd_end)
-    m_enquiries = filter_enquiries(mtd_start, mtd_end, linked_allots=m_allots)
+    m_enquiries = filter_enquiries(mtd_start, mtd_end)
+    m_allots = filter_allots(m_enquiries)
 
     m_booking = Enquirynotevehicle.objects.filter(
         env_enquirynumber__in=m_enquiries
@@ -304,12 +336,7 @@ def get_ops_dashboard_data(request):
     m_placed = m_allots.count()
     m_booking_placed_pct = round((m_placed / m_booking) * 100, 1) if m_booking > 0 else 0.0
 
-    m_trips = TripdetailInfo.objects.filter(tr_enquirynumber__in=m_enquiries)
-    m_invoiced = TransInvoiceInfo.objects.filter(
-        Q(ti_trip__in=m_trips) | Q(ti_consignment__co_enquirynumber__in=m_enquiries)
-    ).values('ti_trip_id').distinct().count()
-    m_ready_inv = m_trips.filter(tc_financestatus_id=9).count()
-    m_total_invoiced_or_ready = max(m_invoiced, m_ready_inv)
+    m_ready_inv, m_invoiced, m_total_invoiced_or_ready = calc_invoicing_metrics(m_enquiries)
     m_placed_invoiced_pct = round((m_total_invoiced_or_ready / m_placed) * 100, 1) if m_placed > 0 else 0.0
 
     m_placed_own = m_allots.filter(va_vehiclesource_id=1).count()
@@ -349,7 +376,8 @@ def get_ops_dashboard_data(request):
     # MTD Lost Customer (vendors from month prior to mtd_start not active in MTD)
     m_past_month_start = mtd_start - timedelta(days=30)
     m_past_month_end = mtd_start - timedelta(days=1)
-    m_past_vends = set(filter_allots(m_past_month_start, m_past_month_end).filter(va_vendor__isnull=False).values_list('va_vendor_id', flat=True))
+    m_past_enquiries = filter_enquiries(m_past_month_start, m_past_month_end)
+    m_past_vends = set(filter_allots(m_past_enquiries).filter(va_vendor__isnull=False).values_list('va_vendor_id', flat=True))
     m_curr_vends = set(m_allots.filter(va_vendor__isnull=False).values_list('va_vendor_id', flat=True))
     m_lost_cust = len(m_past_vends - m_curr_vends)
 
@@ -493,100 +521,26 @@ def get_ops_dashboard_data(request):
         },
     ]
 
-    # Top highlight cards: Display the OVERALL values of the particulars (independent of date filter)
-    o_allots_qs = Vehicle_allotmentInfo.objects.exclude(va_status_id__in=[2, 4])
-    if branch_id and branch_id != 'all':
-        b_q = Q(va_enquirynumber__en_assignedto_id__in=branch_user_ids)
-        if branch_code:
-            b_q |= Q(va_enquirynumber__en_enquirynumber__icontains=branch_code)
-        o_allots_qs = o_allots_qs.filter(b_q)
-    if target_ops_id:
-        o_allots_qs = o_allots_qs.filter(va_updated_by_id=target_ops_id)
-
-    o_placed = o_allots_qs.count()
-
-    o_enq_qs = EnquirynoteInfo.objects.all()
-    if branch_id and branch_id != 'all':
-        b_q = Q(en_assignedto_id__in=branch_user_ids)
-        if branch_code:
-            b_q |= Q(en_enquirynumber__icontains=branch_code)
-        o_enq_qs = o_enq_qs.filter(b_q)
-    if target_ops_id:
-        o_enq_qs = o_enq_qs.filter(Q(vehicle_allotmentinfo__va_updated_by_id=target_ops_id) | Q(en_assignedto_id=target_ops_id)).distinct()
-
-    o_booking = Enquirynotevehicle.objects.filter(
-        env_enquirynumber__in=o_enq_qs
-    ).aggregate(total=Sum('env_quantity'))['total']
-    if o_booking is None or o_booking == 0:
-        o_booking = o_enq_qs.count()
-
-    o_booking_placed_pct = round((o_placed / o_booking) * 100, 1) if o_booking > 0 else 0.0
-
-    o_trips = TripdetailInfo.objects.filter(tr_enquirynumber__in=o_enq_qs)
-    o_invoiced = TransInvoiceInfo.objects.filter(
-        Q(ti_trip__in=o_trips) | Q(ti_consignment__co_enquirynumber__in=o_enq_qs)
-    ).values('ti_trip_id').distinct().count()
-    o_ready_inv = o_trips.filter(tc_financestatus_id=9).count()
-    o_total_invoiced = max(o_invoiced, o_ready_inv)
-    o_placed_invoiced_pct = round((o_total_invoiced / o_placed) * 100, 1) if o_placed > 0 else 0.0
-
-    o_placed_own = o_allots_qs.filter(va_vehiclesource_id=1).count()
-    o_placed_attc = o_allots_qs.filter(va_vehiclesource_id=2).count()
-    o_placed_mkt_local = o_allots_qs.filter(va_vehiclesource_id=3, va_enquirynumber__en_trip_type_id=1).count()
-    o_placed_mkt_os = o_allots_qs.filter(va_vehiclesource_id=3, va_enquirynumber__en_trip_type_id=2).count()
-
-    o_own_share = round((o_placed_own / o_placed) * 100, 1) if o_placed > 0 else 0.0
-    o_attc_share = round((o_placed_attc / o_placed) * 100, 1) if o_placed > 0 else 0.0
-    o_mkt_local_share = round((o_placed_mkt_local / o_placed) * 100, 1) if o_placed > 0 else 0.0
-    o_mkt_os_share = round((o_placed_mkt_os / o_placed) * 100, 1) if o_placed > 0 else 0.0
-
-    o_vendors_mkt_local = o_allots_qs.filter(
-        va_vehiclesource_id=3,
-        va_enquirynumber__en_trip_type_id=1,
-        va_vendor__isnull=False
-    ).values('va_vendor').distinct().count()
-
-    o_vendors_mkt_os = o_allots_qs.filter(
-        va_vehiclesource_id=3,
-        va_enquirynumber__en_trip_type_id=2,
-        va_vendor__isnull=False
-    ).values('va_vendor').distinct().count()
-
-    if target_ops_id:
-        o_new_cust = CustomerInfo.objects.filter(
-            id__in=o_enq_qs.values_list('en_customername_id', flat=True)
-        ).count()
-    else:
-        o_new_cust = CustomerInfo.objects.count()
-
-    recent_30_vends = set(Vehicle_allotmentInfo.objects.filter(
-        va_created_at__date__gte=today_dt - timedelta(days=30),
-        va_created_at__date__lte=today_dt,
-        va_vendor__isnull=False
-    ).values_list('va_vendor_id', flat=True))
-    all_branch_vends = set(o_allots_qs.filter(va_vendor__isnull=False).values_list('va_vendor_id', flat=True))
-    o_lost_cust = len(all_branch_vends - recent_30_vends)
-
-    # Top highlight cards: Display the OVERALL values of the particulars
+    # Top highlight cards: Display the selected period values of the particulars (matching filter and CS Dashboard)
     top_cards = {
-        'booking_placed_rate': f"{o_booking_placed_pct:.1f}%",
-        'booking_placed_sub': f"{o_placed} Placed / {o_booking} Demanded",
-        'placed_invoiced_rate': f"{o_placed_invoiced_pct:.1f}%",
-        'placed_invoiced_sub': f"{o_total_invoiced} Invoiced / {o_placed} Placed",
-        'placed_own': o_placed_own,
-        'placed_own_pct': f"{o_own_share}%",
-        'placed_attc': o_placed_attc,
-        'placed_attc_pct': f"{o_attc_share}%",
-        'placed_mkt_local': o_placed_mkt_local,
-        'placed_mkt_local_pct': f"{o_mkt_local_share}%",
-        'placed_mkt_os': o_placed_mkt_os,
-        'placed_mkt_os_pct': f"{o_mkt_os_share}%",
-        'vendors_mkt_local': o_vendors_mkt_local,
-        'vendors_mkt_os': o_vendors_mkt_os,
-        'new_customers': o_new_cust,
-        'lost_customers': o_lost_cust,
-        'total_placed': o_placed,
-        'total_demanded': o_booking,
+        'booking_placed_rate': f"{p_booking_placed_pct:.1f}%",
+        'booking_placed_sub': f"{p_placed} Placed / {p_booking} Demanded",
+        'placed_invoiced_rate': f"{p_placed_invoiced_pct:.1f}%",
+        'placed_invoiced_sub': f"{p_total_invoiced_or_ready} Invoiced / {p_placed} Placed",
+        'placed_own': p_placed_own,
+        'placed_own_pct': f"{p_own_share}%",
+        'placed_attc': p_placed_attc,
+        'placed_attc_pct': f"{p_attc_share}%",
+        'placed_mkt_local': p_placed_mkt_local,
+        'placed_mkt_local_pct': f"{p_mkt_local_share}%",
+        'placed_mkt_os': p_placed_mkt_os,
+        'placed_mkt_os_pct': f"{p_mkt_os_share}%",
+        'vendors_mkt_local': p_vendors_mkt_local,
+        'vendors_mkt_os': p_vendors_mkt_os,
+        'new_customers': p_new_cust,
+        'lost_customers': p_lost_cust,
+        'total_placed': p_placed,
+        'total_demanded': p_booking,
     }
 
     # Chart 1: Fleet Sourcing Breakdown (Completely Distinct Colors: Blue, Amber, Green, Purple)
