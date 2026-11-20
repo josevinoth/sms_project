@@ -745,9 +745,13 @@
             // Fallback header keyword check if metadata is missing
             if (colMeta.is_mergeable === undefined) {
                 var headerLower = (headers[c] || '').toLowerCase();
-                var cargoTerms = ['hawb', 'hbl', 'boe', 'eway', 'pkg', 'pcs', 'weight', 'cbm', 'volume', 'invoice', 'seal', 'ref no'];
-                if (cargoTerms.some(function(term) { return headerLower.includes(term); })) {
-                    isColMergeable = false;
+                if (headerLower.includes('customer ref') || headerLower.includes('customer reference')) {
+                    isColMergeable = true;
+                } else {
+                    var cargoTerms = ['hawb', 'hbl', 'boe', 'eway', 'pkg', 'pcs', 'weight', 'cbm', 'volume', 'invoice', 'seal'];
+                    if (cargoTerms.some(function(term) { return headerLower.includes(term); })) {
+                        isColMergeable = false;
+                    }
                 }
             }
 

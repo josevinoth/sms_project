@@ -541,6 +541,7 @@
             <li><a href="{% url 'customer_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i>
                     Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}"><i class="fas fa-file-invoice"></i> DMR Report</a></li>
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
@@ -557,6 +558,7 @@
         <ul class="nav-links">
             <li><a href="{% url 'customer_dashboard' %}" class="active">Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}">My Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}">DMR Report</a></li>
             <li><a href="{% url 'customer_documents' %}">Documents</a></li>
             <li><a href="{% url 'customer_support' %}">Support</a></li>
             <li><a href="{% url 'customer_profile' %}">Profile</a></li>
@@ -678,7 +680,11 @@
                         <td>{{ trip.tr_departedlocation|default:"-" }}</td>
                         <td>{{ trip.tr_reportedlocation|default:trip.tr_enquirynumber.en_tolocation }}</td>
                         <td>
-                            {% if trip.tc_financestatus_id == 1 %}
+                            {% if trip.flow %}
+                            <span class="status-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ trip.flow.stage_color }}; color: {{ trip.flow.stage_color }}; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas {{ trip.flow.stage_icon }}"></i> {{ trip.flow.stage_label }}
+                            </span>
+                            {% elif trip.tc_financestatus_id == 1 %}
                             <span class="status-badge status-transit">In-Transit</span>
                             {% elif trip.tc_financestatus_id == 2 or trip.tc_financestatus_id == 7 %}
                             <span class="status-badge status-active">Delivered</span>

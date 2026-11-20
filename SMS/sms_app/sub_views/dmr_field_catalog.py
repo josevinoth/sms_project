@@ -191,7 +191,6 @@ CARGO_GOODS_FIELD_KEYS = {
     'cg_ebillno',            # E-Way Bill #
     'cg_ewaybill',           # E-Way Bill alias
     'cg_consignerinvoice',   # Consigner Invoice (per package/good)
-    'co_cusrefnum',          # Customer Reference No
     'cg_qty',                # No of Pieces / Pkgs
     'cg_weight',             # Actual Weight (Kgs)
     'chargeable_weight',     # Chargeable Weight
@@ -207,7 +206,7 @@ CARGO_GOODS_FIELD_KEYS = {
 CARGO_HEADER_KEYWORDS = [
     'hawb', 'hbl', 'boe', 'eway', 'e-way', 'pieces', 'pkgs', 'pkg', 'pcs',
     'actual weight', 'gross weight', 'chargeable weight', 'cargo weight', 'weight (kgs)',
-    'cbm', 'volume', 'invoice', 'ref no', 'ref num', 'master invoice', 'seal', 'capacity',
+    'cbm', 'volume', 'invoice', 'master invoice', 'seal', 'capacity',
     'be#', 'be #', 'be no', 'b/e no', 'b/e #',
     'split cost', 'split'
 ]
@@ -220,10 +219,15 @@ def is_dmr_column_mergeable(field_key=None, column_header=None):
     """
     if field_key:
         fk = str(field_key).strip().lower()
+        # Explicit check: Customer Reference No is consignment-level and ALWAYS mergeable
+        if fk in ('co_cusrefnum', 'customer_ref_no', 'customer_reference_no', 'booking_no', 'co_consignmentnumber'):
+            return True
         if fk in CARGO_GOODS_FIELD_KEYS:
             return False
     if column_header:
         ch = str(column_header).strip().lower()
+        if 'customer ref' in ch or 'customer reference' in ch or 'job no' in ch or 'cnote' in ch:
+            return True
         if ch in ('weight', 'wt', 'net weight', 'pcs', 'pkgs', 'pkg'):
             return False
         if any(kw in ch for kw in CARGO_HEADER_KEYWORDS):
