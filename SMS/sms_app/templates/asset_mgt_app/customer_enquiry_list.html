@@ -469,6 +469,381 @@
                 font-size: 16px;
             }
         }
+
+        /* Flow Pill & Button */
+        .flow-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .btn-view-flow {
+            background: rgba(0, 242, 254, 0.12);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            color: #38bdf8;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            margin-top: 4px;
+            width: fit-content;
+        }
+
+        .btn-view-flow:hover {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: #0b1329;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 20px;
+            max-width: 680px;
+            width: 100%;
+            max-height: 88vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+            animation: modalFadeIn 0.25s ease;
+        }
+
+        .modal-dialog::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-dialog::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .modal-dialog::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 4px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.2rem 1.6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-close:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .modal-body {
+            padding: 1.5rem 1.6rem 2rem;
+        }
+
+        /* Flow Progress Bar */
+        .flow-progress-wrapper {
+            margin-bottom: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1rem 1.2rem;
+        }
+
+        .flow-progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            font-size: 0.82rem;
+        }
+
+        .flow-progress-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .flow-progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #38bdf8 0%, #00f2fe 50%, #10b981 100%);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+            transition: width 0.6s ease;
+        }
+
+        /* Phase Separator Header */
+        .flow-phase-block {
+            margin: 1.4rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .flow-phase-badge {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+        }
+
+        .flow-phase-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent);
+        }
+
+        /* Flow Stepper Timeline */
+        .flow-stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        .flow-step-item {
+            display: flex;
+            gap: 1.2rem;
+            position: relative;
+            padding-bottom: 1.6rem;
+        }
+
+        .flow-step-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .flow-step-line {
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flow-step-item.is-done .flow-step-line {
+            background: #22c55e;
+        }
+
+        .flow-step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            z-index: 2;
+            background: #1e293b;
+            border: 2px solid #475569;
+            color: #94a3b8;
+            transition: all 0.25s;
+        }
+
+        .flow-step-item.is-done .flow-step-icon {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .flow-step-item.is-current .flow-step-icon {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: #00f2fe;
+            color: #00f2fe;
+            box-shadow: 0 0 16px rgba(0, 242, 254, 0.6);
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+        }
+
+        .flow-step-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .flow-step-item.is-current .flow-step-content {
+            background: rgba(0, 242, 254, 0.04);
+            border-color: rgba(0, 242, 254, 0.25);
+        }
+
+        .flow-step-item.is-done .flow-step-content {
+            background: rgba(34, 197, 94, 0.03);
+            border-color: rgba(34, 197, 94, 0.15);
+        }
+
+        .flow-step-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 0.3rem;
+        }
+
+        .flow-step-time {
+            font-size: 0.74rem;
+            font-weight: 500;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .flow-step-desc {
+            font-size: 0.83rem;
+            color: #cbd5e1;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-step-sub {
+            font-size: 0.76rem;
+            color: #94a3b8;
+        }
+
+        .step-badge {
+            font-size: 0.68rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .step-badge-done {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .step-badge-current {
+            background: rgba(0, 242, 254, 0.15);
+            color: #00f2fe;
+            border: 1px solid rgba(0, 242, 254, 0.4);
+        }
+
+        .step-badge-pending {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .flow-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .flow-action-gps {
+            background: rgba(0, 242, 254, 0.18);
+            border: 1px solid #00f2fe;
+            color: #00f2fe;
+        }
+
+        .flow-action-gps:hover {
+            background: #00f2fe;
+            color: #0b1329;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        .flow-action-pod {
+            background: rgba(239, 68, 68, 0.18);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .flow-action-pod:hover {
+            background: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
     </style>
 </head>
 
@@ -486,6 +861,7 @@
             <li><a href="{% url 'customer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}" class="active"><i class="fas fa-shipping-fast"></i> My
                     Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}"><i class="fas fa-file-invoice"></i> DMR Report</a></li>
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
@@ -502,6 +878,7 @@
         <ul class="nav-links">
             <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}" class="active">My Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}">DMR Report</a></li>
             <li><a href="{% url 'customer_documents' %}">Documents</a></li>
             <li><a href="{% url 'customer_support' %}">Support</a></li>
             <li><a href="{% url 'customer_profile' %}">Profile</a></li>
@@ -570,6 +947,7 @@
                             <th>Customer Name</th>
                             <th>Vehicle No</th>
                             <th>Driver No</th>
+                            <th>Goods Status Flow</th>
                             <th>Track / POD</th>
                             <th>From</th>
                             <th>To</th>
@@ -587,6 +965,20 @@
                             <td>{{ item.enq.en_customername.cu_nameshort|default:item.enq.en_customername.cu_name }}</td>
                             <td>{{ item.vehicle_no }}</td>
                             <td>{{ item.driver_number|default:"-" }}</td>
+                            <td>
+                                {% if item.flow %}
+                                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                                    <span class="flow-pill-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ item.flow.stage_color }}; color: {{ item.flow.stage_color }}; white-space: nowrap;">
+                                        <i class="fas {{ item.flow.stage_icon }}"></i> {{ item.flow.stage_label }}
+                                    </span>
+                                    <button type="button" class="btn-view-flow" onclick="openFlowModal('flow-modal-{{ forloop.counter }}')">
+                                        <i class="fas fa-route"></i> Track Flow ({{ item.flow.current_stage }}/12)
+                                    </button>
+                                </div>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if item.pod_trip_id %}
                                 {# POD available — show POD button, hide Track #}
@@ -633,7 +1025,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="11" style="text-align: center; padding: 4rem; color: #94a3b8;">No shipments or
+                            <td colspan="12" style="text-align: center; padding: 4rem; color: #94a3b8;">No shipments or
                                 enquiries found.</td>
                         </tr>
                         {% endfor %}
@@ -662,7 +1054,144 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Flow Modals for each shipment item -->
+    {% for item in enquiry_list %}
+    {% if item.flow %}
+    <div class="modal-overlay" id="flow-modal-{{ forloop.counter }}" onclick="if(event.target === this) closeFlowModal('flow-modal-{{ forloop.counter }}')">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fas fa-route" style="color: #00f2fe;"></i> Shipment Lifecycle & Goods Movement Flow</h3>
+                <span class="modal-close" onclick="closeFlowModal('flow-modal-{{ forloop.counter }}')" title="Close"><i class="fas fa-times"></i></span>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Header -->
+                <div class="flow-progress-wrapper">
+                    <div class="flow-progress-meta">
+                        <span style="color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Overall Movement Progress</span>
+                        <span style="color: #00f2fe; font-weight: 700; font-family: 'Orbitron', sans-serif;">{{ item.flow.progress_percent }}% &bull; Step {{ item.flow.current_stage }} of {{ item.flow.total_stages }}</span>
+                    </div>
+                    <div class="flow-progress-track">
+                        <div class="flow-progress-fill" style="width: {{ item.flow.progress_percent }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Shipment Summary Box -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 1.1rem 1.3rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">Booking Reference & Route</div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-top: 3px;">
+                            #{{ item.enq.en_enquirynumber }} &bull; {{ item.flow.from_loc }} &rarr; {{ item.flow.to_loc }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap;">
+                            <span><i class="fas fa-truck" style="color: var(--primary);"></i> <b>{{ item.flow.vehicle_no }}</b></span>
+                            {% if item.flow.driver_name %}
+                            <span><i class="fas fa-user" style="color: var(--secondary);"></i> {{ item.flow.driver_name }} {% if item.flow.driver_phone %}({{ item.flow.driver_phone }}){% endif %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="flow-pill-badge" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid {{ item.flow.stage_color }}; color: {{ item.flow.stage_color }}; font-weight: 700;">
+                            <i class="fas {{ item.flow.stage_icon }}"></i> {{ item.flow.stage_label }} (Step {{ item.flow.current_stage }}/{{ item.flow.total_stages }})
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 12-Step Granular Lifecycle Stepper -->
+                <div class="flow-stepper">
+                    {% for step in item.flow.steps %}
+                    
+                    {% ifchanged step.phase_group %}
+                    <div class="flow-phase-block">
+                        <span class="flow-phase-badge" style="background: rgba(255,255,255,0.05); border: 1px solid {{ step.phase_color|default:'var(--primary)' }}; color: {{ step.phase_color|default:'var(--primary)' }};">
+                            <i class="fas {{ step.phase_icon }}"></i> {{ step.phase_group }}
+                        </span>
+                        <div class="flow-phase-line"></div>
+                    </div>
+                    {% endifchanged %}
+
+                    <div class="flow-step-item {% if step.status == 'done' %}is-done{% elif step.status == 'current' %}is-current{% endif %}">
+                        {% if not forloop.last %}
+                        <div class="flow-step-line"></div>
+                        {% endif %}
+                        
+                        <div class="flow-step-icon">
+                            {% if step.status == 'done' %}
+                            <i class="fas fa-check"></i>
+                            {% else %}
+                            <i class="fas {{ step.icon }}"></i>
+                            {% endif %}
+                        </div>
+
+                        <div class="flow-step-content">
+                            <div class="flow-step-title">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span>Step {{ step.step }}: {{ step.title }}</span>
+                                    {% if step.status == 'done' %}
+                                    <span class="step-badge step-badge-done"><i class="fas fa-check-circle"></i> Completed</span>
+                                    {% elif step.status == 'current' %}
+                                    <span class="step-badge step-badge-current"><i class="fas fa-spinner fa-spin"></i> In-Progress</span>
+                                    {% else %}
+                                    <span class="step-badge step-badge-pending"><i class="far fa-circle"></i> Pending</span>
+                                    {% endif %}
+                                </div>
+                                {% if step.time %}
+                                <span class="flow-step-time"><i class="far fa-clock"></i> {{ step.time|date:"d M Y, H:i" }}</span>
+                                {% elif step.status == 'done' %}
+                                <span class="flow-step-time" style="color: #22c55e;"><i class="fas fa-check-double"></i> Milestone Achieved</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="flow-step-desc">{{ step.desc }}</div>
+                            {% if step.sub %}
+                            <div class="flow-step-sub">{{ step.sub }}</div>
+                            {% endif %}
+
+                            {% if step.track_link and step.status == 'current' %}
+                            <div style="margin-top: 10px;">
+                                <a href="{{ step.track_link }}" target="_blank" class="flow-action-btn flow-action-gps">
+                                    <i class="fas fa-satellite-dish"></i> Live GPS Highway Tracking
+                                </a>
+                            </div>
+                            {% endif %}
+
+                            {% if step.pod_trip_id and step.status == 'done' %}
+                            <div style="margin-top: 10px;">
+                                <a href="{% url 'download_pod' step.pod_trip_id %}" target="_blank" class="flow-action-btn flow-action-pod">
+                                    <i class="fas fa-file-pdf"></i> View Delivered POD Document
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
     <script>
+        function openFlowModal(modalId) {
+            const m = document.getElementById(modalId);
+            if (m) m.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFlowModal(modalId) {
+            const m = document.getElementById(modalId);
+            if (m) m.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+                document.body.style.overflow = '';
+            }
+        });
         function updateTime() {
             const now = new Date();
             document.getElementById('currentTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

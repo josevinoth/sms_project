@@ -253,14 +253,14 @@
 </div>
 
 <!-- Job Creation Modal (Preserved & Styled) -->
-<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true" style="overflow-y: auto;">
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false" style="overflow-y: auto;">
     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
         <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 92vh;">
             <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
                 <h5 class="modal-title font-weight-bold text-dark" id="jobCreationModalLabel">
                     <i class="fas fa-industry mr-2 text-primary"></i> Create Production Batch Job
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" id="btn_close_job_modal_x" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -292,7 +292,7 @@
                     <input type="email" id="stock_alert_email_input" class="form-control form-control-sm" placeholder="e.g. stockteam@company.com">
                 </div>
                 <div class="d-flex justify-content-between w-100">
-                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modern btn-cancel" id="btn_cancel_job_modal" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn-modern btn-submit" id="confirm_batch_job_btn">
                         <i class="fas fa-check-circle"></i> Create Job &amp; Map Items
                     </button>
@@ -303,7 +303,7 @@
 </div>
 
 <!-- Partcode Search & Replacement Modal -->
-<div class="modal fade" id="partCodeSearchModal" tabindex="-1" role="dialog" aria-labelledby="partCodeSearchModalLabel" aria-hidden="true" style="z-index: 1060;">
+<div class="modal fade" id="partCodeSearchModal" tabindex="-1" role="dialog" aria-labelledby="partCodeSearchModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false" style="z-index: 1060;">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
             <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
@@ -312,7 +312,7 @@
                     <span class="badge badge-info ml-2 px-3 py-2 text-white font-weight-bold" id="modal_needed_qty_display" style="display:none; font-size: 0.85rem;"></span>
                     <span class="badge ml-2 px-3 py-2 font-weight-bold" id="modal_header_stock_badge" style="display:none; font-size: 0.85rem;"></span>
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" id="btn_close_search_modal_x" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -596,12 +596,18 @@
                     'po_id': po_id, 
                     'items': items, 
                     'stock_alert_email': $('#stock_alert_email_input').val().trim(),
-                    'substitutions': window.pendingJobSubstitutions || {}
+                    'substitutions': {}
                 }),
                 contentType: 'application/json',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                 success: function (response) {
                     if (response.success) { 
+                        try {
+                            sessionStorage.removeItem('sms_active_job_state_' + po_id);
+                            if (window.location.hash === '#batch-job') {
+                                history.replaceState(null, null, window.location.pathname + window.location.search);
+                            }
+                        } catch(e) {}
                         window.location.href = response.redirect_url; 
                     } else { 
                         $('#modal_job_error_text').html(response.message || 'Error creating job');
@@ -613,14 +619,57 @@
                     $('#confirm_batch_job_btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Create Job & Map Items');
                     let resp = xhr.responseJSON;
                     if (resp && resp.stock_alert && resp.insufficient_stock_items) {
+                        // Persist active state to sessionStorage for refresh resilience
+                        try {
+                            sessionStorage.setItem('sms_active_job_state_' + po_id, JSON.stringify({
+                                po_id: po_id,
+                                items: items,
+                                pendingJobSubstitutions: window.pendingJobSubstitutions || {},
+                                email: $('#stock_alert_email_input').val() || '',
+                                isOpen: true
+                            }));
+                            if (window.location.hash !== '#batch-job') {
+                                history.replaceState(null, null, '#batch-job');
+                            }
+                        } catch(e) { console.error('Session save error:', e); }
+
                         window.last_shortfall_items = resp.insufficient_stock_items;
-                        let html = '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" id="shortfall_header_bar">';
-                        html += '<div id="shortfall_header_title"><i class="fas fa-exclamation-circle text-warning mr-1"></i> <b>Insufficient Stock Alert!</b> Stock shortfall detected:</div>';
+                        let metrics = resp.summary_metrics || {
+                            'total_wood_cft_shortfall': 0,
+                            'total_ply_sheets_shortfall': 0,
+                            'total_ply_sqft_shortfall': 0,
+                            'hardware_shortfall_count': 0
+                        };
+
+                        let html = '';
+                        // Commercial Sawmill Shortfall Summary Cards
+                        html += '<div class="row no-gutters mb-3 p-2 rounded shadow-sm" style="background: #f8fafc; border: 1px solid #e2e8f0;">';
+                        html += '<div class="col-md-4 px-2 mb-2 mb-md-0">';
+                        html += '  <div class="p-2 rounded bg-white shadow-sm" style="border-left: 4px solid #16a34a !important;">';
+                        html += '    <div class="small text-muted font-weight-bold"><i class="fas fa-tree text-success mr-1"></i> Total Timber Shortfall</div>';
+                        html += '    <div class="h5 mb-0 font-weight-bold text-dark"><span id="metric_wood_cft">' + metrics.total_wood_cft_shortfall + '</span> <span class="small font-weight-normal text-muted">CFT</span></div>';
+                        html += '  </div>';
+                        html += '</div>';
+                        html += '<div class="col-md-4 px-2 mb-2 mb-md-0">';
+                        html += '  <div class="p-2 rounded bg-white shadow-sm" style="border-left: 4px solid #0284c7 !important;">';
+                        html += '    <div class="small text-muted font-weight-bold"><i class="fas fa-layer-group text-info mr-1"></i> Commercial Plywood (8x4)</div>';
+                        html += '    <div class="h5 mb-0 font-weight-bold text-dark"><span id="metric_ply_sheets">' + metrics.total_ply_sheets_shortfall + '</span> <span class="small font-weight-normal text-muted">Sheets (' + metrics.total_ply_sqft_shortfall + ' SQFT)</span></div>';
+                        html += '  </div>';
+                        html += '</div>';
+                        html += '<div class="col-md-4 px-2">';
+                        html += '  <div class="p-2 rounded bg-white shadow-sm" style="border-left: 4px solid #f59e0b !important;">';
+                        html += '    <div class="small text-muted font-weight-bold"><i class="fas fa-boxes text-warning mr-1"></i> Hardware & Accessories</div>';
+                        html += '    <div class="h5 mb-0 font-weight-bold text-dark"><span id="metric_hardware_count">' + metrics.hardware_shortfall_count + '</span> <span class="small font-weight-normal text-muted">Item Types</span></div>';
+                        html += '  </div>';
+                        html += '</div>';
+                        html += '</div>';
+
+                        html += '<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" id="shortfall_header_bar">';
+                        html += '<div id="shortfall_header_title"><i class="fas fa-exclamation-triangle text-danger mr-1"></i> <b class="text-danger">Stock Shortfall Alert!</b> Material deficiency detected:</div>';
                         html += '<div class="d-flex align-items-center flex-wrap">';
+                        html += '<button type="button" class="btn btn-sm btn-outline-danger mr-2 font-weight-bold d-none shadow-sm" id="reset_all_swaps_btn"><i class="fas fa-undo mr-1"></i> Reset All Swaps</button>';
                         let woodItems = (resp.insufficient_stock_items || []).filter(function(it) {
-                            let pc = (it.part_code || '').toUpperCase();
-                            let desc = (it.description || '').toUpperCase();
-                            return pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE');
+                            return it.is_wood && !it.is_ply;
                         });
                         if (woodItems.length >= 2) {
                             html += '<button type="button" class="btn btn-sm btn-outline-primary mr-2 font-weight-bold" id="quick_select_wood_btn"><i class="fas fa-tree mr-1"></i> Select All (' + woodItems.length + ') Wood Part Codes</button>';
@@ -628,23 +677,34 @@
                         html += '<button type="button" class="btn btn-sm btn-primary font-weight-bold shadow-sm" id="multi_replace_partcode_btn"><i class="fas fa-object-group mr-1"></i> Group Part Codes into One</button></div>';
                         html += '</div>';
 
-                        html += '<div class="table-responsive rounded shadow-sm mb-3" style="max-height: 380px; overflow-y: auto;"><table class="table table-sm table-bordered bg-white text-center small mb-0" id="shortfall_items_table"><thead class="bg-light" style="position: sticky; top: 0; z-index: 3;"><tr class="bg-light">';
+                        html += '<div class="table-responsive rounded shadow-sm mb-3" style="max-height: 420px; overflow-y: auto;"><table class="table table-sm table-bordered bg-white text-center small mb-0" id="shortfall_items_table"><thead class="bg-light" style="position: sticky; top: 0; z-index: 3;"><tr class="bg-light">';
                         html += '<th style="width: 35px;"><input type="checkbox" id="select_all_stk_cbs" title="Select All"></th>';
                         html += '<th style="min-width: 90px;">Part Code</th>';
                         html += '<th class="text-left" style="min-width: 140px;">Description</th>';
                         html += '<th>Needed</th><th>Available</th><th>Shortfall</th>';
-                        html += '<th class="text-left" style="min-width: 160px;">Used in Items / Boxes</th>';
-                        html += '<th>Action</th></tr></thead><tbody>';
+                        html += '<th style="min-width: 90px;">Sawmill Unit</th>';
+                        html += '<th class="text-left" style="min-width: 150px;">Used in Items / Boxes</th>';
+                        html += '<th style="min-width: 180px;">Action / Recommendation</th></tr></thead><tbody>';
+                        window.origActionHtmls = {};
                         resp.insufficient_stock_items.forEach(function(stk) {
                             let qids = stk.quotation_ids || [stk.quotation_id];
                             let qidsStr = qids.join(',');
-                            html += '<tr id="stk_row_' + stk.quotation_id + '" data-partcode="' + stk.part_code + '" data-qids="' + qidsStr + '">';
+                            let commUnit = '-';
+                            if (stk.is_wood && stk.shortfall_cft > 0) {
+                                commUnit = '<span class="badge badge-light border border-success text-success font-weight-bold" style="font-size:0.85rem;">' + stk.shortfall_cft + ' CFT</span>';
+                            } else if (stk.is_ply && stk.shortfall_sheets > 0) {
+                                commUnit = '<span class="badge badge-light border border-info text-info font-weight-bold" style="font-size:0.85rem;">' + stk.shortfall_sheets + ' Sheets</span>';
+                            }
+
+                            html += '<tr id="stk_row_' + stk.quotation_id + '" data-partcode="' + stk.part_code + '" data-qids="' + qidsStr + '" data-is-wood="' + (stk.is_wood ? '1' : '0') + '" data-is-ply="' + (stk.is_ply ? '1' : '0') + '" data-cft="' + (stk.shortfall_cft || 0) + '" data-sheets="' + (stk.shortfall_sheets || 0) + '"';
+                            html += ' data-orig-partcode="' + stk.part_code + '" data-orig-desc="' + (stk.description || '-') + '" data-orig-avail="' + stk.available_qty + '" data-orig-shortfall="' + stk.shortfall + '" data-orig-needed="' + stk.needed_qty + '">';
                             html += '<td><input type="checkbox" class="stk-row-cb" value="' + stk.quotation_id + '" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-pod="' + stk.pod_id + '" data-job-qty="' + (stk.job_qty || 1) + '" data-per-unit="' + (stk.per_unit_req || 1) + '"></td>';
                             html += '<td class="partcode-badge-col"><code class="bg-light px-2 py-1 text-danger font-weight-bold" style="font-size:0.95rem;">' + stk.part_code + '</code></td>';
-                            html += '<td class="text-left font-weight-bold">' + (stk.description || '-') + '</td>';
+                            html += '<td class="text-left font-weight-bold desc-col">' + (stk.description || '-') + '</td>';
                             html += '<td class="font-weight-bold needed-col">' + stk.needed_qty + '</td>';
                             html += '<td class="' + (stk.available_qty > 0 ? 'text-warning' : 'text-danger') + ' font-weight-bold avail-col">' + stk.available_qty + '</td>';
                             html += '<td class="text-danger font-weight-bold shortfall-col">-' + stk.shortfall + '</td>';
+                            html += '<td class="comm-unit-col">' + commUnit + '</td>';
                             
                             // Item breakdown display
                             let itemsHtml = '<span class="text-dark font-weight-bold">' + stk.item_name + '</span>';
@@ -656,16 +716,289 @@
                                 itemsHtml += '</div>';
                             }
                             html += '<td class="text-left">' + itemsHtml + '</td>';
-                            html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-edit mr-1"></i> Change</button></td>';
+
+                            // Action Column: Smart 1-Click Swap Button with Multi-Alternative Recommendations
+                            let actionHtml = '<div class="d-flex flex-column align-items-center w-100 action-col-container">';
+                            let altsList = stk.suggested_alternatives || (stk.suggested_alternative ? [stk.suggested_alternative] : []);
+                            if (altsList.length > 0) {
+                                let primaryAlt = altsList[0];
+                                actionHtml += '<button type="button" class="btn btn-sm btn-success py-1 px-2 mb-1 w-100 quick-swap-alt-btn font-weight-bold shadow-sm text-left" ';
+                                actionHtml += ' data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '"';
+                                actionHtml += ' data-alt-id="' + primaryAlt.part_code_id + '" data-alt-code="' + primaryAlt.part_code + '" data-alt-desc="' + primaryAlt.description + '" data-alt-avail="' + primaryAlt.available_qty + '"';
+                                actionHtml += ' data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"';
+                                actionHtml += ' data-is-wood="' + (stk.is_wood ? '1' : '0') + '" data-is-ply="' + (stk.is_ply ? '1' : '0') + '" data-cft="' + (stk.shortfall_cft || 0) + '" data-sheets="' + (stk.shortfall_sheets || 0) + '"';
+                                actionHtml += ' title="1-Click swap with #1 recommended yard stock">';
+                                actionHtml += ' <div class="d-flex justify-content-between align-items-center">';
+                                actionHtml += '   <span><i class="fas fa-bolt text-warning mr-1"></i> Swap: <b>' + primaryAlt.part_code + '</b></span>';
+                                actionHtml += '   <span class="badge badge-light text-dark ml-1 font-weight-bold">' + primaryAlt.available_qty + ' in yard</span>';
+                                actionHtml += ' </div>';
+                                actionHtml += '</button>';
+
+                                // If more than 1 in-stock alternative exists, show secondary quick pills
+                                if (altsList.length > 1) {
+                                    actionHtml += '<div class="d-flex flex-wrap gap-1 mb-1 w-100 justify-content-center">';
+                                    for (let i = 1; i < altsList.length; i++) {
+                                        let secAlt = altsList[i];
+                                        actionHtml += '<button type="button" class="btn btn-xs btn-outline-success py-0 px-1 quick-swap-alt-btn text-truncate" style="font-size:0.75rem; max-width: 48%;"';
+                                        actionHtml += ' data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '"';
+                                        actionHtml += ' data-alt-id="' + secAlt.part_code_id + '" data-alt-code="' + secAlt.part_code + '" data-alt-desc="' + secAlt.description + '" data-alt-avail="' + secAlt.available_qty + '"';
+                                        actionHtml += ' data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"';
+                                        actionHtml += ' data-is-wood="' + (stk.is_wood ? '1' : '0') + '" data-is-ply="' + (stk.is_ply ? '1' : '0') + '" data-cft="' + (stk.shortfall_cft || 0) + '" data-sheets="' + (stk.shortfall_sheets || 0) + '"';
+                                        actionHtml += ' title="' + secAlt.description + ' (' + secAlt.available_qty + ' in yard)">';
+                                        actionHtml += ' <i class="fas fa-bolt text-warning"></i> ' + secAlt.part_code + ' (' + secAlt.available_qty + ')';
+                                        actionHtml += '</button> ';
+                                    }
+                                    actionHtml += '</div>';
+                                }
+
+                                actionHtml += '<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 w-100 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-search mr-1"></i> Custom Search</button>';
+                            } else {
+                                actionHtml += '<button type="button" class="btn btn-sm btn-primary py-0 px-2 w-100 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-qids="' + qidsStr + '" data-pod="' + stk.pod_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '" data-per-unit="' + (stk.per_unit_req || 1) + '" data-job-qty="' + (stk.job_qty || 1) + '"><i class="fas fa-edit mr-1"></i> Change</button>';
+                            }
+                            actionHtml += '</div>';
+
+                            // Cache original action HTML for Undo
+                            window.origActionHtmls[stk.quotation_id] = actionHtml;
+
+                            html += '<td>' + actionHtml + '</td>';
                             html += '</tr>';
                         });
                         html += '</tbody></table></div>';
-                        html += '<div class="d-flex justify-content-between align-items-center" id="shortfall_footer_bar"><span class="small text-muted"><i class="fas fa-paper-plane mr-1"></i> Stock Team has been notified.</span>';
-                        html += '<button type="button" class="btn btn-sm btn-warning font-weight-bold" id="force_release_job_btn"><i class="fas fa-arrow-right"></i> Proceed with Available Stock &amp; Generate Indent</button></div>';
+                        html += '<div class="d-flex justify-content-between align-items-center flex-wrap" id="shortfall_footer_bar">';
+                        html += '<span class="small text-muted"><i class="fas fa-paper-plane mr-1"></i> Stock Team has been notified.</span>';
+                        html += '<div class="d-flex align-items-center mt-2 mt-md-0">';
+                        html += '<button type="button" class="btn btn-sm btn-success font-weight-bold shadow mr-2 d-none" id="proceed_all_swapped_btn"><i class="fas fa-check-double mr-1"></i> Create Production Batch Job (All Swapped)</button>';
+                        html += '<button type="button" class="btn btn-sm btn-warning font-weight-bold shadow" id="force_release_job_btn"><i class="fas fa-file-invoice mr-1"></i> Proceed with Available Stock &amp; Generate Purchase Indent</button>';
+                        html += '</div></div>';
                         
                         $('#modal_job_error_text').html(html);
                         $('#modal_job_error_alert').removeClass('d-none');
 
+                        // Helper to recalculate Sawmill KPI banners and toggle buttons
+                        function updateSawmillBannersAndButtons() {
+                            let remainingWoodCft = 0.0;
+                            let remainingPlySheets = 0.0;
+                            let unResolvedCount = 0;
+                            let swappedCount = 0;
+
+                            $('#shortfall_items_table tbody tr').each(function() {
+                                if ($(this).attr('data-resolved') === '1') {
+                                    swappedCount++;
+                                } else {
+                                    unResolvedCount++;
+                                    if ($(this).data('is-wood') == '1') {
+                                        remainingWoodCft += parseFloat($(this).data('cft') || 0);
+                                    }
+                                    if ($(this).data('is-ply') == '1') {
+                                        remainingPlySheets += parseFloat($(this).data('sheets') || 0);
+                                    }
+                                }
+                            });
+
+                            $('#metric_wood_cft').text(remainingWoodCft.toFixed(2));
+                            $('#metric_ply_sheets').text(remainingPlySheets.toFixed(1));
+
+                            if (swappedCount > 0 || $('.revert-group-btn').length > 0) {
+                                $('#reset_all_swaps_btn').removeClass('d-none');
+                            } else {
+                                $('#reset_all_swaps_btn').addClass('d-none');
+                            }
+
+                            // Keep sessionStorage updated with latest substitutions
+                            try {
+                                let curPo = '{{ purchaseorder_id }}' || '{{ form.instance.id }}' || '{{ po_id }}';
+                                let savedState = JSON.parse(sessionStorage.getItem('sms_active_job_state_' + curPo) || '{}');
+                                savedState.pendingJobSubstitutions = window.pendingJobSubstitutions || {};
+                                sessionStorage.setItem('sms_active_job_state_' + curPo, JSON.stringify(savedState));
+                            } catch(e) { console.error('Error saving substitutions to sessionStorage:', e); }
+
+                            if (unResolvedCount === 0) {
+                                $('#proceed_all_swapped_btn').removeClass('d-none');
+                                $('#force_release_job_btn').addClass('d-none');
+                                $('#shortfall_header_title').html('<i class="fas fa-check-circle text-success mr-1"></i> <b class="text-success">All Shortfalls Resolved with Yard Substitutes!</b> Ready to create production batch job.');
+                            } else {
+                                $('#proceed_all_swapped_btn').addClass('d-none');
+                                $('#force_release_job_btn').removeClass('d-none');
+                                $('#shortfall_header_title').html('<i class="fas fa-exclamation-triangle text-danger mr-1"></i> <b class="text-danger">Stock Shortfall Alert!</b> Material deficiency detected:');
+                            }
+                        }
+
+                        // 1-Click Swap Alternative Material Handler
+                        $(document).off('click', '.quick-swap-alt-btn').on('click', '.quick-swap-alt-btn', function() {
+                            let btn = $(this);
+                            let row = btn.closest('tr');
+                            let qid = btn.data('qid') + '';
+                            let qidsStr = (btn.data('qids') || qid) + '';
+                            let qids = qidsStr.split(',');
+                            let altId = btn.data('alt-id');
+                            let altCode = btn.data('alt-code');
+                            let altDesc = btn.data('alt-desc');
+                            let altAvail = btn.data('alt-avail');
+                            let neededQty = parseFloat(btn.data('needed') || 1);
+                            let perUnit = parseFloat(btn.data('per-unit') || 1);
+                            let currentPc = btn.data('current');
+
+                            // Register substitution for this job
+                            window.pendingJobSubstitutions = window.pendingJobSubstitutions || {};
+                            qids.forEach(function(targetQid) {
+                                window.pendingJobSubstitutions[targetQid] = {
+                                    'quotation_id': targetQid,
+                                    'quotation_ids': qids,
+                                    'new_part_code_id': altCode,
+                                    'new_qty_req': perUnit,
+                                    'new_batch_qty': neededQty
+                                };
+                            });
+
+                            // Visual row transformation
+                            row.css('background', '#f0fdf4');
+                            row.find('.partcode-badge-col').html('<code class="bg-white px-2 py-1 text-success font-weight-bold" style="border: 1px solid #86efac; border-radius: 4px;"><i class="fas fa-check mr-1"></i>' + altCode + '</code> <del class="small text-muted ml-1">' + currentPc + '</del>');
+                            row.find('.desc-col').html('<span class="text-success font-weight-bold">' + altDesc + '</span>');
+                            row.find('.avail-col').removeClass('text-danger text-warning').addClass('text-success').html(altAvail);
+                            row.find('.shortfall-col').removeClass('text-danger').addClass('text-success').html('<span class="badge badge-success px-2 py-1"><i class="fas fa-check mr-1"></i> Resolved</span>');
+                            row.find('.comm-unit-col').html('<span class="badge badge-success px-2 py-1">Covered</span>');
+
+                            // Action column now displays Swapped badge + UNDO button!
+                            let swappedActionHtml = '<div class="d-flex flex-column align-items-center w-100">';
+                            swappedActionHtml += '<span class="badge badge-success px-2 py-1 font-weight-bold shadow-sm mb-1 w-100 text-center" style="font-size: 0.85rem;"><i class="fas fa-check-circle mr-1"></i> Swapped: <b>' + altCode + '</b></span>';
+                            swappedActionHtml += '<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 w-100 undo-swap-btn font-weight-bold" data-qid="' + qid + '" data-qids="' + qidsStr + '" title="Undo swap and restore original material"><i class="fas fa-undo mr-1"></i> Undo Swap</button>';
+                            swappedActionHtml += '</div>';
+                            row.find('.action-col-container').html(swappedActionHtml);
+                            row.attr('data-resolved', '1');
+
+                            // Recalculate Sawmill KPI banners
+                            updateSawmillBannersAndButtons();
+                        });
+
+                        // Undo Swap Handler
+                        $(document).off('click', '.undo-swap-btn').on('click', '.undo-swap-btn', function() {
+                            let btn = $(this);
+                            let row = btn.closest('tr');
+                            let qid = btn.data('qid') + '';
+                            let qidsStr = (btn.data('qids') || qid) + '';
+                            let qids = qidsStr.split(',');
+
+                            // Remove from pending substitutions
+                            if (window.pendingJobSubstitutions) {
+                                qids.forEach(function(targetQid) {
+                                    delete window.pendingJobSubstitutions[targetQid];
+                                });
+                            }
+
+                            // Restore row DOM
+                            row.css('background', '');
+                            row.removeAttr('data-resolved');
+                            
+                            let origPartcode = row.attr('data-orig-partcode') || row.data('orig-partcode');
+                            let origDesc = row.attr('data-orig-desc') || row.data('orig-desc');
+                            let origAvail = row.attr('data-orig-avail') || row.data('orig-avail');
+                            let origShortfall = row.attr('data-orig-shortfall') || row.data('orig-shortfall');
+                            
+                            row.find('.partcode-badge-col').html('<code class="bg-light px-2 py-1 text-danger font-weight-bold" style="font-size:0.95rem;">' + origPartcode + '</code>');
+                            row.find('.desc-col').html(origDesc);
+                            row.find('.avail-col').removeClass('text-success').addClass(parseFloat(origAvail) > 0 ? 'text-warning' : 'text-danger').html(origAvail);
+                            row.find('.shortfall-col').removeClass('text-success').addClass('text-danger').html('-' + origShortfall);
+
+                            // Restore comm-unit badge
+                            let isWood = row.data('is-wood') == '1';
+                            let isPly = row.data('is-ply') == '1';
+                            let cftVal = parseFloat(row.data('cft') || 0);
+                            let sheetsVal = parseFloat(row.data('sheets') || 0);
+                            let restoredCommUnit = '-';
+                            if (isWood && cftVal > 0) {
+                                restoredCommUnit = '<span class="badge badge-light border border-success text-success font-weight-bold" style="font-size:0.85rem;">' + cftVal + ' CFT</span>';
+                            } else if (isPly && sheetsVal > 0) {
+                                restoredCommUnit = '<span class="badge badge-light border border-info text-info font-weight-bold" style="font-size:0.85rem;">' + sheetsVal + ' Sheets</span>';
+                            }
+                            row.find('.comm-unit-col').html(restoredCommUnit);
+
+                            // Restore original action buttons
+                            if (window.origActionHtmls && window.origActionHtmls[qid]) {
+                                row.find('.action-col-container').html(window.origActionHtmls[qid]);
+                            }
+
+                            // Recalculate Sawmill KPI banners
+                            updateSawmillBannersAndButtons();
+                        });
+
+                        // Reset All Swaps / Groupings Button Handler
+                        $(document).off('click', '#reset_all_swaps_btn').on('click', '#reset_all_swaps_btn', function() {
+                            $('.revert-group-btn').each(function() {
+                                $(this).click();
+                            });
+                            $('.undo-swap-btn').each(function() {
+                                $(this).click();
+                            });
+                        });
+
+                        // Proceed All Swapped button listener
+                        $(document).off('click', '#proceed_all_swapped_btn').on('click', '#proceed_all_swapped_btn', function() {
+                            let btn = $(this);
+
+                            // Check if any items still have unresolved stock shortfalls
+                            let unresolvedItems = [];
+                            $('#shortfall_items_table tbody tr:visible').each(function() {
+                                let row = $(this);
+                                if (row.attr('data-resolved') !== '1') {
+                                    let pc = row.find('.partcode-badge-col code').text().trim() || row.data('partcode');
+                                    let sf = row.find('.shortfall-col').text().trim();
+                                    if (pc) unresolvedItems.push(pc + ' (' + sf + ')');
+                                }
+                            });
+
+                            if (unresolvedItems.length > 0) {
+                                let msg = 'There are still ' + unresolvedItems.length + ' item(s) with stock shortfalls:\n\n• ' + 
+                                          unresolvedItems.slice(0, 5).join('\n• ') + 
+                                          (unresolvedItems.length > 5 ? '\n...and ' + (unresolvedItems.length - 5) + ' more' : '') + 
+                                          '\n\nWould you like to proceed with available stock and automatically generate a Purchase Indent for these items?';
+                                if (confirm(msg)) {
+                                    $('#force_release_job_btn').click();
+                                }
+                                return;
+                            }
+
+                            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Creating Job with Swapped Materials...');
+                            $.ajax({
+                                url: '/SMS/pk_create_batch_job/',
+                                method: 'POST',
+                                data: JSON.stringify({ 
+                                    'po_id': po_id, 
+                                    'items': items, 
+                                    'allow_stock_override': false, 
+                                    'stock_alert_email': $('#stock_alert_email_input').val().trim(),
+                                    'substitutions': window.pendingJobSubstitutions || {}
+                                }),
+                                contentType: 'application/json',
+                                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                                success: function (r) { 
+                                    if (r.success) {
+                                        try {
+                                            sessionStorage.removeItem('sms_active_job_state_' + po_id);
+                                            if (window.location.hash === '#batch-job') {
+                                                history.replaceState(null, null, window.location.pathname + window.location.search);
+                                            }
+                                        } catch(e) {}
+                                        window.location.href = r.redirect_url;
+                                    } else {
+                                        alert(r.message || 'Error releasing job');
+                                        btn.prop('disabled', false).html('<i class="fas fa-check-double mr-1"></i> Create Production Batch Job (All Swapped)');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    let resp = xhr.responseJSON;
+                                    if (resp && resp.stock_alert) {
+                                        if (confirm(resp.message + '\n\nWould you like to proceed with available stock and automatically generate a Purchase Indent for the shortfall items?')) {
+                                            $('#force_release_job_btn').click();
+                                        } else {
+                                            btn.prop('disabled', false).html('<i class="fas fa-check-double mr-1"></i> Create Production Batch Job (All Swapped)');
+                                        }
+                                    } else {
+                                        alert((resp && resp.message) ? resp.message : 'Server error generating batch job');
+                                        btn.prop('disabled', false).html('<i class="fas fa-check-double mr-1"></i> Create Production Batch Job (All Swapped)');
+                                    }
+                                }
+                            });
+                        });
 
         // Prevent Bootstrap multi-modal backdrop & scrolling freeze
         $(document).on('hidden.bs.modal', function () {
@@ -675,14 +1008,16 @@
             }
         });
 
-                        // Quick select all wood lines listener
+                        // Quick select all wood lines listener (strictly solid timber, excludes plywood)
                         $(document).off('click', '#quick_select_wood_btn').on('click', '#quick_select_wood_btn', function() {
                             $('.stk-row-cb').each(function() {
-                                let pc = ($(this).data('current') || '').toUpperCase();
                                 let row = $(this).closest('tr');
-                                let desc = row.find('td:eq(2)').text().toUpperCase();
-                                if (pc.startsWith('K') || desc.includes('WOOD') || desc.includes('RUBBER') || desc.includes('PINE')) {
+                                let isWood = row.data('is-wood') == '1';
+                                let isPly = row.data('is-ply') == '1';
+                                if (isWood && !isPly) {
                                     $(this).prop('checked', true);
+                                } else {
+                                    $(this).prop('checked', false);
                                 }
                             });
                             updateGroupPartCodesBtnState();
@@ -700,6 +1035,108 @@
                                 rows.show();
                                 $(this).text('(Hide Breakdown ▲)');
                             }
+                        });
+
+                        // Revert Grouping Handler
+                        $(document).off('click', '.revert-group-btn').on('click', '.revert-group-btn', function(e) {
+                            e.preventDefault();
+                            let groupQid = $(this).data('target-group') + '';
+                            let primaryRow = $('#stk_row_' + groupQid);
+
+                            // 1. Unhide and restore all absorbed rows
+                            let absorbedRows = $('tr[data-absorbed-into="' + groupQid + '"]');
+                            absorbedRows.each(function() {
+                                let absRow = $(this);
+                                let origPc = absRow.attr('data-orig-partcode') || absRow.data('orig-partcode');
+                                let origDesc = absRow.attr('data-orig-desc') || absRow.data('orig-desc');
+                                let origAvail = absRow.attr('data-orig-avail') || absRow.data('orig-avail');
+                                let origShortfall = absRow.attr('data-orig-shortfall') || absRow.data('orig-shortfall');
+                                let origNeeded = absRow.find('.stk-row-cb').data('needed') || absRow.attr('data-orig-needed') || absRow.data('orig-needed');
+                                let absQid = absRow.find('.stk-row-cb').data('qid') || absRow.attr('id').replace('stk_row_', '');
+
+                                absRow.removeClass('table-secondary text-muted');
+                                absRow.removeAttr('data-absorbed-into');
+                                absRow.find('.stk-row-cb').prop('disabled', false).prop('checked', false);
+
+                                absRow.find('td:eq(1)').html('<code class="bg-light px-2 py-1 text-danger font-weight-bold" style="font-size:0.95rem;">' + origPc + '</code>');
+                                absRow.find('td:eq(2)').html(origDesc);
+                                if (origNeeded) {
+                                    absRow.find('td:eq(3)').html(origNeeded);
+                                }
+                                absRow.find('td:eq(4)').removeClass('text-success').addClass(parseFloat(origAvail) > 0 ? 'text-warning' : 'text-danger').html(origAvail);
+                                absRow.find('td:eq(5)').removeClass('text-success').addClass('text-danger').html('-' + origShortfall);
+
+                                // Restore Sawmill Unit
+                                let isWood = absRow.data('is-wood') == '1';
+                                let isPly = absRow.data('is-ply') == '1';
+                                let cftVal = parseFloat(absRow.data('cft') || 0);
+                                let sheetsVal = parseFloat(absRow.data('sheets') || 0);
+                                let restoredCommUnit = '-';
+                                if (isWood && cftVal > 0) {
+                                    restoredCommUnit = '<span class="badge badge-light border border-success text-success font-weight-bold" style="font-size:0.85rem;">' + cftVal + ' CFT</span>';
+                                } else if (isPly && sheetsVal > 0) {
+                                    restoredCommUnit = '<span class="badge badge-light border border-info text-info font-weight-bold" style="font-size:0.85rem;">' + sheetsVal + ' Sheets</span>';
+                                }
+                                absRow.find('td:eq(6)').html(restoredCommUnit);
+
+                                // Restore original action button
+                                if (window.origActionHtmls && window.origActionHtmls[absQid]) {
+                                    absRow.find('.action-col-container').html(window.origActionHtmls[absQid]);
+                                }
+                                absRow.find('td:eq(7)').find('.badge-success, .badge-secondary').remove();
+
+                                absRow.show();
+
+                                if (window.pendingJobSubstitutions) {
+                                    delete window.pendingJobSubstitutions[absQid];
+                                }
+                            });
+
+                            // 2. Restore primary row
+                            if (primaryRow.length > 0) {
+                                primaryRow.removeClass('table-success');
+                                primaryRow.removeAttr('data-resolved');
+                                primaryRow.find('.stk-row-cb').prop('disabled', false).prop('checked', false);
+
+                                let origPc = primaryRow.attr('data-orig-partcode') || primaryRow.data('orig-partcode');
+                                let origDesc = primaryRow.attr('data-orig-desc') || primaryRow.data('orig-desc');
+                                let origAvail = primaryRow.attr('data-orig-avail') || primaryRow.data('orig-avail');
+                                let origShortfall = primaryRow.attr('data-orig-shortfall') || primaryRow.data('orig-shortfall');
+                                let origNeeded = primaryRow.find('.stk-row-cb').data('needed') || primaryRow.attr('data-orig-needed') || primaryRow.data('orig-needed');
+
+                                primaryRow.find('td:eq(1)').html('<code class="bg-light px-2 py-1 text-danger font-weight-bold" style="font-size:0.95rem;">' + origPc + '</code>');
+                                primaryRow.find('td:eq(2)').html(origDesc);
+                                if (origNeeded) {
+                                    primaryRow.find('td:eq(3)').html(origNeeded);
+                                }
+                                primaryRow.find('td:eq(4)').removeClass('text-success').addClass(parseFloat(origAvail) > 0 ? 'text-warning' : 'text-danger').html(origAvail);
+                                primaryRow.find('td:eq(5)').removeClass('text-success').addClass('text-danger').html('-' + origShortfall);
+
+                                let isWood = primaryRow.data('is-wood') == '1';
+                                let isPly = primaryRow.data('is-ply') == '1';
+                                let cftVal = parseFloat(primaryRow.data('cft') || 0);
+                                let sheetsVal = parseFloat(primaryRow.data('sheets') || 0);
+                                let restoredCommUnit = '-';
+                                if (isWood && cftVal > 0) {
+                                    restoredCommUnit = '<span class="badge badge-light border border-success text-success font-weight-bold" style="font-size:0.85rem;">' + cftVal + ' CFT</span>';
+                                } else if (isPly && sheetsVal > 0) {
+                                    restoredCommUnit = '<span class="badge badge-light border border-info text-info font-weight-bold" style="font-size:0.85rem;">' + sheetsVal + ' Sheets</span>';
+                                }
+                                primaryRow.find('td:eq(6)').html(restoredCommUnit);
+
+                                if (window.origActionHtmls && window.origActionHtmls[groupQid]) {
+                                    primaryRow.find('.action-col-container').html(window.origActionHtmls[groupQid]);
+                                }
+                                primaryRow.find('td:eq(7)').find('.badge-success, .badge-secondary').remove();
+
+                                if (window.pendingJobSubstitutions) {
+                                    delete window.pendingJobSubstitutions[groupQid];
+                                }
+                            }
+
+                            // 3. Update session storage and KPI banners
+                            updateSawmillBannersAndButtons();
+                            updateGroupPartCodesBtnState();
                         });
 
                         // Select all checkbox listener
@@ -723,9 +1160,9 @@
                             }
                         }
 
-                        // Force release button listener
+                        // Force release button listener (Proceed with Available Stock & Generate Indent)
                         $('#force_release_job_btn').off('click').on('click', function() {
-                            $('#confirm_batch_job_btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+                            $('#confirm_batch_job_btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating Job &amp; Purchase Indent...');
                             $.ajax({
                                 url: '/SMS/pk_create_batch_job/',
                                 method: 'POST',
@@ -738,9 +1175,50 @@
                                 }),
                                 contentType: 'application/json',
                                 headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                                success: function (r) { if (r.success) window.location.href = r.redirect_url; }
+                                success: function (r) { 
+                                    if (r.success) {
+                                        try {
+                                            sessionStorage.removeItem('sms_active_job_state_' + po_id);
+                                            if (window.location.hash === '#batch-job') {
+                                                history.replaceState(null, null, window.location.pathname + window.location.search);
+                                            }
+                                        } catch(e) {}
+                                        window.location.href = r.redirect_url;
+                                    } else {
+                                        alert(r.message || 'Error releasing job');
+                                        $('#confirm_batch_job_btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Create Job & Map Items');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    let msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error generating job indent';
+                                    alert(msg);
+                                    $('#confirm_batch_job_btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Create Job & Map Items');
+                                }
                             });
                         });
+
+                        // Auto-apply any restored substitutions
+                        if (window.pendingJobSubstitutions && Object.keys(window.pendingJobSubstitutions).length > 0) {
+                            setTimeout(function() {
+                                Object.keys(window.pendingJobSubstitutions).forEach(function(targetQid) {
+                                    let sub = window.pendingJobSubstitutions[targetQid];
+                                    if (sub && sub.new_part_code_id) {
+                                        let altBtn = $('.quick-swap-alt-btn[data-qid="' + targetQid + '"][data-alt-code="' + sub.new_part_code_id + '"]');
+                                        if (altBtn.length > 0) {
+                                            altBtn.first().click();
+                                        } else {
+                                            $('.quick-swap-alt-btn[data-alt-code="' + sub.new_part_code_id + '"]').each(function() {
+                                                let qids = String($(this).data('qids') || $(this).data('qid')).split(',');
+                                                if (qids.includes(String(targetQid))) {
+                                                    $(this).click();
+                                                    return false;
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }, 150);
+                        }
                     } else if (resp && resp.message) {
                         $('#modal_job_error_text').html('<div class="text-danger font-weight-bold"><i class="fas fa-times-circle mr-1"></i> ' + resp.message + '</div>');
                         $('#modal_job_error_alert').removeClass('d-none');
@@ -752,8 +1230,9 @@
                     // Helper to open Partcode Modal with full state (supports grouped part codes)
                     window.openPartcodeSearchModal = function(qid, currentPc, neededQty, perUnitReq, jobQty, podId, preAbsorbedQids, allQids, groupedPartCodes) {
                         window.currentTargetQuotationIds = (allQids && allQids.length) ? allQids : [qid];
+                        let primaryNeeded = parseFloat($('#stk_row_' + qid).find('.stk-row-cb').data('needed')) || neededQty;
                         $('#modal_target_quotation_id').val(qid);
-                        $('#modal_target_needed_qty').val(neededQty);
+                        $('#modal_target_needed_qty').val(neededQty).data('base-needed', primaryNeeded);
                         $('#modal_target_job_qty').val(jobQty);
                         $('#modal_target_per_unit_req').val(perUnitReq);
 
@@ -789,8 +1268,8 @@
                                 let input = $('<input type="checkbox" class="custom-control-input modal-absorbed-cb">')
                                     .attr('id', 'abs_pc_' + item.quotation_id)
                                     .val(item.quotation_id)
-                                    .data('qids', itemQidsStr)
-                                    .data('needed', item.needed_qty)
+                                    .attr('data-qids', itemQidsStr)
+                                    .attr('data-needed', item.needed_qty)
                                     .prop('checked', isChecked);
                                 let label = $('<label class="custom-control-label small font-weight-bold cursor-pointer w-100">')
                                     .attr('for', 'abs_pc_' + item.quotation_id)
@@ -916,6 +1395,29 @@
         $('#collapseTwo').on('hide.bs.collapse', function () {
             $('.accordion-chevron').css('transform', 'rotate(0deg)');
         });
+
+        // Auto-resume Batch Job / Shortfall modal if page was refreshed
+        let curPoId = '{{ purchaseorder_id }}' || '{{ form.instance.id }}' || '{{ po_id }}';
+        let savedStateRaw = sessionStorage.getItem('sms_active_job_state_' + curPoId);
+        if (savedStateRaw || window.location.hash === '#batch-job') {
+            let savedState = null;
+            try { savedState = JSON.parse(savedStateRaw); } catch(e){}
+            if (savedState && savedState.items && savedState.items.length > 0) {
+                console.log("Restoring active batch job state on page refresh...", savedState);
+                setTimeout(function() {
+                    openJobModal(true, savedState);
+                }, 200);
+            }
+        }
+
+        // Clear session ONLY when user explicitly clicks Cancel button or Close X on Job Modal
+        $(document).on('click', '#btn_cancel_job_modal, #btn_close_job_modal_x', function() {
+            let pId = '{{ purchaseorder_id }}' || '{{ form.instance.id }}' || '{{ po_id }}';
+            sessionStorage.removeItem('sms_active_job_state_' + pId);
+            if (window.location.hash === '#batch-job') {
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+            }
+        });
     });
 })(jQuery);
 
@@ -932,8 +1434,8 @@ function calculateTotal() {
     }
 }
 
-function openJobModal() {
-    console.log("Opening Job Modal...");
+function openJobModal(autoSubmit, restoredState) {
+    console.log("Opening Job Modal...", autoSubmit, restoredState);
     let po_id = '{{ purchaseorder_id }}';
     if (!po_id || po_id === 'None' || po_id === '0' || po_id === '') {
         po_id = '{{ form.instance.id }}';
@@ -946,7 +1448,16 @@ function openJobModal() {
         return;
     }
 
-    window.pendingJobSubstitutions = {};
+    if (restoredState && restoredState.pendingJobSubstitutions) {
+        window.pendingJobSubstitutions = restoredState.pendingJobSubstitutions;
+    } else if (!autoSubmit) {
+        window.pendingJobSubstitutions = {};
+    }
+
+    if (restoredState && restoredState.email) {
+        $('#stock_alert_email_input').val(restoredState.email);
+    }
+
     $('#modal_job_error_alert')
         .addClass('d-none alert-danger')
         .removeClass('alert-success')
@@ -969,6 +1480,14 @@ function openJobModal() {
             tbody.empty();
             if (response.success && response.items.length > 0) {
                 response.items.forEach(function(item) {
+                    let defaultQty = 0;
+                    if (restoredState && restoredState.items) {
+                        let matched = restoredState.items.find(function(it) { return it.id == item.id; });
+                        if (matched && matched.qty !== undefined) defaultQty = matched.qty;
+                    } else if (item.remaining_qty > 0) {
+                        defaultQty = item.remaining_qty;
+                    }
+
                     const tr = $('<tr class="align-middle">');
                     tr.append($('<td class="font-weight-bold text-dark" style="color: #000 !important; font-weight: 700;">').text(item.item_name));
                     tr.append($('<td class="text-dark">').html(
@@ -980,12 +1499,18 @@ function openJobModal() {
                             'type': 'number', 'step': '0.01',
                             'class': 'form-control form-control-modern modal-job-qty text-center',
                             'data-id': item.id, 'data-max': item.remaining_qty,
-                            'value': '0', 'min': '0', 'max': item.remaining_qty,
+                            'value': defaultQty, 'min': '0', 'max': item.remaining_qty,
                             'style': 'height: 38px !important; border-radius: 8px;'
                         })
                     ));
                     tbody.append(tr);
                 });
+
+                if (autoSubmit) {
+                    setTimeout(function() {
+                        $('#confirm_batch_job_btn').click();
+                    }, 150);
+                }
             } else {
                 tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No items available for job creation.</td></tr>');
             }
@@ -1282,6 +1807,8 @@ $(document).on('click', '#modal_clear_batches_btn', function() {
     recalcAllocations();
 });
 
+
+
 $(document).on('change', '.modal-batch-cb', function() {
     let cb = $(this);
     let row = cb.closest('tr');
@@ -1308,6 +1835,8 @@ $(document).on('change', '.modal-batch-cb', function() {
     recalcAllocations();
 });
 
+
+
 $(document).on('input change', '.modal-batch-alloc-qty', function() {
     let input = $(this);
     let row = input.closest('tr');
@@ -1324,6 +1853,8 @@ $(document).on('input change', '.modal-batch-alloc-qty', function() {
     }
     recalcAllocations();
 });
+
+
 
 $(document).on('change', '#modal_batch_select_all', function() {
     let isChecked = $(this).is(':checked');
@@ -1343,6 +1874,8 @@ $(document).on('change', '#modal_batch_select_all', function() {
     });
     recalcAllocations();
 });
+
+
 
 function recalcModalCosts() {
     let perUnitQty = parseFloat($('#modal_qty_req').val()) || 0;
@@ -1392,6 +1925,8 @@ $(document).on('input change', '#modal_qty_req', function() {
     recalcAllocations();
 });
 
+
+
 // Sync Batch Qty -> Per-Unit Qty Req
 $(document).on('input change', '#modal_batch_qty_req', function() {
     let jobQty = parseFloat($('#modal_target_job_qty').val()) || 1;
@@ -1405,6 +1940,44 @@ $(document).on('input change', '#modal_batch_qty_req', function() {
     recalcAllocations();
 });
 
+// Dynamic listener when checking / unchecking absorbed part codes in the modal
+$(document).on('change', '.modal-absorbed-cb', function() {
+    let primaryNeeded = parseFloat($('#modal_target_needed_qty').data('base-needed') || $('#modal_target_needed_qty').val()) || 0;
+    let checkedItems = $('.modal-absorbed-cb:checked');
+    let additionalNeeded = 0;
+    let primaryCode = ($('#modal_part_code_select option:selected').text() || '').split(' - ')[0].trim() || 'Selected Part';
+    let groupedCodes = [primaryCode];
+    
+    checkedItems.each(function() {
+        let needed = parseFloat($(this).data('needed')) || 0;
+        additionalNeeded += needed;
+        let pcText = $(this).closest('.custom-control').find('label span.text-primary').text().trim();
+        if (pcText && !groupedCodes.includes(pcText)) {
+            groupedCodes.push(pcText);
+        }
+    });
+    
+    let totalNeeded = primaryNeeded + additionalNeeded;
+    $('#modal_batch_qty_req').val(totalNeeded.toFixed(2));
+    
+    if (groupedCodes.length > 1) {
+        $('#modal_needed_qty_display').html(
+            '<div class="alert alert-primary py-2 px-3 mb-2 small font-weight-bold text-left">' +
+            '<i class="fas fa-object-group mr-1"></i> Grouping <b>' + groupedCodes.length + ' Part Codes</b>: <code>' + groupedCodes.join(', ') + '</code><br>' +
+            '<i class="fas fa-boxes mr-1"></i> Total Combined Needed Qty: <b>' + totalNeeded.toFixed(2) + '</b></div>'
+        ).show();
+    } else {
+        $('#modal_needed_qty_display').html('<i class="fas fa-boxes mr-1"></i> Required Batch Qty: <b>' + totalNeeded.toFixed(2) + '</b>').show();
+    }
+    
+    let jobQty = parseFloat($('#modal_target_job_qty').val()) || 1;
+    if (jobQty > 0) {
+        $('#modal_qty_req').val((totalNeeded / jobQty).toFixed(4));
+    }
+    recalcModalCosts();
+    recalcAllocations();
+});
+
 $(document).on('input change', '#modal_rate_unit, #modal_conversion, #modal_days_hours', function() {
     recalcModalCosts();
 });
@@ -1412,6 +1985,10 @@ $(document).on('input change', '#modal_rate_unit, #modal_conversion, #modal_days
 function submitPartcodeChange(shouldProceedToJob) {
     let qid = $('#modal_target_quotation_id').val();
     let newPcId = $('#modal_selected_partcode_id').val() || $('#modal_part_code_select').val();
+    let newPcCode = ($('#modal_part_code_select option:selected').text() || '').trim() || $('#modal_part_code_select').val() || newPcId;
+    if (newPcCode.includes(' - ')) {
+        newPcCode = newPcCode.split(' - ')[0].trim();
+    }
     let newQtyReq = parseFloat($('#modal_qty_req').val()) || 0;
     let newBatchQty = parseFloat($('#modal_batch_qty_req').val()) || 0;
     let updateMaster = $('#modal_update_master_cb').is(':checked');
@@ -1453,13 +2030,14 @@ function submitPartcodeChange(shouldProceedToJob) {
 
     let absorbedIds = [];
     $('.modal-absorbed-cb:checked').each(function() {
-        let qidsData = $(this).data('qids');
+        let qidsData = $(this).attr('data-qids') || $(this).data('qids');
         if (qidsData) {
             String(qidsData).split(',').forEach(id => { if (id && !absorbedIds.includes(id)) absorbedIds.push(id); });
         } else {
             absorbedIds.push($(this).val());
         }
     });
+    console.log("DEBUG absorbedIds collected:", absorbedIds);
 
     let targetQids = window.currentTargetQuotationIds || [qid];
 
@@ -1497,13 +2075,56 @@ function submitPartcodeChange(shouldProceedToJob) {
             if (res.success) {
                 $('#partCodeSearchModal').modal('hide');
 
-                // Visually update the shortfall alert table for this job
+                // 1. Hide all absorbed rows in shortfall table
+                absorbedIds.forEach(function(absId) {
+                    let absRow = $('#stk_row_' + absId);
+                    if (absRow.length === 0) {
+                        $('.stk-row-cb').each(function() {
+                            let cb = $(this);
+                            let qidsStr = cb.attr('data-qids') || cb.data('qids') || cb.val();
+                            if (qidsStr && String(qidsStr).split(',').includes(String(absId))) {
+                                absRow = cb.closest('tr');
+                            }
+                        });
+                    }
+                    if (absRow && absRow.length > 0) {
+                        absRow.attr('data-absorbed-into', qid);
+                        absRow.find('td:eq(3)').html('<span class="text-muted"><del>' + absRow.find('td:eq(3)').text() + '</del></span>');
+                        absRow.find('td:eq(5)').html('<span class="badge badge-secondary py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped into ' + newPcCode + '</span>');
+                        absRow.find('td:eq(7)').html('<span class="text-muted small font-weight-bold"><i class="fas fa-ban mr-1"></i> Absorbed</span>');
+                        absRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
+                        absRow.addClass('table-secondary text-muted');
+                        absRow.css('display', 'none');
+                        absRow.hide();
+                    }
+                });
+
+                // Also hide any other row that was checked in the shortfall table for grouping
+                $('#shortfall_items_table .stk-row-cb:checked').each(function() {
+                    let otherCb = $(this);
+                    let otherRow = otherCb.closest('tr');
+                    if (otherRow.attr('id') !== ('stk_row_' + qid)) {
+                        otherRow.attr('data-absorbed-into', qid);
+                        otherRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
+                        otherRow.addClass('table-secondary text-muted');
+                        otherRow.css('display', 'none');
+                        otherRow.hide();
+                    }
+                });
+
+                // 2. Visually update the primary row for this job
                 let primaryRow = $('#stk_row_' + qid);
+                let absorbedPartCodesCount = $('.modal-absorbed-cb:checked').length;
+                let totalGroupedCount = 1 + absorbedPartCodesCount;
                 if (primaryRow.length > 0) {
-                    let groupedBadge = (absorbedIds && absorbedIds.length > 0) 
-                        ? '<div class="mt-1"><span class="badge badge-success font-weight-bold px-2 py-1"><i class="fas fa-object-group mr-1"></i> Grouped (' + (absorbedIds.length + 1) + ' Part Codes)</span> <a href="javascript:void(0)" class="toggle-absorbed-details small text-primary ml-1 font-weight-bold" data-target-group="' + qid + '">(View Breakdown ▼)</a></div>' 
-                        : '<div class="badge badge-success mt-1">For this Job</div>';
-                    primaryRow.find('td:eq(1)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold" style="font-size:0.95rem;">' + newPcId + '</code>' + groupedBadge);
+                    let groupedBadge = (absorbedPartCodesCount > 0) 
+                        ? '<div class="mt-1 d-flex align-items-center flex-wrap">' +
+                          '<span class="badge badge-success font-weight-bold px-2 py-1"><i class="fas fa-object-group mr-1"></i> Grouped (' + totalGroupedCount + ' Part Codes)</span>' +
+                          '<a href="javascript:void(0)" class="toggle-absorbed-details small text-primary ml-1 font-weight-bold" data-target-group="' + qid + '">(View Breakdown ▼)</a>' +
+                          '<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 ml-2 revert-group-btn font-weight-bold shadow-sm" data-target-group="' + qid + '" title="Revert grouping and restore individual part codes"><i class="fas fa-undo mr-1"></i> Ungroup</button>' +
+                          '</div>' 
+                        : '<div class="badge badge-success mt-1">For this Job <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ml-1 revert-group-btn" data-target-group="' + qid + '" title="Revert change"><i class="fas fa-undo"></i></button></div>';
+                    primaryRow.find('td:eq(1)').html('<code class="bg-success text-white px-2 py-1 rounded font-weight-bold" style="font-size:0.95rem;">' + newPcCode + '</code>' + groupedBadge);
                     primaryRow.find('td:eq(3)').html('<b class="text-primary font-weight-bold" style="font-size:1.05rem;">' + newBatchQty.toFixed(2) + '</b>');
                     primaryRow.find('td:eq(4)').html('<span class="text-success font-weight-bold">' + totalAlloc.toFixed(2) + '</span>');
                     if (totalAlloc >= newBatchQty) {
@@ -1514,14 +2135,16 @@ function submitPartcodeChange(shouldProceedToJob) {
                     primaryRow.find('td:eq(7)').html('<span class="badge badge-success py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped</span>');
                     primaryRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
                     primaryRow.addClass('table-success');
+                    updateSawmillBannersAndButtons();
                 }
 
-                absorbedIds.forEach(function(absId) {
-                    let absRow = $('#stk_row_' + absId);
+                $('.modal-absorbed-cb:checked').each(function() {
+                    let absQid = $(this).val();
+                    let absRow = $('#stk_row_' + absQid);
                     if (absRow.length > 0) {
                         absRow.attr('data-absorbed-into', qid);
                         absRow.find('td:eq(3)').html('<span class="text-muted"><del>' + absRow.find('td:eq(3)').text() + '</del></span>');
-                        absRow.find('td:eq(5)').html('<span class="badge badge-secondary py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped into ' + newPcId + '</span>');
+                        absRow.find('td:eq(5)').html('<span class="badge badge-secondary py-1 px-2"><i class="fas fa-check mr-1"></i> Grouped into ' + newPcCode + '</span>');
                         absRow.find('td:eq(7)').html('<span class="text-muted small font-weight-bold"><i class="fas fa-ban mr-1"></i> Absorbed</span>');
                         absRow.find('.stk-row-cb').prop('checked', false).prop('disabled', true);
                         absRow.addClass('table-secondary text-muted');

@@ -1,7 +1,10 @@
+from datetime import datetime, date
+from io import BytesIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q
 from ..sub_models.enquirynote_mod import EnquirynoteInfo
 from ..sub_models.customer_mod import CustomerInfo
@@ -67,6 +70,373 @@ def ajax_get_vehicle_types(request):
     """AJAX view to return all vehicle types (unfiltered)."""
     types = VehicletypeInfo.objects.all().order_by('vt_vehicletype').values('id', 'vt_vehicletype')
     return JsonResponse(list(types), safe=False)
+
+
+def compute_shipment_flow(enq=None, trip=None, va=None, is_delivered=False, pod_trip_id=None, track_link=''):
+    """
+    Computes comprehensive 12-step operational shipment lifecycle flow:
+    Phase 1: Order Placement & Allotment
+      1. Indent Placed (Booking received & registered)
+      2. Vehicle Allotted (Vehicle & Driver assigned)
+    Phase 2: Origin Loading Bay Operations
+      3. Reported at Loading Point (Vehicle arrived at pickup location gate)
+      4. Loading Dock-In (Positioned at loading dock/bay)
+      5. Cargo Loading (Cargo loaded and secured inside vehicle container)
+      6. Loading Dock-Out (Loading completed, dock released & gate clearance)
+    Phase 3: Highway Transit Operations
+      7. Trip Started (In-Transit) (Dispatched from origin & moving on transit corridor)
+    Phase 4: Destination Unloading Bay Operations
+      8. Reported at Unloading Point (Vehicle arrived at delivery destination gate)
+      9. Unloading Dock-In (Positioned at unloading bay/dock)
+      10. Cargo Unloading (Cargo unloaded, verified & count checked by consignee)
+      11. Unloading Dock-Out (Unloading completed, dock cleared & exit gate pass)
+    Phase 5: Delivery & POD Verification
+      12. Trip Completed & POD Verified (Trip officially closed & POD document uploaded)
+    """
+    if va is None and enq and hasattr(enq, 'vehicle_allotmentinfo_set'):
+        va = enq.vehicle_allotmentinfo_set.first()
+
+    has_vehicle = bool(
+        (trip and trip.tr_vehiclenumber and trip.tr_vehiclenumber != '-') or
+        (va and (va.va_vehiclenumber or va.va_vehiclenumber_mkt))
+    )
+
+    veh_no = '-'
+    if trip and trip.tr_vehiclenumber and trip.tr_vehiclenumber != '-':
+        veh_no = trip.tr_vehiclenumber
+    elif va:
+        if va.va_vehiclenumber:
+            veh_no = str(va.va_vehiclenumber)
+        elif va.va_vehiclenumber_mkt:
+            veh_no = va.va_vehiclenumber_mkt
+
+    driver_name = ''
+    driver_phone = ''
+    if trip and (trip.tr_drivername or trip.tr_drivernumber):
+        driver_name = trip.tr_drivername or ''
+        driver_phone = trip.tr_drivernumber or ''
+    elif va and (va.va_drivername or va.va_drivernumber):
+        driver_name = va.va_drivername or ''
+        driver_phone = va.va_drivernumber or ''
+
+    # Check delivery status
+    if not is_delivered and trip:
+        if trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11]:
+            is_delivered = True
+
+    from_loc_name = enq.en_fromlocaion.place_name if (enq and enq.en_fromlocaion) else (trip.tr_departedlocation.place_name if (trip and trip.tr_departedlocation) else 'Origin')
+    to_loc_name = enq.en_tolocation.place_name if (enq and enq.en_tolocation) else (trip.tr_reportedlocation.place_name if (trip and trip.tr_reportedlocation) else 'Destination')
+
+    # Step 1: Indent Placed
+    t1_done = True
+    t1_time = enq.en_created_at if enq else (trip.tr_created_at if trip else None)
+
+    # Step 2: Vehicle Allotted
+    t2_done = has_vehicle
+    t2_time = (va.va_created_at if va and hasattr(va, 'va_created_at') and va.va_created_at else None) or (trip.tr_created_at if trip else None)
+
+    # Step 3: Reported at Loading Point (Pickup arrival)
+    t3_done = bool(trip and (trip.tr_reporteddate_pickup or trip.tr_departeddate_pickup or trip.tr_dock_in_time or trip.tr_loading_time or trip.tr_dock_out_time or trip.tr_departeddate or is_delivered))
+    t3_time = (trip.tr_reporteddate_pickup or trip.tr_departeddate_pickup or trip.tr_dock_in_time or trip.tr_loading_time) if trip else None
+
+    # Step 4: Loading Dock-In
+    t4_done = bool(trip and (trip.tr_dock_in_time or trip.tr_loading_time or trip.tr_dock_out_time or trip.tr_departeddate or is_delivered))
+    t4_time = (trip.tr_dock_in_time or trip.tr_loading_time) if trip else None
+
+    # Step 5: Cargo Loading
+    t5_done = bool(trip and (trip.tr_loading_time or trip.tr_dock_out_time or trip.tr_departeddate or is_delivered))
+    t5_time = (trip.tr_loading_time or trip.tr_dock_out_time) if trip else None
+
+    # Step 6: Loading Dock-Out
+    t6_done = bool(trip and (trip.tr_dock_out_time or trip.tr_departeddate or is_delivered))
+    t6_time = (trip.tr_dock_out_time or trip.tr_departeddate) if trip else None
+
+    # Step 7: Trip Started / Departed (In-Transit)
+    t7_done = bool(trip and (is_delivered or trip.tc_financestatus_id in [2, 7, 9] or trip.tr_reporteddate or trip.tr_reporteddate_delivery or trip.tr_unloading_time or trip.tr_departeddate_delivery))
+    t7_active = bool(trip and not is_delivered and (trip.tc_financestatus_id == 1 or trip.tr_departeddate or (t6_done and not (trip.tr_reporteddate or trip.tr_reporteddate_delivery))))
+    t7_time = (trip.tr_departeddate or trip.tr_dock_out_time) if trip else None
+
+    # Step 8: Reported at Unloading Point (Destination arrival)
+    t8_done = bool(trip and (trip.tr_reporteddate_delivery or trip.tr_reporteddate or trip.tr_departeddate_delivery or trip.tr_unloading_time or is_delivered))
+    t8_time = (trip.tr_reporteddate or trip.tr_reporteddate_delivery or trip.tr_unloading_time) if trip else None
+
+    # Step 9: Unloading Dock-In
+    t9_done = bool(trip and (trip.tr_departeddate_delivery or trip.tr_unloading_time or is_delivered))
+    t9_time = (trip.tr_departeddate_delivery or trip.tr_reporteddate or trip.tr_unloading_time) if trip else None
+
+    # Step 10: Cargo Unloading
+    t10_done = bool(trip and (trip.tr_unloading_time or is_delivered))
+    t10_time = (trip.tr_unloading_time or trip.tr_reporteddate) if trip else None
+
+    # Step 11: Unloading Dock-Out
+    t11_done = bool(trip and (trip.tr_departeddate_delivery or trip.tr_reporteddate_delivery or is_delivered))
+    t11_time = (trip.tr_departeddate_delivery or trip.tr_reporteddate_delivery or trip.tr_unloading_time) if trip else None
+
+    # Step 12: Trip Completed & POD Verified
+    t12_done = is_delivered
+    t12_time = (trip.tr_reporteddate_delivery or trip.tr_unloading_time or trip.tr_reporteddate or trip.tr_updated_at) if (trip and is_delivered) else None
+
+    # Determine current step (1 to 12)
+    if t12_done:
+        current_step = 12
+        stage_label = 'Trip Completed & POD Verified'
+        stage_class = 'completed'
+        stage_color = '#10b981'
+        stage_icon = 'fa-check-circle'
+    elif t11_done:
+        current_step = 11
+        stage_label = 'Unloading Dock-Out'
+        stage_class = 'unloading'
+        stage_color = '#38bdf8'
+        stage_icon = 'fa-door-open'
+    elif t10_done:
+        current_step = 10
+        stage_label = 'Cargo Unloaded'
+        stage_class = 'unloading'
+        stage_color = '#38bdf8'
+        stage_icon = 'fa-dolly'
+    elif t9_done:
+        current_step = 9
+        stage_label = 'Unloading Dock-In'
+        stage_class = 'unloading'
+        stage_color = '#38bdf8'
+        stage_icon = 'fa-warehouse'
+    elif t8_done:
+        current_step = 8
+        stage_label = 'Reported at Destination'
+        stage_class = 'unloading'
+        stage_color = '#38bdf8'
+        stage_icon = 'fa-location-dot'
+    elif t7_active:
+        current_step = 7
+        stage_label = 'In-Transit (Highway Movement)'
+        stage_class = 'transit'
+        stage_color = '#00f2fe'
+        stage_icon = 'fa-truck-fast'
+    elif t6_done:
+        current_step = 6
+        stage_label = 'Loading Dock-Out'
+        stage_class = 'loading'
+        stage_color = '#f59e0b'
+        stage_icon = 'fa-door-open'
+    elif t5_done:
+        current_step = 5
+        stage_label = 'Cargo Loaded'
+        stage_class = 'loading'
+        stage_color = '#f59e0b'
+        stage_icon = 'fa-boxes-packing'
+    elif t4_done:
+        current_step = 4
+        stage_label = 'Loading Dock-In'
+        stage_class = 'loading'
+        stage_color = '#f59e0b'
+        stage_icon = 'fa-warehouse'
+    elif t3_done:
+        current_step = 3
+        stage_label = 'Reported at Loading'
+        stage_class = 'loading'
+        stage_color = '#f59e0b'
+        stage_icon = 'fa-location-dot'
+    elif t2_done:
+        current_step = 2
+        stage_label = 'Vehicle Allotted'
+        stage_class = 'allotted'
+        stage_color = '#a855f7'
+        stage_icon = 'fa-truck-front'
+    else:
+        current_step = 1
+        stage_label = 'Indent Placed'
+        stage_class = 'indent'
+        stage_color = '#38bdf8'
+        stage_icon = 'fa-file-invoice'
+
+    def get_step_status(step_num):
+        if t12_done:
+            return 'done'
+        if step_num < current_step:
+            return 'done'
+        if step_num == current_step:
+            return 'current'
+        return 'pending'
+
+    steps = [
+        {
+            'step': 1,
+            'phase_group': 'Phase 1: Order Placement & Vehicle Allotment',
+            'phase_badge': 'Order Placement',
+            'phase_icon': 'fa-clipboard-check',
+            'phase_color': '#38bdf8',
+            'title': 'Indent Placed',
+            'desc': f"Booking #{enq.en_enquirynumber}" if enq else "Indent Placed",
+            'sub': f"Route: {from_loc_name} → {to_loc_name}",
+            'time': t1_time,
+            'status': get_step_status(1),
+            'icon': 'fa-file-invoice',
+        },
+        {
+            'step': 2,
+            'phase_group': 'Phase 1: Order Placement & Vehicle Allotment',
+            'phase_badge': 'Vehicle Allotment',
+            'phase_icon': 'fa-truck-front',
+            'phase_color': '#a855f7',
+            'title': 'Vehicle Allotted',
+            'desc': f"Vehicle: {veh_no}" if veh_no and veh_no != '-' else "Awaiting Allotment",
+            'sub': f"Driver: {driver_name} {f'({driver_phone})' if driver_phone else ''}".strip() or 'Driver assignment in progress',
+            'time': t2_time,
+            'status': get_step_status(2),
+            'icon': 'fa-truck-front',
+        },
+        {
+            'step': 3,
+            'phase_group': f'Phase 2: Origin Loading Bay Operations ({from_loc_name})',
+            'phase_badge': 'Loading Point',
+            'phase_icon': 'fa-warehouse',
+            'phase_color': '#f59e0b',
+            'title': 'Reported at Loading Point',
+            'desc': f"Vehicle arrived at origin: {from_loc_name}",
+            'sub': 'Vehicle reported at loading gate' if (t3_done or current_step >= 3) else 'Awaiting arrival at loading point',
+            'time': t3_time,
+            'status': get_step_status(3),
+            'icon': 'fa-location-dot',
+        },
+        {
+            'step': 4,
+            'phase_group': f'Phase 2: Origin Loading Bay Operations ({from_loc_name})',
+            'phase_badge': 'Loading Point',
+            'phase_icon': 'fa-warehouse',
+            'phase_color': '#f59e0b',
+            'title': 'Loading Dock-In',
+            'desc': f"Placed at {from_loc_name} loading bay",
+            'sub': 'Docked at loading platform' if (t4_done or current_step >= 4) else 'Dock-in pending',
+            'time': t4_time,
+            'status': get_step_status(4),
+            'icon': 'fa-warehouse',
+        },
+        {
+            'step': 5,
+            'phase_group': f'Phase 2: Origin Loading Bay Operations ({from_loc_name})',
+            'phase_badge': 'Loading Point',
+            'phase_icon': 'fa-boxes-packing',
+            'phase_color': '#f59e0b',
+            'title': 'Cargo Loading',
+            'desc': 'Cargo loaded & secured inside vehicle container',
+            'sub': 'Loading activity completed' if (t5_done or current_step >= 5) else 'Loading operation in progress',
+            'time': t5_time,
+            'status': get_step_status(5),
+            'icon': 'fa-boxes-packing',
+        },
+        {
+            'step': 6,
+            'phase_group': f'Phase 2: Origin Loading Bay Operations ({from_loc_name})',
+            'phase_badge': 'Loading Point',
+            'phase_icon': 'fa-door-open',
+            'phase_color': '#f59e0b',
+            'title': 'Loading Dock-Out',
+            'desc': f"Vehicle cleared from {from_loc_name} loading bay",
+            'sub': 'Dock released & cleared for dispatch' if (t6_done or current_step >= 6) else 'Dock-out release pending',
+            'time': t6_time,
+            'status': get_step_status(6),
+            'icon': 'fa-door-open',
+        },
+        {
+            'step': 7,
+            'phase_group': 'Phase 3: Highway Transit Operations',
+            'phase_badge': 'In-Transit',
+            'phase_icon': 'fa-truck-fast',
+            'phase_color': '#00f2fe',
+            'title': 'Trip Started (In-Transit)',
+            'desc': f"Dispatched from {from_loc_name} • Highway movement",
+            'sub': f'Moving towards {to_loc_name}' if (t7_active or t7_done or current_step >= 7) else 'Awaiting transit dispatch',
+            'track_link': track_link,
+            'time': t7_time,
+            'status': get_step_status(7),
+            'icon': 'fa-truck-fast',
+        },
+        {
+            'step': 8,
+            'phase_group': f'Phase 4: Destination Unloading Bay Operations ({to_loc_name})',
+            'phase_badge': 'Unloading Point',
+            'phase_icon': 'fa-warehouse',
+            'phase_color': '#38bdf8',
+            'title': 'Reported at Unloading Point',
+            'desc': f"Vehicle arrived at destination: {to_loc_name}",
+            'sub': 'Reported at delivery receiving gate' if (t8_done or current_step >= 8) else 'En route to delivery point',
+            'time': t8_time,
+            'status': get_step_status(8),
+            'icon': 'fa-location-crosshairs',
+        },
+        {
+            'step': 9,
+            'phase_group': f'Phase 4: Destination Unloading Bay Operations ({to_loc_name})',
+            'phase_badge': 'Unloading Point',
+            'phase_icon': 'fa-warehouse',
+            'phase_color': '#38bdf8',
+            'title': 'Unloading Dock-In',
+            'desc': f"Positioned at {to_loc_name} receiving bay",
+            'sub': 'Vehicle docked at unloading platform' if (t9_done or current_step >= 9) else 'Scheduled for receiving dock',
+            'time': t9_time,
+            'status': get_step_status(9),
+            'icon': 'fa-warehouse',
+        },
+        {
+            'step': 10,
+            'phase_group': f'Phase 4: Destination Unloading Bay Operations ({to_loc_name})',
+            'phase_badge': 'Unloading Point',
+            'phase_icon': 'fa-dolly',
+            'phase_color': '#38bdf8',
+            'title': 'Cargo Unloading',
+            'desc': 'Cargo unloaded & received at destination bay',
+            'sub': 'Material unloaded & quality inspection done' if (t10_done or current_step >= 10) else 'Awaiting unloading activity',
+            'time': t10_time,
+            'status': get_step_status(10),
+            'icon': 'fa-dolly',
+        },
+        {
+            'step': 11,
+            'phase_group': f'Phase 4: Destination Unloading Bay Operations ({to_loc_name})',
+            'phase_badge': 'Unloading Point',
+            'phase_icon': 'fa-door-open',
+            'phase_color': '#38bdf8',
+            'title': 'Unloading Dock-Out',
+            'desc': f"Vehicle cleared from {to_loc_name} unloading dock",
+            'sub': 'Receiving bay released & gate pass cleared' if (t11_done or current_step >= 11) else 'Unloading dock-out pending',
+            'time': t11_time,
+            'status': get_step_status(11),
+            'icon': 'fa-door-open',
+        },
+        {
+            'step': 12,
+            'phase_group': 'Phase 5: Delivery & POD Verification',
+            'phase_badge': 'Trip Completed',
+            'phase_icon': 'fa-circle-check',
+            'phase_color': '#10b981',
+            'title': 'Trip Completed & POD Verified',
+            'desc': f"Delivered safely to {to_loc_name}",
+            'sub': 'Consignment delivered, verified & POD uploaded' if t12_done else 'Trip completion pending',
+            'time': t12_time,
+            'pod_trip_id': pod_trip_id,
+            'status': 'done' if t12_done else 'pending',
+            'icon': 'fa-circle-check',
+        },
+    ]
+
+    progress_percent = int(round((current_step / 12) * 100))
+
+    return {
+        'current_stage': current_step,
+        'total_stages': 12,
+        'progress_percent': progress_percent,
+        'stage_label': stage_label,
+        'stage_class': stage_class,
+        'stage_color': stage_color,
+        'stage_icon': stage_icon,
+        'vehicle_no': veh_no,
+        'driver_name': driver_name,
+        'driver_phone': driver_phone,
+        'from_loc': from_loc_name,
+        'to_loc': to_loc_name,
+        'steps': steps,
+    }
 
 @login_required(login_url='/SMS/customer_login/2/')
 def customer_dashboard(request):
@@ -201,6 +571,11 @@ def customer_dashboard(request):
     recent_shipments = all_trips.select_related(
         'tr_enquirynumber', 'tc_financestatus', 'tr_consignmentnumber'
     ).order_by('-tr_created_at')[:5]
+
+    for trip in recent_shipments:
+        is_deliv = (trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11] or (trip.tr_tripnumber and trip.tr_tripnumber in closed_trip_numbers))
+        track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={trip.tr_vehiclenumber}&trip_id={trip.id}' if trip.tr_vehiclenumber and not is_deliv else ''
+        trip.flow = compute_shipment_flow(trip.tr_enquirynumber, trip, is_delivered=is_deliv, track_link=track_link)
 
     return render(request, 'asset_mgt_app/customer_portal_dashboard.html', {
         'customer': customer,
@@ -793,6 +1168,16 @@ def customer_enquiry_list(request):
         if trip and trip.tr_drivernumber:
             driver_number = trip.tr_drivernumber
 
+        # Compute status flow
+        flow = compute_shipment_flow(
+            enq=enq,
+            trip=trip,
+            va=va,
+            is_delivered=is_delivered,
+            pod_trip_id=pod_trip_id,
+            track_link=track_link
+        )
+
         enquiry_list.append({
             'enq': enq,
             'vehicle_no': vehicle_no,
@@ -804,6 +1189,7 @@ def customer_enquiry_list(request):
             'cus_ref_num': cus_ref_num,
             'driver_number': driver_number,
             'is_delivered': is_delivered,
+            'flow': flow,
         })
     
     return render(request, 'asset_mgt_app/customer_enquiry_list.html', {
@@ -885,9 +1271,18 @@ def customer_shipment_tracking(request, trip_id):
     customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
     
+    enq = trip.tr_enquirynumber
+    va = enq.vehicle_allotmentinfo_set.first() if enq else None
+    closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+    is_delivered = (trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11] or bool(closure))
+    pod_trip_id = trip.id if ((closure and closure.tcf_pod) or trip.tc_pod_attachment) else None
+    track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={trip.tr_vehiclenumber}&trip_id={trip.id}' if trip.tr_vehiclenumber and not is_delivered else ''
+    flow = compute_shipment_flow(enq, trip, va, is_delivered=is_delivered, pod_trip_id=pod_trip_id, track_link=track_link)
+
     return render(request, 'asset_mgt_app/customer_shipment_tracking.html', {
         'trip': trip,
-        'customer': customer
+        'customer': customer,
+        'flow': flow,
     })
 
 @login_required
@@ -1086,3 +1481,186 @@ def customer_support(request):
         'department': department,
         'is_lp': is_lp
     })
+
+
+@login_required(login_url='/SMS/customer_login/2/')
+def customer_dmr_report(request):
+    """
+    Daily Movement Report (DMR) strictly scoped to the logged-in customer.
+    Supports Date Range, Month/Year, Department filters, Search, and Excel Export.
+    """
+    customer, department, is_lp, agent_name = get_customer_context(request)
+    if not customer:
+        messages.error(request, 'Your account is not linked to a Customer Profile. Please contact support.')
+        return redirect('customer_dashboard')
+
+    from .dmr_report_view import (
+        BASE_DMR_Q, apply_dmr_date_filter, build_dmr_search_filter,
+        get_dmr_headers, get_dmr_rows
+    )
+    from django.core.paginator import Paginator
+
+    today_dt = date.today()
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
+    selected_month = request.GET.get('month', '')
+    selected_year = request.GET.get('year', '')
+    search_query = request.GET.get('q', '').strip()
+    dept_id = request.GET.get('customer_department', '')
+
+    # Base trips for this customer
+    trips = TripdetailInfo.objects.filter(
+        BASE_DMR_Q,
+        tr_enquirynumber__en_customername=customer
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tr_consignmentnumber',
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tc_financestatus'
+    )
+
+    # Department scoping
+    dept_name = ""
+    if department:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment=department)
+        dept_name = department.ct_customerdepartment
+        dept_id = str(department.id)
+    elif dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+        try:
+            dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment
+        except:
+            dept_name = ""
+
+    # Apply date filters
+    trips = apply_dmr_date_filter(trips, from_date, to_date, selected_month, selected_year)
+
+    # Search filter
+    if search_query:
+        trips = trips.filter(build_dmr_search_filter(search_query))
+
+    trips = trips.order_by('-effective_dmr_date', '-id').distinct()
+
+    total_records = trips.count()
+
+    # KPI counts for customer summary
+    in_transit_count = trips.filter(tc_financestatus_id=1).count()
+    delivered_count = trips.filter(tc_financestatus_id__in=[2, 7, 9]).count()
+
+    # Pagination
+    paginator = Paginator(trips, 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Headers & dynamic rows
+    headers, template_key = get_dmr_headers(
+        customer.cu_name, dept_name, None, None,
+        customer_id=customer.id, dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None
+    )
+    data_rows = get_dmr_rows(page_obj, headers, template_key, customer.cu_name, start_idx=page_obj.start_index())
+
+    # Available departments for filter dropdown
+    available_departments = CustomerdepartmentInfo.objects.filter(
+        enquirynoteinfo__en_customername=customer
+    ).distinct().order_by('ct_customerdepartment')
+
+    current_year = today_dt.year
+    current_month = today_dt.month
+
+    return render(request, 'asset_mgt_app/customer_dmr_report.html', {
+        'customer': customer,
+        'department': department,
+        'dept_id': str(dept_id or ''),
+        'available_departments': available_departments,
+        'headers': headers,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'total_records': total_records,
+        'in_transit_count': in_transit_count,
+        'delivered_count': delivered_count,
+        'from_date': from_date,
+        'to_date': to_date,
+        'selected_month': int(selected_month) if (selected_month and str(selected_month).isdigit()) else current_month,
+        'selected_year': int(selected_year) if (selected_year and str(selected_year).isdigit()) else current_year,
+        'years': range(current_year - 5, current_year + 1),
+        'search_query': search_query,
+    })
+
+
+@login_required(login_url='/SMS/customer_login/2/')
+def customer_dmr_export_excel(request):
+    """Export DMR Excel for the logged-in customer."""
+    customer, department, is_lp, agent_name = get_customer_context(request)
+    if not customer:
+        messages.error(request, 'Customer context not found.')
+        return redirect('customer_dashboard')
+
+    from .dmr_report_view import (
+        BASE_DMR_Q, apply_dmr_date_filter, build_dmr_search_filter,
+        build_dmr_excel_workbook
+    )
+
+    today_dt = date.today()
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
+    selected_month = request.GET.get('month', '')
+    selected_year = request.GET.get('year', '')
+    search_query = request.GET.get('q', '').strip()
+    dept_id = request.GET.get('customer_department', '')
+
+    trips = TripdetailInfo.objects.filter(
+        BASE_DMR_Q,
+        tr_enquirynumber__en_customername=customer
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tr_consignmentnumber',
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tc_financestatus'
+    )
+
+    dept_name = ""
+    if department:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment=department)
+        dept_name = department.ct_customerdepartment
+        dept_id = department.id
+    elif dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+        try:
+            dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment
+        except:
+            dept_name = ""
+
+    trips = apply_dmr_date_filter(trips, from_date, to_date, selected_month, selected_year)
+    if search_query:
+        trips = trips.filter(build_dmr_search_filter(search_query))
+
+    trips = trips.order_by('-effective_dmr_date', '-id').distinct()
+
+    wb, _ = build_dmr_excel_workbook(
+        customer_obj=customer,
+        dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None,
+        dept_name=dept_name or "Logistics",
+        from_loc=None,
+        to_loc=None,
+        trips=list(trips)
+    )
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    cust_clean = (customer.cu_nameshort or customer.cu_name or "Customer").replace(" ", "_").replace("/", "_")
+    filename = f"DMR_{cust_clean}_{today_dt.strftime('%Y%m%d')}.xlsx"
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
