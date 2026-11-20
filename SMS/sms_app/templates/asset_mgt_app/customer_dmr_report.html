@@ -1,0 +1,716 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Customer DMR Report | BVM Booking Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a, button, input[type="submit"], .btn {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            max-width: 98%;
+            margin: 0 auto;
+            padding: 1.2rem;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.8rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.92rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .hamburger {
+            display: none;
+            font-size: 1.4rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        /* Sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: #0f172a;
+            border-right: 1px solid var(--glass-border);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-close {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-menu li a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--glass);
+            color: var(--primary);
+        }
+
+        /* Page Header */
+        header {
+            margin: 1.8rem 0 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .welcome h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome h1 i {
+            color: var(--primary);
+        }
+
+        .welcome p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--dark);
+            padding: 0.65rem 1.3rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.25s ease;
+            border: none;
+            font-size: 0.88rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 242, 254, 0.4);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            padding: 0.65rem 1.3rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.25s ease;
+            border: none;
+            font-size: 0.88rem;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.4);
+            color: #ffffff;
+        }
+
+        /* Quick Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.1rem 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.25s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .icon-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .icon-cyan { background: rgba(0, 242, 254, 0.15); color: #00f2fe; }
+        .icon-green { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* Filter Section Card */
+        .filter-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-control {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.55rem 0.8rem;
+            color: #f8fafc;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .filter-control:focus {
+            border-color: var(--primary);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-filter {
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            border-radius: 8px;
+            padding: 0.58rem 1.1rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            height: 38px;
+        }
+
+        .btn-filter:hover {
+            opacity: 0.9;
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.58rem 0.9rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            color: #ffffff;
+            border-color: #94a3b8;
+        }
+
+        /* Glass Table Container */
+        .glass-table-container {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            max-height: 680px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.82rem;
+            min-width: 1200px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            z-index: 10;
+        }
+
+        th {
+            padding: 0.85rem 1rem;
+            color: var(--primary);
+            font-weight: 700;
+            border-bottom: 2px solid var(--glass-border);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+
+        .pagination a, .pagination span {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .pagination a:hover {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .pagination .current {
+            background: var(--primary);
+            color: var(--dark);
+            font-weight: 700;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger { display: block; }
+            .nav-links { display: none; }
+            .welcome h1 { font-size: 1.4rem; }
+            .filter-form { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">BVM PORTAL</div>
+            <span class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'customer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}" class="active"><i class="fas fa-file-invoice"></i> DMR Report</a></li>
+            <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
+            <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
+            <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
+            <li><a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Top Navigation -->
+    <nav>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+            <div class="logo">BVM BOOKING PORTAL</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}">My Bookings</a></li>
+            <li><a href="{% url 'customer_dmr_report' %}" class="active">DMR Report</a></li>
+            <li><a href="{% url 'customer_documents' %}">Documents</a></li>
+            <li><a href="{% url 'customer_support' %}">Support</a></li>
+            <li><a href="{% url 'customer_profile' %}">Profile</a></li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span id="currentTime" style="color: #94a3b8; font-size: 0.85rem;"></span>
+            <a href="javascript:location.reload();" title="Refresh" style="color: #94a3b8; text-decoration: none; font-size: 1.05rem;">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+            <div style="width: 34px; height: 34px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark); font-size: 0.85rem;">
+                {{ request.user.username|make_list|first|upper }}
+            </div>
+            <a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}" title="Logout" style="color: #94a3b8; text-decoration: none;">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="welcome">
+                <h1><i class="fas fa-chart-line"></i> Daily Movement Report (DMR)</h1>
+                <p>Live shipment tracking, dispatch details & movement execution for <b>{{ customer.cu_nameshort|default:customer.cu_name }}</b>{% if department %} &bull; <span style="color: #38bdf8;">{{ department.ct_customerdepartment }} Dept</span>{% endif %}</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="{% url 'customer_dmr_export_excel' %}?from_date={{ from_date }}&to_date={{ to_date }}&month={{ selected_month }}&year={{ selected_year }}&customer_department={{ dept_id }}&q={{ search_query }}" class="btn-export">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+                <a href="{% url 'customer_enquiry_add' %}" class="btn-primary">
+                    <i class="fas fa-plus"></i> New Booking
+                </a>
+            </div>
+        </header>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div style="background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); padding: 0.85rem 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; color: #f8fafc;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Quick Summary Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <i class="fas fa-boxes-stacked"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ total_records }}</div>
+                    <div class="stat-label">Total DMR Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-cyan">
+                    <i class="fas fa-truck-fast"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ in_transit_count }}</div>
+                    <div class="stat-label">In-Transit Fleet</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ delivered_count }}</div>
+                    <div class="stat-label">Delivered Shipments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <form method="GET" action="{% url 'customer_dmr_report' %}" class="filter-form">
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-calendar-alt"></i> From Date</label>
+                    <input type="date" name="from_date" value="{{ from_date }}" class="filter-control">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-calendar-check"></i> To Date</label>
+                    <input type="date" name="to_date" value="{{ to_date }}" class="filter-control">
+                </div>
+                {% if available_departments|length > 1 and not department %}
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-building"></i> Department</label>
+                    <select name="customer_department" class="filter-control">
+                        <option value="">All Departments</option>
+                        {% for dept in available_departments %}
+                        <option value="{{ dept.id }}" {% if dept_id == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.ct_customerdepartment }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="filter-group">
+                    <label class="filter-label"><i class="fas fa-search"></i> Search Keyword</label>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Trip #, Truck #, Location..." class="filter-control">
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                    <a href="{% url 'customer_dmr_report' %}" class="btn-reset" title="Reset Filters">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- DMR Data Table -->
+        <div class="glass-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for h in headers %}
+                        <th>{{ h }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data_rows %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{ cell|default:"-" }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ headers|length|default:10 }}" style="text-align: center; padding: 4rem 1rem;">
+                            <div style="position: sticky; left: 40px; display: inline-block; max-width: 500px; margin: 0 auto; color: #94a3b8;">
+                                <i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.6; color: #f59e0b;"></i>
+                                <h4 style="color: #f1f5f9; font-size: 1.15rem; margin-bottom: 0.5rem; font-weight: 700;">No Shipments Found For Selected Filters</h4>
+                                <p style="font-size: 0.88rem; line-height: 1.5; margin-bottom: 1.2rem;">
+                                    {% if from_date or to_date %}
+                                    There are no recorded DMR trips between <b style="color: #38bdf8;">{{ from_date|default:"any" }}</b> and <b style="color: #38bdf8;">{{ to_date|default:"any" }}</b> for this customer.
+                                    {% elif search_query %}
+                                    No records match keyword "<b style="color: #38bdf8;">{{ search_query }}</b>".
+                                    {% else %}
+                                    No DMR records found.
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'customer_dmr_report' %}" class="btn-primary" style="font-size: 0.82rem; padding: 0.5rem 1.2rem; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-undo"></i> Clear Filters & Show All Shipments
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">&lsaquo; Prev</a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">Next &rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}{% if dept_id %}&customer_department={{ dept_id }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">Last &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    </script>
+</body>
+
+</html>
