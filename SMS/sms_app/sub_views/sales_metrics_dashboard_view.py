@@ -157,12 +157,17 @@ def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_
     rows = []
 
     for u in users_query:
-        # Targets (Option A: Targets strictly apply to a selected period; in All-Time mode targets are 0)
+        # Targets: If a period is filtered, strictly match targets for that period.
+        # If no date filter is selected (default view), strictly match the target active for the current date (no fallbacks).
         if from_date or to_date:
             t_qs = Sales_target_info.objects.filter(st_sales_person=u).filter(target_filter).order_by('-id')
             target = t_qs.first()
         else:
-            target = None
+            today = timezone.now().date()
+            t_qs = Sales_target_info.objects.filter(st_sales_person=u)
+            if company_id and company_id != 'all':
+                t_qs = t_qs.filter(Q(st_company_id=company_id) | Q(st_company__isnull=True, st_sales_person__user_extinfo__emp_organisation_id=company_id))
+            target = t_qs.filter(st_start_date__lte=today, st_end_date__gte=today).order_by('-id').first()
 
         company = _get_short_company(u, target, company_obj)
 
@@ -200,8 +205,19 @@ def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_
         if target:
             tgt_rev_exist = float(target.st_target_revenue_existing or 0.0)
             tgt_rev_new = float(target.st_target_revenue_new or 0.0)
+
+            # Smart normalization: If user entered in raw Rupees (>= 1,000), convert to Lakhs
+            if tgt_rev_exist >= 1000:
+                tgt_rev_exist = round(tgt_rev_exist / 100000.0, 2)
+            if tgt_rev_new >= 1000:
+                tgt_rev_new = round(tgt_rev_new / 100000.0, 2)
+
             if tgt_rev_exist == 0 and tgt_rev_new == 0 and (target.st_target_revenue or 0) > 0:
-                tgt_rev_exist = round(float(target.st_target_revenue) / 100000.0, 2)
+                raw_st_rev = float(target.st_target_revenue)
+                if raw_st_rev >= 1000:
+                    tgt_rev_exist = round(raw_st_rev / 100000.0, 2)
+                else:
+                    tgt_rev_exist = round(raw_st_rev, 2)
 
             tgt_cust_total = int(target.st_target_customer or 0)
             tgt_cust_new = int(target.st_target_customers_new or 0)
@@ -295,7 +311,9 @@ def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_
         act_rev_total = round(total_rev_inr / 100000.0, 2)
 
         rev_achieve_pct = round((act_rev_total / tgt_rev_total * 100), 1) if tgt_rev_total > 0 else 0
-        cust_achieve_pct = round((act_cust_exist / tgt_cust_exist * 100), 1) if tgt_cust_exist > 0 else 0
+        cust_target_base = tgt_cust_total if tgt_cust_total > 0 else (tgt_cust_exist + tgt_cust_new)
+        cust_actual_base = act_cust_total if cust_target_base > 0 else (act_cust_exist + act_cust_new)
+        cust_achieve_pct = round((cust_actual_base / cust_target_base * 100), 1) if cust_target_base > 0 else 0
         onboard_achieve_pct = round((act_cust_onboard / tgt_cust_onboard * 100), 1) if tgt_cust_onboard > 0 else 0
         calls_achieve_pct = round((c_inperson / tgt_calls * 100), 1) if tgt_calls > 0 else 0
 
@@ -423,7 +441,9 @@ def sales_metrics_dashboard(request):
     companies = Business_Sol_info.objects.all().order_by('bvm_business')
     branches = Location_info.objects.all().order_by('loc_name')
 
-    today_str = timezone.localtime(timezone.now()).strftime('%Y-%m-%d')
+    today_dt = timezone.localtime(timezone.now()).date()
+    month_start_str = today_dt.replace(day=1).strftime('%Y-%m-%d')
+    today_str = today_dt.strftime('%Y-%m-%d')
 
     context = {
         'first_name': first_name,
@@ -434,8 +454,8 @@ def sales_metrics_dashboard(request):
         'default_branch_id': default_branch_id,
         'default_employee_id': default_employee_id,
         'today_date': today_str,
-        'default_from_date': '',
-        'default_to_date': '',
+        'default_from_date': month_start_str,
+        'default_to_date': today_str,
     }
     return render(request, "asset_mgt_app/sales_metrics_dashboard.html", context)
 
@@ -447,11 +467,27 @@ def get_sales_metrics_dashboard_data(request):
     Returns summary cards, channel distribution, pipeline funnel, target achievement gauges,
     and the full 26-metric salesperson data grid with totals.
     """
+    today_dt = timezone.localtime(timezone.now()).date()
+    month_start_str = today_dt.replace(day=1).strftime('%Y-%m-%d')
+    today_str = today_dt.strftime('%Y-%m-%d')
+
     company_id = request.GET.get('company_id', '').strip()
     branch_id = request.GET.get('branch_id', '').strip()
     employee_id = request.GET.get('employee_id', '').strip()
-    from_date = request.GET.get('from_date', '').strip()
-    to_date = request.GET.get('to_date', '').strip()
+
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    # Default to current Month-To-Date (MTD) if dates are not provided in request
+    if from_date is None:
+        from_date = month_start_str
+    else:
+        from_date = from_date.strip()
+
+    if to_date is None:
+        to_date = today_str
+    else:
+        to_date = to_date.strip()
 
     rows = _build_metrics_rows(branch_id, company_id, employee_id, from_date, to_date)
 
@@ -567,6 +603,9 @@ def get_sales_metrics_dashboard_data(request):
     total_actual_onboard = len(won_customers_list)
 
     overall_rev_pct = round((total_actual_rev / total_target_rev * 100), 1) if total_target_rev > 0 else 0
+    total_cust_target_base = total_target_cust if total_target_cust > 0 else total_target_cust_ex
+    total_cust_actual_base = total_actual_cust if total_cust_target_base > 0 else total_actual_cust_ex
+    overall_cust_pct = round((total_cust_actual_base / total_cust_target_base * 100), 1) if total_cust_target_base > 0 else 0
     overall_cust_exist_pct = round((total_actual_cust_ex / total_target_cust_ex * 100), 1) if total_target_cust_ex > 0 else 0
     overall_onboard_pct = round((total_actual_onboard / total_target_onboard * 100), 1) if total_target_onboard > 0 else 0
     in_person_rate = round((total_in_person / total_calls * 100), 1) if total_calls > 0 else 0
@@ -575,7 +614,7 @@ def get_sales_metrics_dashboard_data(request):
     win_rate = round((total_actual_onboard / total_actual_cust * 100), 1) if total_actual_cust > 0 else 0
 
     rev_code, rev_hex, rev_status = get_color_code(overall_rev_pct)
-    cust_code, cust_hex, cust_status = get_color_code(overall_cust_exist_pct)
+    cust_code, cust_hex, cust_status = get_color_code(overall_cust_pct)
     onboard_code, onboard_hex, onboard_status = get_color_code(overall_onboard_pct)
 
     # 1. Top 8 KPI Cards
@@ -799,8 +838,11 @@ def get_sales_metrics_dashboard_data(request):
         'actual_cust_exist': total_actual_cust_ex,
         'actual_cust_onboard': total_actual_onboard,
         'rev_achieve_pct': overall_rev_pct,
-        'cust_achieve_pct': overall_cust_exist_pct,
+        'cust_achieve_pct': overall_cust_pct,
         'onboard_achieve_pct': overall_onboard_pct,
+        'rev_color_class': rev_code,
+        'cust_color_class': cust_code,
+        'onboard_color_class': onboard_code,
     }
 
     data = {
@@ -827,8 +869,22 @@ def sales_metrics_export_excel(request):
     company_id = request.GET.get('company_id', '').strip()
     branch_id = request.GET.get('branch_id', '').strip()
     employee_id = request.GET.get('employee_id', '').strip()
-    from_date = request.GET.get('from_date', '').strip()
-    to_date = request.GET.get('to_date', '').strip()
+    today_dt = timezone.localtime(timezone.now()).date()
+    month_start_str = today_dt.replace(day=1).strftime('%Y-%m-%d')
+    today_str = today_dt.strftime('%Y-%m-%d')
+
+    from_date = request.GET.get('from_date', None)
+    to_date = request.GET.get('to_date', None)
+
+    if from_date is None:
+        from_date = month_start_str
+    else:
+        from_date = from_date.strip()
+
+    if to_date is None:
+        to_date = today_str
+    else:
+        to_date = to_date.strip()
 
     rows = _build_metrics_rows(branch_id, company_id, employee_id, from_date, to_date)
 
@@ -1083,6 +1139,10 @@ def sales_metrics_import_excel(request):
             target_calls = int(row[2]) if len(row) > 2 and row[2] else 0
             tgt_rev_exist = float(row[14]) if len(row) > 14 and row[14] else 0.0
             tgt_rev_new = float(row[15]) if len(row) > 15 and row[15] else 0.0
+            if tgt_rev_exist >= 1000:
+                tgt_rev_exist = round(tgt_rev_exist / 100000.0, 2)
+            if tgt_rev_new >= 1000:
+                tgt_rev_new = round(tgt_rev_new / 100000.0, 2)
             tgt_cust_total = int(row[16]) if len(row) > 16 and row[16] else 0
             tgt_cust_new = int(row[17]) if len(row) > 17 and row[17] else 0
             tgt_cust_exist = int(row[18]) if len(row) > 18 and row[18] else 0

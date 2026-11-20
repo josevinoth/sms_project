@@ -794,7 +794,7 @@ def tms_petty_cash_export_tally(request):
         
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 
-        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_driver_name', 'tpc_created_by'
+        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_vehicle_number__vm_ownership', 'tpc_driver_name', 'tpc_created_by'
     )
     
     wb = Workbook()
@@ -831,32 +831,50 @@ def tms_petty_cash_export_tally(request):
         debit = TALLY_DEBIT_MAP.get(debit_raw.lower().strip(), debit_raw)
         credit = tpc.tpc_credit_ledger.ledger_name if tpc.tpc_credit_ledger else ""
         
-        # Primary Cost Category
-        branch_code = ""
-        if tpc.tpc_branch:
-            loc_name_upper = tpc.tpc_branch.loc_name.upper()
-            if "MAA" in loc_name_upper:
-                branch_code = "Maa"
-            elif "BLR" in loc_name_upper:
-                branch_code = "Blr"
-            else:
-                branch_code = tpc.tpc_branch.loc_name.split()[-1].title()
-                
-        source_code = ""
+        # Primary Cost Category: Own, Attached, Market, M-Dept, B-Dept
+        primary_cost_cat = ""
         if tpc.tpc_vehicle_source:
             source_name = tpc.tpc_vehicle_source.ow_ownership.lower()
             if "market" in source_name:
-                source_code = "Mkt"
+                primary_cost_cat = "Market"
             elif "attached" in source_name:
-                source_code = "Att"
+                primary_cost_cat = "Attached"
             elif "own" in source_name:
-                source_code = "Own"
+                primary_cost_cat = "Own"
             else:
-                source_code = tpc.tpc_vehicle_source.ow_ownership[:3].title()
+                primary_cost_cat = tpc.tpc_vehicle_source.ow_ownership.title()
         elif tpc.tpc_unit:
-            source_code = tpc.tpc_unit
-            
-        primary_cost_cat = f"{branch_code}-{source_code}" if (branch_code and source_code) else (branch_code or source_code or "")
+            unit_val = str(tpc.tpc_unit).strip()
+            unit_clean = unit_val.lower().replace(" ", "").replace("-", "").replace("_", "")
+            if "mdept" in unit_clean:
+                primary_cost_cat = "M-Dept"
+            elif "bdept" in unit_clean:
+                primary_cost_cat = "B-Dept"
+            else:
+                primary_cost_cat = unit_val
+        elif tpc.tpc_vehicle_number and tpc.tpc_vehicle_number.vm_ownership:
+            source_name = tpc.tpc_vehicle_number.vm_ownership.ow_ownership.lower()
+            if "market" in source_name:
+                primary_cost_cat = "Market"
+            elif "attached" in source_name:
+                primary_cost_cat = "Attached"
+            elif "own" in source_name:
+                primary_cost_cat = "Own"
+            else:
+                primary_cost_cat = tpc.tpc_vehicle_number.vm_ownership.ow_ownership.title()
+
+        # Fallback to branch department if not vehicle-based
+        if not primary_cost_cat:
+            branch_name = tpc.tpc_branch.loc_name.upper() if tpc.tpc_branch and tpc.tpc_branch.loc_name else ""
+            if not branch_name and tpc.tpc_credit_ledger and tpc.tpc_credit_ledger.ledger_name:
+                branch_name = tpc.tpc_credit_ledger.ledger_name.upper()
+            if not branch_name and vou_no:
+                branch_name = vou_no.upper()
+
+            if "MAA" in branch_name or "CHENNAI" in branch_name or branch_name.startswith("M_T"):
+                primary_cost_cat = "M-Dept"
+            elif "BLR" in branch_name or "BANGALORE" in branch_name or "BENGALURU" in branch_name or branch_name.startswith("B_T"):
+                primary_cost_cat = "B-Dept"
         
         # Customer
         customer = tpc.tpc_customer.cu_name if tpc.tpc_customer else "NA"
@@ -865,7 +883,7 @@ def tms_petty_cash_export_tally(request):
         raw_job_no = tpc.tpc_job_no or ""
         job_no = raw_job_no if raw_job_no.strip() else "NA"
         
-        # Veh. No: "Mkt" constant for market vehicles, else the registration number
+        # Veh. No: "Mkt" constant for market vehicles, else the registration number, or "NA" if blank
         veh_no = ""
         if tpc.tpc_vehicle_source and "market" in tpc.tpc_vehicle_source.ow_ownership.lower():
             veh_no = "Mkt"
@@ -877,6 +895,9 @@ def tms_petty_cash_export_tally(request):
                 veh_no = reg_num
         elif tpc.tpc_vehicle_number_manual:
             veh_no = tpc.tpc_vehicle_number_manual
+            
+        if not veh_no or not veh_no.strip():
+            veh_no = "NA"
             
         # Amount
         amount = tpc.tpc_amount or 0.0

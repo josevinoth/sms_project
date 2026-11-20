@@ -41,6 +41,12 @@ def sales_target_add(request, sales_target_id=0):
             # Auto-compute total revenue (INR) from Lakhs (New + Existing)
             rev_new = float(target_obj.st_target_revenue_new or 0.0)
             rev_exist = float(target_obj.st_target_revenue_existing or 0.0)
+            if rev_new >= 1000:
+                rev_new = round(rev_new / 100000.0, 2)
+                target_obj.st_target_revenue_new = rev_new
+            if rev_exist >= 1000:
+                rev_exist = round(rev_exist / 100000.0, 2)
+                target_obj.st_target_revenue_existing = rev_exist
             target_obj.st_target_revenue = round((rev_new + rev_exist) * 100000.0, 2)
 
             # Auto-compute total customers (New + Existing)

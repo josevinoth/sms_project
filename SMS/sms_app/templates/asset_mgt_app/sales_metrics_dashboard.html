@@ -1141,7 +1141,14 @@
         font-size: 0.66rem;
     }
 
-    .matrix-tbl tbody tr:hover td { background: rgba(54, 209, 255, 0.12) !important; }
+    .matrix-tbl tbody tr:hover td { 
+        background: #0c1a40 !important; 
+    }
+
+    .matrix-tbl tbody tr:hover td.sticky-col-1,
+    .matrix-tbl tbody tr:hover td.sticky-col-2 {
+        background: #0c1a40 !important;
+    }
 
     .matrix-tbl tr.row-total-footer td {
         background: linear-gradient(90deg, #0e1e4a 0%, #0a1435 100%) !important;
@@ -1212,11 +1219,11 @@
             <!-- 4. Streamlined Date Range Pill unified by Date of Call -->
             <div class="filter-pill filter-date-range" title="All dashboard metrics unified by Date of Call (sc_date_of_call)">
                 <label><i class="fas fa-calendar-alt"></i> Date:</label>
-                <input type="date" id="filter-from-date" value="" title="From Call Date">
+                <input type="date" id="filter-from-date" value="{{ default_from_date }}" title="From Call Date">
                 <span class="date-arrow">&rarr;</span>
-                <input type="date" id="filter-to-date" value="" title="To Call Date">
-                <button type="button" class="btn-clear-date-icon" id="btn-clear-date" title="Clear Date Filter (Show All Time)">
-                    <i class="fas fa-times"></i>
+                <input type="date" id="filter-to-date" value="{{ default_to_date }}" title="To Call Date">
+                <button type="button" class="btn-clear-date-icon" id="btn-clear-date" title="Reset to Current Month (MTD)">
+                    <i class="fas fa-undo"></i>
                 </button>
             </div>
         </div>
@@ -1615,10 +1622,10 @@ $(document).ready(function() {
         fetchDashboardData();
     });
 
-    // Clear Date button
+    // Reset Date button to Current Month (MTD)
     $('#btn-clear-date').on('click', function() {
-        $('#filter-from-date').val('');
-        $('#filter-to-date').val('');
+        $('#filter-from-date').val('{{ default_from_date }}');
+        $('#filter-to-date').val('{{ default_to_date }}');
         fetchDashboardData();
     });
 
@@ -2193,9 +2200,9 @@ $(document).ready(function() {
                     <td class="col-num">${totals.actual_cust_onboard.toLocaleString()}</td>
 
                     <!-- Overall Achievement -->
-                    <td class="col-center"><span class="badge-scale badge-green">${totals.rev_achieve_pct}%</span></td>
-                    <td class="col-center"><span class="badge-scale badge-blue">${totals.cust_achieve_pct}%</span></td>
-                    <td class="col-center"><span class="badge-scale badge-blue">${totals.onboard_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-${totals.rev_color_class || 'green'}">${totals.rev_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-${totals.cust_color_class || 'blue'}">${totals.cust_achieve_pct}%</span></td>
+                    <td class="col-center"><span class="badge-scale badge-${totals.onboard_color_class || 'blue'}">${totals.onboard_achieve_pct}%</span></td>
                 </tr>
             `;
             $('#matrix-tfoot').html(tfootHtml);
