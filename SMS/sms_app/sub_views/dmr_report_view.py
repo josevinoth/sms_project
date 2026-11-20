@@ -417,7 +417,7 @@ DMR_TEMPLATES = {
 }
 
 DEFAULT_HEADERS = [
-    "S.NO", "PICKUP LOCATION", "DELIVERY LOCATION", "DEPARTMENT", "SHIPPER NAME",
+    "S.NO", "CUSTOMER NAME", "PICKUP LOCATION", "DELIVERY LOCATION", "DEPARTMENT", "SHIPPER NAME",
     "Reference No", "TRUCK NO", "TRUCK TYPE", "No.of PKGS", "ACTUAL WEIGHT",
     "SEAL No", "DRIVER MOBILE", "Pickup Date",
     "VEHICLE Reported Date &Time at Loading Point",
@@ -1063,8 +1063,9 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                 if hh == "trip sheet no":
                     row.append(safe_str(trip.tr_tripnumber));
                     continue
-                if hh == "customer name":
-                    row.append(safe_str(trip.tr_enquirynumber.en_customername));
+                if hh in ("customer name", "customer"):
+                    val = trip.tr_enquirynumber.en_customername if (trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername) else ""
+                    row.append(safe_str(val));
                     continue
                 if hh == "customer dept":
                     row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment));
@@ -1469,18 +1470,6 @@ def trip_report(request):
         except:
             pass
 
-    # Fallback to trip data if filter names missing
-    if not cust_name and page_obj:
-        try:
-            cust_name = str(page_obj[0].tr_enquirynumber.en_customername)
-        except:
-            pass
-    if not dept_name and page_obj:
-        try:
-            dept_name = str(page_obj[0].tr_enquirynumber.en_customerdepartment)
-        except:
-            pass
-
     template_id = request.POST.get('dmr_template') or request.GET.get('dmr_template')
     headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=customer_id, dept_id=dept_id, template_id=template_id)
     data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name, consolidate_merged=True)
@@ -1514,7 +1503,9 @@ def trip_report(request):
 
 
 def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc, trips, start_idx=1, template_id=None):
-    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc, customer_id=customer_obj.id, dept_id=dept_id, template_id=template_id)
+    cust_name = customer_obj.cu_name if customer_obj else ""
+    cust_id = customer_obj.id if customer_obj else None
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=cust_id, dept_id=dept_id, template_id=template_id)
 
     wb = Workbook()
     ws = wb.active
@@ -1535,7 +1526,7 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
         cell.alignment = center_align
 
     # Write Rows
-    rows, trip_groups = get_dmr_rows(trips, headers, template_key, customer_obj.cu_name, start_idx=start_idx, return_groups=True)
+    rows, trip_groups = get_dmr_rows(trips, headers, template_key, cust_name, start_idx=start_idx, return_groups=True)
     for row in rows:
         ws.append(row)
 
@@ -1559,7 +1550,7 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
                 should_merge = True
         except Exception:
             pass
-    elif "EIPL" in (customer_obj.cu_name or "").upper():
+    elif cust_name and "EIPL" in str(cust_name).upper():
         should_merge = True
 
     if should_merge and len(rows) > 1:
@@ -1622,19 +1613,16 @@ def export_dmr_excel(request):
     from_loc = request.GET.get('from_location')
     to_loc = request.GET.get('to_location')
 
-    if not customer_id:
-        messages.error(request, "Please select a customer.")
-        return redirect('trip_report')
-
-    try:
-        customer_obj = CustomerInfo.objects.get(id=customer_id)
-    except CustomerInfo.DoesNotExist:
-        messages.error(request, "Customer not found.")
-        return redirect('trip_report')
+    customer_obj = None
+    if customer_id:
+        try:
+            customer_obj = CustomerInfo.objects.get(id=customer_id)
+        except CustomerInfo.DoesNotExist:
+            messages.error(request, "Customer not found.")
+            return redirect('trip_report')
 
     qs = TripdetailInfo.objects.filter(
         BASE_DMR_Q,
-        tr_enquirynumber__en_customername_id=customer_id,
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1646,6 +1634,8 @@ def export_dmr_excel(request):
         'tr_reportedlocation',
         'tc_financestatus'
     )
+    if customer_id:
+        qs = qs.filter(tr_enquirynumber__en_customername_id=customer_id)
 
     if dept_id:
         try:
@@ -1667,7 +1657,9 @@ def export_dmr_excel(request):
     dept_name = str(department) if department else None
 
     template_id = request.GET.get('dmr_template') or request.GET.get('template_id')
-    headers, template_key = get_dmr_headers(customer_obj.cu_name, dept_name, from_loc, to_loc, customer_id=customer_obj.id, dept_id=dept_id, template_id=template_id)
+    cust_name = customer_obj.cu_name if customer_obj else ""
+    cust_id = customer_obj.id if customer_obj else None
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=cust_id, dept_id=dept_id, template_id=template_id)
 
     # Slicing and Ordering based on DataTable view / page length
     try:
@@ -1729,7 +1721,7 @@ def export_dmr_excel(request):
     wb.save(excel_file)
     excel_file.seek(0)
 
-    filename = f"{customer_obj.cu_name}_DMR_Report.xlsx"
+    filename = f"{customer_obj.cu_name if customer_obj else 'All_Customers'}_DMR_Report.xlsx"
     response = HttpResponse(
         excel_file.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
