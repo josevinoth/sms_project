@@ -42,8 +42,7 @@ def safe_int(val, default=0):
 def get_trip_cnote_or_fallback(trip, cons=None, default=""):
     """
     Returns the C-Note number.
-    If the trip is a Cancellation with Billing job and has no C-Note,
-    falls back to the Trip Number (tr_tripnumber).
+    If the trip has no C-Note, falls back to the Trip Number (tr_tripnumber).
     """
     if cons is None and trip:
         cons = getattr(trip, 'tr_consignmentnumber', None)
@@ -53,14 +52,7 @@ def get_trip_cnote_or_fallback(trip, cons=None, default=""):
         if val:
             return val
 
-    is_cancel_billing = False
     if trip:
-        is_cancel_billing = (
-            getattr(trip, 'tc_financestatus_id', None) == 10
-            or getattr(trip, 'tr_operational_status_id', None) == 10
-            or getattr(trip, 'tc_cancellation_check', False)
-        )
-    if is_cancel_billing and trip:
         val = safe_str(getattr(trip, 'tr_tripnumber', '') or '').strip()
         if val:
             return val
@@ -785,7 +777,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
 OWN_VEHICLE_PL_HEADERS = [
     "S No", "Trip date", "Vehicle No", "Cnote No", "Trip Category", "Customer Name", "From", "To",
     "Trip Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
-    "Weighment Charges", "Handling charges", "Halting Charges", "Revenue",
+    "Weighment Charges", "Handling charges", "Halting Charges", "Cancellation Charges", "Revenue",
     "Driver Salary", "Fuel Cost", "Acting Driver", "Driver Bata", "Toll Cost",
     "Parking Cost", "Loading Cost", "Unloading Cost", "Weighment Cost", "Handling Cost", "Vehicle Hire", "Total Expense"
 ]
@@ -3730,6 +3722,7 @@ def vendor_p_l_attached_report_view(request):
     date_to = (request.POST.get('date_to') or request.GET.get('date_to', '')).strip()
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
+    branch = (request.POST.get('branch') or request.GET.get('branch', '')).strip()
     vendor_id = request.POST.get('vendor_id') or request.GET.get('vendor_id')
 
     if vendor_id:
@@ -3810,6 +3803,7 @@ def vendor_p_l_attached_report_view(request):
         'date_to': date_to,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'branch': branch,
         'vehicle_type': vehicle_type_id,
         'vendor_id': vendor_id,
         'veh_no': veh_no,
@@ -4178,7 +4172,22 @@ def vendor_p_l_attached_report_ajax_view(request):
         base_trips = base_trips.filter(tr_reportedlocation_id=to_loc_id)
 
     if branch:
-        base_trips = base_trips.filter(get_branch_filter_q(branch))
+        b_code = branch.upper().replace('BVM ', '').strip()
+        if b_code in ['1', 'BLR']:
+            b_code = 'BLR'
+        elif b_code in ['2', 'MAA']:
+            b_code = 'MAA'
+
+        if b_code in ['MAA', 'BLR']:
+            base_trips = base_trips.filter(
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=b_code) |
+                (
+                    (Q(tr_consignmentnumber__isnull=True) | Q(tr_consignmentnumber__co_consignmentnumber="")) &
+                    Q(tr_tripnumber__icontains=b_code)
+                )
+            )
+        else:
+            base_trips = base_trips.filter(get_branch_filter_q(branch))
 
     if vehicle_type_id:
         base_trips = base_trips.filter(tr_vehicletype_id=vehicle_type_id)
@@ -5351,6 +5360,7 @@ def own_vehicle_pl_report_view(request):
             selling_weighment = round(selling_weighment, 2)
             selling_handling = round(selling_handling, 2)
             selling_halting = round(selling_halting, 2)
+            selling_cancellation = round(selling_cancellation, 2)
             selling_total = round(selling_total, 2)
 
             driver_salary = round(driver_salary, 2)
@@ -5389,7 +5399,7 @@ def own_vehicle_pl_report_view(request):
                 selling_weighment,
                 selling_handling,
                 selling_halting,
-
+                selling_cancellation,
                 selling_total,
                 driver_salary,
                 fuel_expense,
@@ -11446,8 +11456,8 @@ def time_analysis_report_export_view(request):
             if trip.tr_enquirynumber.en_customername:
                 customer_name = safe_str(trip.tr_enquirynumber.en_customername.cu_name)
 
+        cnote_no = get_trip_cnote_or_fallback(trip)
         if trip.tr_consignmentnumber:
-            cnote_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
             cnote_created = trip.tr_consignmentnumber.co_created_at
 
         veh_allotted_dt = None

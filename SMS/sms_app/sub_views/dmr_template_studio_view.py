@@ -237,6 +237,13 @@ def dmr_template_preview_ajax(request):
                 'tr_enquirynumber__en_customerdepartment', 'tr_consignmentnumber'
             ).order_by('-id')[:3])
 
+        # Pre-attach vehicle category for sample preview
+        try:
+            from .trans_invoice_view import attach_vehicle_category_to_trips
+            attach_vehicle_category_to_trips(sample_trips)
+        except Exception:
+            pass
+
         trip_cons_nums = [t.tr_consignmentnumber_id for t in sample_trips if t.tr_consignmentnumber_id]
         trip_enq_nums = [t.tr_enquirynumber_id for t in sample_trips]
 

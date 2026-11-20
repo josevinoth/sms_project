@@ -1593,7 +1593,8 @@ def invoice_export_excel(request, invoice_id):
         "NO. OF DAYS", "PER DAY W/H CHARGES", "Warehouse Storage Charges",
         "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse Loading Charges",
         "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse UnLoading Charges",
-        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges", "Total"
+        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges", "Total",
+        "Remarks"
     ]
     ws.append(headers)
     for cell in ws[1]:
@@ -1693,6 +1694,7 @@ def invoice_export_excel(request, invoice_id):
                   (float(invoice.bill_handling_charges or 0) + float(invoice.bill_tot_fumigation_charges or 0) + float(
                       invoice.bill_packing_charges or 0)) +
                   crane_val + forklift_val, 2),
+            invoice.bill_remarks or "",
         ])
     else:
         # Pre-calculate storage split logic identically to Case-to-Case tally export
@@ -1793,6 +1795,7 @@ def invoice_export_excel(request, invoice_id):
                 round(job_portion + (j_agg['loading'] or 0) + (j_agg['loading'] or 0) +
                       row_handling +
                       (j_agg['crane'] or 0) + (j_agg['forklift'] or 0), 2),
+                invoice.bill_remarks or "",
             ])
             sl += 1
 

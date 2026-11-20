@@ -1120,12 +1120,14 @@ def customer_enquiry_list(request):
         if trip and trip.tr_customerref:
             customer_ref = trip.tr_customerref
 
-        # Consignment number: trip > direct consignment
+        # Consignment number: trip > direct consignment > trip number
         cnote = '-'
-        if trip and trip.tr_consignmentnumber:
+        if trip and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber:
             cnote = trip.tr_consignmentnumber.co_consignmentnumber
-        elif cn:
+        elif cn and cn.co_consignmentnumber:
             cnote = cn.co_consignmentnumber
+        elif trip and trip.tr_tripnumber:
+            cnote = trip.tr_tripnumber
 
         # Is Delivered?
         is_delivered = False

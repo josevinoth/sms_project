@@ -2,6 +2,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime, date, timedelta
+from collections import defaultdict
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
@@ -44,10 +45,24 @@ def get_color_code(percentage):
         return 'blue', '#8b5cf6', 'Purple'
 
 
-def _get_short_company(user, target=None):
+def _get_short_company(user, target=None, company_obj=None):
     """
     Returns clean short company code: PACK, TRANS, STORAGE, EXPRESS, TOURS, etc.
     """
+    if company_obj:
+        name = str(company_obj.bvm_business).upper()
+        if 'PACK' in name:
+            return 'PACK'
+        if 'TRANS' in name:
+            return 'TRANS'
+        if 'STORAGE' in name:
+            return 'STORAGE'
+        if 'EXPRESS' in name:
+            return 'EXPRESS'
+        if 'TOURS' in name:
+            return 'TOURS'
+        return name[:12]
+
     if target and target.st_company:
         name = str(target.st_company.bvm_business).upper()
         if 'PACK' in name:
@@ -103,8 +118,16 @@ def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_
         id__in=active_ids
     ).distinct().select_related('user_extinfo', 'user_extinfo__emp_branch', 'user_extinfo__emp_organisation')
 
+    company_obj = None
     if company_id and company_id != 'all':
-        users_query = users_query.filter(user_extinfo__emp_organisation_id=company_id)
+        company_obj = Business_Sol_info.objects.filter(id=company_id).first()
+        comp_user_ids = set(SalesInfo.objects.filter(s_company_id=company_id).values_list('s_updated_by_id', flat=True)) | \
+                        set(Sales_Comments_Info.objects.filter(sc_sales_number__s_company_id=company_id).values_list('sc_updated_by_id', flat=True)) | \
+                        set(Sales_target_info.objects.filter(st_company_id=company_id).values_list('st_sales_person_id', flat=True)) | \
+                        set(BusinessrevenueInfo.objects.filter(br_business_id=company_id).values_list('br_sale_person_id', flat=True)) | \
+                        set(MyUser.objects.filter(user_extinfo__emp_organisation_id=company_id).values_list('id', flat=True))
+        comp_user_ids.discard(None)
+        users_query = users_query.filter(id__in=comp_user_ids)
 
     if branch_id and branch_id != 'all':
         users_query = users_query.filter(user_extinfo__emp_branch_id=branch_id)
@@ -141,7 +164,7 @@ def _build_metrics_rows(branch_id=None, company_id=None, employee_id=None, from_
         else:
             target = None
 
-        company = _get_short_company(u, target)
+        company = _get_short_company(u, target, company_obj)
 
         # Calls
         calls = Sales_Comments_Info.objects.filter(sc_updated_by=u).filter(call_filter)
@@ -362,8 +385,28 @@ def sales_metrics_dashboard(request):
             user_id__in=active_ids
         ).select_related('user', 'emp_branch', 'emp_organisation').order_by('user__first_name')
 
+        user_companies_map = defaultdict(set)
+        for uext in User_extInfo.objects.filter(user_id__in=active_ids).values_list('user_id', 'emp_organisation_id'):
+            if uext[0] and uext[1]:
+                user_companies_map[uext[0]].add(str(uext[1]))
+        for s_uid, s_cid in SalesInfo.objects.filter(s_updated_by_id__in=active_ids, s_company_id__isnull=False).values_list('s_updated_by_id', 's_company_id').distinct():
+            if s_uid and s_cid:
+                user_companies_map[s_uid].add(str(s_cid))
+        for c_uid, c_cid in Sales_Comments_Info.objects.filter(sc_updated_by_id__in=active_ids, sc_sales_number__s_company_id__isnull=False).values_list('sc_updated_by_id', 'sc_sales_number__s_company_id').distinct():
+            if c_uid and c_cid:
+                user_companies_map[c_uid].add(str(c_cid))
+        for t_uid, t_cid in Sales_target_info.objects.filter(st_sales_person_id__in=active_ids, st_company_id__isnull=False).values_list('st_sales_person_id', 'st_company_id').distinct():
+            if t_uid and t_cid:
+                user_companies_map[t_uid].add(str(t_cid))
+        for r_uid, r_cid in BusinessrevenueInfo.objects.filter(br_sale_person_id__in=active_ids, br_business_id__isnull=False).values_list('br_sale_person_id', 'br_business_id').distinct():
+            if r_uid and r_cid:
+                user_companies_map[r_uid].add(str(r_cid))
+
         for emp in sales_qs:
             full_name = f"{emp.user.first_name or ''} {emp.user.last_name or ''}".strip() or emp.user.username
+            c_ids = list(user_companies_map.get(emp.user.id, []))
+            if not c_ids and emp.emp_organisation_id:
+                c_ids = [str(emp.emp_organisation_id)]
             sales_employees_data.append({
                 'id': emp.user.id,
                 'name': full_name,
@@ -371,6 +414,7 @@ def sales_metrics_dashboard(request):
                 'branch_name': emp.emp_branch.loc_name if emp.emp_branch else 'BVM MAA',
                 'company_id': str(emp.emp_organisation_id) if emp.emp_organisation_id else '',
                 'company_name': emp.emp_organisation.bvm_business if emp.emp_organisation else '',
+                'company_ids': c_ids,
             })
     except Exception:
         pass

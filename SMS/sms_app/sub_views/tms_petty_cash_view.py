@@ -862,7 +862,8 @@ def tms_petty_cash_export_tally(request):
         customer = tpc.tpc_customer.cu_name if tpc.tpc_customer else "NA"
         
         # Job No
-        job_no = tpc.tpc_job_no or ""
+        raw_job_no = tpc.tpc_job_no or ""
+        job_no = raw_job_no if raw_job_no.strip() else "NA"
         
         # Veh. No: "Mkt" constant for market vehicles, else the registration number
         veh_no = ""
@@ -885,10 +886,10 @@ def tms_petty_cash_export_tally(request):
         
         # Remarks: Route string from trip if available, else tpc_remarks
         remarks = tpc.tpc_remarks or ""
-        if job_no:
+        if raw_job_no:
             trip = TripdetailInfo.objects.filter(
-                Q(tr_consignmentnumber__co_consignmentnumber=job_no) | 
-                Q(tr_tripnumber=job_no)
+                Q(tr_consignmentnumber__co_consignmentnumber=raw_job_no) | 
+                Q(tr_tripnumber=raw_job_no)
             ).first()
             if trip:
                 from_loc = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""

@@ -101,8 +101,7 @@ def apply_dmr_date_filter(qs, from_date_str=None, to_date_str=None, month=None, 
 
 def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
     """
-    Returns consignment number if available; if not available and the trip
-    is cancellation with or without billing, falls back to trip number (tr_tripnumber).
+    Returns consignment number if available; if not available, falls back to trip number (tr_tripnumber).
     """
     if cons_detail and getattr(cons_detail, 'co_consignmentnumber', None):
         val = str(cons_detail.co_consignmentnumber).strip()
@@ -114,22 +113,9 @@ def get_trip_cnote_or_fallback(trip, cons_detail=None, default=""):
             val = str(cons.co_consignmentnumber).strip()
             if val:
                 return val
-        tc_status = getattr(trip, 'tc_financestatus_id', None)
-        op_status = getattr(trip, 'tr_operational_status_id', None)
-        cancel_check = getattr(trip, 'tc_cancellation_check', False)
-        cancel_charges = getattr(trip, 'tc_cancellation', 0)
-        enquiry = getattr(trip, 'tr_enquirynumber', None)
-        en_status = getattr(enquiry, 'en_status_id', None) if enquiry else None
-        if (
-            tc_status in (3, 10, 11) or
-            op_status in (3, 10, 11) or
-            cancel_check or
-            (cancel_charges and cancel_charges > 0) or
-            en_status in (8, 10)
-        ):
-            val = getattr(trip, 'tr_tripnumber', None)
-            if val:
-                return str(val).strip()
+        val = getattr(trip, 'tr_tripnumber', None)
+        if val:
+            return str(val).strip()
     return default
 
 
@@ -798,9 +784,15 @@ def safe_num(v):
         return 0
 
 
-def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, return_groups=False):
+def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, return_groups=False, consolidate_merged=False):
     rows = []
     trip_groups = []
+    # Pre-attach vehicle category to all trips for maximum performance
+    try:
+        from .trans_invoice_view import attach_vehicle_category_to_trips
+        attach_vehicle_category_to_trips(trips)
+    except Exception:
+        pass
     # Fetch all ConsignmentgoodsInfo and Vehicle_allotmentInfo for the current page in bulk
     trip_cons_nums = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
     trip_enq_nums = [t.tr_enquirynumber_id for t in trips]
@@ -813,6 +805,19 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
               Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enq_nums).select_related('va_vendor',
                                                                                                          'va_driver')}
     cons_detail_map = {c.id: c for c in ConsignmentdetailInfo.objects.filter(id__in=trip_cons_nums)}
+
+    # Determine should_merge based on template toggle or customer fallback
+    should_merge = False
+    if template_key and str(template_key).startswith("STUDIO_"):
+        try:
+            tmpl_id = int(str(template_key).replace("STUDIO_", ""))
+            tmpl_obj = DmrTemplateMaster.objects.filter(id=tmpl_id).first()
+            if tmpl_obj and tmpl_obj.merge_identical_cells:
+                should_merge = True
+        except Exception:
+            pass
+    elif customer_name and "EIPL" in str(customer_name).upper():
+        should_merge = True
 
     # DYNAMIC STUDIO TEMPLATE PROCESSING
     if template_key and str(template_key).startswith("STUDIO_"):
@@ -836,27 +841,74 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                 effective_tripcost = 0.0 if (cancellation_val > 0 or is_cancel_without_billing) else get_tms_report_transport_charge(trip, allotment=va)
 
                 g_len = len(goods_list)
-                studio_trip_groups.append((cur_idx, cur_idx + g_len - 1))
-                cur_idx += g_len
 
-                for cons_goods in goods_list:
+                # When consolidate_merged is enabled and merge is ON, consolidate multi-invoice trips into 1 single row for table view
+                if consolidate_merged and should_merge and g_len > 1:
                     row = []
                     for col in studio_cols:
-                        val = extract_dmr_cell_value(
-                            field_key=col.field_key,
-                            trip=trip,
-                            cons_goods=cons_goods,
-                            cons_detail=cons_detail,
-                            va=va,
-                            effective_tripcost=effective_tripcost,
-                            row_idx=idx,
-                            date_fmt=col.date_format,
-                            included_charges=col.included_charges,
-                            static_val=col.static_value,
-                            goods_count=g_len
-                        )
-                        row.append(val)
+                        mergeable = is_dmr_column_mergeable(field_key=col.field_key, column_header=col.column_header)
+                        if mergeable:
+                            val = extract_dmr_cell_value(
+                                field_key=col.field_key,
+                                trip=trip,
+                                cons_goods=goods_list[0],
+                                cons_detail=cons_detail,
+                                va=va,
+                                effective_tripcost=effective_tripcost,
+                                row_idx=idx,
+                                date_fmt=col.date_format,
+                                included_charges=col.included_charges,
+                                static_val=col.static_value,
+                                goods_count=g_len
+                            )
+                            row.append(val)
+                        else:
+                            # Cargo / invoice column: collect distinct values across all goods in this trip
+                            vals = []
+                            for cg in goods_list:
+                                v = extract_dmr_cell_value(
+                                    field_key=col.field_key,
+                                    trip=trip,
+                                    cons_goods=cg,
+                                    cons_detail=cons_detail,
+                                    va=va,
+                                    effective_tripcost=effective_tripcost,
+                                    row_idx=idx,
+                                    date_fmt=col.date_format,
+                                    included_charges=col.included_charges,
+                                    static_val=col.static_value,
+                                    goods_count=g_len
+                                )
+                                if v not in (None, '', '-'):
+                                    s = str(v).strip()
+                                    if s and s not in vals:
+                                        vals.append(s)
+                            row.append(', '.join(vals) if vals else '')
                     studio_rows.append(row)
+                    studio_trip_groups.append((cur_idx, cur_idx))
+                    cur_idx += 1
+                else:
+                    studio_trip_groups.append((cur_idx, cur_idx + g_len - 1))
+                    cur_idx += g_len
+
+                    for cons_goods in goods_list:
+                        row = []
+                        for col in studio_cols:
+                            val = extract_dmr_cell_value(
+                                field_key=col.field_key,
+                                trip=trip,
+                                cons_goods=cons_goods,
+                                cons_detail=cons_detail,
+                                va=va,
+                                effective_tripcost=effective_tripcost,
+                                row_idx=idx,
+                                date_fmt=col.date_format,
+                                included_charges=col.included_charges,
+                                static_val=col.static_value,
+                                goods_count=g_len
+                            )
+                            row.append(val)
+                        studio_rows.append(row)
             if return_groups:
                 return studio_rows, studio_trip_groups
             return studio_rows
@@ -870,8 +922,14 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
         va = va_map.get(trip.tr_enquirynumber_id)
 
         g_len = len(goods_list)
-        trip_groups.append((cur_idx, cur_idx + g_len - 1))
-        cur_idx += g_len
+        if consolidate_merged and should_merge and g_len > 1:
+            trip_groups.append((cur_idx, cur_idx))
+            cur_idx += 1
+            eval_goods = [goods_list[0]]
+        else:
+            trip_groups.append((cur_idx, cur_idx + g_len - 1))
+            cur_idx += g_len
+            eval_goods = goods_list
 
         # If cancellation charges are applicable for a trip, trip charges should be 0
         from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
@@ -883,7 +941,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
         )
         effective_tripcost = 0.0 if (cancellation_val > 0 or is_cancel_without_billing) else get_tms_report_transport_charge(trip, allotment=va)
 
-        for cons_goods in goods_list:
+        for cons_goods in eval_goods:
             row = []
             for h in headers:
                 hh = " ".join(h.strip().lower().split())
@@ -1425,7 +1483,7 @@ def trip_report(request):
 
     template_id = request.POST.get('dmr_template') or request.GET.get('dmr_template')
     headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc, customer_id=customer_id, dept_id=dept_id, template_id=template_id)
-    data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name)
+    data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name, consolidate_merged=True)
 
     customer_templates = []
     if customer_id:
@@ -1984,8 +2042,8 @@ def trip_report_ajax(request):
     else:
         paginated = list(trips[start:])
 
-    # Build rows for current page
-    data_rows = get_dmr_rows(paginated, headers, template_key, cust_name, start_idx=start + 1)
+    # Build rows for current page (consolidate_merged=True respects template merge_identical_cells toggle)
+    data_rows = get_dmr_rows(paginated, headers, template_key, cust_name, start_idx=start + 1, consolidate_merged=True)
 
     # If client only requested headers (to validate column mapping), return headers without full payload
     if request.GET.get('header_only') in ('1', 'true', 'True'):

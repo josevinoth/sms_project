@@ -1,7 +1,4 @@
-{% extends "asset_mgt_app/base_1.html" %}
 {% load static %}
-
-{% block content %}
 <link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20261106-07">
 
 <style>
@@ -17,7 +14,8 @@
         padding: 0 !important;
         margin: 0 !important;
         max-width: 100% !important;
-        height: calc(100vh - 65px) !important;
+        height: calc(100vh - var(--app-header-height, 85px) - 2px) !important;
+        max-height: calc(100vh - var(--app-header-height, 85px) - 2px) !important;
         overflow: hidden !important;
     }
 
@@ -25,45 +23,61 @@
     .cs-dashboard-root {
         width: 100% !important;
         max-width: 100% !important;
-        height: calc(100vh - 65px) !important;
+        height: calc(100vh - var(--app-header-height, 85px) - 2px) !important;
+        max-height: calc(100vh - var(--app-header-height, 85px) - 2px) !important;
         display: flex;
         flex-direction: column;
-        padding: 0.25rem 0.5rem;
-        gap: 0.30rem;
+        padding: 0.20rem 0.40rem;
+        gap: 0.25rem;
         box-sizing: border-box;
         background: #04081e;
         color: #ffffff;
         overflow: hidden;
     }
 
-    /* Top Control Bar */
+    #main-content .cs-dashboard-root {
+        height: 100% !important;
+        max-height: 100% !important;
+    }
+
+    /* Top Control Bar - Ultra-sleek single row (zero overlap, zero wrapping) */
     .cs-top-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.45rem;
+        gap: 0.25rem;
         width: 100%;
         flex-shrink: 0;
+        flex-wrap: nowrap !important;
         background: linear-gradient(135deg, rgba(14, 25, 71, 0.95) 0%, rgba(8, 14, 45, 0.98) 100%);
         border: 1px solid rgba(54, 209, 255, 0.25);
         border-radius: 6px;
-        padding: 0.20rem 0.50rem;
+        padding: 0.18rem 0.40rem;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        height: 31px;
+        box-sizing: border-box;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+
+    .cs-top-bar::-webkit-scrollbar {
+        display: none;
     }
 
     .filter-group-left {
         display: flex;
         align-items: center;
-        gap: 0.35rem;
-        flex-wrap: nowrap;
-        min-width: 0;
+        gap: 0.25rem;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0;
     }
 
     .filter-group-right {
         display: flex;
         align-items: center;
-        gap: 0.40rem;
-        flex-wrap: nowrap;
+        gap: 0.25rem;
+        flex-wrap: nowrap !important;
         margin-left: auto;
         flex-shrink: 0;
     }
@@ -72,12 +86,13 @@
         background: rgba(4, 9, 32, 0.9);
         border: 1px solid rgba(54, 209, 255, 0.35);
         border-radius: 20px;
-        padding: 0.10rem 0.45rem;
+        padding: 0.08rem 0.38rem;
         display: flex;
         align-items: center;
-        gap: 0.30rem;
-        height: 27px;
+        gap: 0.20rem;
+        height: 25px;
         box-sizing: border-box;
+        flex-shrink: 0;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -86,13 +101,13 @@
         box-shadow: 0 0 8px rgba(54, 209, 255, 0.3);
     }
 
-    .filter-company-pill { max-width: 175px; }
-    .filter-branch-pill { max-width: 135px; }
-    .filter-emp-pill { max-width: 170px; }
-    .filter-date-range { max-width: 250px; }
+    .filter-company-pill { width: 140px; }
+    .filter-branch-pill { width: 110px; }
+    .filter-emp-pill { width: 135px; }
+    .filter-date-range { width: 215px; }
 
     .filter-pill label {
-        font-size: 0.58rem;
+        font-size: 0.56rem;
         color: #36d1ff;
         font-weight: 700;
         text-transform: uppercase;
@@ -109,11 +124,11 @@
         background: transparent !important;
         color: #ffffff !important;
         border: none !important;
-        font-size: 0.70rem;
+        font-size: 0.68rem;
         font-weight: 600;
         outline: none;
         cursor: pointer;
-        padding: 0 2px;
+        padding: 0 1px;
         height: 20px;
         line-height: 1;
         flex: 1;
@@ -132,14 +147,14 @@
         background: transparent !important;
         color: #ffffff !important;
         border: none !important;
-        font-size: 0.66rem !important;
+        font-size: 0.62rem !important;
         font-weight: 600;
         outline: none;
         cursor: pointer;
         padding: 0 !important;
-        width: 82px;
-        max-width: 86px;
-        height: 20px;
+        width: 72px;
+        max-width: 74px;
+        height: 18px;
         line-height: 1;
     }
 
@@ -147,14 +162,14 @@
         filter: invert(1);
         cursor: pointer;
         opacity: 0.85;
-        margin-left: 2px;
+        margin-left: 1px;
     }
 
     .date-arrow {
         color: #36d1ff;
-        font-size: 0.52rem;
+        font-size: 0.50rem;
         opacity: 0.7;
-        margin: 0 1px;
+        margin: 0;
         flex-shrink: 0;
     }
 
@@ -162,9 +177,9 @@
         background: transparent;
         border: none;
         color: #94a3b8;
-        font-size: 0.65rem;
+        font-size: 0.60rem;
         cursor: pointer;
-        padding: 2px 4px;
+        padding: 1px 3px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
@@ -186,8 +201,8 @@
         background: rgba(4, 9, 32, 0.95);
         border: 1px solid rgba(54, 209, 255, 0.35);
         border-radius: 20px;
-        padding: 2px;
-        height: 27px;
+        padding: 1px;
+        height: 25px;
         box-sizing: border-box;
         box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
         flex-shrink: 0;
@@ -198,16 +213,16 @@
         border: none;
         outline: none;
         color: #94a3b8;
-        font-size: 0.60rem;
+        font-size: 0.58rem;
         font-weight: 700;
         letter-spacing: 0.3px;
-        padding: 3px 9px;
+        padding: 2px 7px;
         border-radius: 16px;
         cursor: pointer;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
         white-space: nowrap;
         line-height: 1;
     }
@@ -228,18 +243,18 @@
         background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.28) 100%);
         border: 1px solid rgba(52, 211, 153, 0.55);
         border-radius: 20px;
-        padding: 0 10px;
-        height: 27px;
+        padding: 0 8px;
+        height: 25px;
         box-sizing: border-box;
         color: #34d399;
-        font-size: 0.62rem;
+        font-size: 0.58rem;
         font-weight: 800;
         letter-spacing: 0.3px;
         cursor: pointer;
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
         white-space: nowrap;
         line-height: 1;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -257,18 +272,18 @@
     .cs-legend-bar {
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: 0.18rem;
         background: rgba(4, 9, 32, 0.92);
         border: 1px solid rgba(54, 209, 255, 0.35);
         border-radius: 20px;
-        padding: 0 0.5rem;
-        height: 27px;
+        padding: 0 0.35rem;
+        height: 25px;
         box-sizing: border-box;
         flex-shrink: 0;
     }
 
     .legend-title {
-        font-size: 0.58rem;
+        font-size: 0.54rem;
         color: #36d1ff;
         font-weight: 800;
         text-transform: uppercase;
@@ -281,10 +296,10 @@
         display: inline-flex;
         align-items: center;
         gap: 2px;
-        font-size: 0.58rem;
+        font-size: 0.52rem;
         font-weight: 800;
-        padding: 2px 5px;
-        border-radius: 10px;
+        padding: 1px 3px;
+        border-radius: 8px;
         white-space: nowrap;
         line-height: 1;
     }
@@ -293,6 +308,14 @@
     .leg-orange { background: rgba(245, 158, 11, 0.22); color: #fde68a; border: 1px solid #f59e0b; }
     .leg-green { background: rgba(16, 185, 129, 0.22); color: #86efac; border: 1px solid #10b981; }
     .leg-blue { background: rgba(59, 130, 246, 0.22); color: #93c5fd; border: 1px solid #3b82f6; }
+
+    @media (max-width: 1080px) {
+        .legend-title { display: none; }
+    }
+
+    @media (max-width: 960px) {
+        .cs-legend-bar { display: none; }
+    }
 
     /* Top KPI 10-Card Strip (Strict Single Horizontal Row) */
     .cs-top-cards-row {
@@ -403,7 +426,7 @@
     .cs-card-header {
         background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
         border-bottom: 1px solid rgba(54, 209, 255, 0.2);
-        padding: 0.25rem 0.55rem;
+        padding: 0.18rem 0.45rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -411,7 +434,7 @@
     }
 
     .cs-card-header h6 {
-        font-size: 0.68rem;
+        font-size: 0.65rem;
         font-weight: 800;
         color: #ffffff;
         margin: 0;
@@ -518,18 +541,20 @@
 
     /* Column 2: Center Channel & Pipeline Panels */
     .center-top-split {
-        height: 48%;
+        flex: 1;
+        min-height: 0;
         display: flex;
         border-bottom: 1px solid rgba(54, 209, 255, 0.2);
         overflow: hidden;
     }
 
     .center-bottom-split {
-        height: 52%;
+        flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        padding: 0.3rem 0.5rem;
+        padding: 0.2rem 0.5rem;
     }
 
     .channel-donut-box {
@@ -564,17 +589,19 @@
 
     /* Column 3: Right Target vs Actual Matrix Deck (CS Dashboard Meter Cards Format) */
     .right-top-box {
-        height: 50%;
+        flex: 1;
+        min-height: 0;
         border-bottom: 1px solid rgba(54, 209, 255, 0.2);
-        padding: 5px;
+        padding: 3px;
         display: flex;
         flex-direction: column;
         overflow: hidden;
     }
 
     .right-bottom-box {
-        height: 50%;
-        padding: 5px;
+        flex: 1;
+        min-height: 0;
+        padding: 3px;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -583,7 +610,7 @@
     .kpi-target-cards-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 5px;
+        gap: 4px;
         height: 100%;
         flex: 1;
         min-height: 0;
@@ -594,13 +621,14 @@
         background: linear-gradient(180deg, rgba(14, 28, 75, 0.95) 0%, rgba(8, 16, 48, 0.98) 100%);
         border: 1px solid rgba(54, 209, 255, 0.32);
         border-radius: 6px;
-        padding: 5px 6px;
+        padding: 2.5px 4px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         min-width: 0;
+        min-height: 0;
         overflow: hidden;
     }
 
@@ -615,6 +643,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1px;
+        flex-shrink: 0;
     }
 
     .kpi-target-card-title {
@@ -640,7 +669,8 @@
     .kpi-target-card-divider {
         height: 1px;
         background: rgba(255, 255, 255, 0.14);
-        margin: 2px 0 3px 0;
+        margin: 1px 0 2px 0;
+        flex-shrink: 0;
     }
 
     .kpi-target-card-sub {
@@ -650,9 +680,10 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
         white-space: nowrap;
         line-height: 1.1;
+        flex-shrink: 0;
     }
 
     .kpi-target-card-sub strong {
@@ -667,17 +698,20 @@
         padding: 2px 0;
         flex: 1;
         min-height: 0;
+        width: 100%;
     }
 
     .kpi-gauge-svg {
         display: block;
         overflow: visible;
-        max-width: 100%;
+        width: 100%;
+        max-width: 135px;
+        max-height: 65px;
         height: auto;
     }
 
     .kpi-sla-badge {
-        margin-top: 2px;
+        margin-top: 1px;
         padding: 2px 4px;
         border-radius: 4px;
         font-size: 0.52rem;
@@ -687,6 +721,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         line-height: 1.1;
+        flex-shrink: 0;
     }
 
     /* Achievement Badges */
@@ -709,15 +744,16 @@
     /* ══════ WON CLIENTS IN-CARD TICKER & HEADER PILL ══════ */
     .won-card-box {
         margin-top: 1px;
-        padding: 2px 5px;
+        padding: 2px 4px;
         background: rgba(16, 185, 129, 0.12);
         border: 1px solid rgba(16, 185, 129, 0.38);
         border-radius: 4px;
         cursor: pointer;
         display: flex;
         flex-direction: column;
-        gap: 1.5px;
+        gap: 1px;
         transition: all 0.15s ease;
+        flex-shrink: 0;
     }
 
     .won-card-box:hover {
@@ -730,7 +766,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 0.52rem;
+        font-size: 0.50rem;
         line-height: 1;
     }
 
@@ -747,11 +783,11 @@
     .won-view-btn {
         color: #38bdf8;
         font-weight: 700;
-        font-size: 0.50rem;
+        font-size: 0.48rem;
     }
 
     .won-client-name-ticker {
-        font-size: 0.54rem;
+        font-size: 0.50rem;
         font-weight: 700;
         color: #ffffff;
         white-space: nowrap;
@@ -760,7 +796,8 @@
         display: flex;
         align-items: center;
         gap: 3px;
-        line-height: 1.1;
+        line-height: 1;
+        margin-top: 1px;
     }
 
     .won-rotator-text {
@@ -1135,7 +1172,7 @@
         <div class="filter-group-left">
             <!-- 1. Company Dropdown (Business_Sol_info) -->
             <div class="filter-pill filter-company-pill">
-                <label><i class="fas fa-building"></i> Company:</label>
+                <label><i class="fas fa-building"></i> Co:</label>
                 <select id="filter-company">
                     <option value="all">All Companies</option>
                     {% for comp in companies %}
@@ -1174,7 +1211,7 @@
 
             <!-- 4. Streamlined Date Range Pill unified by Date of Call -->
             <div class="filter-pill filter-date-range" title="All dashboard metrics unified by Date of Call (sc_date_of_call)">
-                <label><i class="fas fa-calendar-alt"></i> Call Date:</label>
+                <label><i class="fas fa-calendar-alt"></i> Date:</label>
                 <input type="date" id="filter-from-date" value="" title="From Call Date">
                 <span class="date-arrow">&rarr;</span>
                 <input type="date" id="filter-to-date" value="" title="To Call Date">
@@ -1191,13 +1228,13 @@
                     <i class="fas fa-tachometer-alt"></i> Cockpit
                 </button>
                 <button type="button" class="view-switch-btn" id="btn-view-matrix" title="Full 26-column table matrix view">
-                    <i class="fas fa-table"></i> Table Matrix
+                    <i class="fas fa-table"></i> Matrix
                 </button>
             </div>
 
             <!-- 2. Streamlined Export Excel Pill -->
             <button type="button" class="btn-export-pill" id="btn-export-excel" title="Download formatted 26-column Excel report">
-                <i class="fas fa-file-excel"></i> Export Excel
+                <i class="fas fa-file-excel"></i> Export
             </button>
 
             <!-- 3. Performance Benchmark Scale Legend -->
@@ -1532,7 +1569,8 @@ $(document).ready(function() {
             branch_id: "{{ emp.branch_id }}",
             branch_name: "{{ emp.branch_name|escapejs }}",
             company_id: "{{ emp.company_id }}",
-            company_name: "{{ emp.company_name|escapejs }}"
+            company_name: "{{ emp.company_name|escapejs }}",
+            company_ids: [{% for cid in emp.company_ids %}"{{ cid }}"{% if not forloop.last %},{% endif %}{% endfor %}]
         },
         {% endfor %}
     ];
@@ -1545,7 +1583,7 @@ $(document).ready(function() {
         empSelect.append('<option value="all">All Active Reps</option>');
 
         activeEmployees.forEach(function(emp) {
-            const matchCompany = (companyId === 'all' || !companyId || String(emp.company_id) === String(companyId));
+            const matchCompany = (companyId === 'all' || !companyId || (emp.company_ids && emp.company_ids.includes(String(companyId))) || String(emp.company_id) === String(companyId));
             const matchBranch = (branchId === 'all' || !branchId || String(emp.branch_id) === String(branchId));
             if (matchCompany && matchBranch) {
                 const isSel = (String(emp.id) === String(currentVal)) ? 'selected' : '';
@@ -1883,11 +1921,11 @@ $(document).ready(function() {
             const clampedPct = Math.min(Math.max(pctInt, 0), 100);
             const dashoffset = (arcLength * (1 - clampedPct / 100)).toFixed(2);
 
-            let fontSize = '20';
+            let fontSize = '22';
             if (pctInt > 999) {
-                fontSize = '14';
+                fontSize = '15';
             } else if (pctInt > 99) {
-                fontSize = '17';
+                fontSize = '18';
             }
 
             let checkIcon = '<i class="fas fa-check-circle" style="color:#10b981;"></i>';
@@ -1937,20 +1975,20 @@ $(document).ready(function() {
                         <span>Done: <strong>${m.done}</strong></span>
                     </div>
                     <div class="kpi-target-card-gauge">
-                        <svg class="kpi-gauge-svg" viewBox="0 0 120 54" width="98" height="46">
+                        <svg class="kpi-gauge-svg" viewBox="0 0 120 54" width="125" height="56">
                             <path d="M 12 50 A 48 48 0 0 1 108 50" 
                                   fill="none" 
                                   stroke="rgba(255, 255, 255, 0.12)" 
-                                  stroke-width="8" 
+                                  stroke-width="9" 
                                   stroke-linecap="round" />
                             <path d="M 12 50 A 48 48 0 0 1 108 50" 
                                   fill="none" 
                                   stroke="${fillColor}" 
-                                  stroke-width="8" 
+                                  stroke-width="9" 
                                   stroke-linecap="round"
                                   stroke-dasharray="150.8" 
                                   stroke-dashoffset="${dashoffset}" 
-                                  style="transition: stroke-dashoffset 0.8s ease; filter: drop-shadow(0 0 4px ${fillColor}99);" />
+                                  style="transition: stroke-dashoffset 0.8s ease; filter: drop-shadow(0 0 5px ${fillColor}99);" />
                             <text x="60" y="46" text-anchor="middle" dominant-baseline="auto" font-size="${fontSize}" font-weight="900" fill="#ffffff" letter-spacing="-0.5px">${displayPct}</text>
                         </svg>
                     </div>
@@ -2165,4 +2203,3 @@ $(document).ready(function() {
     }
 });
 </script>
-{% endblock content %}

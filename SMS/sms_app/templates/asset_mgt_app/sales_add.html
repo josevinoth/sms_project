@@ -46,9 +46,43 @@
 							<label class="form-label-modern font-weight-bold">Customer Name</label>
 							{% render_field form.s_customer_name class="form-control form-control-modern" id="s_customer_name" onchange="cusnewexist_enabler()" %}
 						</div>
+						<div id="new_customer_master_access" class="mb-2" style="display: none; width: 100%; max-width: 100%;">
+							<div class="ncm-card p-2 rounded border" style="background: rgba(37, 99, 235, 0.06); border-color: rgba(37, 99, 235, 0.25) !important; width: 100%; box-sizing: border-box; overflow: hidden;">
+								<div class="d-flex align-items-center justify-content-between mb-1" style="line-height: 1.2;">
+									<span class="font-weight-bold text-primary text-truncate" style="font-size: 0.74rem;">
+										<i class="fas fa-user-plus mr-1"></i> New Customer Master:
+									</span>
+									<span class="badge badge-primary px-1" style="font-size: 0.65rem;">Master</span>
+								</div>
+								<div class="d-flex" style="gap: 5px; width: 100%; box-sizing: border-box;">
+									<a href="javascript:void(0)"
+									   id="btn_open_quick_add_ncm"
+									   class="btn btn-sm btn-primary ncm-btn font-weight-bold text-center text-truncate shadow-sm"
+									   title="Add new customer in master and select automatically">
+										<i class="fas fa-plus-circle mr-1"></i> Add Master
+									</a>
+									<a href="{% url 'new_customer_master_list' %}" target="_blank"
+									   class="btn btn-sm btn-outline-secondary ncm-btn ncm-list-btn font-weight-bold text-center text-truncate shadow-sm"
+									   title="View all New Customers in Master List">
+										<i class="fas fa-list mr-1"></i> Master List
+									</a>
+								</div>
+							</div>
+						</div>
 						<div class="form-group-modern mb-2">
-							<label class="form-label-modern font-weight-bold">New Customer Name</label>
+							<div class="d-flex justify-content-between align-items-center mb-1">
+								<label class="form-label-modern font-weight-bold mb-0">New Customer Name</label>
+								<a href="javascript:void(0)" id="btn_refresh_new_customers" class="text-primary small" title="Refresh customers list from master" style="text-decoration: none; font-size: 0.72rem;">
+									<i class="fas fa-sync-alt" id="refresh_icon"></i> Refresh
+								</a>
+							</div>
 							{% render_field form.s_customer_new_name class="form-control form-control-modern disable_a_href" id="s_customer_new_name" %}
+							<div id="new_customer_selected_hint" class="small mt-1 text-success font-weight-bold" style="display: none; font-size: 0.72rem;">
+								<i class="fas fa-check-circle mr-1"></i> Customer selected from Master
+							</div>
+							<div id="business_won_notice" class="small mt-1 text-dark font-weight-bold p-1 rounded" style="display: none; font-size: 0.72rem; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35);">
+								<i class="fas fa-trophy mr-1 text-warning"></i> Business Won: On save, customer will be added to Customer Master & set to Inactive in New Customer Master.
+							</div>
 						</div>
 					</div>
 
@@ -503,6 +537,55 @@
 </div>
 
 <style>
+    /* Scoped New Customer Master button styles inside section */
+    #new_customer_master_access,
+    #new_customer_master_access .ncm-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    #new_customer_master_access .ncm-btn {
+        flex: 1 1 50% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 4px 4px !important;
+        height: auto !important;
+        min-height: 30px !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    #new_customer_master_access .ncm-list-btn {
+        background: #ffffff !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    #new_customer_master_access .ncm-list-btn:hover {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+    }
+    [data-theme="dark"] #new_customer_master_access .ncm-card {
+        background: #1e293b !important;
+        border-color: #3b82f6 !important;
+    }
+    [data-theme="dark"] #new_customer_master_access .ncm-list-btn {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+        border-color: #475569 !important;
+    }
+
     .compact-form .form-group-modern {
         margin-bottom: 0.55rem !important;
     }
@@ -645,18 +728,23 @@
 
 <script>
 	function cusnewexist_enabler() {
-      var jn5=document.getElementById("s_customer_name").value
-      if (jn5==210)
+      var jn5=document.getElementById("s_customer_name").value;
+      var selectedText = $("#s_customer_name option:selected").text().trim();
+      var isNewCustomer = (jn5 == 210 || selectedText.toLowerCase() === 'new customer');
+
+      if (isNewCustomer)
         {
             $('#s_customer_new_name').removeClass('disable_a_href').prop('required', true);
             $('#s_customer_type').removeClass('disable_a_href');
             $('#s_industry_type').removeClass('disable_a_href');
+            $('#new_customer_master_access').slideDown(200);
         }
       else
           {
             $('#s_customer_new_name').addClass('disable_a_href').prop('required', false).val("");
             $('#s_customer_type').addClass('disable_a_href');
             $('#s_industry_type').addClass('disable_a_href');
+            $('#new_customer_master_access').slideUp(200);
         }
     }
 </script>
@@ -720,6 +808,9 @@
             $('#s_billing_sop').removeClass('disable_a_href');
             $('#s_trans_imp').removeClass('disable_a_href');
             $('#s_status').removeClass('disable_a_href');
+            if ($('#s_customer_new_name').val()) {
+                $('#business_won_notice').fadeIn();
+            }
         }
       else
           {
@@ -733,6 +824,7 @@
             $('#s_billing_sop').addClass('disable_a_href');
             $('#s_trans_imp').addClass('disable_a_href');
             $('#s_status').addClass('disable_a_href');
+            $('#business_won_notice').fadeOut();
         }
     }
 </script>
@@ -796,4 +888,242 @@
         }
     });
 </script>
+
+<!-- Modal: Quick Add New Customer Master -->
+<div class="modal fade" id="quick_add_new_customer_modal" tabindex="-1" role="dialog" aria-labelledby="quickAddNcmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 480px;">
+        <div class="modal-content shadow-lg" style="border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); overflow: hidden;">
+            <div class="modal-header bg-primary text-white py-2 px-3">
+                <h5 class="modal-title font-weight-bold d-flex align-items-center mb-0" id="quickAddNcmTitle" style="font-size: 1.05rem;">
+                    <i class="fas fa-user-plus mr-2"></i> Add in New Customer Master
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="quick_add_ncm_form">
+                {% csrf_token %}
+                <div class="modal-body p-3">
+                    <div id="ncm_modal_error_alert" class="alert alert-danger py-1 px-2 small font-weight-bold mb-2" style="display: none; border-radius: 6px;"></div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label-modern font-weight-bold mb-1" for="modal_customer_name" style="font-size: 0.82rem;">
+                            Customer Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-modern" id="modal_customer_name" name="customer_name" placeholder="Enter customer name..." autocomplete="off" required style="height: 38px;">
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label class="form-label-modern font-weight-bold d-block mb-1" style="font-size: 0.82rem;">Status</label>
+                        <div class="custom-control custom-switch custom-switch-lg mt-1">
+                            <input type="checkbox" class="custom-control-input" id="modal_is_active" name="is_active" checked>
+                            <label class="custom-control-label" for="modal_is_active" id="modal_status_label" style="cursor: pointer; user-select: none;">
+                                <span class="badge badge-success px-2 py-1" id="modal_status_badge"><i class="fas fa-check-circle mr-1"></i> Active</span>
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Customer will be active and selectable immediately in the dropdown.</small>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+                    <a href="{% url 'new_customer_master_add' %}" target="_blank" class="small text-muted" style="font-size: 0.75rem;">
+                        <i class="fas fa-external-link-alt mr-1"></i> Open full page
+                    </a>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3 mr-1" data-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                        <button type="submit" id="btn_submit_quick_ncm" class="btn btn-sm btn-primary font-weight-bold px-3 shadow-sm" style="border-radius: 6px;">
+                            <span id="btn_quick_ncm_text"><i class="fas fa-check-circle mr-1"></i> Save & Select</span>
+                            <span id="btn_quick_ncm_spinner" style="display: none;"><i class="fas fa-spinner fa-spin mr-1"></i> Saving...</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    function updateModalStatusBadge() {
+        if ($('#modal_is_active').is(':checked')) {
+            $('#modal_status_badge')
+                .removeClass('badge-secondary')
+                .addClass('badge-success')
+                .html('<i class="fas fa-check-circle mr-1"></i> Active');
+        } else {
+            $('#modal_status_badge')
+                .removeClass('badge-success')
+                .addClass('badge-secondary')
+                .html('<i class="fas fa-times-circle mr-1"></i> Inactive');
+        }
+    }
+    $('#modal_is_active').on('change', updateModalStatusBadge);
+
+    // Open Quick Add Modal
+    $('#btn_open_quick_add_ncm').on('click', function(e) {
+        e.preventDefault();
+        $('#ncm_modal_error_alert').hide().text('');
+        $('#modal_customer_name').val('');
+        $('#modal_is_active').prop('checked', true);
+        updateModalStatusBadge();
+        $('#quick_add_new_customer_modal').modal('show');
+        setTimeout(function() {
+            $('#modal_customer_name').focus();
+        }, 400);
+    });
+
+    // Handle Quick Add Submit via AJAX
+    $('#quick_add_ncm_form').on('submit', function(e) {
+        e.preventDefault();
+        var customerName = $('#modal_customer_name').val().trim();
+        if (!customerName) {
+            $('#ncm_modal_error_alert').text('Customer Name is required.').show();
+            return;
+        }
+
+        var isActive = $('#modal_is_active').is(':checked');
+        var postData = {
+            'customer_name': customerName,
+            'is_active': isActive ? 'on' : '',
+            'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+            'is_ajax': '1'
+        };
+
+        $('#btn_submit_quick_ncm').prop('disabled', true);
+        $('#btn_quick_ncm_text').hide();
+        $('#btn_quick_ncm_spinner').show();
+        $('#ncm_modal_error_alert').hide();
+
+        $.ajax({
+            url: "{% url 'new_customer_master_add' %}",
+            type: "POST",
+            data: postData,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(response) {
+                $('#btn_submit_quick_ncm').prop('disabled', false);
+                $('#btn_quick_ncm_text').show();
+                $('#btn_quick_ncm_spinner').hide();
+
+                if (response.status === 'success') {
+                    var addedName = response.customer_name;
+
+                    // Check if option exists in dropdown
+                    var exists = false;
+                    $('#s_customer_new_name option').each(function() {
+                        if ($(this).val().toLowerCase() === addedName.toLowerCase()) {
+                            exists = true;
+                            $(this).prop('selected', true);
+                        }
+                    });
+
+                    // Add new option if not present
+                    if (!exists) {
+                        $('#s_customer_new_name').append(
+                            $('<option>', {
+                                value: addedName,
+                                text: addedName,
+                                selected: true
+                            })
+                        );
+                    }
+
+                    // Select it
+                    $('#s_customer_new_name').val(addedName).trigger('change');
+                    $('#s_customer_new_name').removeClass('disable_a_href').prop('required', true);
+
+                    // Show success feedback
+                    $('#new_customer_selected_hint')
+                        .html('<i class="fas fa-check-circle mr-1"></i> Customer "<strong>' + $('<div>').text(addedName).html() + '</strong>" added and selected!')
+                        .fadeIn();
+
+                    // Close modal
+                    $('#quick_add_new_customer_modal').modal('hide');
+                }
+            },
+            error: function(xhr) {
+                $('#btn_submit_quick_ncm').prop('disabled', false);
+                $('#btn_quick_ncm_text').show();
+                $('#btn_quick_ncm_spinner').hide();
+
+                var errorMsg = 'Failed to save customer. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    var errObj = xhr.responseJSON.errors;
+                    var errList = [];
+                    for (var key in errObj) {
+                        errList.push(errObj[key].join(', '));
+                    }
+                    errorMsg = errList.join(' ');
+                }
+                $('#ncm_modal_error_alert').text(errorMsg).show();
+            }
+        });
+    });
+
+    // Refresh New Customers Dropdown via API
+    function refreshNewCustomerDropdown(valToSelect) {
+        var $refreshIcon = $('#refresh_icon');
+        $refreshIcon.addClass('fa-spin');
+
+        $.ajax({
+            url: "{% url 'new_customer_master_api' %}",
+            type: "GET",
+            data: {'all': '0'},
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(response) {
+                $refreshIcon.removeClass('fa-spin');
+                if (response.status === 'success' && response.data) {
+                    var $select = $('#s_customer_new_name');
+                    $select.empty();
+
+                    // Default empty prompt is always first and selected when no specific value to select
+                    var shouldSelectEmpty = !valToSelect;
+                    $select.append($('<option>', {
+                        value: '',
+                        text: '--Select New Customer--',
+                        selected: shouldSelectEmpty
+                    }));
+
+                    $.each(response.data, function(idx, item) {
+                        var isSel = Boolean(valToSelect && item.name.toLowerCase() === valToSelect.toLowerCase());
+                        $select.append($('<option>', {
+                            value: item.name,
+                            text: item.name,
+                            selected: isSel
+                        }));
+                    });
+
+                    // Explicitly set value: only select if valToSelect was provided, otherwise keep unselected
+                    $select.val(valToSelect || '');
+
+                    if (!valToSelect) {
+                        $('#new_customer_selected_hint').fadeOut();
+                    }
+                }
+            },
+            error: function() {
+                $refreshIcon.removeClass('fa-spin');
+            }
+        });
+    }
+
+    // Manual Refresh button click: reloads list and resets selection to '--Select New Customer--'
+    $('#btn_refresh_new_customers').on('click', function(e) {
+        e.preventDefault();
+        refreshNewCustomerDropdown(''); // Do not auto-select any customer on refresh
+    });
+
+    // Dropdown change listener to show/hide feedback
+    $('#s_customer_new_name').on('change', function() {
+        if ($(this).val()) {
+            $('#new_customer_selected_hint').fadeIn();
+            if ($('#s_bus_won_not').val() == 1) {
+                $('#business_won_notice').fadeIn();
+            }
+        } else {
+            $('#new_customer_selected_hint').fadeOut();
+            $('#business_won_notice').fadeOut();
+        }
+    });
+});
+</script>
+
 {% endblock content %}
