@@ -1,5 +1,6 @@
 {% extends "asset_mgt_app/header_1.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 <!-- Add Google Fonts inside your base template's <head> (header_1.html):
@@ -174,7 +175,7 @@
 <div class="login-container">
   <!-- Left section -->
   <div class="login-left text-center">
-    <img src="/media/logo4.0.png" alt="Logo" class="login-logo">
+    <img src="{% static 'images/logo4.0.png' %}" alt="Logo" class="login-logo">
 
     <!-- Stylized Header -->
     <div class="bvm-logo-text">

@@ -594,37 +594,40 @@ def customer_enquiry_add(request):
     """
     customer, department, is_lp, agent_name = get_customer_context(request)
     
+    from ..sub_models.tr_triptype_mod import Tr_triptype_Info
+    places = Places.objects.all().order_by('place_name')
+    categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
+    types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
+    departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
+    trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
+
     if request.method == 'POST':
         from_loc_id = request.POST.get('from_location')
         to_loc_id = request.POST.get('to_location')
-        # New structured vehicle fields
         category_id = request.POST.get('vehicle_category')
         type_id = request.POST.get('vehicle_type')
+        cargo_details = request.POST.get('cargo_details', '')
         
-        cargo_details = request.POST.get('cargo_details', '') # Still capture for fallback/legacy
-        
-        # Combined datetime-local field
         pickup_datetime_str = request.POST.get('pickup_datetime', '')
         pickup_date = None
         req_time = None
         if pickup_datetime_str:
             try:
-                # datetime-local format: "2026-02-22T10:30"
                 parts = pickup_datetime_str.split('T')
                 pickup_date = parts[0]
                 req_time = parts[1] if len(parts) > 1 else None
             except Exception:
                 pickup_date = pickup_datetime_str
         
-        # Fallback: check old separate fields
         if not pickup_date:
             pickup_date = request.POST.get('pickup_date')
         if not req_time:
             req_time = request.POST.get('req_time')
         
-        # New fields for LP/Agent
-        agent_name = request.POST.get('agent_name')
-        no_of_veh = request.POST.get('no_of_veh', 0)
+        dept_id = request.POST.get('customer_department')
+        trip_type_id = request.POST.get('trip_type')
+        agent_name = request.POST.get('agent_name', agent_name)
+        no_of_veh = request.POST.get('no_of_veh', '')
         no_of_pcs = request.POST.get('no_of_pcs', 0)
         weight = request.POST.get('weight')
         dimensions = request.POST.get('dimensions')
@@ -640,56 +643,45 @@ def customer_enquiry_add(request):
             return redirect('customer_dashboard')
             
         try:
-            from_loc = Places.objects.get(id=from_loc_id) if from_loc_id else None
-            to_loc = Places.objects.get(id=to_loc_id) if to_loc_id else None
-            
-            # Get objects for structured storage and string names
-            category_name = ""
-            vc_obj = None
-            if category_id:
-                vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first()
-                if vc_obj:
-                    category_name = vc_obj.vc_vehiclecategory
+            # Resolve objects
+            selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first() if dept_id else department
+            trip_type_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first() if trip_type_id else None
+            from_loc = Places.objects.filter(id=from_loc_id).first() if from_loc_id else None
+            to_loc = Places.objects.filter(id=to_loc_id).first() if to_loc_id else None
+            vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
+            vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
 
-            vt_obj = None
-            if type_id:
-                vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                # ONLY use vehicle type if cargo_details is explicitly empty
-                if not cargo_details and vt_obj:
-                    cargo_details = vt_obj.vt_vehicletype
-
-            # Department: use form selection, fallback to session
-            dept_id = request.POST.get('customer_department')
-            selected_dept = None
-            if dept_id:
-                selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
+            # Validate 8 mandatory fields:
+            # 1. Department, 2. Trip Type, 3. Vehicle Required Date & Time, 4. Origin,
+            # 5. Destination, 6. Vehicle Category, 7. Vehicle Type, 8. No. of Vehicles
+            errors = []
             if not selected_dept:
-                selected_dept = department
-
-            # Custom logic for assigning to Ajay R for EIPL
-            assigned_user = MyUser.objects.filter(is_superuser=True).first() or request.user
-            if customer and "EIPL" in customer.cu_name:
-                ajay_user = MyUser.objects.filter(first_name__icontains='Ajay', last_name__icontains='R').first()
-                if not ajay_user:
-                    ajay_user = MyUser.objects.filter(first_name__icontains='Ajay').first()
-                if ajay_user:
-                    assigned_user = ajay_user
-
-            from ..sub_models.tr_triptype_mod import Tr_triptype_Info
-            trip_type_id = request.POST.get('trip_type')
-            trip_type_obj = None
-            if trip_type_id:
-                trip_type_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first()
+                errors.append('Please select a Department.')
             if not trip_type_obj:
-                messages.error(request, 'Please select a Trip Type.')
-                places = Places.objects.all().order_by('place_name')
-                categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
-                types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
-                departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
-                trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
+                errors.append('Please select a Trip Type.')
+            if not pickup_datetime_str and not pickup_date:
+                errors.append('Please select Vehicle Required Date & Time.')
+            if not from_loc:
+                errors.append('Please select an Origin.')
+            if not to_loc:
+                errors.append('Please select a Destination.')
+            if not vc_obj:
+                errors.append('Please select a Vehicle Category.')
+            if not vt_obj:
+                errors.append('Please select a Vehicle Type.')
+            try:
+                veh_count = int(no_of_veh)
+                if veh_count < 1:
+                    errors.append('Please enter Number of Vehicles (minimum 1).')
+            except (ValueError, TypeError):
+                errors.append('Please enter Number of Vehicles (minimum 1).')
+
+            if errors:
+                for err in errors:
+                    messages.error(request, err)
                 return render(request, 'asset_mgt_app/customer_enquiry_add.html', {
                     'customer': customer,
-                    'department': department,
+                    'department': selected_dept or department,
                     'departments': departments,
                     'places': places,
                     'categories': categories,
@@ -699,6 +691,18 @@ def customer_enquiry_add(request):
                     'default_agent_name': agent_name
                 })
 
+            category_name = vc_obj.vc_vehiclecategory if vc_obj else ""
+            if not cargo_details and vt_obj:
+                cargo_details = vt_obj.vt_vehicletype
+
+            assigned_user = MyUser.objects.filter(is_superuser=True).first() or request.user
+            if customer and "EIPL" in customer.cu_name:
+                ajay_user = MyUser.objects.filter(first_name__icontains='Ajay', last_name__icontains='R').first()
+                if not ajay_user:
+                    ajay_user = MyUser.objects.filter(first_name__icontains='Ajay').first()
+                if ajay_user:
+                    assigned_user = ajay_user
+
             enquiry = EnquirynoteInfo(
                 en_customername=customer,
                 en_customerdepartment=selected_dept,
@@ -706,16 +710,14 @@ def customer_enquiry_add(request):
                 en_status=StatusList.objects.filter(id=6).first(),
                 en_trip_type=trip_type_obj,
                 en_consignmentdetails=cargo_details,
-                en_vehicledetails=category_name, # Save category here as string
+                en_vehicledetails=category_name,
                 en_pickupdatetime=pickup_datetime_str if pickup_datetime_str else timezone.now(),
                 en_fromlocaion=from_loc,
                 en_tolocation=to_loc,
                 en_created_at=timezone.now(),
-                
-                # New fields
                 en_agent_name=agent_name,
                 en_vehicle_req_time=req_time if req_time else None,
-                en_no_of_vehicles=int(no_of_veh) if no_of_veh else 0,
+                en_no_of_vehicles=veh_count,
                 en_no_of_pcs=int(no_of_pcs) if no_of_pcs else 0,
                 en_weight=weight,
                 en_dimensions=dimensions,
@@ -725,23 +727,20 @@ def customer_enquiry_add(request):
                 en_delivery_contact_name=delivery_contact_name,
                 en_delivery_contact_mobile=delivery_contact_mobile
             )
-            enquiry.save() # Save first to get ID
+            enquiry.save()
             
-            # Generate number based on ID to match internal pattern
-            # Example format: 26-27_WEB_EN_000001
             current_fy = get_financial_year()
             prefix = f"{current_fy}_WEB_EN_"
             enquiry.en_enquirynumber = generate_next_number(EnquirynoteInfo, 'en_enquirynumber', prefix, 6)
             enquiry.save(update_fields=['en_enquirynumber'])
             
-            # Save structured vehicle info for internal view sync using fetched objects
             if vc_obj and vt_obj:
                 try:
                     Enquirynotevehicle.objects.create(
                         env_enquirynumber=enquiry,
                         env_vehiclecategory=vc_obj,
                         env_vehicletype=vt_obj,
-                        env_quantity=int(no_of_veh) if no_of_veh else 1,
+                        env_quantity=veh_count,
                         env_updated_by=request.user
                     )
                 except Exception as inner_e:
@@ -798,23 +797,75 @@ def customer_enquiry_edit(request, enquiry_id):
             except Exception:
                 pass
         
-        # Trip type update
-        trip_type_id = request.POST.get('trip_type')
-        if trip_type_id:
-            tt_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first()
-            if tt_obj:
-                enquiry.en_trip_type = tt_obj
-        
         dept_id = request.POST.get('customer_department')
-        if dept_id:
-            selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
-            if selected_dept:
-                enquiry.en_customerdepartment = selected_dept
+        trip_type_id = request.POST.get('trip_type')
+        no_veh_val = request.POST.get('no_of_veh')
 
-        if from_loc_id:
-            enquiry.en_fromlocaion = Places.objects.filter(id=from_loc_id).first()
-        if to_loc_id:
-            enquiry.en_tolocation = Places.objects.filter(id=to_loc_id).first()
+        # Resolve objects
+        selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first() if dept_id else enquiry.en_customerdepartment
+        tt_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first() if trip_type_id else enquiry.en_trip_type
+        from_loc = Places.objects.filter(id=from_loc_id).first() if from_loc_id else enquiry.en_fromlocaion
+        to_loc = Places.objects.filter(id=to_loc_id).first() if to_loc_id else enquiry.en_tolocation
+        vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
+        vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
+
+        # Check vehicle count
+        try:
+            veh_count = int(no_veh_val)
+            if veh_count < 1:
+                veh_count = None
+        except (ValueError, TypeError):
+            veh_count = None
+
+        # Validate 8 mandatory fields
+        errors = []
+        if not selected_dept:
+            errors.append('Please select a Department.')
+        if not tt_obj:
+            errors.append('Please select a Trip Type.')
+        if not pickup_datetime_str and not enquiry.en_pickupdatetime:
+            errors.append('Please select Vehicle Required Date & Time.')
+        if not from_loc:
+            errors.append('Please select an Origin.')
+        if not to_loc:
+            errors.append('Please select a Destination.')
+        if not vc_obj:
+            errors.append('Please select a Vehicle Category.')
+        if not vt_obj:
+            errors.append('Please select a Vehicle Type.')
+        if not veh_count:
+            errors.append('Please enter Number of Vehicles (minimum 1).')
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            places = Places.objects.all().order_by('place_name')
+            categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
+            types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
+            departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
+            trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
+            env = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
+            return render(request, 'asset_mgt_app/customer_enquiry_add.html', {
+                'customer': customer,
+                'department': selected_dept,
+                'departments': departments,
+                'places': places,
+                'categories': categories,
+                'types': types,
+                'trip_types': trip_types,
+                'is_lp': is_lp,
+                'enquiry': enquiry,
+                'env': env,
+                'edit_mode': True,
+                'default_agent_name': agent_name
+            })
+
+        # Update enquiry fields
+        enquiry.en_trip_type = tt_obj
+        enquiry.en_customerdepartment = selected_dept
+        enquiry.en_fromlocaion = from_loc
+        enquiry.en_tolocation = to_loc
+        enquiry.en_vehicledetails = vc_obj.vc_vehiclecategory if vc_obj else enquiry.en_vehicledetails
 
         if pickup_datetime_str:
             enquiry.en_pickupdatetime = pickup_datetime_str
@@ -823,15 +874,11 @@ def customer_enquiry_edit(request, enquiry_id):
 
         if cargo_details:
             enquiry.en_consignmentdetails = cargo_details
+        elif vt_obj:
+            enquiry.en_consignmentdetails = vt_obj.vt_vehicletype
 
         enquiry.en_agent_name = request.POST.get('agent_name', enquiry.en_agent_name)
-        
-        no_veh_val = request.POST.get('no_of_veh')
-        if no_veh_val not in (None, ''):
-            try:
-                enquiry.en_no_of_vehicles = int(no_veh_val)
-            except (ValueError, TypeError):
-                pass
+        enquiry.en_no_of_vehicles = veh_count
 
         no_pcs_val = request.POST.get('no_of_pcs')
         if no_pcs_val not in (None, ''):
@@ -851,8 +898,6 @@ def customer_enquiry_edit(request, enquiry_id):
         enquiry.save()
 
         # Update structured vehicle detail
-        vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
-        vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
         if vc_obj and vt_obj:
             Enquirynotevehicle.objects.update_or_create(
                 env_enquirynumber=enquiry,
