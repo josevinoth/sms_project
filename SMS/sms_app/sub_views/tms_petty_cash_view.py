@@ -723,12 +723,8 @@ def get_tms_trips_by_date(request):
     except Exception:
         pass
         
-    date_filter = (
-        Q(tr_departeddate__date=trip_date) |
-        Q(tr_departeddate_pickup__date=trip_date) |
-        Q(tr_reporteddate__date=trip_date) |
-        Q(tr_departeddate_delivery__date=trip_date)
-    )
+    # Strictly filter by Loading Vehicle Started Date / Departed Date (tr_departeddate) with no fallback
+    date_filter = Q(tr_departeddate__date=trip_date)
 
     cancel_billing_q = (
         (Q(tc_financestatus__id=10) | Q(tr_operational_status__id=10) | Q(tc_cancellation_check=True)) &

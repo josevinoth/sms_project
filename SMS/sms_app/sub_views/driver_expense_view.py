@@ -443,12 +443,7 @@ def filter_trips_by_date(request):
                 pass
         
         if parsed_date:
-            qs = qs.filter(
-                Q(tr_departeddate__date=parsed_date) | 
-                Q(tr_reporteddate__date=parsed_date) |
-                Q(tr_departeddate_pickup__date=parsed_date) |
-                Q(tr_departeddate_delivery__date=parsed_date)
-            )
+            qs = qs.filter(tr_departeddate__date=parsed_date)
 
     # ✅ OPTIONAL FILTER BY VEHICLE
     if vehicle_no:
