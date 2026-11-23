@@ -68,9 +68,16 @@
                 <input type="date" name="to_date" id="to_date" class="form-control form-control-modern" value="{{ to_date }}">
             </div>
 
-            <div class="form-group-modern mb-0" style="flex: 0 0 170px;">
+            <div class="form-group-modern mb-0" style="flex: 0 0 180px;">
                 <label for="search_vehicle" class="form-label-modern">Vehicle Number</label>
-                <input type="text" name="search_vehicle" id="search_vehicle" class="form-control form-control-modern" placeholder="Search by Vehicle No" value="{{ search_vehicle }}">
+                <select name="search_vehicle" id="search_vehicle" class="form-control form-control-modern select2">
+                    <option value="">All Vehicles</option>
+                    {% for v in vehicle_list %}
+                    <option value="{{ v.vm_registrationnumber }}" {% if search_vehicle == v.vm_registrationnumber or search_vehicle == v.id|stringformat:"s" %}selected{% endif %}>
+                        {{ v.vm_registrationnumber }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             {% if is_admin_or_supervisor %}
@@ -228,6 +235,13 @@
         // Prevent column ordering when clicking input inside filter row
         $('.filter-row input').on('click', function(e) {
             e.stopPropagation();
+        });
+
+        // Initialize Select2 on Vehicle Number filter
+        $('#search_vehicle').select2({
+            placeholder: "All Vehicles",
+            allowClear: true,
+            width: '100%'
         });
     });
 </script>

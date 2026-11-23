@@ -10,7 +10,7 @@ from ..sub_models.tms_petty_cash_mod import TMSPettyCashInfo, TMSPettyCashAttach
 from ..sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
-from ..models import Business_Sol_info, Location_info
+from ..models import Business_Sol_info, Location_info, VehiclemasterInfo
 from ..sub_forms.tms_petty_cash_form import TMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 from django.views.decorators.csrf import csrf_exempt
@@ -416,7 +416,10 @@ def tms_petty_cash_list(request):
     if to_date:
         filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
-        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        if search_vehicle.isdigit():
+            filters &= (Q(tpc_vehicle_number_id=int(search_vehicle)) | Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        else:
+            filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
         
     is_admin_or_supervisor = is_admin_or_supervisor_user(request)
 
@@ -616,6 +619,8 @@ def tms_petty_cash_list(request):
         creator_ids = TMSPettyCashInfo.objects.filter(tpc_created_by__isnull=False).values_list('tpc_created_by_id', flat=True).distinct()
         user_list = User.objects.filter(id__in=creator_ids).order_by('first_name', 'username')
 
+    vehicle_list = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+
     context = {
         'search_tpc_number': tpc_number,
         'search_date': search_date,
@@ -625,6 +630,7 @@ def tms_petty_cash_list(request):
         'search_branch': search_branch,
         'search_user': search_user,
         'user_list': user_list,
+        'vehicle_list': vehicle_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
@@ -717,7 +723,32 @@ def get_tms_trips_by_date(request):
     except Exception:
         pass
         
-    trips = TripdetailInfo.objects.filter(tr_departeddate__date=trip_date).exclude(tr_category__category__icontains='empty')
+    date_filter = (
+        Q(tr_departeddate__date=trip_date) |
+        Q(tr_departeddate_pickup__date=trip_date) |
+        Q(tr_reporteddate__date=trip_date) |
+        Q(tr_departeddate_delivery__date=trip_date)
+    )
+
+    cancel_billing_q = (
+        (Q(tc_financestatus__id=10) | Q(tr_operational_status__id=10) | Q(tc_cancellation_check=True)) &
+        ~Q(tc_financestatus__id=11) &
+        ~Q(tr_operational_status__id=11)
+    )
+
+    cancel_no_billing_q = (
+        Q(tc_financestatus__id=11) |
+        Q(tr_operational_status__id=11) |
+        (Q(tc_financestatus__id=3) & Q(tc_cancellation_check=False))
+    )
+
+    trips = TripdetailInfo.objects.filter(
+        date_filter
+    ).filter(
+        (~Q(tr_category__category__icontains='empty') | cancel_billing_q)
+    ).exclude(
+        cancel_no_billing_q
+    ).distinct()
     
     trip_data = []
     for t in trips:
@@ -730,6 +761,24 @@ def get_tms_trips_by_date(request):
             if t.tr_consignmentnumber.co_customer:
                 customer_name = t.tr_consignmentnumber.co_customer.cu_name or ""
                 customer_id = t.tr_consignmentnumber.co_customer.id
+        elif getattr(t, 'tr_enquirynumber', None) and getattr(t.tr_enquirynumber, 'en_customername', None):
+            cnote_no = t.tr_tripnumber or ""
+            customer_name = t.tr_enquirynumber.en_customername.cu_name or ""
+            customer_id = t.tr_enquirynumber.en_customername.id
+        else:
+            cnote_no = t.tr_tripnumber or ""
+
+        from_loc = ""
+        if t.tr_departedlocation:
+            from_loc = t.tr_departedlocation.place_name
+        elif getattr(t, 'tr_enquirynumber', None) and getattr(t.tr_enquirynumber, 'en_fromlocaion', None):
+            from_loc = t.tr_enquirynumber.en_fromlocaion.place_name
+
+        to_loc = ""
+        if t.tr_reportedlocation:
+            to_loc = t.tr_reportedlocation.place_name
+        elif getattr(t, 'tr_enquirynumber', None) and getattr(t.tr_enquirynumber, 'en_tolocation', None):
+            to_loc = t.tr_enquirynumber.en_tolocation.place_name
                 
         trip_data.append({
             'trip_id': t.id,
@@ -740,8 +789,8 @@ def get_tms_trips_by_date(request):
             'vehicle_source_name': t.tr_vehiclesource.ow_ownership if t.tr_vehiclesource else "",
             'vehicle_number': t.tr_vehiclenumber or "",
             'driver_name': t.tr_drivername or "",
-            'from_location': t.tr_departedlocation.place_name if t.tr_departedlocation else "",
-            'to_location': t.tr_reportedlocation.place_name if t.tr_reportedlocation else ""
+            'from_location': from_loc,
+            'to_location': to_loc
         })
         
     return JsonResponse({'status': 'success', 'data': trip_data})
@@ -769,7 +818,10 @@ def tms_petty_cash_export_tally(request):
     if to_date:
         filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
-        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        if search_vehicle.isdigit():
+            filters &= (Q(tpc_vehicle_number_id=int(search_vehicle)) | Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        else:
+            filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
 
     is_admin_or_supervisor = is_admin_or_supervisor_user(request)
 
@@ -1024,7 +1076,10 @@ def tms_petty_cash_export_zip(request):
     if to_date:
         filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
-        filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        if search_vehicle.isdigit():
+            filters &= (Q(tpc_vehicle_number_id=int(search_vehicle)) | Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
+        else:
+            filters &= (Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle) | Q(tpc_vehicle_number_manual__icontains=search_vehicle))
 
     is_admin_or_supervisor = is_admin_or_supervisor_user(request)
     if not is_admin_or_supervisor:
