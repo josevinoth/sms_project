@@ -1,12 +1,13 @@
 {% extends "asset_mgt_app/header_1.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
 
     body {
-        background: url('/media/warehouse_bw.png') no-repeat center center fixed;
+        background: url("{% static 'images/warehouse_bw.png' %}") no-repeat center center fixed;
         background-size: cover;
     }
 
@@ -170,7 +171,7 @@
 
 <div class="auth-card">
     <div class="auth-header">
-        <img src="/media/logo4.0.png" alt="BVM Logo" class="registration-logo">
+        <img src="{% static 'images/logo4.0.png' %}" alt="BVM Logo" class="registration-logo">
         <div style="font-size: 1.3rem; color: #fff; margin-bottom: 0.1rem; font-weight: 300;">Welcome to</div>
         <div
             style="font-size: 2rem; font-weight: 900; color: #FF0000; text-transform: uppercase; margin-bottom: 0.6rem; letter-spacing: 1px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">

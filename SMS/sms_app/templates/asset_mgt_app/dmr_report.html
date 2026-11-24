@@ -291,10 +291,6 @@ function initTripTable() {
 
 function downloadDmrExcel() {
     var custId = $('#id_dmr_customer').val() || "{{ customer_id }}";
-    if (!custId) {
-        alert("Please select a customer before exporting Excel.");
-        return;
-    }
     var pageInfo = tripTable ? tripTable.page.info() : null;
     var start = pageInfo ? pageInfo.start : 0;
     var length = pageInfo ? pageInfo.length : 10;
@@ -382,7 +378,7 @@ $(document).ready(function () {
             var existingHeaders = currentTableHeaders();
 
             // Compare headers length and content
-            var same = (returnedHeaders.length === existingHeaders.length) && returnedHeaders.every(function(h, i){ return h.trim() === existingHeaders[i].trim(); });
+            var same = (returnedHeaders.length === existingHeaders.length) && returnedHeaders.every(function(h, i){ return h.trim().toLowerCase() === (existingHeaders[i] || '').trim().toLowerCase(); });
 
             if (same) {
                 // Headers match, just reload data

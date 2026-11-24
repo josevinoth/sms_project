@@ -7,6 +7,11 @@ from openpyxl import Workbook
 from django.http import HttpResponse
 
 import io
+import datetime
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import escape
+from django.middleware.csrf import get_token
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from pypdf import PdfWriter, PdfReader
@@ -785,43 +790,258 @@ def trans_invoice_edit(request, invoice_id):
 @login_required(login_url='login_page')
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
-
-    queryset = list(
-        TransInvoiceInfo.objects
-        .filter(is_woh=False)
-        .select_related('ti_customer', 'ti_created_by', 'ti_updated_by')
-        .order_by('-id')
-    )
-
-    # Fetch all (ti_inv_no, ti_customer_id) combinations that have at least one CNote
-    woh_cnote_items = TransInvoiceInfo.objects.filter(
-        is_woh=True
-    ).filter(
-        Q(ti_consignment__isnull=False) | Q(ti_trip__tr_consignmentnumber__isnull=False)
-    ).values_list('ti_inv_no', 'ti_customer_id')
-
-    cnote_inv_keys = set(woh_cnote_items)
-
-    # Pre-fetch submission dates in case set on WOH records
-    woh_sub_dates = dict(
-        TransInvoiceInfo.objects.filter(
-            ti_submission_date__isnull=False
-        ).values_list('ti_inv_no', 'ti_submission_date')
-    )
-
-    for invoice in queryset:
-        invoice.has_cnote = (invoice.ti_inv_no, invoice.ti_customer_id) in cnote_inv_keys
-        if not invoice.ti_submission_date and invoice.ti_inv_no in woh_sub_dates:
-            invoice.ti_submission_date = woh_sub_dates[invoice.ti_inv_no]
-
     return render(
         request,
         "asset_mgt_app/trans_invoice_list.html",
         {
-            'trans_invoice_list': queryset,
             'first_name': first_name,
         }
     )
+
+
+@login_required(login_url='login_page')
+def trans_invoice_list_ajax(request):
+    """
+    High-performance Server-Side DataTables AJAX endpoint for Transport Invoice List.
+    Eliminates N+1 queries by only slicing requested page (e.g. 10 records)
+    and batch pre-fetching CNote existence and submission dates.
+    """
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    base_qs = TransInvoiceInfo.objects.filter(is_woh=False).select_related(
+        'ti_customer', 'ti_created_by', 'ti_updated_by'
+    )
+    records_total = base_qs.count()
+
+    qs = base_qs
+    if search_value:
+        q_obj = (
+            Q(ti_inv_no__icontains=search_value) |
+            Q(ti_customer__cu_name__icontains=search_value) |
+            Q(ti_customer_short_name__icontains=search_value) |
+            Q(ti_created_by__first_name__icontains=search_value) |
+            Q(ti_created_by__username__icontains=search_value) |
+            Q(ti_updated_by__first_name__icontains=search_value) |
+            Q(ti_updated_by__username__icontains=search_value)
+        )
+        try:
+            val_clean = search_value.replace(',', '').replace('₹', '').strip()
+            total_float = float(val_clean)
+            q_obj |= Q(ti_total=total_float)
+        except ValueError:
+            pass
+
+        date_obj = None
+        for fmt in ('%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d'):
+            try:
+                date_obj = datetime.datetime.strptime(search_value, fmt).date()
+                break
+            except ValueError:
+                pass
+        if date_obj:
+            q_obj |= Q(ti_inv_date=date_obj) | Q(ti_submission_date=date_obj)
+
+        qs = qs.filter(q_obj)
+
+    records_filtered = qs.count()
+
+    # Column index to model field mapping
+    col_map = {
+        0: 'ti_inv_date',
+        1: 'ti_inv_no',
+        2: 'ti_customer__cu_name',
+        3: 'ti_total',
+        11: 'ti_submission_date',
+        14: 'ti_created_at',
+        15: 'ti_created_by__first_name',
+        16: 'ti_updated_at',
+        17: 'ti_updated_by__first_name',
+    }
+
+    order_col_idx = request.GET.get('order[0][column]')
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+
+    if order_col_idx is not None and str(order_col_idx).isdigit():
+        field_name = col_map.get(int(order_col_idx))
+        if field_name:
+            if order_dir == 'desc':
+                field_name = f"-{field_name}"
+            qs = qs.order_by(field_name, '-id')
+        else:
+            qs = qs.order_by('-id')
+    else:
+        qs = qs.order_by('-id')
+
+    if length > 0:
+        slice_invoices = list(qs[start:start + length])
+    else:
+        slice_invoices = list(qs)
+
+    inv_nos = [inv.ti_inv_no for inv in slice_invoices if inv.ti_inv_no]
+
+    # Batch pre-fetch has_cnote for current slice ONLY
+    cnote_inv_keys = set()
+    if inv_nos:
+        cnote_inv_keys = set(
+            TransInvoiceInfo.objects.filter(
+                is_woh=True,
+                ti_inv_no__in=inv_nos
+            ).filter(
+                Q(ti_consignment__isnull=False) | Q(ti_trip__tr_consignmentnumber__isnull=False)
+            ).values_list('ti_inv_no', 'ti_customer_id')
+        )
+
+    # Batch pre-fetch submission dates for current slice ONLY if not already set
+    missing_sub = [inv.ti_inv_no for inv in slice_invoices if not inv.ti_submission_date and inv.ti_inv_no]
+    woh_sub_dates = {}
+    if missing_sub:
+        woh_sub_dates = dict(
+            TransInvoiceInfo.objects.filter(
+                is_woh=True,
+                ti_inv_no__in=missing_sub,
+                ti_submission_date__isnull=False
+            ).values_list('ti_inv_no', 'ti_submission_date')
+        )
+
+    csrf_token = get_token(request)
+    data = []
+
+    for invoice in slice_invoices:
+        inv_no_safe = invoice.ti_inv_no or ""
+        inv_id = invoice.id
+
+        # 0: Invoice Date
+        inv_date_str = invoice.ti_inv_date.strftime('%d/%m/%Y') if invoice.ti_inv_date else '—'
+
+        # 1: Invoice No
+        inv_no_html = f'<span style="font-size:0.82rem; font-weight:600; color:var(--accent-blue);">{escape(inv_no_safe)}</span>'
+
+        # 2: Customer Short Name
+        cust_str = escape(str(invoice.ti_customer)) if invoice.ti_customer else '—'
+
+        # 3: Total Charges
+        total_val = invoice.ti_total if invoice.ti_total is not None else 0.0
+        total_html = f'<span class="badge badge-pill" style="background:#3a9e96; color:#fff; font-size:0.78rem; padding:3px 8px; font-weight:600;">&#8377; {total_val:.2f}</span>'
+
+        # 4: Ann-1 (PDF)
+        ann1_url = reverse('trans_invoice_ann1_pdf', args=[inv_no_safe]) if inv_no_safe else '#'
+        ann1_html = f'<a href="{ann1_url}" target="_blank" class="action-icon" style="color:#0284c7;" title="Download Ann-1 (PDF)"><i class="fas fa-file-pdf"></i></a>'
+
+        # 5: Ann-2 (CNote PDF)
+        has_cnote = (invoice.ti_inv_no, invoice.ti_customer_id) in cnote_inv_keys
+        if has_cnote:
+            ann2_url = reverse('trans_invoice_cnote_pdf', args=[inv_id])
+            ann2_html = f'<a href="{ann2_url}" target="_blank" class="action-icon" style="color:#d97706;" title="Download Ann-2 (Combined CNote PDF)"><i class="fas fa-file-pdf"></i></a>'
+        else:
+            ann2_html = '<span class="text-muted">—</span>'
+
+        # 6: Ann-3 (Invoice Documents)
+        if invoice.ti_merged_pdf:
+            ann3_html = f'<a href="{invoice.ti_merged_pdf.url}" target="_blank" class="action-icon" style="color:#e05252;" title="View Ann-3 (Invoice Documents)"><i class="fas fa-file-pdf"></i></a>'
+        else:
+            ann3_html = '<span class="text-muted">—</span>'
+
+        # 7: Excel Export
+        excel_url = reverse('trans_invoice_excel', args=[inv_no_safe]) if inv_no_safe else '#'
+        excel_html = f'<a href="{excel_url}" class="action-icon" style="color:#10b981;" title="Download Excel"><i class="far fa-file-excel"></i></a>'
+
+        # 8: Tally to Excel
+        tally_url = reverse('trans_invoice_tally_excel', args=[inv_no_safe]) if inv_no_safe else '#'
+        tally_html = f'<a href="{tally_url}" class="action-icon" style="color:#8f6cc4;" title="Tally to Excel"><i class="fas fa-file-invoice"></i></a>'
+
+        # 9: Combined PDF
+        comb_url = reverse('trans_invoice_combined_pdf', args=[inv_no_safe]) if inv_no_safe else '#'
+        comb_html = f'<a href="{comb_url}" target="_blank" class="action-icon" style="color:#6366f1;" title="Generate & Download Combined PDF (Invoice + Ann-1 + Ann-2 + Ann-3)"><i class="fas fa-file-pdf"></i></a>'
+
+        # 10: Invoice (PDF Upload & Preview)
+        if invoice.ti_invoice_pdf:
+            inv_pdf_html = (
+                f'<a href="{invoice.ti_invoice_pdf.url}" target="_blank" class="action-icon" style="color:#e05252;" title="View Uploaded Invoice PDF"><i class="fas fa-file-pdf"></i></a> '
+                f'<button type="button" class="upload-invoice-btn replace-pdf-btn" data-id="{inv_id}" data-inv="{escape(inv_no_safe)}" title="Replace Invoice PDF"><i class="fas fa-upload"></i></button>'
+            )
+        else:
+            inv_pdf_html = (
+                f'<button type="button" class="upload-invoice-btn btn-modern-upload" data-id="{inv_id}" data-inv="{escape(inv_no_safe)}" title="Upload Invoice PDF"><i class="fas fa-cloud-upload-alt mr-1"></i> Upload</button>'
+            )
+
+        # 11: Submission Date
+        sub_date = invoice.ti_submission_date or woh_sub_dates.get(invoice.ti_inv_no)
+        if sub_date:
+            sub_date_html = f'<span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">{sub_date.strftime("%d/%m/%Y")}</span>'
+        else:
+            sub_date_html = '<span class="text-muted">—</span>'
+
+        # 12: Edit
+        edit_url = reverse('trans_invoice_edit', args=[inv_id])
+        edit_html = f'<a href="{edit_url}" class="action-icon" style="color:#3b82f6;" title="Edit Invoice"><i class="far fa-edit"></i></a>'
+
+        # 13: Delete
+        del_url = reverse('trans_invoice_delete', args=[inv_id])
+        del_html = (
+            f'<form action="{del_url}" method="post" onsubmit="return confirm(\'Are you sure you want to delete this invoice?\');" style="display:inline; margin:0;">'
+            f'<input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">'
+            f'<button type="submit" class="action-icon" style="background:none; border:none; padding:0; cursor:pointer; color:#e05252;" title="Delete Invoice"><i class="fas fa-trash-alt"></i></button>'
+            f'</form>'
+        )
+
+        # 14: Created Date
+        if invoice.ti_created_at:
+            created_at_str = timezone.localtime(invoice.ti_created_at).strftime('%d/%m/%Y %H:%M')
+            created_at_html = f'<span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">{created_at_str}</span>'
+        else:
+            created_at_html = '<span class="text-muted">—</span>'
+
+        # 15: Created By
+        if invoice.ti_created_by:
+            cr_name = invoice.ti_created_by.first_name or invoice.ti_created_by.username
+            created_by_html = f'<span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">{escape(cr_name)}</span>'
+        else:
+            created_by_html = '<span class="text-muted">—</span>'
+
+        # 16: Updated Date
+        if invoice.ti_updated_at:
+            updated_at_str = timezone.localtime(invoice.ti_updated_at).strftime('%d/%m/%Y %H:%M')
+            updated_at_html = f'<span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">{updated_at_str}</span>'
+        else:
+            updated_at_html = '<span class="text-muted">—</span>'
+
+        # 17: Updated By
+        if invoice.ti_updated_by:
+            up_name = invoice.ti_updated_by.first_name or invoice.ti_updated_by.username
+            updated_by_html = f'<span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">{escape(up_name)}</span>'
+        else:
+            updated_by_html = '<span class="text-muted">—</span>'
+
+        data.append([
+            inv_date_str,
+            inv_no_html,
+            cust_str,
+            total_html,
+            ann1_html,
+            ann2_html,
+            ann3_html,
+            excel_html,
+            tally_html,
+            comb_html,
+            inv_pdf_html,
+            sub_date_html,
+            edit_html,
+            del_html,
+            created_at_html,
+            created_by_html,
+            updated_at_html,
+            updated_by_html,
+        ])
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
+    })
 
 
 # ==================================================

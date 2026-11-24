@@ -1,12 +1,12 @@
 {% extends "asset_mgt_app/header_1.html" %}
 {% load widget_tweaks %}
-
+{% load static %}
 {% block content %}
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
 
   body {
-    background: url('/media/warehouse_bw.png') no-repeat center center fixed;
+    background: url("{% static 'images/warehouse_bw.png' %}") no-repeat center center fixed;
     background-size: cover;
   }
 
@@ -264,8 +264,7 @@
 <div class="auth-card">
   <div class="auth-left text-center">
     <div class="logo-row">
-<img src="/media/logo4.0.png?v=2" class="logo-small">
-    </div>
+<img src="{% static 'images/logo4.0.png' %}?v=2" class="logo-small">    </div>
     <div class="welcome-text">Welcome to</div>
     <div class="bvm-brand">THE BVM GROUP</div>
     <div class="service-line">WAREHOUSE | TRANSPORTATION | PACKAGING</div>

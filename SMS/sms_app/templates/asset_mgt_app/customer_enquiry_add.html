@@ -616,11 +616,11 @@
                         <input type="text" value="{% if customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}{{ request.user.username }}{% endif %}" disabled>
                     </div>
                     <div class="form-group">
-                        <label>Department</label>
-                        <select name="customer_department" id="customer_department">
+                        <label>Department <span style="color: #ef4444;">*</span></label>
+                        <select name="customer_department" id="customer_department" required>
                             <option value="">Select Department</option>
                             {% for dept in departments %}
-                            <option value="{{ dept.id }}">{{ dept.ct_customerdepartment }}</option>
+                            <option value="{{ dept.id }}" {% if enquiry.en_customerdepartment_id == dept.id or department.id == dept.id %}selected{% endif %}>{{ dept.ct_customerdepartment }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -647,8 +647,8 @@
             <div class="form-section">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Vehicle Required Date & Time</label>
-                        <input type="datetime-local" name="pickup_datetime" id="pickup_datetime" required>
+                        <label>Vehicle Required Date & Time <span style="color: #ef4444;">*</span></label>
+                        <input type="datetime-local" name="pickup_datetime" id="pickup_datetime" value="{% if enquiry.en_pickupdatetime %}{{ enquiry.en_pickupdatetime|date:'Y-m-d\TH:i' }}{% endif %}" required>
                     </div>
                 </div>
             </div>
@@ -658,21 +658,21 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label><i class="fas fa-map-marker-alt" style="color: var(--success); margin-right: 4px;"></i>
-                            Origin</label>
+                            Origin <span style="color: #ef4444;">*</span></label>
                         <select name="from_location" id="from_location" required>
                             <option value="">Select Origin</option>
                             {% for place in places %}
-                            <option value="{{ place.id }}">{{ place.place_name }}</option>
+                            <option value="{{ place.id }}" {% if enquiry.en_fromlocaion_id == place.id %}selected{% endif %}>{{ place.place_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-map-marker-alt" style="color: #ef4444; margin-right: 4px;"></i>
-                            Destination</label>
+                            Destination <span style="color: #ef4444;">*</span></label>
                         <select name="to_location" id="to_location" required>
                             <option value="">Select Destination</option>
                             {% for place in places %}
-                            <option value="{{ place.id }}">{{ place.place_name }}</option>
+                            <option value="{{ place.id }}" {% if enquiry.en_tolocation_id == place.id %}selected{% endif %}>{{ place.place_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -709,25 +709,25 @@
             <div class="form-section">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Vehicle Category</label>
+                        <label>Vehicle Category <span style="color: #ef4444;">*</span></label>
                         <select name="vehicle_category" id="vehicle_category" required>
                             <option value="">Select Category</option>
                             {% for cat in categories %}
-                            <option value="{{ cat.id }}">{{ cat.vc_vehiclecategory }}</option>
+                            <option value="{{ cat.id }}" {% if env.env_vehiclecategory_id == cat.id or enquiry.en_vehicledetails == cat.vc_vehiclecategory %}selected{% endif %}>{{ cat.vc_vehiclecategory }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Vehicle Type</label>
+                        <label>Vehicle Type <span style="color: #ef4444;">*</span></label>
                         <select name="vehicle_type" id="vehicle_type" required>
                             <option value="">Select Type</option>
                             {% for vt in types %}
-                            <option value="{{ vt.id }}">{{ vt.vt_vehicletype }}</option>
+                            <option value="{{ vt.id }}" {% if env.env_vehicletype_id == vt.id %}selected{% endif %}>{{ vt.vt_vehicletype }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>No. of Vehicles</label>
+                        <label>No. of Vehicles <span style="color: #ef4444;">*</span></label>
                         <input type="number" name="no_of_veh" value="{{ enquiry.en_no_of_vehicles|default:'1' }}"
                             min="1" required>
                     </div>

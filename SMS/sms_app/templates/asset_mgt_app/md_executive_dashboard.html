@@ -3151,9 +3151,24 @@
                 loadDashboardData();
             });
 
+            function normalizeToIsoDate(dStr) {
+                if (!dStr) return '';
+                dStr = String(dStr).trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
+                const parts = dStr.split(/[-/.]/);
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) {
+                        return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    } else if (parts[2].length === 4) {
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
+                }
+                return dStr;
+            }
+
             function applyCustomDateFilter() {
-                let fDate = $('#date-from-input').val();
-                let tDate = $('#date-to-input').val();
+                let fDate = normalizeToIsoDate($('#date-from-input').val());
+                let tDate = normalizeToIsoDate($('#date-to-input').val());
                 if (!fDate && !tDate) return;
                 if (!fDate) fDate = tDate;
                 if (!tDate) tDate = fDate;
@@ -3162,29 +3177,29 @@
                     const tmp = fDate;
                     fDate = tDate;
                     tDate = tmp;
-                    $('#date-from-input').val(fDate);
-                    $('#date-to-input').val(tDate);
                 }
+                $('#date-from-input').val(fDate);
+                $('#date-to-input').val(tDate);
 
                 clearPresetActive();
                 activeFromDate = fDate;
                 activeToDate = tDate;
                 activePeriod = (fDate === tDate) ? 'day' : 'range';
-                $('#btn-date-apply').addClass('active');
-                setTimeout(() => $('#btn-date-apply').removeClass('active'), 800);
+                
+                $('#btn-date-apply').html('<i class="fas fa-spinner fa-spin"></i> Filtering...').prop('disabled', true).addClass('active');
+                $('#live-status-text').html('<i class="fas fa-spinner fa-spin" style="color:#36d1ff;"></i> Updating...');
+                
                 loadDashboardData();
             }
 
-            $('#btn-date-apply').on('click', function() {
-                applyCustomDateFilter();
-            });
-
-            $('#date-from-input, #date-to-input').on('change', function() {
+            $('#btn-date-apply').on('click', function(e) {
+                e.preventDefault();
                 applyCustomDateFilter();
             });
 
             $('#date-from-input, #date-to-input').on('keydown', function(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     applyCustomDateFilter();
                 }
             });
@@ -3202,8 +3217,8 @@
             // Data Loading & API Fetch
             // ==========================================
             function loadDashboardData() {
-                const fDate = activeFromDate || todayStr;
-                const tDate = activeToDate || todayStr;
+                const fDate = normalizeToIsoDate(activeFromDate || todayStr);
+                const tDate = normalizeToIsoDate(activeToDate || todayStr);
 
                 $.ajax({
                     url: "{% url 'get_md_dashboard_data' %}",
@@ -3218,10 +3233,16 @@
                     success: function(res) {
                         if (res.status === 'success') {
                             updateUI(res);
+                        } else {
+                            $('#live-status-text').html('<span style="color:#f59e0b;"><i class="fas fa-exclamation-circle"></i> ' + (res.message || 'No data') + '</span>');
                         }
                     },
-                    error: function() {
-                        console.warn("Failed to fetch fresh MD dashboard data");
+                    error: function(xhr, status, err) {
+                        console.warn("Failed to fetch fresh MD dashboard data:", status, err);
+                        $('#live-status-text').html('<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> Filter failed or timed out</span>');
+                    },
+                    complete: function() {
+                        $('#btn-date-apply').html('<i class="fas fa-filter"></i> Apply').prop('disabled', false).removeClass('active');
                     }
                 });
             }

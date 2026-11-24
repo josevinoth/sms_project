@@ -76,8 +76,8 @@ def driver_expense_add(request, expense_id=0):
                         Q(tr_tripnumber=trip_no) | Q(id=trip_no) if str(trip_no).isdigit() else Q(tr_tripnumber=trip_no)
                     ).first()
                     if trip_obj:
-                        from_loc = trip_obj.tr_departedlocation.place_name if trip_obj.tr_departedlocation else ""
-                        to_loc = trip_obj.tr_reportedlocation.place_name if trip_obj.tr_reportedlocation else ""
+                        from_loc = trip_obj.tr_departedlocation.place_name if trip_obj.tr_departedlocation else (trip_obj.tr_enquirynumber.en_fromlocaion.place_name if getattr(trip_obj, 'tr_enquirynumber', None) and getattr(trip_obj.tr_enquirynumber, 'en_fromlocaion', None) else "")
+                        to_loc = trip_obj.tr_reportedlocation.place_name if trip_obj.tr_reportedlocation else (trip_obj.tr_enquirynumber.en_tolocation.place_name if getattr(trip_obj, 'tr_enquirynumber', None) and getattr(trip_obj.tr_enquirynumber, 'en_tolocation', None) else "")
                         if from_loc or to_loc:
                             exp.de_remarks = f"{from_loc}-{to_loc}"
 
@@ -146,8 +146,8 @@ def driver_expense_add(request, expense_id=0):
                             vehicle_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
                         if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_customer:
                             customer_obj = trip.tr_consignmentnumber.co_customer
-                        elif hasattr(trip, 'tr_enquirynumber') and trip.tr_enquirynumber and trip.tr_enquirynumber.en_customer:
-                            customer_obj = trip.tr_enquirynumber.en_customer
+                        elif getattr(trip, 'tr_enquirynumber', None) and getattr(trip.tr_enquirynumber, 'en_customername', None):
+                            customer_obj = trip.tr_enquirynumber.en_customername
 
                 # Map Driver Expense fields to standard Petty Cash expense types (Option B)
                 expense_mapping = [
@@ -361,6 +361,9 @@ def get_trip_charges(request):
         else:
             trip = TripdetailInfo.objects.get(tr_tripnumber=trip_id)
 
+        from_loc = trip.tr_departedlocation.place_name if trip.tr_departedlocation else (trip.tr_enquirynumber.en_fromlocaion.place_name if getattr(trip, 'tr_enquirynumber', None) and getattr(trip.tr_enquirynumber, 'en_fromlocaion', None) else "")
+        to_loc = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else (trip.tr_enquirynumber.en_tolocation.place_name if getattr(trip, 'tr_enquirynumber', None) and getattr(trip.tr_enquirynumber, 'en_tolocation', None) else "")
+
         data = {
             # COSTS
             'parking': trip.tc_parkingcost or 0,
@@ -373,8 +376,8 @@ def get_trip_charges(request):
 
             #  NEW DETAILS
             'vehicle_number': trip.tr_vehiclenumber or "",
-            'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else "",
-            'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "",
+            'from_location': from_loc,
+            'to_location': to_loc,
         }
 
         data['total'] = sum([
@@ -403,8 +406,16 @@ def filter_trips_by_date(request):
 
     settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
+    cancel_billing_q = (
+        (Q(tc_financestatus__id=10) | Q(tr_operational_status__id=10) | Q(tc_cancellation_check=True)) &
+        ~Q(tc_financestatus__id=11) &
+        ~Q(tr_operational_status__id=11)
+    )
+
     qs = TripdetailInfo.objects.filter(
-        tc_financestatus__id__in=[5, 7, 9]
+        Q(tc_financestatus__id__in=[5, 7, 9]) | cancel_billing_q
+    ).exclude(
+        Q(tc_financestatus__id=11) | Q(tr_operational_status__id=11)
     )
 
     # Filter by driver
@@ -432,26 +443,24 @@ def filter_trips_by_date(request):
                 pass
         
         if parsed_date:
-            qs = qs.filter(
-                Q(tr_departeddate__date=parsed_date) | 
-                Q(tr_reporteddate__date=parsed_date) |
-                Q(tr_departeddate_pickup__date=parsed_date) |
-                Q(tr_departeddate_delivery__date=parsed_date)
-            )
+            qs = qs.filter(tr_departeddate__date=parsed_date)
 
     # ✅ OPTIONAL FILTER BY VEHICLE
     if vehicle_no:
         qs = qs.filter(tr_vehiclenumber__icontains=vehicle_no)
 
-    qs = qs.order_by('-tr_departeddate')
+    from django.db.models.functions import Coalesce
+    qs = qs.annotate(
+        effective_date=Coalesce('tr_departeddate_pickup', 'tr_departeddate', 'tr_reporteddate', 'tr_departeddate_delivery')
+    ).order_by('-effective_date', '-id')
 
     data = [
         {
             'id': t.id, 
             'trip_number': t.tr_tripnumber,
             'vehicle': t.tr_vehiclenumber,
-            'from': t.tr_departedlocation.place_name if t.tr_departedlocation else "",
-            'to': t.tr_reportedlocation.place_name if t.tr_reportedlocation else "",
+            'from': t.tr_departedlocation.place_name if t.tr_departedlocation else (t.tr_enquirynumber.en_fromlocaion.place_name if getattr(t, 'tr_enquirynumber', None) and getattr(t.tr_enquirynumber, 'en_fromlocaion', None) else ""),
+            'to': t.tr_reportedlocation.place_name if t.tr_reportedlocation else (t.tr_enquirynumber.en_tolocation.place_name if getattr(t, 'tr_enquirynumber', None) and getattr(t.tr_enquirynumber, 'en_tolocation', None) else ""),
             'date': (t.tr_departeddate_pickup or t.tr_departeddate or t.tr_reporteddate or t.tr_departeddate_delivery).strftime('%Y-%m-%d') if (t.tr_departeddate_pickup or t.tr_departeddate or t.tr_reporteddate or t.tr_departeddate_delivery) else "",
             'parking': t.tc_parkingcost or 0,
             'loading': t.tc_loadingcost or 0,

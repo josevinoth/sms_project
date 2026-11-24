@@ -89,6 +89,22 @@ def md_dashboard(request):
 BLR_CS_IDS = {141, 237}  # Sriramprasad (20074), Elumalai (20209)
 
 
+def parse_date_flexible(d_str, default=None):
+    """
+    Parses date strings flexibly across multiple formats:
+    YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY, YYYY/MM/DD, DD.MM.YYYY
+    """
+    if not d_str or str(d_str).strip().lower() in ('undefined', 'null', '', 'none'):
+        return default
+    d_str = str(d_str).strip()
+    for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y', '%Y/%m/%d', '%d.%m.%Y'):
+        try:
+            return datetime.strptime(d_str, fmt).date()
+        except (ValueError, TypeError):
+            continue
+    return default
+
+
 def get_same_days_prev_month(start_d, end_d):
     """
     Returns the exact corresponding (1..N) calendar days in the previous month.
@@ -160,28 +176,18 @@ def get_md_dashboard_data(request):
     import calendar
 
     # Determine date bounds: prioritize explicit from_date & to_date range
-    if from_date_str and to_date_str and from_date_str != 'undefined' and to_date_str != 'undefined':
-        try:
-            from_d = datetime.strptime(from_date_str, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            from_d = today
-        try:
-            to_d = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            to_d = today
+    if from_date_str and to_date_str and str(from_date_str).strip() not in ('undefined', 'null', '') and str(to_date_str).strip() not in ('undefined', 'null', ''):
+        from_d = parse_date_flexible(from_date_str, today)
+        to_d = parse_date_flexible(to_date_str, today)
         if from_d > to_d:
             from_d, to_d = to_d, from_d
     elif period == 'last_month':
-        if selected_date_str and selected_date_str != 'undefined':
-            try:
-                parsed_d = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-                cur_month_start = parsed_d.replace(day=1)
-                _, last_day = calendar.monthrange(parsed_d.year, parsed_d.month)
-                from_d = cur_month_start
-                to_d = parsed_d.replace(day=last_day)
-            except ValueError:
-                from_d = last_month_start
-                to_d = last_month_end
+        if selected_date_str and str(selected_date_str).strip() not in ('undefined', 'null', ''):
+            parsed_d = parse_date_flexible(selected_date_str, last_month_end)
+            cur_month_start = parsed_d.replace(day=1)
+            _, last_day = calendar.monthrange(parsed_d.year, parsed_d.month)
+            from_d = cur_month_start
+            to_d = parsed_d.replace(day=last_day)
         else:
             from_d = last_month_start
             to_d = last_month_end
@@ -192,11 +198,8 @@ def get_md_dashboard_data(request):
         from_d = today - timedelta(days=1)
         to_d = from_d
     else:
-        if selected_date_str and selected_date_str != 'undefined':
-            try:
-                d = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                d = today
+        if selected_date_str and str(selected_date_str).strip() not in ('undefined', 'null', ''):
+            d = parse_date_flexible(selected_date_str, today)
             from_d = d
             to_d = d
         else:
@@ -210,8 +213,12 @@ def get_md_dashboard_data(request):
     t_end = timezone.make_aware(datetime.combine(to_d, time.max))
 
     if is_range:
-        # Strict same days of previous month (1..N)
-        p_from, p_to = get_same_days_prev_month(from_d, to_d)
+        num_days = (to_d - from_d).days
+        if num_days <= 31 and from_d.month == to_d.month:
+            p_from, p_to = get_same_days_prev_month(from_d, to_d)
+        else:
+            p_to = from_d - timedelta(days=1)
+            p_from = p_to - timedelta(days=num_days)
         prev_m_start_dt = timezone.make_aware(datetime.combine(p_from, time.min))
         prev_m_end_dt = timezone.make_aware(datetime.combine(p_to, time.max))
         y_start = prev_m_start_dt
@@ -494,7 +501,8 @@ def get_md_dashboard_data(request):
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
-        'tr_consignmentnumber'
+        'tr_consignmentnumber',
+        'tr_departedlocation'
     ).annotate(
         resolved_date=Coalesce(
             'tr_departeddate', 'tr_departeddate_pickup', 'tr_loading_time',
@@ -533,6 +541,8 @@ def get_md_dashboard_data(request):
     blr_invoiced = 0.0
     blr_unbilled = 0.0
 
+    trip_selling_map = {}
+
     for t in pl_trips:
         v_source = t.tr_vehiclesource_id
         inv = pl_inv_map.get(t.id)
@@ -541,6 +551,7 @@ def get_md_dashboard_data(request):
         # 100% Exact Selling Breakdown calculation from location_pl_report_view
         selling_bd = get_trip_selling_breakdown(t, inv=inv, allotment=va)
         trip_selling_tot = selling_bd['total_selling']
+        trip_selling_map[t.id] = trip_selling_tot
 
         if v_source == 1:
             own_rev += trip_selling_tot
@@ -706,9 +717,22 @@ def get_md_dashboard_data(request):
 
     pending_enquiries_list = []
     if req_today > 0 and enq_today.exists():
-        for enq in enq_today.select_related('en_customername', 'en_assignedto'):
-            q = Enquirynotevehicle.objects.filter(env_enquirynumber=enq).aggregate(tot=Sum('env_quantity'))['tot'] or 0
-            cn = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enq).count()
+        # Optimization: inspect the latest 50 enquiries for quick responsiveness instead of 10,000+ historical records
+        recent_enqs = list(enq_today.select_related('en_customername', 'en_assignedto').order_by('-id')[:50])
+        r_ids = [e.id for e in recent_enqs]
+        
+        env_qty_map = {
+            row['env_enquirynumber_id']: (row['tot'] or 0)
+            for row in Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=r_ids).values('env_enquirynumber_id').annotate(tot=Sum('env_quantity'))
+        }
+        cn_cnt_map = {
+            row['co_enquirynumber_id']: (row['cnt'] or 0)
+            for row in ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=r_ids).values('co_enquirynumber_id').annotate(cnt=Count('id'))
+        }
+        
+        for enq in recent_enqs:
+            q = env_qty_map.get(enq.id, 0)
+            cn = cn_cnt_map.get(enq.id, 0)
             if q > cn:
                 v_obj = Enquirynotevehicle.objects.filter(env_enquirynumber=enq).select_related('env_vehicletype').first()
                 vtype = v_obj.env_vehicletype.vt_vehicletype if (v_obj and v_obj.env_vehicletype) else '32ft Container'
@@ -1138,8 +1162,7 @@ def get_md_dashboard_data(request):
     cust_delay_map = {}
     loc_delay_map = {}
     for t in unbilled_delay_5d_trips:
-        s_bd = get_trip_selling_breakdown(t)
-        trip_selling = s_bd['total_selling']
+        trip_selling = trip_selling_map.get(t.id, 0.0)
         tot_unbilled_5d += trip_selling
         
         c_name = t.tr_enquirynumber.en_customername.cu_name if (t.tr_enquirynumber and t.tr_enquirynumber.en_customername) else 'Unknown'

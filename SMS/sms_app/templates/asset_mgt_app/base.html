@@ -89,7 +89,7 @@
                 <h1 style="font-weight:Bold;"><a href="{% url 'home_page' %}" class="btn btn-dark"><i class="fas fa-home"></i></a></h1>
             </div>
             <div class="col-6">
-                <h1 style="font-weight: Bold;"><img src="/media/Company_Logo.png" style="width:50px;height:60px;padding:2px;margin-right:10px;">BVM Management System</h1>
+                <h1 style="font-weight: Bold;"><img src="{% static 'images/Company_Logo.png' %}" style="width:50px;height:60px;padding:2px;margin-right:10px;">BVM Management System</h1>
             </div>
             <div class="col-2 d-flex flex-column justify-content-center align-items-center" style="line-height: 1.3;">
                 <span class="font-weight-bold text-white" style="font-size: 0.95rem;">Hi, {{ request.session.first_name }}</span>
