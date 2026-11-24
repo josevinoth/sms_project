@@ -1047,6 +1047,43 @@
         background: rgba(255, 255, 255, 0.2);
     }
 
+    /* ══════ PIPELINE STAGE CUSTOMERS MODAL STYLING ══════ */
+    .stage-company-pills {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    .stage-comp-pill {
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+    .stage-comp-pill:hover {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: #38bdf8;
+        color: #fff;
+    }
+    .stage-comp-pill.active {
+        background: #38bdf8;
+        color: #040920;
+        border-color: #38bdf8;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+    .badge-comp-pack { background: rgba(30, 64, 175, 0.35); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+    .badge-comp-trans { background: rgba(6, 95, 70, 0.35); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+    .badge-comp-storage { background: rgba(15, 118, 110, 0.35); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+    .badge-comp-express { background: rgba(76, 29, 149, 0.35); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+    .badge-comp-tours { background: rgba(194, 65, 12, 0.35); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+    .badge-comp-default { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.62rem; }
+
     /* Alternative Matrix View (Toggled when requested) */
     #matrix-view-panel {
         display: none;
@@ -1423,10 +1460,10 @@
                 </div>
             </div>
 
-            <!-- Bottom Half: Pipeline Conversion Funnel (7 Metrics) -->
+            <!-- Bottom Half: Pipeline Conversion Funnel (7 Metrics) with Company Breakdown -->
             <div class="cs-card-header" style="border-top:1px solid rgba(54, 209, 255, 0.2);">
                 <h6><i class="fas fa-filter text-warning"></i> Sales Pipeline Conversion Funnel (7 Stages)</h6>
-                <span class="badge badge-dark" style="font-size:0.56rem; border:1px solid #eab308;">CONVERSION</span>
+                <span class="badge badge-info" style="font-size:0.56rem; border:1px solid #38bdf8; cursor:pointer;" title="Click any bar to view customer details in that stage"><i class="fas fa-mouse-pointer mr-1"></i>Click Bar for Customers</span>
             </div>
             <div class="center-bottom-split">
                 <div style="flex:1; position:relative; width:100%; height:100%;">
@@ -1559,6 +1596,64 @@
     </div>
 </div>
 
+<!-- ══════ PIPELINE STAGE CUSTOMERS DRILLDOWN MODAL ══════ -->
+<div id="pipelineStageModal" class="won-modal-backdrop" style="display:none;">
+    <div class="won-modal-dialog" style="width:1050px; max-width:96vw;">
+        <div class="won-modal-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="won-modal-icon" id="stage-modal-icon-wrap" style="background:rgba(56,189,248,0.15); color:#38bdf8;">
+                    <i class="fas fa-filter" id="stage-modal-icon"></i>
+                </div>
+                <div>
+                    <h5 class="won-modal-title" id="stage-modal-title">Stage Customers</h5>
+                    <span class="won-modal-subtitle" id="stage-modal-subtitle">Customer interactions logged in this pipeline stage</span>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge badge-info" id="stage-modal-count-badge" style="font-size:0.72rem; padding:4px 10px; border-radius:12px;">0 Calls</span>
+                <button type="button" class="won-modal-close" onclick="closePipelineStageModal()">&times;</button>
+            </div>
+        </div>
+        
+        <div class="won-modal-toolbar" style="flex-wrap:wrap; gap:8px;">
+            <div class="won-search-box" style="flex:1; min-width:260px;">
+                <i class="fas fa-search won-search-icon"></i>
+                <input type="text" id="stage-customer-search" placeholder="Search customer name, company, salesperson, deal #..." autocomplete="off">
+            </div>
+            <!-- Company Filter Pills -->
+            <div class="stage-company-pills" id="stage-modal-company-pills">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <div class="won-modal-body">
+            <table class="won-modal-table">
+                <thead>
+                    <tr>
+                        <th style="width:36px; text-align:center;">#</th>
+                        <th>Customer Name</th>
+                        <th style="width:100px; text-align:center;">Company</th>
+                        <th style="width:140px;">Salesperson</th>
+                        <th style="width:110px; text-align:center;">Call Type</th>
+                        <th style="width:100px; text-align:center;">Call Date</th>
+                        <th style="width:140px;">Deal / Sale #</th>
+                        <th style="width:95px; text-align:right;">Exp Rev</th>
+                        <th style="width:180px;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="stage-modal-tbody">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="won-modal-footer">
+            <span style="font-size:0.68rem; color:#94a3b8;">Showing <strong id="stage-modal-showing-count" style="color:#fff;">0</strong> records (<span id="stage-modal-unique-count" style="color:#38bdf8;">0 unique customers</span>)</span>
+            <button type="button" class="won-btn-close" onclick="closePipelineStageModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
 $(document).ready(function() {
     let channelChart = null;
@@ -1566,6 +1661,8 @@ $(document).ready(function() {
     let currentRowsData = [];
     let currentWonCustomers = [];
     let wonRotatorInterval = null;
+    let currentStageData = null;
+    let selectedStageCompany = 'ALL';
 
     // Active Sales Representatives passed from backend (strictly active with recorded activity)
     const activeEmployees = [
@@ -1694,7 +1791,7 @@ $(document).ready(function() {
                 $('#header-won-count').text(currentWonCustomers.length);
                 renderTopCards(resp.cards);
                 renderLeaderboard(resp.rows, employeeId);
-                renderCharts(resp.call_channels, resp.pipeline_stages, resp.totals);
+                renderCharts(resp.call_channels, resp.pipeline_stages, resp.totals, resp.pipeline_companies);
                 renderMeterCards('revenue-meters-container', resp.revenue_meters);
                 renderMeterCards('customer-meters-container', resp.customer_meters);
                 if (resp.totals) {
@@ -1790,26 +1887,56 @@ $(document).ready(function() {
     }
 
     // 3. Render Column 2: Channel Activity & Pipeline Funnel
-    function renderCharts(channels, stages, totals) {
+    function renderCharts(channels, stages, totals, companies) {
         if (!channels || !stages || !totals) return;
 
         // Total Calls count in Donut Center
         $('#donut-center-total').text(totals.no_of_calls.toLocaleString());
 
-        // Channel Doughnut Chart
+        // Channel Doughnut Chart - Matching Top KPI Card Themes
         const donutCtx = document.getElementById('channelChartCanvas');
         if (donutCtx) {
             if (channelChart) channelChart.destroy();
-            channelChart = new Chart(donutCtx.getContext('2d'), {
+
+            // Gradient fills matching .card-bg-allot (Blue), .card-bg-cnote (Amber), .card-bg-transit (Emerald), .card-bg-closed (Cyan)
+            const ctx2d = donutCtx.getContext('2d');
+            const inPersonGrad = ctx2d.createLinearGradient(0, 0, 0, 160);
+            inPersonGrad.addColorStop(0, '#3b82f6');
+            inPersonGrad.addColorStop(1, '#1e40af');
+
+            const teleGrad = ctx2d.createLinearGradient(0, 0, 0, 160);
+            teleGrad.addColorStop(0, '#fbbf24');
+            teleGrad.addColorStop(1, '#b45309');
+
+            const emailGrad = ctx2d.createLinearGradient(0, 0, 0, 160);
+            emailGrad.addColorStop(0, '#34d399');
+            emailGrad.addColorStop(1, '#065f46');
+
+            const teamsGrad = ctx2d.createLinearGradient(0, 0, 0, 160);
+            teamsGrad.addColorStop(0, '#38bdf8');
+            teamsGrad.addColorStop(1, '#0f766e');
+
+            const channelColorConfig = {
+                'In-Person Meetings': { bg: inPersonGrad, border: '#60a5fa', badgeColor: '#60a5fa' },
+                'Tele-Calls (Phone)': { bg: teleGrad, border: '#fbbf24', badgeColor: '#fbbf24' },
+                'E-Mail Outreach': { bg: emailGrad, border: '#34d399', badgeColor: '#34d399' },
+                'MS-Teams Calls': { bg: teamsGrad, border: '#38bdf8', badgeColor: '#38bdf8' }
+            };
+
+            const donutBgs = channels.map(c => channelColorConfig[c.name] ? channelColorConfig[c.name].bg : c.color);
+            const donutBorders = channels.map(c => channelColorConfig[c.name] ? channelColorConfig[c.name].border : '#38bdf8');
+
+            channelChart = new Chart(ctx2d, {
                 type: 'doughnut',
                 data: {
                     labels: channels.map(c => c.name),
                     datasets: [{
                         data: channels.map(c => c.count),
-                        backgroundColor: ['#3b82f6', '#10b981', '#a855f7', '#f59e0b'],
+                        backgroundColor: donutBgs,
                         borderColor: '#060b24',
+                        hoverBorderColor: donutBorders,
                         borderWidth: 2,
-                        hoverOffset: 3
+                        hoverOffset: 4
                     }]
                 },
                 options: {
@@ -1832,17 +1959,18 @@ $(document).ready(function() {
                 }
             });
 
-            // Badges beside doughnut
+            // Badges beside doughnut with matched glow accents
             let badgeHtml = '';
             channels.forEach(function(c) {
+                const conf = channelColorConfig[c.name] || { badgeColor: c.color };
                 badgeHtml += `
                     <div class="channel-legend-row">
-                        <span style="display:flex; align-items:center; gap:4px; color:#d1dcfa; font-weight:600;">
-                            <i class="fas ${c.icon}" style="color:${c.color}; font-size:0.62rem;"></i> ${c.name}
+                        <span style="display:flex; align-items:center; gap:5px; color:#d1dcfa; font-weight:600;">
+                            <i class="fas ${c.icon}" style="color:${conf.badgeColor}; font-size:0.65rem;"></i> ${c.name}
                         </span>
                         <span>
                             <strong style="color:#ffffff;">${c.count.toLocaleString()}</strong>
-                            <span style="color:#36d1ff; font-size:0.56rem; margin-left:3px;">(${c.pct}%)</span>
+                            <span style="color:${conf.badgeColor}; font-size:0.56rem; margin-left:3px; font-weight:700;">(${c.pct}%)</span>
                         </span>
                     </div>
                 `;
@@ -1850,60 +1978,131 @@ $(document).ready(function() {
             $('#channel-legend-badges').html(badgeHtml);
         }
 
-        // Pipeline Horizontal Bar Chart
+        // Pipeline Horizontal Bar Chart with KPI Card Coordinated Theme & Company Breakdown
         const pipeCtx = document.getElementById('pipelineChartCanvas');
         if (pipeCtx) {
             if (pipelineChart) pipelineChart.destroy();
+
+            const compList = (companies && companies.length > 0) ? companies : ['PACK', 'TRANS', 'STORAGE', 'EXPRESS', 'TOURS'];
+            const pCtx2d = pipeCtx.getContext('2d');
+            const canvasW = pipeCtx.width || 420;
+
+            // Coordinated with executive KPI cards:
+            // PACK -> Cobalt Blue (.card-bg-allot)
+            // TRANS -> Forest Emerald (.card-bg-transit)
+            // STORAGE -> Ocean Cyan / Teal (.card-bg-closed / .card-bg-custmet)
+            // EXPRESS -> Royal Purple (.card-bg-revenue)
+            // TOURS -> Warm Amber / Coral (.card-bg-cnote / .card-bg-newcust)
+            const companyThemeMap = {
+                'PACK': {
+                    start: 'rgba(30, 64, 175, 0.90)',
+                    end: 'rgba(59, 130, 246, 0.92)',
+                    border: '#60a5fa'
+                },
+                'TRANS': {
+                    start: 'rgba(6, 95, 70, 0.90)',
+                    end: 'rgba(16, 185, 129, 0.92)',
+                    border: '#34d399'
+                },
+                'STORAGE': {
+                    start: 'rgba(15, 118, 110, 0.90)',
+                    end: 'rgba(6, 182, 212, 0.92)',
+                    border: '#38bdf8'
+                },
+                'EXPRESS': {
+                    start: 'rgba(76, 29, 149, 0.90)',
+                    end: 'rgba(168, 85, 247, 0.92)',
+                    border: '#c084fc'
+                },
+                'TOURS': {
+                    start: 'rgba(194, 65, 12, 0.90)',
+                    end: 'rgba(245, 158, 11, 0.92)',
+                    border: '#fbbf24'
+                }
+            };
+
+            const datasets = compList.map(comp => {
+                const theme = companyThemeMap[comp] || {
+                    start: 'rgba(51, 65, 85, 0.90)',
+                    end: 'rgba(148, 163, 184, 0.92)',
+                    border: '#cbd5e1'
+                };
+                const grad = pCtx2d.createLinearGradient(0, 0, canvasW, 0);
+                grad.addColorStop(0, theme.start);
+                grad.addColorStop(1, theme.end);
+
+                return {
+                    label: comp,
+                    data: stages.map(s => (s.company_counts && s.company_counts[comp]) ? s.company_counts[comp] : 0),
+                    backgroundColor: grad,
+                    borderColor: theme.border,
+                    borderWidth: 1.2,
+                    borderRadius: 3
+                };
+            });
+
             pipelineChart = new Chart(pipeCtx.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: stages.map(s => s.name),
-                    datasets: [{
-                        label: 'Deals / Records',
-                        data: stages.map(s => s.count),
-                        backgroundColor: [
-                            'rgba(148, 163, 184, 0.85)',
-                            'rgba(96, 165, 250, 0.85)',
-                            'rgba(234, 179, 8, 0.85)',
-                            'rgba(249, 115, 22, 0.85)',
-                            'rgba(34, 197, 94, 0.85)',
-                            'rgba(129, 140, 248, 0.85)',
-                            'rgba(192, 132, 252, 0.85)'
-                        ],
-                        borderColor: [
-                            '#94a3b8',
-                            '#60a5fa',
-                            '#eab308',
-                            '#f97316',
-                            '#22c55e',
-                            '#818cf8',
-                            '#c084fc'
-                        ],
-                        borderWidth: 1,
-                        borderRadius: 3
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) { return ` Records: ${ctx.raw.toLocaleString()}`; }
-                            }
-                        }
-                    },
                     scales: {
                         x: {
+                            stacked: true,
                             grid: { color: 'rgba(255, 255, 255, 0.05)' },
                             ticks: { color: '#94a3b8', font: { size: 9 } }
                         },
                         y: {
+                            stacked: true,
                             grid: { display: false },
                             ticks: { color: '#ffffff', font: { size: 9, weight: 'bold' } }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                color: '#cbd5e1',
+                                font: { size: 9, weight: 'bold' },
+                                padding: 6
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.raw || 0;
+                                    return ` ${ctx.dataset.label}: ${val.toLocaleString()} records`;
+                                },
+                                afterBody: function(items) {
+                                    if (!items || items.length === 0) return '';
+                                    const stageIdx = items[0].dataIndex;
+                                    const st = stages[stageIdx];
+                                    const total = st ? st.count : 0;
+                                    return `Total: ${total.toLocaleString()} (Click bar to view customer details)`;
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements && elements.length > 0) {
+                            const stageIndex = elements[0].index;
+                            const stage = stages[stageIndex];
+                            const datasetIndex = elements[0].datasetIndex;
+                            const clickedCompany = compList[datasetIndex];
+                            openPipelineStageModal(stage, clickedCompany);
+                        }
+                    },
+                    onHover: function(evt, elements) {
+                        evt.native.target.style.cursor = (elements && elements.length > 0) ? 'pointer' : 'default';
                     }
                 }
             });
@@ -2090,6 +2289,153 @@ $(document).ready(function() {
                     </td>
                     <td style="text-align:center; color:#e2e8f0; font-size:0.64rem;">${item.won_date}</td>
                     <td style="text-align:right; font-weight:700; color:#86efac; font-size:0.66rem;">${revFormatted}</td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    }
+
+    // ══════ PIPELINE STAGE CUSTOMERS MODAL LOGIC ══════
+    window.openPipelineStageModal = function(stage, clickedCompany) {
+        if (!stage) return;
+        currentStageData = stage;
+        selectedStageCompany = 'ALL';
+
+        // Set Title & Icons
+        $('#stage-modal-title').html(`<i class="fas ${stage.icon || 'fa-filter'} mr-1" style="color:${stage.color || '#38bdf8'};"></i> ${stage.name} Stage Customers`);
+        $('#stage-modal-subtitle').text(`Showing interactions & deals currently in ${stage.name} phase (${stage.count} calls logged)`);
+        $('#stage-modal-icon-wrap').css({
+            'background': `${stage.color || '#38bdf8'}22`,
+            'color': stage.color || '#38bdf8'
+        });
+        $('#stage-modal-icon').attr('class', `fas ${stage.icon || 'fa-filter'}`);
+        $('#stage-modal-count-badge').text(`${stage.count} Total Calls`).css('border', `1px solid ${stage.color || '#38bdf8'}`);
+
+        // Build Company Filter Pills
+        const pillsContainer = $('#stage-modal-company-pills');
+        pillsContainer.empty();
+        
+        const compCounts = stage.company_counts || {};
+        let pillsHtml = `<span class="stage-comp-pill ${selectedStageCompany === 'ALL' ? 'active' : ''}" data-comp="ALL">ALL (${stage.count})</span>`;
+        
+        Object.keys(compCounts).forEach(comp => {
+            const count = compCounts[comp];
+            if (count > 0) {
+                const isActive = (selectedStageCompany === comp) ? 'active' : '';
+                pillsHtml += `<span class="stage-comp-pill ${isActive}" data-comp="${comp}">${comp} (${count})</span>`;
+            }
+        });
+        pillsContainer.html(pillsHtml);
+
+        // Bind Pill click
+        $('.stage-comp-pill').off('click').on('click', function() {
+            $('.stage-comp-pill').removeClass('active');
+            $(this).addClass('active');
+            selectedStageCompany = $(this).data('comp');
+            filterAndRenderStageModal();
+        });
+
+        // Reset search box
+        $('#stage-customer-search').val('');
+        filterAndRenderStageModal();
+
+        $('#pipelineStageModal').fadeIn(150);
+        $('#stage-customer-search').focus();
+    };
+
+    window.closePipelineStageModal = function() {
+        $('#pipelineStageModal').fadeOut(120);
+        currentStageData = null;
+    };
+
+    $('#pipelineStageModal').on('click', function(e) {
+        if ($(e.target).hasClass('won-modal-backdrop')) {
+            closePipelineStageModal();
+        }
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#pipelineStageModal').is(':visible')) {
+            closePipelineStageModal();
+        }
+    });
+
+    $('#stage-customer-search').on('keyup', function() {
+        filterAndRenderStageModal();
+    });
+
+    function filterAndRenderStageModal() {
+        if (!currentStageData || !currentStageData.customers) return;
+        const query = ($('#stage-customer-search').val() || '').toLowerCase().trim();
+        
+        let filtered = currentStageData.customers;
+
+        // Filter by company pill if not ALL
+        if (selectedStageCompany && selectedStageCompany !== 'ALL') {
+            filtered = filtered.filter(item => item.company === selectedStageCompany);
+        }
+
+        // Filter by text search
+        if (query) {
+            filtered = filtered.filter(item => {
+                return (item.customer_name && item.customer_name.toLowerCase().includes(query)) ||
+                       (item.company && item.company.toLowerCase().includes(query)) ||
+                       (item.sales_rep && item.sales_rep.toLowerCase().includes(query)) ||
+                       (item.deal_number && item.deal_number.toLowerCase().includes(query)) ||
+                       (item.call_type && item.call_type.toLowerCase().includes(query)) ||
+                       (item.remarks && item.remarks.toLowerCase().includes(query));
+            });
+        }
+
+        renderStageModalTable(filtered);
+    }
+
+    function renderStageModalTable(list) {
+        const tbody = $('#stage-modal-tbody');
+        tbody.empty();
+
+        $('#stage-modal-showing-count').text(list.length);
+        const uniqueCustomers = new Set(list.map(x => x.customer_name)).size;
+        $('#stage-modal-unique-count').text(`${uniqueCustomers} unique customer${uniqueCustomers === 1 ? '' : 's'}`);
+
+        if (!list || list.length === 0) {
+            tbody.html('<tr><td colspan="9" style="text-align:center; padding:25px; color:#94a3b8;"><i class="fas fa-search mr-1"></i> No customer interactions found for this filter.</td></tr>');
+            return;
+        }
+
+        const compBadgeClassMap = {
+            'PACK': 'badge-comp-pack',
+            'TRANS': 'badge-comp-trans',
+            'STORAGE': 'badge-comp-storage',
+            'EXPRESS': 'badge-comp-express',
+            'TOURS': 'badge-comp-tours'
+        };
+
+        let html = '';
+        list.forEach((item, idx) => {
+            const badgeClass = compBadgeClassMap[item.company] || 'badge-comp-default';
+            const revFormatted = item.revenue > 0 ? `₹${(item.revenue / 100000).toFixed(2)} L` : '-';
+            const remarksSafe = item.remarks ? item.remarks : '<span style="color:#64748b;">-</span>';
+
+            html += `
+                <tr>
+                    <td style="text-align:center; color:#94a3b8; font-size:0.64rem;">${idx + 1}</td>
+                    <td style="font-weight:700; color:#ffffff;">
+                        <i class="fas fa-building text-info mr-1" style="font-size:0.60rem;"></i> ${item.customer_name}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="${badgeClass}">${item.company}</span>
+                    </td>
+                    <td style="color:#93c5fd; font-weight:600; font-size:0.68rem;">
+                        <i class="fas fa-user-tie text-secondary mr-1" style="font-size:0.58rem;"></i> ${item.sales_rep}
+                    </td>
+                    <td style="text-align:center; color:#cbd5e1; font-size:0.64rem;">
+                        <span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${item.call_type}</span>
+                    </td>
+                    <td style="text-align:center; color:#e2e8f0; font-size:0.64rem;">${item.call_date}</td>
+                    <td style="color:#fde047; font-size:0.65rem; font-family:monospace;">${item.deal_number}</td>
+                    <td style="text-align:right; font-weight:700; color:#86efac; font-size:0.66rem;">${revFormatted}</td>
+                    <td style="color:#94a3b8; font-size:0.63rem; line-height:1.2;" title="${item.remarks || ''}">${remarksSafe}</td>
                 </tr>
             `;
         });

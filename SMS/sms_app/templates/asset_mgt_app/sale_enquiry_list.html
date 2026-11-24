@@ -181,13 +181,13 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <!-- Modal Header: Compact, Space-Efficient with Integrated Search & Filter Controls -->
-            <div class="modal-header d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header d-flex align-items-center justify-content-between text-white" style="background: linear-gradient(90deg, rgba(16, 28, 80, 0.98) 0%, rgba(9, 16, 48, 0.98) 100%); padding: 8px 18px; border-bottom: 1px solid rgba(54, 209, 255, 0.3);">
                 <div class="d-flex align-items-center" style="gap: 10px;">
-                    <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3);">
-                        <i class="fas fa-calendar-alt" style="color: #38bdf8; font-size: 1rem;"></i>
+                    <div class="d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(54, 209, 255, 0.15); border: 1px solid rgba(54, 209, 255, 0.35); box-shadow: 0 0 8px rgba(54, 209, 255, 0.3);">
+                        <i class="fas fa-calendar-alt" style="color: #36d1ff; font-size: 1rem;"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title font-weight-bold mb-0 text-white" id="calendarModalLabel" style="font-size: 1.05rem; letter-spacing: 0.3px;">
+                        <h5 class="modal-title font-weight-bold mb-0 text-white" id="calendarModalLabel" style="font-size: 1.05rem; letter-spacing: 0.4px;">
                             MC Tours - Schedule &amp; Fleet Calendar
                         </h5>
                     </div>
@@ -195,7 +195,7 @@
 
                 <!-- Live Omnibox Search -->
                 <div class="cal-search-wrap d-flex align-items-center">
-                    <i class="fas fa-search text-muted mr-1" style="font-size: 0.78rem;"></i>
+                    <i class="fas fa-search mr-1" style="font-size: 0.78rem; color: #36d1ff;"></i>
                     <input type="text" id="calendarSearchInput" placeholder="Search enquiry, customer, route, vehicle..." autocomplete="off">
                     <span id="calendarSearchClear" class="btn-clear-search" style="display: none;" title="Clear search"><i class="fas fa-times"></i></span>
                 </div>
@@ -225,24 +225,34 @@
                 </div>
             </div>
 
-            <!-- Sub-Toolbar: Fleet & Vehicle Dimension Filter + Live Fleet Status -->
+            <!-- Sub-Toolbar: Type & Fleet/Vehicle Dimension Filters + Live Fleet Status -->
             <div class="cal-subbar d-flex justify-content-between align-items-center px-3 py-1">
-                <div class="d-flex align-items-center" style="gap: 5px; flex-wrap: wrap;">
-                    <span class="cal-subbar-label mr-1"><i class="fas fa-bus mr-1 text-primary"></i> Vehicle:</span>
+                <div class="d-flex align-items-center" style="gap: 4px; flex-wrap: nowrap;">
+                    <!-- Customer Type Dimension Filter -->
+                    <span class="cal-subbar-label mr-1"><i class="fas fa-tag mr-1" style="color: #36d1ff;"></i> Type:</span>
+                    <button type="button" class="cal-type-pill active" data-type="all">All</button>
+                    <button type="button" class="cal-type-pill" data-type="tours"><i class="fas fa-umbrella-beach mr-1" style="color: #38bdf8;"></i> Tours</button>
+                    <button type="button" class="cal-type-pill" data-type="travels"><i class="fas fa-road mr-1" style="color: #fbbf24;"></i> Travels</button>
+                    <button type="button" class="cal-type-pill" data-type="tours_travels"><i class="fas fa-route mr-1" style="color: #34d399;"></i> Tours &amp; Travels</button>
+
+                    <span class="cal-subbar-divider mx-1">|</span>
+
+                    <!-- Vehicle Dimension Filter -->
+                    <span class="cal-subbar-label mr-1"><i class="fas fa-bus mr-1" style="color: #36d1ff;"></i> Vehicle:</span>
                     <button type="button" class="cal-veh-pill active" data-veh="all">All Fleet</button>
                     <button type="button" class="cal-veh-pill" data-veh="bvm-own"><i class="fas fa-warehouse mr-1 text-info"></i> BVM Own</button>
-                    <button type="button" class="cal-veh-pill" data-veh="market"><i class="fas fa-store mr-1 text-secondary"></i> Market</button>
+                    <button type="button" class="cal-veh-pill" data-veh="market"><i class="fas fa-store mr-1 text-warning"></i> Market</button>
                     <span class="cal-subbar-divider">|</span>
-                    <button type="button" class="cal-veh-pill" data-veh="urbania"><i class="fas fa-shuttle-van mr-1 text-success"></i> Urbania</button>
-                    <button type="button" class="cal-veh-pill" data-veh="crysta"><i class="fas fa-car mr-1 text-primary"></i> Crysta</button>
-                    <button type="button" class="cal-veh-pill" data-veh="tempo"><i class="fas fa-bus-alt mr-1 text-warning"></i> Tempo</button>
+                    <button type="button" class="cal-veh-pill" data-veh="urbania"><i class="fas fa-shuttle-van mr-1" style="color: #34d399;"></i> Urbania</button>
+                    <button type="button" class="cal-veh-pill" data-veh="crysta"><i class="fas fa-car mr-1" style="color: #38bdf8;"></i> Crysta</button>
+                    <button type="button" class="cal-veh-pill" data-veh="tempo"><i class="fas fa-bus-alt mr-1" style="color: #fbbf24;"></i> Tempo</button>
                 </div>
-                <div class="d-flex align-items-center" style="gap: 14px;">
-                    <div id="cal-live-today" class="d-flex align-items-center text-success font-weight-bold" style="font-size: 0.73rem;">
+                <div class="d-flex align-items-center" style="gap: 12px; flex-shrink: 0;">
+                    <div id="cal-live-today" class="d-flex align-items-center font-weight-bold" style="font-size: 0.73rem; color: #86efac; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 4px; padding: 1.5px 8px;">
                         <span class="pulse-dot mr-1"></span> <span id="count-today">0</span> active today
                     </div>
-                    <div class="text-muted font-weight-bold" style="font-size: 0.72rem;">
-                        Showing <span id="cal-filtered-count" class="text-dark font-weight-bold">0</span> of <span id="cal-total-count" class="text-dark font-weight-bold">0</span> bookings
+                    <div class="font-weight-bold" style="font-size: 0.72rem; color: #8fa0c9;">
+                        Showing <span id="cal-filtered-count" style="color: #36d1ff; font-weight: 800;">0</span> of <span id="cal-total-count" style="color: #36d1ff; font-weight: 800;">0</span> bookings
                     </div>
                 </div>
             </div>
@@ -263,8 +273,11 @@
                     <div class="drawer-body">
                         <!-- Customer Card -->
                         <div class="drawer-card mb-2">
-                            <div class="drawer-card-label"><i class="fas fa-user text-primary mr-1"></i> Customer</div>
-                            <div id="drawerCustomerName" class="drawer-card-value font-weight-bold text-dark">-</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="drawer-card-label mb-0"><i class="fas fa-user text-info mr-1"></i> Customer</div>
+                                <span id="drawerCustomerType" class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.68rem; font-weight: 700;">-</span>
+                            </div>
+                            <div id="drawerCustomerName" class="drawer-card-value font-weight-bold text-white mt-1">-</div>
                         </div>
 
                         <!-- Route & Dates Card -->
@@ -272,21 +285,21 @@
                             <div class="drawer-card-label"><i class="fas fa-route text-danger mr-1"></i> Journey &amp; Route</div>
                             <div class="d-flex align-items-center justify-content-between my-2">
                                 <div class="text-left" style="flex: 1;">
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; font-weight: 700;">From</small>
-                                    <div id="drawerFrom" class="font-weight-bold text-dark" style="font-size: 0.85rem;">-</div>
+                                    <small class="drawer-sub-label">From</small>
+                                    <div id="drawerFrom" class="font-weight-bold text-white" style="font-size: 0.85rem;">-</div>
                                 </div>
                                 <div class="text-center px-2">
-                                    <span id="drawerDurationBadge" class="badge badge-light border text-primary" style="font-size: 0.68rem; font-weight: 700;">-</span>
-                                    <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1;">&rarr;</div>
+                                    <span id="drawerDurationBadge" class="badge border" style="font-size: 0.68rem; font-weight: 700; background: rgba(54, 209, 255, 0.15); border-color: rgba(54, 209, 255, 0.4) !important; color: #36d1ff;">-</span>
+                                    <div style="font-size: 0.8rem; color: #36d1ff; line-height: 1;">&rarr;</div>
                                 </div>
                                 <div class="text-right" style="flex: 1;">
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; font-weight: 700;">To</small>
-                                    <div id="drawerTo" class="font-weight-bold text-dark" style="font-size: 0.85rem;">-</div>
+                                    <small class="drawer-sub-label">To</small>
+                                    <div id="drawerTo" class="font-weight-bold text-white" style="font-size: 0.85rem;">-</div>
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-between pt-2 border-top text-muted" style="font-size: 0.74rem;">
-                                <div><i class="far fa-calendar-alt mr-1 text-primary"></i> <span id="drawerTravelDate">-</span></div>
-                                <div><i class="fas fa-flag-checkered mr-1 text-danger"></i> <span id="drawerReturnDate">-</span></div>
+                            <div class="d-flex justify-content-between pt-2 border-top-dark" style="font-size: 0.74rem; color: #8fa0c9;">
+                                <div><i class="far fa-calendar-alt mr-1 text-info"></i> <span id="drawerTravelDate" class="text-white font-weight-bold">-</span></div>
+                                <div><i class="fas fa-flag-checkered mr-1 text-danger"></i> <span id="drawerReturnDate" class="text-white font-weight-bold">-</span></div>
                             </div>
                         </div>
 
@@ -295,32 +308,32 @@
                             <div class="drawer-card-label"><i class="fas fa-bus text-warning mr-1"></i> Fleet &amp; Vehicle</div>
                             <div class="d-flex justify-content-between my-1">
                                 <div>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; font-weight: 700;">Source</small>
+                                    <small class="drawer-sub-label">Source</small>
                                     <div><span id="drawerVehicleSource" class="badge badge-secondary" style="font-size: 0.72rem;">-</span></div>
                                 </div>
                                 <div class="text-right">
-                                    <small class="text-muted text-uppercase" style="font-size: 0.65rem; font-weight: 700;">Vehicle Type</small>
+                                    <small class="drawer-sub-label">Vehicle Type</small>
                                     <div><span id="drawerVehicleType" class="badge badge-info" style="font-size: 0.72rem;">-</span></div>
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-between pt-2 border-top" style="font-size: 0.74rem;">
-                                <div><i class="fas fa-users mr-1 text-muted"></i> Passengers: <strong id="drawerPassengers" class="text-dark">-</strong></div>
-                                <div><i class="fas fa-hotel mr-1 text-muted"></i> Hotel: <strong id="drawerHotelReq" class="text-dark">-</strong></div>
+                            <div class="d-flex justify-content-between pt-2 border-top-dark" style="font-size: 0.74rem; color: #8fa0c9;">
+                                <div><i class="fas fa-users mr-1 text-info"></i> Passengers: <strong id="drawerPassengers" class="text-white font-weight-bold">-</strong></div>
+                                <div><i class="fas fa-hotel mr-1 text-warning"></i> Hotel: <strong id="drawerHotelReq" class="text-white font-weight-bold">-</strong></div>
                             </div>
                         </div>
 
                         <!-- Remarks Card (if any) -->
                         <div class="drawer-card mb-3" id="drawerRemarksWrap">
                             <div class="drawer-card-label"><i class="fas fa-comment-alt text-info mr-1"></i> Remarks</div>
-                            <div id="drawerRemarks" class="text-muted" style="font-size: 0.78rem; line-height: 1.35;">-</div>
+                            <div id="drawerRemarks" style="color: #cbd5e1; font-size: 0.78rem; line-height: 1.35;">-</div>
                         </div>
 
                         <!-- Action Buttons -->
                         <div class="d-flex flex-column" style="gap: 8px;">
-                            <a href="#" id="drawerOpenLink" target="_blank" class="btn btn-primary btn-sm font-weight-bold py-2 shadow-sm d-flex align-items-center justify-content-center" style="gap: 6px;">
+                            <a href="#" id="drawerOpenLink" target="_blank" class="btn btn-sm font-weight-bold py-2 shadow-sm d-flex align-items-center justify-content-center btn-drawer-open" style="gap: 6px;">
                                 <i class="fas fa-external-link-alt"></i> Open Enquiry Details
                             </a>
-                            <button type="button" id="drawerCopyBtn" class="btn btn-outline-secondary btn-sm font-weight-bold py-1 d-flex align-items-center justify-content-center" style="gap: 6px;">
+                            <button type="button" id="drawerCopyBtn" class="btn btn-sm font-weight-bold py-1 d-flex align-items-center justify-content-center btn-drawer-copy" style="gap: 6px;">
                                 <i class="fas fa-copy"></i> <span id="drawerCopyText">Copy Trip Summary</span>
                             </button>
                         </div>
@@ -329,21 +342,21 @@
             </div>
 
             <!-- Modal Footer: Super Slim & Functional -->
-            <div class="modal-footer d-flex justify-content-between align-items-center py-1 px-3" style="background: #f8fafc; border-top: 1px solid #e2e8f0; min-height: 32px; height: 32px;">
+            <div class="modal-footer d-flex justify-content-between align-items-center py-1 px-3" style="background: #081132; border-top: 1px solid rgba(54, 209, 255, 0.25); min-height: 32px; height: 32px;">
                 <div class="d-flex align-items-center" style="gap: 16px; font-size: 0.74rem;">
-                    <span class="text-muted"><i class="fas fa-mouse-pointer text-primary mr-1"></i> Click booking to inspect</span>
-                    <span class="d-inline-flex align-items-center"><span class="tab-dot dot-won mr-1"></span> <strong style="color: #16a34a;">Business Won</strong></span>
-                    <span class="d-inline-flex align-items-center"><span class="tab-dot dot-disc mr-1"></span> <strong style="color: #d97706;">In Discussion</strong></span>
-                    <span class="text-muted ml-2" style="font-size: 0.7rem;"><i class="fas fa-keyboard mr-1"></i> Shortcuts: &larr;/&rarr; Month &bull; T Today &bull; L List &bull; M Month</span>
+                    <span style="color: #8fa0c9;"><i class="fas fa-mouse-pointer mr-1" style="color: #36d1ff;"></i> Click booking to inspect</span>
+                    <span class="d-inline-flex align-items-center"><span class="tab-dot dot-won mr-1"></span> <strong style="color: #86efac;">Business Won</strong></span>
+                    <span class="d-inline-flex align-items-center"><span class="tab-dot dot-disc mr-1"></span> <strong style="color: #fde68a;">In Discussion</strong></span>
+                    <span class="ml-2" style="font-size: 0.7rem; color: #8fa0c9;"><i class="fas fa-keyboard mr-1" style="color: #36d1ff;"></i> Shortcuts: &larr;/&rarr; Month &bull; T Today &bull; L List &bull; M Month</span>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-3" data-dismiss="modal" style="font-size: 0.76rem; height: 24px; line-height: 22px; border-radius: 6px;">Close</button>
+                <button type="button" class="btn btn-sm py-0 px-3" data-dismiss="modal" style="font-size: 0.76rem; height: 24px; line-height: 22px; border-radius: 6px; background: rgba(14, 25, 71, 0.8); border: 1px solid rgba(54, 209, 255, 0.3); color: #93c5fd;">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* ══ Modal Layout & Zero-Scroll Fit ══ */
+    /* ══ Modal Layout & Zero-Scroll Fit (Cyber-Navy CS Dashboard Aesthetic) ══ */
     #calendarModal .modal-dialog {
         max-width: 96vw;
         width: 1420px;
@@ -354,40 +367,41 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        border-radius: 14px;
+        border-radius: 10px;
         overflow: hidden;
-        border: 1px solid #cbd5e1;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
-        background: #ffffff;
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 25px rgba(54, 209, 255, 0.2) !important;
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%) !important;
     }
     #calendarModal .modal-body {
         flex: 1 1 auto;
-        padding: 6px 14px !important;
+        padding: 6px 12px !important;
         overflow: hidden !important;
         display: flex;
         flex-direction: column;
+        background: #060b24 !important;
     }
 
-    /* ══ Omnibox Search (Crisp, High-Contrast Solid Style) ══ */
+    /* ══ Omnibox Search (Cyber-Navy Pill with Cyan Glow) ══ */
     .cal-search-wrap {
         position: relative;
-        background: #ffffff !important;
-        border: 1.5px solid #cbd5e1 !important;
+        background: rgba(4, 9, 32, 0.85) !important;
+        border: 1px solid rgba(54, 209, 255, 0.35) !important;
         border-radius: 20px !important;
         padding: 2px 12px !important;
         width: 320px !important;
         height: 30px !important;
         display: flex !important;
         align-items: center !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5) !important;
         transition: all 0.2s ease !important;
     }
     .cal-search-wrap:focus-within {
-        border-color: #0284c7 !important;
-        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3) !important;
+        border-color: #36d1ff !important;
+        box-shadow: 0 0 12px rgba(54, 209, 255, 0.5), inset 0 0 6px rgba(0, 0, 0, 0.4) !important;
     }
-    .cal-search-wrap i {
-        color: #64748b !important;
+    .cal-search-wrap i.fa-search {
+        color: #36d1ff !important;
         font-size: 0.8rem !important;
         margin-right: 6px !important;
         flex-shrink: 0 !important;
@@ -396,9 +410,9 @@
         border: none !important;
         outline: none !important;
         background: transparent !important;
-        color: #0f172a !important;
+        color: #ffffff !important;
         font-size: 0.78rem !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
@@ -407,17 +421,17 @@
         box-shadow: none !important;
     }
     .cal-search-wrap input::placeholder {
-        color: #94a3b8 !important;
+        color: #8fa0c9 !important;
         font-size: 0.76rem !important;
-        font-weight: 400 !important;
-        opacity: 1 !important;
+        font-weight: 500 !important;
+        opacity: 0.85 !important;
     }
     span.btn-clear-search {
         display: none;
         border: none !important;
         background: transparent !important;
-        color: #94a3b8 !important;
-        font-size: 0.8rem !important;
+        color: #8fa0c9 !important;
+        font-size: 0.85rem !important;
         cursor: pointer !important;
         padding: 0 4px !important;
         line-height: 1 !important;
@@ -428,26 +442,27 @@
         user-select: none !important;
     }
     span.btn-clear-search:hover {
-        color: #0f172a !important;
+        color: #36d1ff !important;
     }
 
-    /* ══ Header Segmented Tabs ══ */
+    /* ══ Header Segmented Tabs (CS Dashboard Style) ══ */
     .calendar-pill-group {
         display: inline-flex;
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(4, 9, 32, 0.92);
         padding: 2px;
-        border-radius: 8px;
-        gap: 2px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        gap: 3px;
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
     }
     .btn-cal-tab {
         background: transparent;
-        border: none;
-        color: #cbd5e1;
-        font-size: 0.74rem;
-        font-weight: 600;
-        padding: 3px 11px;
-        border-radius: 6px;
+        border: 1px solid transparent;
+        color: #8fa0c9;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 4px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -457,24 +472,39 @@
     }
     .btn-cal-tab:hover {
         color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(54, 209, 255, 0.15);
     }
     .btn-cal-tab.active {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-        font-weight: 700;
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid #38bdf8 !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+        font-weight: 800;
+    }
+    .btn-cal-tab[data-filter="business won"].active {
+        background: rgba(16, 185, 129, 0.25) !important;
+        border: 1px solid #10b981 !important;
+        color: #86efac !important;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5) !important;
+    }
+    .btn-cal-tab[data-filter="in discussion"].active {
+        background: rgba(245, 158, 11, 0.25) !important;
+        border: 1px solid #f59e0b !important;
+        color: #fde68a !important;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.5) !important;
     }
     .btn-cal-tab .tab-badge {
-        font-size: 0.68rem;
+        font-size: 0.66rem;
         padding: 1px 5px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.2);
-        color: #e2e8f0;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.4);
+        color: #93c5fd;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .btn-cal-tab.active .tab-badge {
-        background: #0f172a;
+        background: rgba(0, 0, 0, 0.55);
         color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.25);
     }
     .tab-dot {
         display: inline-block;
@@ -482,67 +512,79 @@
         height: 7px;
         border-radius: 50%;
     }
-    .dot-won { background: #10b981; }
-    .dot-disc { background: #f59e0b; }
+    .dot-won { 
+        background: #10b981; 
+        box-shadow: 0 0 6px #10b981; 
+    }
+    .dot-disc { 
+        background: #f59e0b; 
+        box-shadow: 0 0 6px #f59e0b; 
+    }
 
     /* Action Buttons in Header */
     .btn-cal-action {
-        background: rgba(255, 255, 255, 0.12);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(14, 25, 71, 0.85);
+        color: #36d1ff;
+        border: 1px solid rgba(54, 209, 255, 0.3);
         font-size: 0.74rem;
-        font-weight: 600;
-        padding: 3px 10px;
+        font-weight: 700;
+        padding: 4px 10px;
         border-radius: 6px;
         transition: all 0.15s ease;
     }
     .btn-cal-action:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(54, 209, 255, 0.25);
         color: #ffffff;
+        border-color: #36d1ff;
+        box-shadow: 0 0 10px rgba(54, 209, 255, 0.5);
     }
 
     /* ══ Sub-Toolbar: Fleet & Vehicle Dimension Filter ══ */
     .cal-subbar {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+        background: rgba(4, 9, 32, 0.95);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
         min-height: 33px;
     }
     .cal-subbar-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #64748b;
-        letter-spacing: 0.3px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #36d1ff;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
     .cal-subbar-divider {
-        color: #cbd5e1;
+        color: rgba(54, 209, 255, 0.3);
         font-weight: 300;
-        margin: 0 2px;
+        margin: 0 3px;
     }
-    .cal-veh-pill {
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        font-size: 0.72rem;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 12px;
+    .cal-veh-pill,
+    .cal-type-pill {
+        background: rgba(14, 25, 71, 0.85);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        color: #93c5fd;
+        font-size: 0.69rem;
+        font-weight: 700;
+        padding: 2px 7.5px;
+        border-radius: 4px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
+        white-space: nowrap;
         transition: all 0.15s ease;
         outline: none;
     }
-    .cal-veh-pill:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-        border-color: #94a3b8;
+    .cal-veh-pill:hover,
+    .cal-type-pill:hover {
+        background: rgba(54, 209, 255, 0.2);
+        color: #ffffff;
+        border-color: #36d1ff;
     }
-    .cal-veh-pill.active {
-        background: #0f172a !important;
+    .cal-veh-pill.active,
+    .cal-type-pill.active {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
         color: #ffffff !important;
-        border-color: #0f172a !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
     }
     .pulse-dot {
         display: inline-block;
@@ -559,17 +601,17 @@
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
-    /* ══ FullCalendar Container & Grid Fit ══ */
+    /* ══ FullCalendar Container & Cyber-Navy Theme ══ */
     #calendarModal .fc {
         height: 100% !important;
         max-height: 100% !important;
         display: flex;
         flex-direction: column;
-        --fc-page-bg-color: #ffffff;
-        --fc-neutral-bg-color: #f8fafc;
-        --fc-border-color: #e2e8f0;
-        --fc-today-bg-color: rgba(56, 189, 248, 0.04);
-        color: #1e293b;
+        --fc-page-bg-color: #060b24;
+        --fc-neutral-bg-color: #081132;
+        --fc-border-color: rgba(54, 209, 255, 0.16);
+        --fc-today-bg-color: rgba(54, 209, 255, 0.08);
+        color: #cbd5e1;
         font-family: inherit;
     }
     #calendarModal .fc .fc-view-harness {
@@ -578,9 +620,14 @@
     }
     #calendarModal .fc .fc-scrollgrid {
         height: 100% !important;
-        border: 1px solid #e2e8f0 !important;
+        border: 1px solid rgba(54, 209, 255, 0.25) !important;
         border-radius: 8px;
         overflow: hidden !important;
+        background: #060b24 !important;
+    }
+    #calendarModal .fc td,
+    #calendarModal .fc th {
+        border-color: rgba(54, 209, 255, 0.14) !important;
     }
     /* Only disable scroller in DayGrid Month view to keep the month grid zero-scroll */
     #calendarModal .fc .fc-daygrid .fc-scroller,
@@ -625,8 +672,9 @@
     #calendarModal .fc .fc-toolbar-title {
         font-size: 1.15rem !important;
         font-weight: 800 !important;
-        letter-spacing: 0.2px;
-        color: #0f172a !important;
+        letter-spacing: 0.4px;
+        color: #ffffff !important;
+        text-shadow: 0 0 12px rgba(54, 209, 255, 0.35) !important;
         margin: 0 !important;
     }
 
@@ -636,28 +684,30 @@
         min-height: 28px !important;
         padding: 0 10px !important;
         font-size: 0.76rem !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         text-transform: capitalize !important;
-        border-radius: 6px !important;
+        border-radius: 5px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
         transition: all 0.15s ease !important;
         outline: none !important;
     }
     #calendarModal .fc .fc-today-button,
     #calendarModal .fc .fc-prev-button,
     #calendarModal .fc .fc-next-button {
-        background: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        color: #1e3c72 !important;
+        background: rgba(14, 25, 71, 0.85) !important;
+        border: 1px solid rgba(54, 209, 255, 0.3) !important;
+        color: #36d1ff !important;
+        box-shadow: 0 0 6px rgba(54, 209, 255, 0.2) !important;
     }
     #calendarModal .fc .fc-today-button:hover,
     #calendarModal .fc .fc-prev-button:hover,
     #calendarModal .fc .fc-next-button:hover {
-        background: #f1f5f9 !important;
-        color: #0f172a !important;
+        background: #36d1ff !important;
+        color: #04081e !important;
+        border-color: #36d1ff !important;
+        box-shadow: 0 0 12px rgba(54, 209, 255, 0.6) !important;
     }
     #calendarModal .fc .fc-prev-button,
     #calendarModal .fc .fc-next-button {
@@ -668,44 +718,52 @@
 
     #calendarModal .fc .fc-button-group {
         display: inline-flex !important;
-        padding: 1px;
-        border-radius: 7px;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        gap: 1px;
+        padding: 2px;
+        border-radius: 6px;
+        background: rgba(4, 9, 32, 0.95);
+        border: 1px solid rgba(54, 209, 255, 0.3);
+        gap: 2px;
     }
     #calendarModal .fc .fc-button-group > .fc-button {
-        border-radius: 5px !important;
+        border-radius: 4px !important;
         margin: 0 !important;
         border: none !important;
         box-shadow: none !important;
         height: 24px !important;
         min-height: 24px !important;
-        padding: 0 8px !important;
-        color: #64748b;
+        padding: 0 9px !important;
+        color: #8fa0c9;
         background: transparent !important;
+        font-weight: 700;
     }
     #calendarModal .fc .fc-button-group > .fc-button:hover {
-        background: rgba(0, 0, 0, 0.04) !important;
-        color: #0f172a !important;
+        background: rgba(54, 209, 255, 0.15) !important;
+        color: #ffffff !important;
     }
     #calendarModal .fc .fc-button-group > .fc-button.fc-button-active {
-        background: #ffffff !important;
-        color: #1e3c72 !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border: 1px solid #38bdf8 !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5) !important;
     }
 
-    /* ══ Week Header (Sun, Mon, Tue...) ══ */
+    /* ══ Week Header (SUN, MON, TUE...) ══ */
     #calendarModal .fc .fc-col-header-cell {
-        background-color: #f8fafc;
-        color: #475569;
-        padding: 3px 0 !important;
-        font-weight: 700;
+        background-color: #081132 !important;
+        color: #36d1ff !important;
+        padding: 4px 0 !important;
+        font-weight: 800;
         font-size: 0.72rem;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
         text-transform: uppercase;
-        border-color: #e2e8f0;
+        border-color: rgba(54, 209, 255, 0.25) !important;
+    }
+    #calendarModal .fc .fc-col-header-cell.fc-day-today {
+        background: linear-gradient(180deg, rgba(2, 132, 199, 0.25) 0%, #081132 100%) !important;
+        color: #38bdf8 !important;
+        border-bottom: 2px solid #38bdf8 !important;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
     }
 
     /* ══ Month Day Cells ══ */
@@ -713,36 +771,56 @@
         height: 100% !important;
         min-height: 0 !important;
         padding: 1px 2px !important;
-        display: flex;
-        flex-direction: column;
     }
     #calendarModal .fc .fc-daygrid-day-top {
+        display: flex;
         flex-direction: row;
-        padding: 1px 2px !important;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 1px 3px !important;
     }
     #calendarModal .fc .fc-daygrid-day-number {
-        font-weight: 600;
-        font-size: 0.73rem;
+        font-weight: 700;
+        font-size: 0.74rem;
         padding: 0 3px;
-        color: #64748b;
+        color: #cbd5e1;
         line-height: 1.2;
     }
-    #calendarModal .fc .fc-day-today {
-        background-color: rgba(56, 189, 248, 0.04) !important;
-    }
-    #calendarModal .fc .fc-day-today .fc-daygrid-day-number {
-        background: #0284c7;
-        color: #ffffff !important;
-        border-radius: 4px;
-        padding: 1px 4px;
-        font-weight: 700;
+    #calendarModal .fc .fc-day-other .fc-daygrid-day-number {
+        color: #475569 !important;
+        opacity: 0.4;
     }
 
-    /* ══ TINTED PILL EVENT DESIGN (Clean, High-Contrast & Lightweight) ══ */
-    #calendarModal .fc .fc-daygrid-event-harness {
-        margin-bottom: 2px !important;
-        margin-top: 0 !important;
+    /* Current Date Highlighter (Sleek Ambient Glow & CS Dashboard Pill) */
+    #calendarModal .fc .fc-day-today {
+        background: linear-gradient(180deg, rgba(56, 189, 248, 0.12) 0%, rgba(9, 18, 54, 0.45) 100%) !important;
+        box-shadow: inset 0 2.5px 0 0 #38bdf8, inset 0 0 18px rgba(56, 189, 248, 0.12) !important;
+        position: relative;
     }
+    #calendarModal .fc .fc-day-today .fc-daygrid-day-number {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid #38bdf8 !important;
+        border-radius: 12px !important;
+        padding: 1px 7px !important;
+        font-weight: 800 !important;
+        font-size: 0.72rem !important;
+        line-height: 1.3 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin: 1px 2px !important;
+    }
+    #calendarModal .fc .fc-day-today .fc-daygrid-day-number::after {
+        content: "TODAY";
+        font-size: 0.52rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: #a5f3fc;
+    }
+
+    /* ══ High-Tech Cyber Pill Event Design ══ */
     #calendarModal .fc-event {
         cursor: pointer !important;
         border-radius: 4px !important;
@@ -754,7 +832,6 @@
     }
     #calendarModal .fc-event:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15) !important;
         z-index: 10 !important;
     }
     #calendarModal .fc-h-event {
@@ -765,16 +842,16 @@
         display: flex;
         align-items: center;
         width: 100%;
-        height: 19px;
+        height: 20px;
         padding: 0 4px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
         font-weight: 700;
-        font-size: 0.71rem;
-        line-height: 19px;
+        font-size: 0.72rem;
+        line-height: 20px;
         border-radius: 4px;
-        gap: 3px;
+        gap: 4px;
     }
     #calendarModal .pill-status-icon {
         display: inline-flex;
@@ -783,7 +860,6 @@
         width: 13px;
         height: 13px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.85);
         flex-shrink: 0;
     }
     #calendarModal .pill-enq-text {
@@ -794,68 +870,97 @@
         font-weight: 800;
     }
     #calendarModal .pill-veh-badge {
-        font-size: 0.6rem;
-        font-weight: 700;
+        font-size: 0.58rem;
+        font-weight: 800;
         padding: 0 4px;
         border-radius: 3px;
         line-height: 13px;
-        background: rgba(0, 0, 0, 0.08);
-        color: #334155;
         flex-shrink: 0;
         text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
 
-    /* Business Won (Soft Tinted Mint / Emerald) */
+    /* Business Won (CS Dashboard Emerald Glow) */
     #calendarModal .fc-event-status-business-won {
-        background: #ecfdf5 !important;
-        border: 1px solid #a7f3d0 !important;
-        border-left: 3.5px solid #10b981 !important;
+        background: rgba(16, 185, 129, 0.20) !important;
+        border: 1px solid #10b981 !important;
+        border-left: 3.5px solid #00ff9d !important;
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.25) !important;
+    }
+    #calendarModal .fc-event-status-business-won .pill-status-icon {
+        background: rgba(16, 185, 129, 0.35);
+        color: #86efac;
     }
     #calendarModal .fc-event-status-business-won .pill-enq-text {
-        color: #065f46 !important;
+        color: #a7f3d0 !important;
+    }
+    #calendarModal .fc-event-status-business-won .pill-veh-badge {
+        background: rgba(4, 9, 32, 0.85);
+        color: #86efac;
+        border: 1px solid rgba(16, 185, 129, 0.45);
     }
     #calendarModal .fc-event-status-business-won:hover {
-        background: #d1fae5 !important;
+        background: rgba(16, 185, 129, 0.35) !important;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.6) !important;
     }
 
-    /* In Discussion (Soft Tinted Amber / Warm Orange) */
+    /* In Discussion (CS Dashboard Warm Amber Glow) */
     #calendarModal .fc-event-status-in-discussion {
-        background: #fffbeb !important;
-        border: 1px solid #fde68a !important;
-        border-left: 3.5px solid #f59e0b !important;
+        background: rgba(245, 158, 11, 0.20) !important;
+        border: 1px solid #f59e0b !important;
+        border-left: 3.5px solid #fbbf24 !important;
+        box-shadow: 0 0 6px rgba(245, 158, 11, 0.25) !important;
+    }
+    #calendarModal .fc-event-status-in-discussion .pill-status-icon {
+        background: rgba(245, 158, 11, 0.35);
+        color: #fde68a;
     }
     #calendarModal .fc-event-status-in-discussion .pill-enq-text {
-        color: #92400e !important;
+        color: #fde68a !important;
+    }
+    #calendarModal .fc-event-status-in-discussion .pill-veh-badge {
+        background: rgba(4, 9, 32, 0.85);
+        color: #fde68a;
+        border: 1px solid rgba(245, 158, 11, 0.45);
     }
     #calendarModal .fc-event-status-in-discussion:hover {
-        background: #fef3c7 !important;
+        background: rgba(245, 158, 11, 0.35) !important;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
     }
 
-    /* ══ FullCalendar List View Enhancements (Run-Sheet) ══ */
+    /* ══ FullCalendar List View (Agenda List) ══ */
     #calendarModal .fc-list {
-        border: 1px solid #e2e8f0 !important;
+        border: 1px solid rgba(54, 209, 255, 0.25) !important;
         border-radius: 8px;
         overflow-y: auto !important;
         height: 100% !important;
+        background: #060b24 !important;
     }
     #calendarModal .fc .fc-list-empty {
         padding: 40px !important;
         text-align: center;
-        color: #94a3b8;
+        color: #8fa0c9;
+        background: #060b24 !important;
     }
     #calendarModal .fc .fc-list-day-cushion {
-        background: #f1f5f9 !important;
-        font-weight: 700;
-        color: #1e3c72 !important;
+        background: #081132 !important;
+        font-weight: 800;
+        color: #36d1ff !important;
         padding: 6px 12px !important;
         font-size: 0.78rem;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25) !important;
     }
     #calendarModal .fc .fc-list-event {
         cursor: pointer !important;
+        background: #060b24 !important;
         transition: background 0.15s ease;
     }
     #calendarModal .fc .fc-list-event:hover td {
-        background: #f8fafc !important;
+        background: rgba(54, 209, 255, 0.09) !important;
+    }
+    #calendarModal .fc .fc-list-event td {
+        border-color: rgba(54, 209, 255, 0.12) !important;
+        color: #d1dcfa !important;
     }
     #calendarModal .fc .fc-list-event-dot {
         border-width: 5px !important;
@@ -864,39 +969,50 @@
     /* ══ "+X more" Link & Popover ══ */
     #calendarModal .fc .fc-daygrid-more-link {
         font-size: 0.68rem !important;
-        font-weight: 700 !important;
-        color: #1e3c72 !important;
-        padding: 0 4px !important;
+        font-weight: 800 !important;
+        color: #36d1ff !important;
+        padding: 0 5px !important;
         line-height: 15px !important;
         border-radius: 3px !important;
-        background: #e2e8f0 !important;
+        background: rgba(14, 25, 71, 0.85) !important;
+        border: 1px solid rgba(54, 209, 255, 0.3) !important;
         margin: 0 !important;
         display: inline-block !important;
         text-decoration: none !important;
         transition: all 0.15s ease !important;
     }
     #calendarModal .fc .fc-daygrid-more-link:hover {
-        background: #cbd5e1 !important;
-        color: #0f172a !important;
+        background: #36d1ff !important;
+        color: #04081e !important;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.6);
     }
     #calendarModal .fc .fc-popover {
-        border-radius: 10px !important;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25) !important;
-        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85), 0 0 15px rgba(54, 209, 255, 0.3) !important;
+        border: 1px solid rgba(54, 209, 255, 0.4) !important;
+        background: #060b24 !important;
         overflow: hidden !important;
         z-index: 1055 !important;
     }
     #calendarModal .fc .fc-popover-header {
-        background: #f1f5f9 !important;
+        background: #081132 !important;
         padding: 6px 10px !important;
-        font-weight: 700 !important;
-        color: #1e3c72 !important;
+        font-weight: 800 !important;
+        color: #36d1ff !important;
         font-size: 0.78rem !important;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25) !important;
+    }
+    #calendarModal .fc .fc-popover-close {
+        color: #8fa0c9 !important;
+    }
+    #calendarModal .fc .fc-popover-close:hover {
+        color: #36d1ff !important;
     }
     #calendarModal .fc .fc-popover-body {
         padding: 6px !important;
         max-height: 250px !important;
         overflow-y: auto !important;
+        background: #060b24 !important;
     }
 
     /* ══ SLIDE-OVER INSPECTOR DRAWER ══ */
@@ -906,12 +1022,12 @@
         right: 0;
         width: 360px;
         height: 100%;
-        background: #ffffff;
-        box-shadow: -10px 0 25px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.75), 0 0 15px rgba(54, 209, 255, 0.2);
         z-index: 1050;
         display: flex;
         flex-direction: column;
-        border-left: 1px solid #cbd5e1;
+        border-left: 1px solid rgba(54, 209, 255, 0.3);
         transform: translateX(100%);
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -919,20 +1035,20 @@
         transform: translateX(0);
     }
     .drawer-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.98) 0%, rgba(9, 16, 48, 0.98) 100%);
         color: #ffffff;
         padding: 10px 14px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25);
     }
     .drawer-title {
         font-size: 0.95rem;
-        letter-spacing: 0.3px;
-        color: #ffffff;
+        letter-spacing: 0.4px;
+        color: #36d1ff;
     }
     .drawer-close-btn {
         background: transparent;
         border: none;
-        color: #cbd5e1;
+        color: #8fa0c9;
         font-size: 1.4rem;
         line-height: 1;
         cursor: pointer;
@@ -940,31 +1056,62 @@
         outline: none;
     }
     .drawer-close-btn:hover {
-        color: #ffffff;
+        color: #36d1ff;
     }
     .drawer-body {
         flex: 1 1 auto;
         overflow-y: auto;
         padding: 14px;
-        background: #f8fafc;
+        background: #060b24;
     }
     .drawer-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background: linear-gradient(180deg, rgba(14, 28, 75, 0.7) 0%, rgba(8, 16, 48, 0.85) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.25);
         border-radius: 8px;
         padding: 10px 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     }
     .drawer-card-label {
         font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #36d1ff;
+        margin-bottom: 4px;
+    }
+    .drawer-sub-label {
+        font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #64748b;
-        margin-bottom: 4px;
+        color: #8fa0c9;
+    }
+    .border-top-dark {
+        border-top: 1px solid rgba(54, 209, 255, 0.15);
+    }
+    .btn-drawer-open {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        border: 1px solid #38bdf8;
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+    .btn-drawer-open:hover {
+        background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+    }
+    .btn-drawer-copy {
+        background: rgba(14, 25, 71, 0.85);
+        border: 1px solid rgba(54, 209, 255, 0.3);
+        color: #93c5fd;
+    }
+    .btn-drawer-copy:hover {
+        background: rgba(54, 209, 255, 0.25);
+        color: #ffffff;
+        border-color: #36d1ff;
     }
 
-    /* ══ Modern Rich Card Tooltip ══ */
+    /* ══ Tooltip ══ */
     .calendar-tooltip-card {
         text-align: left;
         line-height: 1.4;
@@ -974,9 +1121,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
         padding-bottom: 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25);
     }
     .calendar-tooltip-body {
         display: flex;
@@ -986,86 +1133,11 @@
     .tooltip-inner {
         max-width: 300px !important;
         padding: 8px 12px !important;
-        background: #0f172a !important;
+        background: rgba(6, 11, 38, 0.98) !important;
         color: #f8fafc !important;
         border-radius: 8px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4) !important;
-    }
-
-    /* ══ DARK THEME MODE SUPPORT ══ */
-    html[data-theme="dark"] #calendarModal .modal-content,
-    body[data-theme="dark"] #calendarModal .modal-content,
-    [data-theme="dark"] #calendarModal .modal-content {
-        background-color: #0f172a !important;
-        border: 1px solid #334155 !important;
-    }
-    html[data-theme="dark"] #calendarModal .modal-body,
-    body[data-theme="dark"] #calendarModal .modal-body,
-    [data-theme="dark"] #calendarModal .modal-body {
-        background-color: #0f172a !important;
-        color: #f8fafc !important;
-    }
-    html[data-theme="dark"] #calendarModal .modal-footer,
-    body[data-theme="dark"] #calendarModal .modal-footer,
-    [data-theme="dark"] #calendarModal .modal-footer {
-        background-color: #0b1120 !important;
-        border-top: 1px solid #1e293b !important;
-    }
-    html[data-theme="dark"] .cal-subbar {
-        background: #0b1120 !important;
-        border-bottom: 1px solid #1e293b !important;
-    }
-    html[data-theme="dark"] .calendar-detail-drawer {
-        background: #0f172a !important;
-        border-left: 1px solid #334155 !important;
-    }
-    html[data-theme="dark"] .drawer-body {
-        background: #0b1120 !important;
-    }
-    html[data-theme="dark"] .drawer-card {
-        background: #0f172a !important;
-        border-color: #1e293b !important;
-        color: #f8fafc !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc,
-    body[data-theme="dark"] #calendarModal .fc,
-    [data-theme="dark"] #calendarModal .fc {
-        --fc-page-bg-color: #0f172a !important;
-        --fc-neutral-bg-color: #0b1120 !important;
-        --fc-border-color: #1e293b !important;
-        --fc-today-bg-color: rgba(56, 189, 248, 0.08) !important;
-        color: #f8fafc !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc .fc-toolbar-title,
-    [data-theme="dark"] #calendarModal .fc .fc-toolbar-title {
-        color: #ffffff !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc .fc-col-header-cell,
-    [data-theme="dark"] #calendarModal .fc .fc-col-header-cell {
-        background-color: #0b1120 !important;
-        color: #38bdf8 !important;
-        border-color: #1e293b !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc .fc-daygrid-day-number,
-    [data-theme="dark"] #calendarModal .fc .fc-daygrid-day-number {
-        color: #94a3b8 !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc-event-status-business-won {
-        background: rgba(16, 185, 129, 0.15) !important;
-        border: 1px solid rgba(16, 185, 129, 0.35) !important;
-        border-left: 3.5px solid #10b981 !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc-event-status-business-won .pill-enq-text {
-        color: #6ee7b7 !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc-event-status-in-discussion {
-        background: rgba(245, 158, 11, 0.15) !important;
-        border: 1px solid rgba(245, 158, 11, 0.35) !important;
-        border-left: 3.5px solid #f59e0b !important;
-    }
-    html[data-theme="dark"] #calendarModal .fc-event-status-in-discussion .pill-enq-text {
-        color: #fcd34d !important;
+        border: 1px solid #36d1ff !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), 0 0 15px rgba(54, 209, 255, 0.35) !important;
     }
 </style>
 
@@ -1088,6 +1160,7 @@
         if (calendarEl) {
             var rawCalendarEvents = [];
             var activeStatusFilter = 'all';
+            var activeTypeFilter = 'all';
             var activeVehFilter = 'all';
             var activeDrawerBooking = null;
 
@@ -1113,7 +1186,7 @@
                 eventContent: function(arg) {
                     var p = arg.event.extendedProps || {};
                     var isWon = p.status === 'business won';
-                    var dotColor = isWon ? '#16a34a' : '#d97706';
+                    var iconColor = isWon ? '#86efac' : '#fde68a';
                     var icon = isWon ? 'fa-check' : 'fa-hourglass-half';
                     var title = arg.event.title;
                     var veh = (p.vehicleType || '').trim();
@@ -1124,7 +1197,7 @@
                     }
 
                     var html = '<div class="fc-event-tinted-pill">' +
-                               '<span class="pill-status-icon"><i class="fas ' + icon + '" style="font-size:0.58rem; color:' + dotColor + ';"></i></span>' +
+                               '<span class="pill-status-icon"><i class="fas ' + icon + '" style="font-size:0.56rem; color:' + iconColor + ';"></i></span>' +
                                '<span class="pill-enq-text">' + title + '</span>' +
                                vehTag +
                                '</div>';
@@ -1137,20 +1210,21 @@
                     var p = info.event.extendedProps || {};
                     var isWon = p.status === 'business won';
                     var badgeStyle = isWon
-                        ? 'background:#10b981; color:#fff;'
-                        : 'background:#f59e0b; color:#fff;';
+                        ? 'background:rgba(16, 185, 129, 0.25); color:#86efac; border:1px solid #10b981;'
+                        : 'background:rgba(245, 158, 11, 0.25); color:#fde68a; border:1px solid #f59e0b;';
 
                     var tooltipHtml = `
                         <div class="calendar-tooltip-card">
                             <div class="calendar-tooltip-header">
-                                <span class="badge" style="${badgeStyle} font-size:0.68rem; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:0.5px;">${p.statusLabel || p.status}</span>
-                                <span style="color:#94a3b8; font-size:0.7rem;"><i class="far fa-calendar-alt"></i> ${p.travelDate}${p.returnDate && p.returnDate !== '-' ? ' &rarr; ' + p.returnDate : ''}</span>
+                                <span class="badge" style="${badgeStyle} font-size:0.68rem; font-weight:800; padding:2px 7px; border-radius:4px; text-transform:uppercase; letter-spacing:0.5px;">${p.statusLabel || p.status}</span>
+                                <span style="color:#8fa0c9; font-size:0.7rem;"><i class="far fa-calendar-alt" style="color:#36d1ff;"></i> ${p.travelDate}${p.returnDate && p.returnDate !== '-' ? ' &rarr; ' + p.returnDate : ''}</span>
                             </div>
                             <div class="calendar-tooltip-body">
-                                <div class="font-weight-bold text-white" style="font-size:0.86rem; margin-bottom:2px;">${p.enquiryId}</div>
-                                <div style="color:#cbd5e1; font-size:0.76rem;"><i class="fas fa-user mr-1 text-info" style="width:14px;"></i> ${p.customer || '-'}</div>
-                                <div style="color:#cbd5e1; font-size:0.76rem;"><i class="fas fa-map-marker-alt mr-1 text-danger" style="width:14px;"></i> ${p.from || '-'} &rarr; ${p.to || '-'}</div>
-                                ${p.vehicle ? '<div style="color:#cbd5e1; font-size:0.76rem;"><i class="fas fa-bus mr-1 text-warning" style="width:14px;"></i> ' + p.vehicle + '</div>' : ''}
+                                <div class="font-weight-bold" style="font-size:0.86rem; color:#ffffff; margin-bottom:2px; letter-spacing:0.3px;">${p.enquiryId}</div>
+                                <div style="color:#d1dcfa; font-size:0.76rem;"><i class="fas fa-tag mr-1" style="color:#38bdf8; width:14px;"></i> Type: <strong style="color:#ffffff;">${p.customerType || '-'}</strong></div>
+                                <div style="color:#d1dcfa; font-size:0.76rem;"><i class="fas fa-user mr-1" style="color:#36d1ff; width:14px;"></i> ${p.customer || '-'}</div>
+                                <div style="color:#d1dcfa; font-size:0.76rem;"><i class="fas fa-map-marker-alt mr-1" style="color:#f87171; width:14px;"></i> ${p.from || '-'} &rarr; ${p.to || '-'}</div>
+                                ${p.vehicle ? '<div style="color:#d1dcfa; font-size:0.76rem;"><i class="fas fa-bus mr-1" style="color:#fbbf24; width:14px;"></i> ' + p.vehicle + '</div>' : ''}
                             </div>
                         </div>
                     `;
@@ -1182,12 +1256,13 @@
                 var isWon = p.status === 'business won';
                 var badgeEl = $('#drawerStatusBadge');
                 if (isWon) {
-                    badgeEl.text('Business Won').css({ background: '#10b981', color: '#ffffff' });
+                    badgeEl.text('Business Won').css({ background: 'rgba(16, 185, 129, 0.25)', color: '#86efac', border: '1px solid #10b981' });
                 } else {
-                    badgeEl.text('In Discussion').css({ background: '#f59e0b', color: '#ffffff' });
+                    badgeEl.text('In Discussion').css({ background: 'rgba(245, 158, 11, 0.25)', color: '#fde68a', border: '1px solid #f59e0b' });
                 }
 
                 $('#drawerEnquiryId').text(p.enquiryId || fcEvent.title);
+                $('#drawerCustomerType').text(p.customerType || 'Customer');
                 $('#drawerCustomerName').text(p.customer || '-');
                 $('#drawerFrom').text(p.from || '-');
                 $('#drawerTo').text(p.to || '-');
@@ -1277,7 +1352,21 @@
                         return false;
                     }
 
-                    // 2. Vehicle Filter
+                    // 2. Customer Type Filter (Tours / Travels / Tours & Travels)
+                    if (activeTypeFilter !== 'all') {
+                        var cType = (p.customerType || '').toLowerCase().trim();
+                        if (activeTypeFilter === 'tours' && cType !== 'tours') {
+                            return false;
+                        }
+                        if (activeTypeFilter === 'travels' && cType !== 'travels') {
+                            return false;
+                        }
+                        if (activeTypeFilter === 'tours_travels' && cType !== 'tours & travels' && (!cType.includes('tours') || !cType.includes('travel'))) {
+                            return false;
+                        }
+                    }
+
+                    // 3. Vehicle Filter
                     if (activeVehFilter !== 'all') {
                         var vSrc = (p.vehicleSource || '').toLowerCase();
                         var vType = (p.vehicleType || '').toLowerCase();
@@ -1306,6 +1395,7 @@
                             e.title || '',
                             p.enquiryId || '',
                             p.customer || '',
+                            p.customerType || '',
                             p.from || '',
                             p.to || '',
                             p.vehicle || '',
@@ -1360,6 +1450,14 @@
                 applyCalendarFilters();
             });
 
+            // Customer Type Pills Click (Tours / Tours & Travels)
+            $('.cal-type-pill').on('click', function() {
+                activeTypeFilter = $(this).data('type');
+                $('.cal-type-pill').removeClass('active');
+                $(this).addClass('active');
+                applyCalendarFilters();
+            });
+
             // Vehicle Pills Click
             $('.cal-veh-pill').on('click', function() {
                 activeVehFilter = $(this).data('veh');
@@ -1393,7 +1491,7 @@
                     return;
                 }
 
-                var headers = ['Enquiry ID', 'Status', 'Customer', 'From', 'To', 'Travel Date', 'Return Date', 'Duration (Days)', 'Vehicle Source', 'Vehicle Type', 'Passengers'];
+                var headers = ['Enquiry ID', 'Status', 'Customer Type', 'Customer', 'From', 'To', 'Travel Date', 'Return Date', 'Duration (Days)', 'Vehicle Source', 'Vehicle Type', 'Passengers'];
                 var rows = [headers];
 
                 events.forEach(function(ev) {
@@ -1401,6 +1499,7 @@
                     rows.push([
                         '"' + (p.enquiryId || ev.title || '') + '"',
                         '"' + (p.statusLabel || p.status || '') + '"',
+                        '"' + (p.customerType || '').replace(/"/g, '""') + '"',
                         '"' + (p.customer || '').replace(/"/g, '""') + '"',
                         '"' + (p.from || '').replace(/"/g, '""') + '"',
                         '"' + (p.to || '').replace(/"/g, '""') + '"',

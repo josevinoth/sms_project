@@ -826,6 +826,14 @@
         let selectedBucket = null;
         let lastProgressData = null;
 
+        // KPI and Scale benchmark color mapping for ranges
+        const progressRangeColors = {
+            '30-42': { bg: 'rgba(16, 185, 129, 0.85)', border: '#10b981' }, // Completed / Trip Settled Green
+            '20-30': { bg: 'rgba(59, 130, 246, 0.85)', border: '#3b82f6' }, // Invoiced / Ready to Invoice Blue
+            '10-20': { bg: 'rgba(249, 115, 22, 0.85)', border: '#f97316' }, // In-Progress / Vehicles Missed Orange
+            '0-10':  { bg: 'rgba(239, 68, 68, 0.85)', border: '#ef4444' }   // Critical / Trips Cancelled Red
+        };
+
         const targetLinePlugin = {
             id: 'targetLine',
             beforeDraw(chart) {
@@ -967,6 +975,9 @@
                 progressChart.destroy();
             }
             const data = lastProgressData;
+            const bgColors = data.progress_chart.labels.map(l => (progressRangeColors[l] ? progressRangeColors[l].bg : 'rgba(59, 130, 246, 0.85)'));
+            const borderColors = data.progress_chart.labels.map(l => (progressRangeColors[l] ? progressRangeColors[l].border : '#3b82f6'));
+
             progressChart = new Chart(ctxProgress, {
                 type: 'bar',
                 data: {
@@ -974,8 +985,8 @@
                     datasets: [{
                         label: 'Vehicles',
                         data: data.progress_chart.counts,
-                        backgroundColor: 'rgba(54, 209, 255, 0.85)',
-                        borderColor: '#36d1ff',
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
                         borderWidth: 1,
                         borderRadius: 4,
                         borderSkipped: false
@@ -1049,7 +1060,8 @@
             $('#progress-back-btn').css('display', 'inline-flex');
 
             const monthName = lastProgressData.progress_chart.month_name;
-            $('#progress-chart-month').text(`${monthName} (Range: ${bucketName})`);
+            const bucketColor = progressRangeColors[bucketName] || { bg: 'rgba(59, 130, 246, 0.85)', border: '#3b82f6' };
+            $('#progress-chart-month').html(`${monthName} (Range: <span style="color: ${bucketColor.border};">${bucketName}</span>)`);
 
             const vehicles = progressBreakdowns[bucketName] || [];
             const labels = vehicles.map(v => v.vehicle_number);
@@ -1075,8 +1087,8 @@
                     datasets: [{
                         label: 'Trips',
                         data: tripCounts,
-                        backgroundColor: 'rgba(54, 209, 255, 0.85)',
-                        borderColor: '#36d1ff',
+                        backgroundColor: bucketColor.bg,
+                        borderColor: bucketColor.border,
                         borderWidth: 1,
                         borderRadius: 4,
                         borderSkipped: false
@@ -1188,8 +1200,8 @@
                 data: {
                     labels: data.bar_chart.labels,
                     datasets: [
-                        { label: 'Local', data: data.bar_chart.local, backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false },
-                        { label: 'Outstation', data: data.bar_chart.outstation, backgroundColor: '#8b5cf6', borderRadius: 6, borderSkipped: false }
+                        { label: 'Local', data: data.bar_chart.local, backgroundColor: 'rgba(59, 130, 246, 0.85)', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 6, borderSkipped: false },
+                        { label: 'Outstation', data: data.bar_chart.outstation, backgroundColor: 'rgba(168, 85, 247, 0.85)', borderColor: '#a855f7', borderWidth: 1, borderRadius: 6, borderSkipped: false }
                     ]
                 },
                 options: {
@@ -1222,7 +1234,9 @@
                     datasets: [{
                         label: 'C-Notes',
                         data: data.cs_cnote_chart.counts,
-                        backgroundColor: '#25667a',
+                        backgroundColor: 'rgba(6, 182, 212, 0.85)',
+                        borderColor: '#22d3ee',
+                        borderWidth: 1,
                         borderRadius: 6,
                         borderSkipped: false
                     }]
@@ -1256,7 +1270,7 @@
             // Initialize progress chart
             renderProgressChartRanges();
 
-            const donutColors = ['#10b981', '#f59e0b', '#ef4444'];
+            const donutColors = ['#10b981', '#f97316', '#ef4444'];
             const donutLabels = ['Business', 'Empty', 'B-Empty'];
             const donutDatalabelOptions = {
                 display: (context) => {
@@ -1270,7 +1284,7 @@
                 offset: 0,
                 color: '#ffffff',
                 backgroundColor: (context) => {
-                    const colors = ['rgba(16,185,129,0.85)', 'rgba(245,158,11,0.85)', 'rgba(239,68,68,0.85)'];
+                    const colors = ['rgba(16,185,129,0.9)', 'rgba(249,115,22,0.9)', 'rgba(239,68,68,0.9)'];
                     return colors[context.dataIndex];
                 },
                 borderRadius: 4,
@@ -1362,6 +1376,9 @@
                     selectedBucket = null;
                     $('#progress-back-btn').hide();
                     $('#progress-chart-month').text(data.progress_chart.month_name);
+                    if (data.progress_chart.selected_month) {
+                        $('#progress-month').val(data.progress_chart.selected_month);
+                    }
 
                     if (!tripBarChart) {
                         initCharts(data);
