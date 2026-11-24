@@ -283,7 +283,8 @@ def dmr_template_preview_ajax(request):
             effective_tripcost = 0.0 if cancellation_val > 0 else get_tms_report_transport_charge(trip, allotment=va)
 
             trip_key = f"trip_{trip.id}"
-            for cons_goods in goods_list:
+            g_cnt = len(goods_list)
+            for goods_idx, cons_goods in enumerate(goods_list):
                 row = []
                 for c in columns_data:
                     val = extract_dmr_cell_value(
@@ -296,7 +297,9 @@ def dmr_template_preview_ajax(request):
                         row_idx=trip_idx,
                         date_fmt=c.get('date_format'),
                         included_charges=c.get('included_charges'),
-                        static_val=c.get('static_value', '')
+                        static_val=c.get('static_value', ''),
+                        goods_count=g_cnt,
+                        goods_idx=goods_idx
                     )
                     row.append(val)
                 preview_rows.append({

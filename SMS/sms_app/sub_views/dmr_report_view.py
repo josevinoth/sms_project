@@ -11,6 +11,7 @@ from django.db.models.functions import Coalesce
 from io import BytesIO
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.cell_range import CellRange
 from ..models import TripdetailInfo, EnquirynoteInfo, ConsignmentdetailInfo, MyUser, Places, Emailmaster
 from .send_department_email import send_department_email
@@ -865,7 +866,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                         else:
                             # Cargo / invoice column: collect distinct values across all goods in this trip
                             vals = []
-                            for cg in goods_list:
+                            for cg_idx, cg in enumerate(goods_list):
                                 v = extract_dmr_cell_value(
                                     field_key=col.field_key,
                                     trip=trip,
@@ -877,7 +878,8 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                                     date_fmt=col.date_format,
                                     included_charges=col.included_charges,
                                     static_val=col.static_value,
-                                    goods_count=g_len
+                                    goods_count=g_len,
+                                    goods_idx=cg_idx
                                 )
                                 if v not in (None, '', '-'):
                                     s = str(v).strip()
@@ -891,7 +893,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     studio_trip_groups.append((cur_idx, cur_idx + g_len - 1))
                     cur_idx += g_len
 
-                    for cons_goods in goods_list:
+                    for goods_idx, cons_goods in enumerate(goods_list):
                         row = []
                         for col in studio_cols:
                             val = extract_dmr_cell_value(
@@ -905,7 +907,8 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                                 date_fmt=col.date_format,
                                 included_charges=col.included_charges,
                                 static_val=col.static_value,
-                                goods_count=g_len
+                                goods_count=g_len,
+                                goods_idx=goods_idx
                             )
                             row.append(val)
                         studio_rows.append(row)
@@ -941,7 +944,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
         )
         effective_tripcost = 0.0 if (cancellation_val > 0 or is_cancel_without_billing) else get_tms_report_transport_charge(trip, allotment=va)
 
-        for cons_goods in eval_goods:
+        for goods_idx, cons_goods in enumerate(eval_goods):
             row = []
             for h in headers:
                 hh = " ".join(h.strip().lower().split())
@@ -1295,7 +1298,8 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
                     continue
                 if hh in ("hbl wise split cost", "hbl split cost", "split cost", "hbl wise split"):
                     g_cnt = g_len if g_len > 0 else 1
-                    row.append(round(effective_tripcost / g_cnt, 2));
+                    val = round(effective_tripcost / g_cnt, 2)
+                    row.append(int(val) if val.is_integer() else val)
                     continue
                 if hh in ("loading/unloading charges", "loading & unloading charges", "loading / unloading charges"):
                     row.append(safe_num(trip.tc_loadingcost) + safe_num(trip.tc_unloadingcost));
@@ -1540,6 +1544,64 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
             cell.border = border
             cell.alignment = center_align
 
+    # Check studio columns for exact field_key lookup if applicable
+    studio_col_map = {}
+    if template_key and str(template_key).startswith("STUDIO_"):
+        try:
+            tmpl_id = int(str(template_key).replace("STUDIO_", ""))
+            studio_cols = list(DmrTemplateColumn.objects.filter(template_id=tmpl_id).order_by('column_order'))
+            for idx, sc in enumerate(studio_cols):
+                studio_col_map[idx] = sc.field_key
+        except Exception:
+            pass
+
+    # Find HBL Wise Split Cost column(s) and Transport Cost column for Idea 2 dynamic formula
+    split_col_indices = []
+    transport_col_idx = None
+
+    for col_idx, h in enumerate(headers):
+        h_str = str(h).strip()
+        h_upper = h_str.upper()
+        f_key = (studio_col_map.get(col_idx) or "").strip().lower()
+
+        if f_key in ("hbl_wise_split_cost", "split_cost") or "SPLIT COST" in h_upper or "HBL WISE" in h_upper:
+            split_col_indices.append(col_idx + 1)
+
+        if transport_col_idx is None:
+            if f_key == "tripcost" or f_key in ("transport_cost", "trip_cost"):
+                transport_col_idx = col_idx + 1
+            elif h_upper in (
+                "TRANSPORT COST", "TRIP COST", "TRIP CHARGES", "FREIGHT CHARGES",
+                "FREIGHT COST", "TRIP / FREIGHT CHARGES", "TRIP CHARGES / FREIGHT COST",
+                "BASE FREIGHT", "VEHICLE FREIGHT"
+            ) or ("TRANSPORT" in h_upper and "COST" in h_upper):
+                transport_col_idx = col_idx + 1
+
+    # Apply Idea 2: Dynamic Excel formula for HBL Wise Split Cost (=<TransportCostCell>/<Count>)
+    if split_col_indices:
+        trans_letter = get_column_letter(transport_col_idx) if transport_col_idx else None
+        for start_i, end_i in trip_groups:
+            first_row = data_start_row + start_i
+            last_row = data_start_row + end_i
+            g_cnt = max(end_i - start_i + 1, 1)
+
+            for r_idx in range(first_row, last_row + 1):
+                for sc_idx in split_col_indices:
+                    cell = ws.cell(row=r_idx, column=sc_idx)
+                    if trans_letter:
+                        if g_cnt > 1:
+                            cell.value = f"={trans_letter}{first_row}/{g_cnt}"
+                        else:
+                            cell.value = f"={trans_letter}{first_row}"
+                    else:
+                        try:
+                            raw_val = rows[start_i][sc_idx - 1] if start_i < len(rows) and sc_idx - 1 < len(rows[start_i]) else 0
+                            tot_val = float(raw_val) * g_cnt
+                            cell.value = f"={tot_val:g}/{g_cnt}" if g_cnt > 1 else tot_val
+                        except (ValueError, TypeError):
+                            pass
+                    cell.number_format = '0.00'
+
     # Check cell merging rule (Studio template toggle or EIPL fallback)
     should_merge = False
     if template_key and str(template_key).startswith("STUDIO_"):
@@ -1555,17 +1617,6 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
 
     if should_merge and len(rows) > 1:
         upper_headers = [str(h).strip().upper() for h in headers]
-
-        # Check studio columns for exact field_key lookup if applicable
-        studio_col_map = {}
-        if template_key and str(template_key).startswith("STUDIO_"):
-            try:
-                tmpl_id = int(str(template_key).replace("STUDIO_", ""))
-                studio_cols = list(DmrTemplateColumn.objects.filter(template_id=tmpl_id).order_by('column_order'))
-                for idx, sc in enumerate(studio_cols):
-                    studio_col_map[idx] = sc.field_key
-            except Exception:
-                pass
 
         # Merge strictly WITHIN each multi-row trip
         for start_i, end_i in trip_groups:
@@ -1589,7 +1640,12 @@ def build_dmr_excel_workbook(customer_obj, dept_id, dept_name, from_loc, to_loc,
         max_len = 0
         for cell in col:
             try:
-                if cell.value: max_len = max(max_len, len(str(cell.value)))
+                if cell.value:
+                    val_str = str(cell.value)
+                    if val_str.startswith('='):
+                        max_len = max(max_len, 10)
+                    else:
+                        max_len = max(max_len, len(val_str))
             except:
                 pass
         ws.column_dimensions[col[0].column_letter].width = max(max_len + 3, 12)
