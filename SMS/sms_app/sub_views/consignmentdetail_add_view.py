@@ -638,7 +638,9 @@ def consignmentdetail_list_ajax(request):
             Q(cg_consignmentnumber__cg_consignee__consignee_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consignerinvoice__icontains=search_value) |
             Q(cg_consignmentnumber__cg_ebillno__icontains=search_value) |
-            Q(transinvoiceinfo__ti_inv_no__icontains=search_value)
+            Q(transinvoiceinfo__ti_inv_no__icontains=search_value) |
+            Q(tripdetailinfo__tr_drivername__icontains=search_value) |
+            Q(tripdetailinfo__tr_drivernumber__icontains=search_value)
         ).distinct()
 
     records_filtered = qs.count()
@@ -654,25 +656,27 @@ def consignmentdetail_list_ajax(request):
         4: 'co_consignmentnumber',
         5: 'co_consignmentdate',
         6: 'co_vehicelnumber',
-        # 7 is Vehicle Source, which we can't easily sort by right now
-        8: 'co_fromlocaion__place_name',
-        9: 'co_tolocation__place_name',
-        10: 'cg_consignmentnumber__cg_consigner__consigner_name',
-        11: 'cg_consignmentnumber__cg_consignee__consignee_name',
-        12: 'cg_consignmentnumber__cg_consignerinvoice',
-        13: 'cg_consignmentnumber__cg_consignervalue',
-        14: 'cg_consignmentnumber__cg_valueininr',
-        15: 'cg_consignmentnumber__cg_qty',
-        16: 'cg_consignmentnumber__cg_weight',
-        17: 'cg_consignmentnumber__cg_ebillno',
-        18: 'cg_consignmentnumber__cg_consignerinvoice_date',
-        19: 'cg_consignmentnumber__cg_dateofvalidity',
-        20: 'co_containerdescription',
-        22: 'co_enquirynumber__en_movement_type__mt_movementtype',
-        23: 'co_status__status_title',
-        24: 'co_updated_at',
-        25: 'co_lastmodifiedby__first_name',
-        26: 'co_createdby__first_name',
+        # 7 is Vehicle Source, orderable: false
+        # 8 is Driver Name, orderable: false
+        # 9 is Driver Mobile No, orderable: false
+        10: 'co_fromlocaion__place_name',
+        11: 'co_tolocation__place_name',
+        12: 'cg_consignmentnumber__cg_consigner__consigner_name',
+        13: 'cg_consignmentnumber__cg_consignee__consignee_name',
+        14: 'cg_consignmentnumber__cg_consignerinvoice',
+        15: 'cg_consignmentnumber__cg_consignervalue',
+        16: 'cg_consignmentnumber__cg_valueininr',
+        17: 'cg_consignmentnumber__cg_qty',
+        18: 'cg_consignmentnumber__cg_weight',
+        19: 'cg_consignmentnumber__cg_ebillno',
+        20: 'cg_consignmentnumber__cg_consignerinvoice_date',
+        21: 'cg_consignmentnumber__cg_dateofvalidity',
+        22: 'co_containerdescription',
+        24: 'co_enquirynumber__en_movement_type__mt_movementtype',
+        25: 'co_status__status_title',
+        26: 'co_updated_at',
+        27: 'co_lastmodifiedby__first_name',
+        28: 'co_createdby__first_name',
     }
     order_field = col_map.get(order_col, 'id')
     if order_dir == 'desc':
@@ -696,13 +700,40 @@ def consignmentdetail_list_ajax(request):
             inv['ti_total'] or 0,
         )
 
-    from ..models import TripdetailInfo
+    from ..models import TripdetailInfo, Vehicle_allotmentInfo
     trip_map = {}
     for trip in TripdetailInfo.objects.filter(
             tr_consignmentnumber_id__in=page_cons_ids
-    ).select_related('tr_vehiclesource'):
-        if trip.tr_vehiclesource:
-            trip_map[trip.tr_consignmentnumber_id] = trip.tr_vehiclesource.ow_ownership
+    ).select_related('tr_vehiclesource').order_by('id'):
+        trip_map[trip.tr_consignmentnumber_id] = {
+            'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else '',
+            'driver_name': trip.tr_drivername or '',
+            'driver_mobile': trip.tr_drivernumber or '',
+        }
+
+    # Fallback to Vehicle_allotmentInfo for any missing details
+    missing_enq_ids = [
+        obj.co_enquirynumber_id for obj in page_qs
+        if obj.co_enquirynumber_id and (
+            obj.id not in trip_map or
+            not trip_map[obj.id].get('driver_name') or
+            not trip_map[obj.id].get('driver_mobile') or
+            not trip_map[obj.id].get('vehicle_source')
+        )
+    ]
+    va_map = {}
+    if missing_enq_ids:
+        for va in Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id__in=missing_enq_ids
+        ).select_related('va_vehiclesource', 'va_driver').order_by('id'):
+            d_name = va.va_drivername or (va.va_driver.dm_name if va.va_driver else '')
+            d_phone = va.va_drivernumber or (va.va_driver.dm_phone_number if va.va_driver else '')
+            v_source = va.va_vehiclesource.ow_ownership if va.va_vehiclesource else ''
+            va_map[va.va_enquirynumber_id] = {
+                'driver_name': d_name or '',
+                'driver_mobile': d_phone or '',
+                'vehicle_source': v_source or '',
+            }
 
     data = []
     # Fetch data
@@ -740,7 +771,12 @@ def consignmentdetail_list_ajax(request):
                     obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
 
         inv_no, inv_total = invoice_map.get(obj.id, ('', 0))
-        vehicle_source = trip_map.get(obj.id, '')
+        trip_info = trip_map.get(obj.id, {})
+        va_info = va_map.get(obj.co_enquirynumber_id, {})
+
+        vehicle_source = trip_info.get('vehicle_source') or va_info.get('vehicle_source', '')
+        driver_name = trip_info.get('driver_name') or va_info.get('driver_name', '')
+        driver_mobile = trip_info.get('driver_mobile') or va_info.get('driver_mobile', '')
 
         data.append([
             obj.id,  # 0: ID
@@ -751,29 +787,31 @@ def consignmentdetail_list_ajax(request):
             obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '',  # 5: Consignment Date
             obj.co_vehicelnumber or '',  # 6: Vehicle Number
             vehicle_source,  # 7: Vehicle Source
-            display_from,  # 8: From Location
-            display_to,  # 8: To Location
-            consigner,  # 9: Consigner
-            consignee,  # 10: Consignee
-            invoice,  # 11: Consigner Invoice
-            str(total_value),  # 12: Value
-            str(total_value_inr),  # 13: Value in INR
-            str(total_qty),  # 14: No. of Pieces
-            str(total_weight),  # 15: Weight
-            ebill,  # 16: Eway-Bill No.
-            issue_date,  # 17: Date of Issue
-            validity_date,  # 18: Date of Validity
-            obj.co_containerdescription or '',  # 19: Container Description
-            dimension,  # 20: Dimension
-            movement,  # 21: Movement
-            str(obj.co_status) if obj.co_status else '',  # 22: Status
-            timezone.localtime(obj.co_updated_at).strftime('%Y-%m-%d') if obj.co_updated_at else '',  # 23: Updated On
-            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '',  # 24: Updated By
-            str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '',  # 25: Created By
-            inv_no,  # 26: Invoice Number
-            inv_total,  # 27: Invoice Amount
-            obj.id,  # 28: Edit
-            obj.id,  # 29: Delete
+            driver_name,  # 8: Driver Name
+            driver_mobile,  # 9: Driver Mobile No
+            display_from,  # 10: From Location
+            display_to,  # 11: To Location
+            consigner,  # 12: Consigner
+            consignee,  # 13: Consignee
+            invoice,  # 14: Consigner Invoice
+            str(total_value),  # 15: Value
+            str(total_value_inr),  # 16: Value in INR
+            str(total_qty),  # 17: No. of Pieces
+            str(total_weight),  # 18: Weight
+            ebill,  # 19: Eway-Bill No.
+            issue_date,  # 20: Date of Issue
+            validity_date,  # 21: Date of Validity
+            obj.co_containerdescription or '',  # 22: Container Description
+            dimension,  # 23: Dimension
+            movement,  # 24: Movement
+            str(obj.co_status) if obj.co_status else '',  # 25: Status
+            timezone.localtime(obj.co_updated_at).strftime('%Y-%m-%d') if obj.co_updated_at else '',  # 26: Updated On
+            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '',  # 27: Updated By
+            str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '',  # 28: Created By
+            inv_no,  # 29: Invoice Number
+            inv_total,  # 30: Invoice Amount
+            obj.id,  # 31: Edit
+            obj.id,  # 32: Delete
         ])
 
     return JsonResponse({

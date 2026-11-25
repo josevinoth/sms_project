@@ -18,20 +18,29 @@ class DriverExpenseForm(forms.ModelForm):
         # ===============================
         # ✅ FILTER TRIP NUMBERS CORRECTLY
         # ===============================
+        from django.db.models import Q
+        cancel_billing_q = (
+            (Q(tc_financestatus__id=10) | Q(tr_operational_status__id=10) | Q(tc_cancellation_check=True)) &
+            ~Q(tc_financestatus__id=11) &
+            ~Q(tr_operational_status__id=11)
+        )
+
         qs = TripdetailInfo.objects.filter(
-            tc_financestatus__id__in=[5, 7, 9]
+            Q(tc_financestatus__id__in=[5, 7, 9]) | cancel_billing_q
+        ).exclude(
+            Q(tc_financestatus__id=11) | Q(tr_operational_status__id=11)
         )
 
         if settlement:
             # 🟢 PREFERRED: FILTER BY DRIVER MASTER ID
-            if getattr(settlement, 'driver_master_id', None):
+            if getattr(settlement, 'driver', None):
                 qs = qs.filter(
-                    tr_driver_master_id=settlement.driver_master_id
+                    Q(tr_driver_master_id=settlement.driver.id) | Q(tr_drivername=settlement.driver.dm_name)
                 )
-            else:
+            elif getattr(settlement, 'driver_name', None):
                 # 🟡 FALLBACK: FILTER BY DRIVER NAME
                 qs = qs.filter(
-                    tr_drivername=settlement.driver
+                    tr_drivername=settlement.driver_name
                 )
 
         self.fields['trip_number'].queryset = qs

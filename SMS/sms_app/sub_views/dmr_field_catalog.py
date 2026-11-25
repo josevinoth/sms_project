@@ -267,7 +267,7 @@ def calculate_custom_charge_total(trip, effective_tripcost, included_charges_str
 
 def extract_dmr_cell_value(field_key, trip, cons_goods=None, cons_detail=None, va=None,
                             effective_tripcost=0.0, row_idx=1, date_fmt=None,
-                            included_charges=None, static_val="", goods_count=1):
+                            included_charges=None, static_val="", goods_count=1, goods_idx=0):
     """
     Unified extraction engine mapping any field_key from the catalog to its dynamic value.
     """
@@ -275,7 +275,7 @@ def extract_dmr_cell_value(field_key, trip, cons_goods=None, cons_detail=None, v
         return _extract_dmr_cell_value_inner(
             field_key, trip, cons_goods, cons_detail, va,
             effective_tripcost, row_idx, date_fmt,
-            included_charges, static_val, goods_count
+            included_charges, static_val, goods_count, goods_idx
         )
     except Exception:
         return ""
@@ -283,7 +283,7 @@ def extract_dmr_cell_value(field_key, trip, cons_goods=None, cons_detail=None, v
 
 def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=None, va=None,
                                    effective_tripcost=0.0, row_idx=1, date_fmt=None,
-                                   included_charges=None, static_val="", goods_count=1):
+                                   included_charges=None, static_val="", goods_count=1, goods_idx=0):
     fk = (field_key or "").strip().lower()
     df = date_fmt.strip() if date_fmt else ""
 
@@ -548,7 +548,8 @@ def _extract_dmr_cell_value_inner(field_key, trip, cons_goods=None, cons_detail=
         return _safe_num(trip.tc_loadingcost) + _safe_num(trip.tc_unloadingcost)
     if fk in ("hbl_wise_split_cost", "split_cost"):
         g_cnt = goods_count if goods_count and goods_count > 0 else 1
-        return round(effective_tripcost / g_cnt, 2)
+        val = round(effective_tripcost / g_cnt, 2)
+        return int(val) if val.is_integer() else val
     if fk in ("custom_total_charges", "total_charges"):
         return calculate_custom_charge_total(trip, effective_tripcost, included_charges)
 

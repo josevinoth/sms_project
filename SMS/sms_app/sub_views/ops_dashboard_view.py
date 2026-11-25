@@ -445,7 +445,7 @@ def get_ops_dashboard_data(request):
         {
             'name': 'Placed Vs Invoiced',
             'icon': 'fas fa-file-invoice-dollar',
-            'icon_color': '#34d399',
+            'icon_color': '#06b6d4',
             'period_val': f"{p_placed_invoiced_pct:.1f}%",
             'mtd_val': f"{m_placed_invoiced_pct:.1f}%",
             'insight': f"{p_total_invoiced_or_ready} Invoiced / {p_placed} Placed",
@@ -456,12 +456,12 @@ def get_ops_dashboard_data(request):
         {
             'name': 'Placed OWN',
             'icon': 'fas fa-truck-moving',
-            'icon_color': '#3b82f6',
+            'icon_color': '#0ea5e9',
             'period_val': f"{p_placed_own} ({p_own_share}%)",
             'mtd_val': f"{m_placed_own} ({m_own_share}%)",
             'insight': f"{p_own_share}% Fleet Share",
-            'badge_color': '#3b82f6',
-            'badge_bg': 'rgba(59, 130, 246, 0.15)',
+            'badge_color': '#38bdf8',
+            'badge_bg': 'rgba(14, 165, 233, 0.15)',
             'subtext': 'Company owned assets'
         },
         {
@@ -500,23 +500,23 @@ def get_ops_dashboard_data(request):
         {
             'name': 'MKT (Local) No of vendors used',
             'icon': 'fas fa-store-alt',
-            'icon_color': '#14b8a6',
+            'icon_color': '#6366f1',
             'period_val': str(p_vendors_mkt_local),
             'mtd_val': str(m_vendors_mkt_local),
             'insight': f"{p_vendors_mkt_local} Distinct Vendors",
-            'badge_color': '#2dd4bf',
-            'badge_bg': 'rgba(20, 184, 166, 0.15)',
+            'badge_color': '#818cf8',
+            'badge_bg': 'rgba(99, 102, 241, 0.15)',
             'subtext': f"{p_avg_local_per_vendor} avg load/vendor"
         },
         {
             'name': 'MKT (OS) No of vendors used',
             'icon': 'fas fa-warehouse',
-            'icon_color': '#0ea5e9',
+            'icon_color': '#14b8a6',
             'period_val': str(p_vendors_mkt_os),
             'mtd_val': str(m_vendors_mkt_os),
             'insight': f"{p_vendors_mkt_os} Distinct Vendors",
-            'badge_color': '#38bdf8',
-            'badge_bg': 'rgba(14, 165, 233, 0.15)',
+            'badge_color': '#2dd4bf',
+            'badge_bg': 'rgba(20, 184, 166, 0.15)',
             'subtext': f"{p_avg_os_per_vendor} avg load/vendor"
         },
     ]
@@ -543,28 +543,34 @@ def get_ops_dashboard_data(request):
         'total_demanded': p_booking,
     }
 
-    # Chart 1: Fleet Sourcing Breakdown (Completely Distinct Colors: Blue, Amber, Green, Purple)
+    # Chart 1: Fleet Sourcing Breakdown (Matching KPI Cards 3, 4, 5, 6: Ocean Slate Blue, Warm Topaz Gold, Emerald Green, Imperial Purple)
     chart_sourcing = {
         'labels': ['Placed OWN', 'Placed ATTC', 'Placed MKT (Local)', 'Placed MKT (OS)'],
         'data': [p_placed_own, p_placed_attc, p_placed_mkt_local, p_placed_mkt_os],
-        'colors': ['rgba(59, 130, 246, 0.90)', 'rgba(245, 158, 11, 0.90)', 'rgba(16, 185, 129, 0.90)', 'rgba(168, 85, 247, 0.90)'],
+        'colors': ['rgba(14, 165, 233, 0.88)', 'rgba(245, 158, 11, 0.88)', 'rgba(16, 185, 129, 0.88)', 'rgba(168, 85, 247, 0.88)'],
+        'border_colors': ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7'],
     }
 
-    # Chart 2: Fulfillment & Invoicing Multi-stage Conversion Funnel
+    # Chart 2: Fulfillment & Invoicing Multi-stage Conversion Funnel (Matching KPI Cards 1, 3, 2: Royal Sapphire, Ocean Slate Blue, Cyan Arctic Teal)
     chart_funnel = {
         'labels': ['1. Demanded Bookings', '2. Placed Allotments', '3. Invoiced / Ready'],
         'data': [p_booking, p_placed, p_total_invoiced_or_ready],
-        'colors': ['rgba(59, 130, 246, 0.85)', 'rgba(16, 185, 129, 0.85)', 'rgba(217, 119, 6, 0.85)'],
+        'colors': ['rgba(59, 130, 246, 0.85)', 'rgba(14, 165, 233, 0.85)', 'rgba(6, 182, 212, 0.85)'],
+        'border_colors': ['#3b82f6', '#0ea5e9', '#06b6d4'],
         'fulfillment_pct': p_booking_placed_pct,
         'invoicing_pct': p_placed_invoiced_pct
     }
 
-    # Chart 3: Market Logistics Local vs OS Comparison
+    # Chart 3: Market Logistics Local vs OS Comparison (Matching KPI Cards 5, 6, 7, 8)
     chart_market_comp = {
         'labels': ['Market Local', 'Market Outstation (OS)'],
         'placed': [p_placed_mkt_local, p_placed_mkt_os],
         'vendors': [p_vendors_mkt_local, p_vendors_mkt_os],
-        'avg_per_vendor': [p_avg_local_per_vendor, p_avg_os_per_vendor]
+        'avg_per_vendor': [p_avg_local_per_vendor, p_avg_os_per_vendor],
+        'placed_colors': ['rgba(16, 185, 129, 0.85)', 'rgba(168, 85, 247, 0.85)'],
+        'placed_borders': ['#10b981', '#a855f7'],
+        'vendor_colors': ['rgba(99, 102, 241, 0.85)', 'rgba(20, 184, 166, 0.85)'],
+        'vendor_borders': ['#6366f1', '#14b8a6']
     }
 
     # Chart 4: Top Vendors Breakdown
