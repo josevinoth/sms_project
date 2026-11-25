@@ -105,6 +105,36 @@ def resolve_trip_allotment(trip, allotment_map=None):
     return allotments.first()
 
 
+def build_allotment_map(allotments):
+    """
+    Builds an optimized lookup dictionary compatible with resolve_trip_allotment.
+    Maps:
+      - (enquiry_id, clean_veh) -> allotment
+      - (enquiry_id, raw_veh) -> allotment
+      - enquiry_id -> list of allotments
+    """
+    va_map = {}
+    for va in allotments:
+        eid = va.va_enquirynumber_id
+        if eid not in va_map:
+            va_map[eid] = []
+        if isinstance(va_map[eid], list):
+            va_map[eid].append(va)
+
+        veh_str = ""
+        if va.va_vehiclenumber:
+            veh_str = getattr(va.va_vehiclenumber, 'vm_registrationnumber', '') or ''
+        elif va.va_vehiclenumber_mkt:
+            veh_str = va.va_vehiclenumber_mkt or ''
+
+        if veh_str:
+            clean_v = str(veh_str).replace(" ", "").replace("-", "").upper()
+            if clean_v:
+                va_map[(eid, clean_v)] = va
+            va_map[(eid, str(veh_str))] = va
+    return va_map
+
+
 def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_map=None):
     """
     Standardized Transportation / Trip Charge calculation for TMS reports (except Attached P/L):
@@ -674,6 +704,20 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
                 safe_num(details.get('halting_cost', 0))
             )
         else:
+            if va_info and trip.tr_vehiclenumber:
+                v_no = ""
+                if getattr(va_info, 'va_vehiclenumber', None):
+                    v_no = getattr(va_info.va_vehiclenumber, 'vm_registrationnumber', '') or ''
+                elif getattr(va_info, 'va_vehiclenumber_mkt', None):
+                    v_no = va_info.va_vehiclenumber_mkt or ''
+                if v_no:
+                    clean_va_veh = str(v_no).replace(" ", "").replace("-", "").upper()
+                    clean_trip_veh = str(trip.tr_vehiclenumber).replace(" ", "").replace("-", "").upper()
+                    if clean_va_veh and clean_trip_veh and clean_va_veh != clean_trip_veh:
+                        va_info = resolve_trip_allotment(trip)
+            elif not va_info and trip.tr_enquirynumber_id:
+                va_info = resolve_trip_allotment(trip)
+
             if va_info:
                 if safe_num(va_info.va_specialbuy) > 0:
                     tc_tripcost = safe_num(va_info.va_specialbuy)
@@ -6605,9 +6649,9 @@ def own_vs_market_sales_report_view(request):
         )
 
     # Prefetch Vehicle Allotment for Market Buy Rate
-    enquiry_ids = [t.tr_enquirynumber_id for t in trips]
-    va_data = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids)
-    va_map = {v.va_enquirynumber_id: v for v in va_data}
+    enquiry_ids = [t.tr_enquirynumber_id for t in trips if t.tr_enquirynumber_id]
+    va_data = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids).select_related('va_vendor', 'va_vehiclenumber')
+    va_map = build_allotment_map(va_data)
 
     aggregated_data = {}
 
@@ -6703,7 +6747,7 @@ def own_vs_market_sales_report_view(request):
                 data['mkt_drivers'].add(trip.tr_drivername)
 
             # Market Buy Rate from Allotment
-            va = va_map.get(trip.tr_enquirynumber_id)
+            va = resolve_trip_allotment(trip, va_map)
             if va:
                 data['mkt_buy_rate'] += safe_num(va.va_specialbuy) or safe_num(va.va_standardbuy)
 
@@ -7565,10 +7609,10 @@ def movementwise_pl_report_ajax_view(request):
                 t_id = int(s_key)
             if t_id and t_id in trip_id_to_pk: expense_map.setdefault(t_id, []).append(e)
 
-        va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
+        all_allotments = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_matching_trips if
-                                     t.tr_enquirynumber_id]).select_related('va_vendor')}
-        vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
+                                     t.tr_enquirynumber_id]).select_related('va_vendor', 'va_vehiclenumber')
+        va_map = build_allotment_map(all_allotments)
 
         bill_no_map = {}
         for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
@@ -7600,7 +7644,7 @@ def movementwise_pl_report_ajax_view(request):
         for idx, trip in enumerate(all_matching_trips, start=start + 1):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
-            va_info = va_map.get(trip.tr_enquirynumber_id)
+            va_info = resolve_trip_allotment(trip, va_map)
             ab_bill = attached_bill_map.get(trip.id) or (
                 attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
             mb_bill = bill_no_map.get(trip.id) or (
@@ -7763,10 +7807,10 @@ def customerwise_pl_report_ajax_view(request):
                 t_id = int(s_key)
             if t_id and t_id in trip_id_to_pk: expense_map.setdefault(t_id, []).append(e)
 
-        va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
+        all_allotments = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_matching_trips if
-                                     t.tr_enquirynumber_id]).select_related('va_vendor')}
-        vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
+                                     t.tr_enquirynumber_id]).select_related('va_vendor', 'va_vehiclenumber')
+        va_map = build_allotment_map(all_allotments)
 
         bill_no_map = {}
         for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
@@ -7805,7 +7849,7 @@ def customerwise_pl_report_ajax_view(request):
         for idx, trip in enumerate(all_matching_trips, start=start + 1):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
-            va_info = va_map.get(trip.tr_enquirynumber_id)
+            va_info = resolve_trip_allotment(trip, va_map)
             ab_bill = attached_bill_map.get(trip.id) or (
                 attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
             mb_bill = bill_no_map.get(trip.id) or (
@@ -7999,9 +8043,10 @@ def customerwise_pl_report_export_view(request):
             if t_id and t_id in trip_id_to_pk:
                 expense_map.setdefault(t_id, []).append(e)
 
-        va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
+        all_allotments = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id__in=all_enq_ids
-        ).only('id', 'va_enquirynumber_id', 'va_vendor_id', 'va_specialbuy', 'va_vehiclenumber', 'va_vehiclenumber_mkt').select_related('va_vendor')}
+        ).only('id', 'va_enquirynumber_id', 'va_vendor_id', 'va_specialbuy', 'va_vehiclenumber', 'va_vehiclenumber_mkt').select_related('va_vendor', 'va_vehiclenumber')
+        va_map = build_allotment_map(all_allotments)
 
         # Pre-fetch Enquirynotevehicle in one single query to eliminate thousands of N+1 DB round-trips
         env_by_enq_vt = {}
@@ -8210,7 +8255,7 @@ def customerwise_pl_report_export_view(request):
         for idx, trip in enumerate(all_matching_trips, start=1):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
-            va_info = va_map.get(trip.tr_enquirynumber_id)
+            va_info = resolve_trip_allotment(trip, va_map)
             ab_bill = attached_bill_map.get(trip.id) or (
                 attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
             mb_bill = bill_no_map.get(trip.id) or (
@@ -8266,7 +8311,26 @@ def customerwise_pl_report_export_view(request):
                     tc_tripcost = safe_num(va_info.va_specialbuy) if (va_info and safe_num(va_info.va_specialbuy) > 0) else 0.0
                     tc_tollcost = safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_vendor_check', False) else 0.0
                     tc_supervisorcost = safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_vendor_check', False) else 0.0
-                    total_buying = tc_tripcost + tc_tollcost + tc_supervisorcost
+                    tc_loadingcost = safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_vendor_check', False) else 0.0
+                    tc_unloadingcost = safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_vendor_check', False) else 0.0
+                    tc_weighmentcost = safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_vendor_check', False) else 0.0
+                    tc_handlingcost = safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_vendor_check', False) else 0.0
+                    tc_parkingcost = safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_vendor_check', False) else 0.0
+                    tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_vendor_check', False) else 0.0
+                    tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_vendor_check', False) else 0.0
+                    tc_cancellation = safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_vendor_check', False) else 0.0
+
+                    halting_days = safe_num(trip.tc_no_of_days_halting)
+                    if getattr(trip, 'tc_total_halting_cost_vendor_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                        tc_haltingcost = safe_num(trip.tc_total_halting_cost)
+                    elif getattr(trip, 'tc_haltingcost_vendor_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                        tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
+                    else:
+                        tc_haltingcost = 0.0
+
+                    total_buying = (tc_tripcost + tc_tollcost + tc_supervisorcost + tc_loadingcost + tc_unloadingcost +
+                                    tc_weighmentcost + tc_haltingcost + tc_handlingcost + tc_parkingcost +
+                                    tc_rtocost + tc_betacost + tc_cancellation)
 
             profit = selling - total_buying
             profit_pct = (profit / selling * 100) if selling > 0 else 0.0
@@ -8404,8 +8468,10 @@ def location_pl_report_view(request):
         if t_id and t_id in trip_id_to_pk:
             expense_map.setdefault(t_id, []).append(e)
 
-    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
+    all_allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_trips if t.tr_enquirynumber_id]
+    ).select_related('va_vendor', 'va_vehiclenumber')
+    va_map = build_allotment_map(all_allotments)
 
     bill_no_map = {}
     for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
@@ -8456,7 +8522,7 @@ def location_pl_report_view(request):
 
     for t in all_trips:
         inv = invoice_map.get(t.id)
-        va = va_map.get(t.tr_enquirynumber_id)
+        va = resolve_trip_allotment(t, va_map)
         src = t.tr_vehiclesource_id
         if not src and t.tr_vehiclenumber:
             clean_no = str(t.tr_vehiclenumber).replace(" ", "").upper()
@@ -8676,16 +8742,7 @@ def location_pl_report_view(request):
 
     mkt_op_exp = 0.0
     for trip in mkt_trips:
-        allotment = allotment_map_mkt.get((trip.tr_enquirynumber_id, trip.tr_vehiclenumber))
-        if not allotment and trip.tr_vehiclenumber:
-            clean_veh = trip.tr_vehiclenumber.replace(' ', '').upper()
-            a = va_map.get(trip.tr_enquirynumber_id)
-            if a:
-                a_veh_no = (str(a.va_vehiclenumber) if a.va_vehiclenumber else a.va_vehiclenumber_mkt or '')
-                if a_veh_no.replace(' ', '').upper() == clean_veh:
-                    allotment = a
-        if not allotment and trip.tr_enquirynumber_id:
-            allotment = va_map.get(trip.tr_enquirynumber_id)
+        allotment = resolve_trip_allotment(trip, va_map)
 
         mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
         buying_trip_cost = 0.0
