@@ -736,7 +736,9 @@ def invoice_add(request, invoice_id=0):
                 messages.success(request, 'Record Added Successfully!')
                 return redirect('/SMS/invoice_list')
             else:
-                messages.error(request, 'Check all mandatory fields!')
+                for field, errors in invoice_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
                 context = {
                     'invoice_form': invoice_form,
                     'first_name': first_name,
@@ -772,7 +774,9 @@ def invoice_add(request, invoice_id=0):
                         Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
                 return redirect('/SMS/invoice_list')
             else:
-                messages.error(request, 'Check all mandatory fields!')
+                for field, errors in invoice_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
                 voucher_num = invoice.bill_invoice_ref
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)
                 context = {
@@ -892,7 +896,7 @@ def invoice_list_ajax(request):
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
 
-    order_column_index = int(request.GET.get('order[0][column]', 1))
+    order_column_index = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'desc')
 
     queryset = BilingInfo.objects.select_related('bill_customer_name', 'bill_customer_type', 'bill_updated_by').all()
