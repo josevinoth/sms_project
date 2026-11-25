@@ -382,6 +382,31 @@ def get_tms_dashboard_data(request):
     if employee_id and employee_id != 'all':
         progress_qs = progress_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
 
+    selected_month_str = f"{current_year}-{current_month:02d}"
+    # If selected/current month has no trips (e.g. testing in local env), fallback to the latest active month
+    if not progress_qs.exists() and (not progress_month_str or (current_year == local_now.year and current_month == local_now.month)):
+        latest_trip = TripdetailInfo.objects.filter(
+            tr_category__category__icontains="Business",
+            tr_enquirynumber__en_created_at__isnull=False,
+            tr_vehiclesource_id__in=own_attached_ids,
+        )
+        if employee_id and employee_id != 'all':
+            latest_trip = latest_trip.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+        latest_trip = latest_trip.order_by('-tr_enquirynumber__en_created_at').first()
+        if latest_trip:
+            dt = timezone.localtime(latest_trip.tr_enquirynumber.en_created_at)
+            current_year = dt.year
+            current_month = dt.month
+            selected_month_str = f"{current_year}-{current_month:02d}"
+            progress_qs = TripdetailInfo.objects.filter(
+                tr_category__category__icontains="Business",
+                tr_enquirynumber__en_created_at__year=current_year,
+                tr_enquirynumber__en_created_at__month=current_month,
+                tr_vehiclesource_id__in=own_attached_ids,
+            )
+            if employee_id and employee_id != 'all':
+                progress_qs = progress_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+
     trips_by_vehicle = progress_qs.values(
         'tr_vehicletype__vt_vehicletype',
         'tr_vehiclenumber'
@@ -439,6 +464,7 @@ def get_tms_dashboard_data(request):
             'labels': progress_labels,
             'counts': progress_counts,
             'breakdowns': progress_breakdowns,
-            'month_name': month_name
+            'month_name': month_name,
+            'selected_month': selected_month_str
         }
     })

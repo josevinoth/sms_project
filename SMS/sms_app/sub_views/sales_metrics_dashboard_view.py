@@ -681,24 +681,108 @@ def get_sales_metrics_dashboard_data(request):
         }
     }
 
-    # 2. Call Channel Distribution (middle card 1)
+    # 2. Call Channel Distribution (middle card 1) - Coordinated with Top KPI Card Colors
     call_channels = [
         {'name': "In-Person Meetings", 'count': total_in_person, 'pct': in_person_rate, 'color': '#3b82f6', 'icon': 'fa-user-friends'},
-        {'name': "Tele-Calls (Phone)", 'count': total_tele_call, 'pct': tele_rate, 'color': '#10b981', 'icon': 'fa-headset'},
-        {'name': "E-Mail Outreach", 'count': total_email, 'pct': round((total_email / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#a855f7', 'icon': 'fa-envelope'},
-        {'name': "MS-Teams Calls", 'count': total_teams, 'pct': round((total_teams / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#f59e0b', 'icon': 'fa-video'},
+        {'name': "Tele-Calls (Phone)", 'count': total_tele_call, 'pct': tele_rate, 'color': '#f59e0b', 'icon': 'fa-headset'},
+        {'name': "E-Mail Outreach", 'count': total_email, 'pct': round((total_email / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#10b981', 'icon': 'fa-envelope'},
+        {'name': "MS-Teams Calls", 'count': total_teams, 'pct': round((total_teams / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#06b6d4', 'icon': 'fa-video'},
     ]
 
-    # 3. Pipeline Funnel (middle card 2)
-    pipeline_stages = [
-        {'name': "Suspect", 'count': total_suspect, 'pct': round((total_suspect / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#94a3b8', 'icon': 'fa-search'},
-        {'name': "Prospect", 'count': total_prospect, 'pct': round((total_prospect / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#60a5fa', 'icon': 'fa-binoculars'},
-        {'name': "RFQ / RFP", 'count': total_rfq, 'pct': round((total_rfq / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#eab308', 'icon': 'fa-file-invoice'},
-        {'name': "Negotiation", 'count': total_negotiation, 'pct': round((total_negotiation / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#fb923c', 'icon': 'fa-handshake'},
-        {'name': "Contract Won", 'count': total_contract_signed, 'pct': round((total_contract_signed / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#22c55e', 'icon': 'fa-file-signature'},
-        {'name': "Implementation", 'count': total_implementation, 'pct': round((total_implementation / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#818cf8', 'icon': 'fa-cogs'},
-        {'name': "Transaction", 'count': total_transaction, 'pct': round((total_transaction / total_calls * 100), 1) if total_calls > 0 else 0, 'color': '#c084fc', 'icon': 'fa-exchange-alt'},
+    # 3. Pipeline Funnel (middle card 2) with Company Breakdown & Customer Details
+    stage_definitions = [
+        ('Suspect', 'suspect', '#94a3b8', 'fa-search'),
+        ('Prospect', 'prospect', '#60a5fa', 'fa-binoculars'),
+        ('RFQ / RFP', ['rfq', 'rfp', 'rfi'], '#eab308', 'fa-file-invoice'),
+        ('Negotiation', 'negotiat', '#fb923c', 'fa-handshake'),
+        ('Contract Won', ['signed', 'contract'], '#22c55e', 'fa-file-signature'),
+        ('Implementation', 'implement', '#818cf8', 'fa-cogs'),
+        ('Transaction', 'transaction', '#c084fc', 'fa-exchange-alt'),
     ]
+
+    calls_pipeline_qs = Sales_Comments_Info.objects.filter(sc_updated_by_id__in=rep_ids)
+    if company_id and company_id != 'all':
+        calls_pipeline_qs = calls_pipeline_qs.filter(sc_sales_number__s_company_id=company_id)
+    if from_date:
+        calls_pipeline_qs = calls_pipeline_qs.filter(sc_date_of_call__gte=from_date)
+    if to_date:
+        calls_pipeline_qs = calls_pipeline_qs.filter(sc_date_of_call__lte=to_date)
+
+    calls_pipeline_qs = calls_pipeline_qs.select_related(
+        'sc_sales_number',
+        'sc_sales_number__s_customer_name',
+        'sc_sales_number__s_company',
+        'sc_updated_by',
+        'sc_call_nature',
+        'sc_call_type'
+    ).order_by('-sc_date_of_call', '-id')
+
+    pipeline_stage_data = {name: {'customers': [], 'company_counts': {}} for name, _, _, _ in stage_definitions}
+    all_pipeline_companies = set()
+
+    for c in calls_pipeline_qs:
+        nature_str = (c.sc_call_nature.call_nature or '').lower() if c.sc_call_nature else ''
+        matched_stage = None
+        for name, keywords, _, _ in stage_definitions:
+            if isinstance(keywords, list):
+                if any(kw in nature_str for kw in keywords):
+                    matched_stage = name
+                    break
+            else:
+                if keywords in nature_str:
+                    matched_stage = name
+                    break
+        if not matched_stage:
+            continue
+
+        s = c.sc_sales_number
+        cname = (s.s_customer_new_name or '').strip() if s else ''
+        if not cname or cname.lower() == 'new customer':
+            if s and s.s_customer_name and s.s_customer_name.cu_name and s.s_customer_name.cu_name.lower() != 'new customer':
+                cname = s.s_customer_name.cu_name.strip()
+            else:
+                cname = f"Client #{s.id}" if s else "Client"
+
+        company_code = _get_short_company(c.sc_updated_by, None, s.s_company if s else None)
+        all_pipeline_companies.add(company_code)
+
+        sales_rep = (c.sc_updated_by.first_name + ' ' + (c.sc_updated_by.last_name or '')).strip() if c.sc_updated_by else 'Unknown'
+        call_date = c.sc_date_of_call.strftime('%d-%b-%Y') if c.sc_date_of_call else 'N/A'
+        call_type = c.sc_call_type.call_type if c.sc_call_type else 'N/A'
+        deal_num = s.s_sale_number if (s and s.s_sale_number) else (f"DEAL_{s.id}" if s else '-')
+        rev = float(s.s_expected_revenue or 0) if s else 0.0
+        comments = (c.sc_comments or '').strip()
+
+        st_obj = pipeline_stage_data[matched_stage]
+        st_obj['company_counts'][company_code] = st_obj['company_counts'].get(company_code, 0) + 1
+        st_obj['customers'].append({
+            'customer_name': cname,
+            'company': company_code,
+            'sales_rep': sales_rep,
+            'call_type': call_type,
+            'call_date': call_date,
+            'deal_number': deal_num,
+            'revenue': rev,
+            'remarks': comments[:120] + ('...' if len(comments) > 120 else '')
+        })
+
+    company_sort_priority = ['PACK', 'TRANS', 'STORAGE', 'EXPRESS', 'TOURS']
+    company_list = sorted(list(all_pipeline_companies), key=lambda x: company_sort_priority.index(x) if x in company_sort_priority else 99)
+
+    pipeline_stages = []
+    for name, _, color, icon in stage_definitions:
+        st_info = pipeline_stage_data[name]
+        st_count = len(st_info['customers'])
+        pipeline_stages.append({
+            'name': name,
+            'count': st_count,
+            'pct': round((st_count / total_calls * 100), 1) if total_calls > 0 else 0,
+            'color': color,
+            'icon': icon,
+            'company_counts': st_info['company_counts'],
+            'customers': st_info['customers'],
+            'unique_customers_count': len(set(x['customer_name'] for x in st_info['customers']))
+        })
 
     # 4. Target Achievement Gauges & Sector Meters (CS Semicircular Gauge Format)
     rev_ex_pct = round((total_actual_rev_ex / total_target_rev_ex * 100), 1) if total_target_rev_ex > 0 else 0
@@ -849,6 +933,7 @@ def get_sales_metrics_dashboard_data(request):
         'cards': cards,
         'call_channels': call_channels,
         'pipeline_stages': pipeline_stages,
+        'pipeline_companies': company_list,
         'gauges': gauges,
         'revenue_meters': revenue_meters,
         'customer_meters': customer_meters,

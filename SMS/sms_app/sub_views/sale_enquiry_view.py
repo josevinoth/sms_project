@@ -14,8 +14,10 @@ from ..sub_models.customer_mod import CustomerInfo
 def sale_enquiry_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    role = User_extInfo.objects.get(user=user_id).emp_role
-    role_id = RoleInfo.objects.get(role_name=role).id
+    user_ext = User_extInfo.objects.filter(user=user_id).first()
+    role = user_ext.emp_role if user_ext else None
+    role_info = RoleInfo.objects.filter(role_name=role).first() if role else None
+    role_id = role_info.id if role_info else 1
 
     sale_enquiry_query = SaleEnquiry.objects.all()
 
@@ -242,8 +244,11 @@ def mc_tours_calendar_events(request):
         cfg = STATUS_CONFIG[status_key]
 
         is_tours = False
-        if enq.mc_customer_type and enq.mc_customer_type.tt_requirement.strip().lower() == 'tours':
-            is_tours = True
+        customer_type_name = ''
+        if enq.mc_customer_type:
+            customer_type_name = str(enq.mc_customer_type.tt_requirement).strip()
+            if customer_type_name.lower() == 'tours':
+                is_tours = True
 
         travel_date_str = enq.mc_travel_date.strftime('%d-%m-%Y')
         return_date_str = enq.mc_return_date.strftime('%d-%m-%Y') if enq.mc_return_date else '-'
@@ -293,6 +298,8 @@ def mc_tours_calendar_events(request):
                 'status': status_key,
                 'statusLabel': cfg['label'],
                 'customer': cust_name,
+                'customerType': customer_type_name,
+                'isTours': is_tours,
                 'from': enq.mc_from or '-',
                 'to': enq.mc_to or '-',
                 'travelDate': travel_date_str,

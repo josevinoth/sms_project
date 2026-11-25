@@ -1089,10 +1089,35 @@ $(document).ready(function() {
 
     function renderSourcingChart(chartData) {
         if (!chartData) return;
-        const ctx = document.getElementById('chartFleetSourcing');
-        if (!ctx) return;
+        const canvas = document.getElementById('chartFleetSourcing');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
         if (sourcingChart) sourcingChart.destroy();
+
+        // Colors strictly aligned with KPI Cards 3, 4, 5, 6:
+        // Placed OWN: Ocean Slate Blue (Card 3: #0369a1 to #0ea5e9)
+        // Placed ATTC: Warm Topaz Gold (Card 4: #b45309 to #f59e0b)
+        // Placed MKT (Local): Emerald Green (Card 5: #065f46 to #10b981)
+        // Placed MKT (OS): Imperial Purple (Card 6: #6b21a8 to #a855f7)
+        const sliceBorders = ['#0ea5e9', '#f59e0b', '#10b981', '#a855f7'];
+
+        // Gradients matching KPI card 135deg executive gradients
+        const gradOwn = ctx.createLinearGradient(0, 0, 180, 180);
+        gradOwn.addColorStop(0, '#0ea5e9');
+        gradOwn.addColorStop(1, '#0369a1');
+
+        const gradAttc = ctx.createLinearGradient(0, 0, 180, 180);
+        gradAttc.addColorStop(0, '#f59e0b');
+        gradAttc.addColorStop(1, '#b45309');
+
+        const gradLocal = ctx.createLinearGradient(0, 0, 180, 180);
+        gradLocal.addColorStop(0, '#10b981');
+        gradLocal.addColorStop(1, '#065f46');
+
+        const gradOs = ctx.createLinearGradient(0, 0, 180, 180);
+        gradOs.addColorStop(0, '#a855f7');
+        gradOs.addColorStop(1, '#6b21a8');
 
         sourcingChart = new Chart(ctx, {
             type: 'pie',
@@ -1100,9 +1125,9 @@ $(document).ready(function() {
                 labels: chartData.labels,
                 datasets: [{
                     data: chartData.data,
-                    backgroundColor: chartData.colors,
-                    borderColor: '#060b24',
-                    borderWidth: 2,
+                    backgroundColor: [gradOwn, gradAttc, gradLocal, gradOs],
+                    borderColor: sliceBorders,
+                    borderWidth: 1.5,
                     hoverOffset: 6
                 }]
             },
@@ -1116,7 +1141,15 @@ $(document).ready(function() {
                             color: '#cbd5e1',
                             font: { size: 9, family: 'Inter', weight: 600 },
                             boxWidth: 9,
-                            padding: 6
+                            padding: 6,
+                            generateLabels: function(chart) {
+                                const original = Chart.overrides.pie.plugins.legend.labels.generateLabels(chart);
+                                original.forEach((item, index) => {
+                                    item.fillStyle = sliceBorders[index] || item.fillStyle;
+                                    item.strokeStyle = sliceBorders[index] || item.strokeStyle;
+                                });
+                                return original;
+                            }
                         }
                     },
                     tooltip: {
@@ -1141,12 +1174,31 @@ $(document).ready(function() {
 
     function renderFunnelChart(chartData) {
         if (!chartData) return;
-        const ctx = document.getElementById('chartFunnelPipeline');
-        if (!ctx) return;
+        const canvas = document.getElementById('chartFunnelPipeline');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
         if (funnelChart) funnelChart.destroy();
 
         $('#funnel-rates-badge').text(`Placement: ${chartData.fulfillment_pct}% | Billing: ${chartData.invoicing_pct}%`);
+
+        // Horizontal linear gradients strictly matching KPI Cards:
+        // 1. Demanded Bookings: Deep Royal Sapphire (Card 1: #1e40af to #3b82f6)
+        const gradBooking = ctx.createLinearGradient(0, 0, 320, 0);
+        gradBooking.addColorStop(0, '#1e40af');
+        gradBooking.addColorStop(1, '#3b82f6');
+
+        // 2. Placed Allotments: Ocean Slate Blue (Card 3: #0369a1 to #0ea5e9)
+        const gradPlaced = ctx.createLinearGradient(0, 0, 320, 0);
+        gradPlaced.addColorStop(0, '#0369a1');
+        gradPlaced.addColorStop(1, '#0ea5e9');
+
+        // 3. Invoiced / Ready: Cyan Arctic Teal (Card 2: #0e7490 to #06b6d4)
+        const gradInvoiced = ctx.createLinearGradient(0, 0, 320, 0);
+        gradInvoiced.addColorStop(0, '#0e7490');
+        gradInvoiced.addColorStop(1, '#06b6d4');
+
+        const funnelBorders = ['#60a5fa', '#38bdf8', '#22d3ee'];
 
         funnelChart = new Chart(ctx, {
             type: 'bar',
@@ -1155,9 +1207,9 @@ $(document).ready(function() {
                 datasets: [{
                     label: 'Units',
                     data: chartData.data,
-                    backgroundColor: chartData.colors,
-                    borderColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                    borderWidth: 1,
+                    backgroundColor: [gradBooking, gradPlaced, gradInvoiced],
+                    borderColor: funnelBorders,
+                    borderWidth: 1.5,
                     borderRadius: 4
                 }]
             },
@@ -1189,10 +1241,32 @@ $(document).ready(function() {
 
     function renderMarketCompChart(chartData) {
         if (!chartData) return;
-        const ctx = document.getElementById('chartMarketDeployment');
-        if (!ctx) return;
+        const canvas = document.getElementById('chartMarketDeployment');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
         if (marketCompChart) marketCompChart.destroy();
+
+        // Vertical linear gradients strictly matching KPI Cards 5, 6, 7, 8:
+        // Local Trips Placed -> Card 5 Emerald Green (#065f46 to #10b981)
+        const gradLocalPlaced = ctx.createLinearGradient(0, 160, 0, 0);
+        gradLocalPlaced.addColorStop(0, '#065f46');
+        gradLocalPlaced.addColorStop(1, '#10b981');
+
+        // OS Trips Placed -> Card 6 Imperial Purple (#6b21a8 to #a855f7)
+        const gradOsPlaced = ctx.createLinearGradient(0, 160, 0, 0);
+        gradOsPlaced.addColorStop(0, '#6b21a8');
+        gradOsPlaced.addColorStop(1, '#a855f7');
+
+        // Local Vendors Used -> Card 7 Royal Indigo (#3730a3 to #6366f1)
+        const gradLocalVendors = ctx.createLinearGradient(0, 160, 0, 0);
+        gradLocalVendors.addColorStop(0, '#3730a3');
+        gradLocalVendors.addColorStop(1, '#6366f1');
+
+        // OS Vendors Used -> Card 8 Persian Teal (#0f766e to #14b8a6)
+        const gradOsVendors = ctx.createLinearGradient(0, 160, 0, 0);
+        gradOsVendors.addColorStop(0, '#0f766e');
+        gradOsVendors.addColorStop(1, '#14b8a6');
 
         marketCompChart = new Chart(ctx, {
             type: 'bar',
@@ -1202,17 +1276,17 @@ $(document).ready(function() {
                     {
                         label: 'Trips Placed',
                         data: chartData.placed,
-                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
-                        borderColor: '#3b82f6',
-                        borderWidth: 1,
+                        backgroundColor: [gradLocalPlaced, gradOsPlaced],
+                        borderColor: ['#10b981', '#a855f7'],
+                        borderWidth: 1.5,
                         borderRadius: 4
                     },
                     {
                         label: 'Vendors Used',
                         data: chartData.vendors,
-                        backgroundColor: 'rgba(20, 184, 166, 0.85)',
-                        borderColor: '#14b8a6',
-                        borderWidth: 1,
+                        backgroundColor: [gradLocalVendors, gradOsVendors],
+                        borderColor: ['#6366f1', '#14b8a6'],
+                        borderWidth: 1.5,
                         borderRadius: 4
                     }
                 ]
@@ -1227,7 +1301,29 @@ $(document).ready(function() {
                             color: '#cbd5e1',
                             font: { size: 8.5, family: 'Inter', weight: 600 },
                             boxWidth: 8,
-                            padding: 6
+                            padding: 6,
+                            generateLabels: function(chart) {
+                                const isPlacedHidden = chart.getDatasetMeta(0).hidden;
+                                const isVendorsHidden = chart.getDatasetMeta(1).hidden;
+                                return [
+                                    {
+                                        text: 'Trips Placed',
+                                        fillStyle: '#10b981',
+                                        strokeStyle: '#a855f7',
+                                        lineWidth: 2,
+                                        hidden: isPlacedHidden,
+                                        datasetIndex: 0
+                                    },
+                                    {
+                                        text: 'Vendors Used',
+                                        fillStyle: '#6366f1',
+                                        strokeStyle: '#14b8a6',
+                                        lineWidth: 2,
+                                        hidden: isVendorsHidden,
+                                        datasetIndex: 1
+                                    }
+                                ];
+                            }
                         }
                     },
                     tooltip: {

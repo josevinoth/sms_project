@@ -3089,7 +3089,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 buying_loading += safe_num(e.de_loadingcost)
                 buying_unloading += safe_num(e.de_unloadingcost)
                 buying_weighment += safe_num(e.de_weighmentcost)
-                buying_aai += safe_num(e.de_supervisorcost)
+                buying_handling += safe_num(e.de_supervisorcost) + safe_num(getattr(e, 'de_handlingcost', 0))
                 buying_parking += safe_num(e.de_parkingcost)
                 buying_rto += safe_num(e.de_rtocost)
                 buying_batta += safe_num(e.de_battacost)
@@ -3102,7 +3102,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 elif "halting" in exp_type_str:
                     buying_halting += cost_val
                 elif "handling" in exp_type_str or "supervisor" in exp_type_str:
-                    if not e.de_supervisorcost: buying_handling += cost_val
+                    if not (e.de_supervisorcost or getattr(e, 'de_handlingcost', 0)): buying_handling += cost_val
                 elif "parking" in exp_type_str:
                     if not e.de_parkingcost: buying_parking += cost_val
                 elif "loading" in exp_type_str:
@@ -3338,7 +3338,7 @@ def vendor_p_l_mkt_report_export_view(request):
             expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).only(
                 'id', 'trip_number', 'de_expense_type', 'de_total_cost',
                 'de_loadingcost', 'de_unloadingcost', 'de_weighmentcost', 'de_parkingcost',
-                'de_rtocost', 'de_battacost', 'de_supervisorcost'
+                'de_rtocost', 'de_battacost', 'de_supervisorcost', 'de_handlingcost'
             ).select_related('de_expense_type')))
 
         allotment_map = {}
@@ -3620,7 +3620,7 @@ def vendor_p_l_mkt_report_export_view(request):
                     elif "halting" in exp_type_str:
                         buying_halting += cost_val
                     elif "handling" in exp_type_str or "supervisor" in exp_type_str:
-                        if not e.de_supervisorcost: buying_handling += cost_val
+                        if not (e.de_supervisorcost or getattr(e, 'de_handlingcost', 0)): buying_handling += cost_val
 
                 buying_loading += safe_num(trip.tc_loadingcost)
                 buying_unloading += safe_num(trip.tc_unloadingcost)
@@ -4487,7 +4487,7 @@ def vendor_p_l_attached_report_ajax_view(request):
             buying_loading += safe_num(e.de_loadingcost)
             buying_unloading += safe_num(e.de_unloadingcost)
             buying_weighment += safe_num(e.de_weighmentcost)
-            buying_aai += safe_num(e.de_supervisorcost)
+            buying_handling += safe_num(e.de_supervisorcost) + safe_num(getattr(e, 'de_handlingcost', 0))
             buying_parking += safe_num(e.de_parkingcost)
             buying_rto += safe_num(e.de_rtocost)
             buying_batta += safe_num(e.de_battacost)
@@ -4500,7 +4500,7 @@ def vendor_p_l_attached_report_ajax_view(request):
             elif "halting" in exp_type_str:
                 buying_halting += cost_val
             elif "handling" in exp_type_str or "supervisor" in exp_type_str:
-                if not e.de_supervisorcost: buying_handling += cost_val
+                if not (e.de_supervisorcost or getattr(e, 'de_handlingcost', 0)): buying_handling += cost_val
             elif "parking" in exp_type_str:
                 if not e.de_parkingcost: buying_parking += cost_val
             elif "loading" in exp_type_str:
@@ -5272,7 +5272,7 @@ def own_vehicle_pl_report_view(request):
                 loading_val = safe_num(e.de_loadingcost)
                 unloading_val = safe_num(e.de_unloadingcost)
                 weighment_val = safe_num(e.de_weighmentcost)
-                handling_val = safe_num(e.de_supervisorcost)
+                handling_val = safe_num(e.de_supervisorcost) + safe_num(getattr(e, 'de_handlingcost', 0))
                 toll_val = safe_num(e.de_rtocost)
                 bata_val = safe_num(e.de_battacost)
 
@@ -5315,7 +5315,7 @@ def own_vehicle_pl_report_view(request):
                     if not weighment_val: weighment_expense += cost
                 elif 'bata' in extype or 'batta' in extype:
                     if not bata_val: driver_bata += cost
-                elif 'handling' in extype:
+                elif 'handling' in extype or 'supervisor' in extype:
                     if not handling_val: handling_expense += cost
 
             # Process petty cash expenses for this trip
@@ -5347,7 +5347,7 @@ def own_vehicle_pl_report_view(request):
                     weighment_expense += cost
                 elif 'bata' in extype or 'batta' in extype:
                     driver_bata += cost
-                elif 'handling' in extype:
+                elif 'handling' in extype or 'supervisor' in extype:
                     handling_expense += cost
 
             # --- 3. Fuel Cost: prorated from Fuelfillinginfo (pre-calculated above) ---
@@ -8554,7 +8554,7 @@ def location_pl_report_view(request):
             loading_val = safe_num(e.de_loadingcost)
             unloading_val = safe_num(e.de_unloadingcost)
             weighment_val = safe_num(e.de_weighmentcost)
-            handling_val = safe_num(e.de_supervisorcost)
+            handling_val = safe_num(e.de_supervisorcost) + safe_num(getattr(e, 'de_handlingcost', 0))
             toll_val = safe_num(e.de_rtocost)
             bata_val = safe_num(e.de_battacost)
 
@@ -8584,7 +8584,7 @@ def location_pl_report_view(request):
                 if not weighment_val: weighment_expense += cost
             elif 'bata' in extype or 'batta' in extype:
                 if not bata_val: driver_bata += cost
-            elif 'handling' in extype:
+            elif 'handling' in extype or 'supervisor' in extype:
                 if not handling_val: handling_expense += cost
 
         for pc in petty_cash_map_own.get(trip.id, []):
@@ -8602,7 +8602,7 @@ def location_pl_report_view(request):
             elif 'unloading' in extype: unloading_expense += cost
             elif 'weighment' in extype: weighment_expense += cost
             elif 'bata' in extype or 'batta' in extype: driver_bata += cost
-            elif 'handling' in extype: handling_expense += cost
+            elif 'handling' in extype or 'supervisor' in extype: handling_expense += cost
 
         total_expense = round(driver_salary + fuel_expense + acting_driver + driver_bata + toll_expense + parking_expense + loading_expense + unloading_expense + weighment_expense + handling_expense + vehicle_hire, 2)
         if trip.tr_category_id not in [2, 3] or trip.tc_financestatus_id == 10:
@@ -8732,7 +8732,7 @@ def location_pl_report_view(request):
                 buying_loading += safe_num(e.de_loadingcost)
                 buying_unloading += safe_num(e.de_unloadingcost)
                 buying_weighment += safe_num(e.de_weighmentcost)
-                buying_aai += safe_num(e.de_supervisorcost)
+                buying_handling += safe_num(e.de_supervisorcost) + safe_num(getattr(e, 'de_handlingcost', 0))
                 buying_parking += safe_num(e.de_parkingcost)
                 buying_rto += safe_num(e.de_rtocost)
                 buying_batta += safe_num(e.de_battacost)
@@ -8745,7 +8745,7 @@ def location_pl_report_view(request):
                 elif 'halting' in exp_type_str:
                     buying_halting += cost_val
                 elif 'handling' in exp_type_str or 'supervisor' in exp_type_str:
-                    if not e.de_supervisorcost: buying_handling += cost_val
+                    if not (e.de_supervisorcost or getattr(e, 'de_handlingcost', 0)): buying_handling += cost_val
                 elif 'parking' in exp_type_str:
                     if not e.de_parkingcost: buying_parking += cost_val
                 elif 'loading' in exp_type_str:
@@ -12583,7 +12583,8 @@ def transport_mis(request):
     # 1. Driver Settlement (Driverexpense)
     de_qs = Driverexpense.objects.filter(
         Q(de_battacost__gt=0) | Q(de_parkingcost__gt=0) | Q(de_loadingcost__gt=0) |
-        Q(de_unloadingcost__gt=0) | Q(de_weighmentcost__gt=0) | Q(de_supervisorcost__gt=0)
+        Q(de_unloadingcost__gt=0) | Q(de_weighmentcost__gt=0) | Q(de_supervisorcost__gt=0) |
+        Q(de_handlingcost__gt=0)
     ).select_related('de_expense_type', 'driver_name__dm_user_id__user_extinfo__emp_branch')
     if selected_year:
         de_qs = de_qs.filter(Q(de_date__year=selected_year) | (Q(de_date__isnull=True) & Q(trip_date__year=selected_year)))
@@ -12621,9 +12622,10 @@ def transport_mis(request):
             expense_dict[loading_cat][dt.month] += float(de.de_loadingcost or 0)
             expense_dict[unloading_cat][dt.month] += float(de.de_unloadingcost or 0)
             expense_dict[weighment_cat][dt.month] += float(de.de_weighmentcost or 0)
-            expense_dict[handling_exp_cat][dt.month] += float(de.de_supervisorcost or 0)
+            handling_val = float(de.de_supervisorcost or 0) + float(getattr(de, 'de_handlingcost', 0) or 0)
+            expense_dict[handling_exp_cat][dt.month] += handling_val
             exp_type_str = str(getattr(de, 'de_expense_type', '') or '').lower()
-            if ('handling' in exp_type_str or 'supervisor' in exp_type_str) and not de.de_supervisorcost:
+            if ('handling' in exp_type_str or 'supervisor' in exp_type_str) and not handling_val:
                 expense_dict[handling_exp_cat][dt.month] += float(getattr(de, 'de_total_cost', 0) or 0)
 
     # 2. Direct Petty Cash (TMSPettyCashInfo) - Excluding auto-generated Driver Settlement vouchers

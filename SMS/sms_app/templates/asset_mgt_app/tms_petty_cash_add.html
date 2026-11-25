@@ -212,7 +212,10 @@
         <!-- ================= TRIP LIST TABLE ================= -->
         <div id="trip_table_container" class="modern-card mt-4" style="display:none; padding: 1rem !important;">
             <div class="modern-header d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 text-white">Available Trips for Selected Date</h5>
+                <div class="d-flex align-items-center" style="gap: 12px;">
+                    <h5 class="mb-0 text-white" id="trip_table_title"><i class="fas fa-truck mr-2"></i> Available Trips for Selected Date</h5>
+                    <span id="trip_filter_toggle_container"></span>
+                </div>
                 <div style="width: 250px;">
                     <input type="text" id="trip_search_input" class="form-control" placeholder="Search trips..." style="height: 30px; font-size: 0.85rem; border-radius: 4px; padding: 2px 8px; font-weight: 600;">
                 </div>
@@ -346,6 +349,103 @@
         $('#tpc_unit').change(function() { toggleTransFields('unit'); });
         toggleTransFields(); // run on load
         
+        var isEditMode = {% if tpc_id and tpc_id != 0 %}true{% else %}false{% endif %};
+        var showOnlySelected = isEditMode;
+        var cachedTripData = [];
+
+        function renderTripRows(tripDataList) {
+            var tbody = $('#trip_table tbody');
+            tbody.empty();
+            var currentJob = ($('#tpc_job_no').val() || '').trim().toUpperCase();
+
+            var listToRender = tripDataList;
+            if (showOnlySelected && currentJob) {
+                listToRender = tripDataList.filter(function(trip) {
+                    var tripCnote = (trip.cnote_no || '').trim().toUpperCase();
+                    return tripCnote === currentJob || String(trip.trip_id) === currentJob;
+                });
+            }
+
+            if (listToRender.length > 0) {
+                listToRender.forEach(function(trip) {
+                    var tripCnote = (trip.cnote_no || '').trim().toUpperCase();
+                    var isSelected = currentJob && (tripCnote === currentJob || String(trip.trip_id) === currentJob);
+                    var rowClass = isSelected ? 'table-warning font-weight-bold' : '';
+                    var btnClass = isSelected ? 'btn-warning' : 'btn-success';
+                    var btnText = isSelected ? '<i class="fas fa-check"></i> Selected' : '<i class="fas fa-hand-pointer"></i> Select';
+
+                    var row = `<tr class="${rowClass}">
+                        <td><button type="button" class="btn btn-sm ${btnClass} select-trip-btn font-weight-bold" 
+                            data-cnote="${trip.cnote_no}" 
+                            data-customer="${trip.customer_id}" 
+                            data-source="${trip.vehicle_source_id}" 
+                            data-vehicle="${trip.vehicle_number}" 
+                            data-driver="${trip.driver_name}"
+                            data-from="${trip.from_location}"
+                            data-to="${trip.to_location}">
+                            ${btnText}
+                        </button></td>
+                        <td><strong>${trip.cnote_no}</strong></td>
+                        <td>${trip.from_location} - ${trip.to_location}</td>
+                        <td>${trip.customer_name}</td>
+                        <td>${trip.vehicle_source_name}</td>
+                        <td>${trip.vehicle_number}</td>
+                        <td>${trip.driver_name}</td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+            } else if (showOnlySelected && currentJob) {
+                var customerName = $('#tpc_customer option:selected').text();
+                if (!customerName || customerName.indexOf('--Select--') > -1) customerName = '';
+                var sourceName = $('#tpc_vehicle_source option:selected').text();
+                if (!sourceName || sourceName.indexOf('--Select--') > -1) sourceName = '';
+                var vehicleNo = $('#tpc_vehicle_number option:selected').text();
+                if (!vehicleNo || vehicleNo.indexOf('--Select--') > -1) vehicleNo = $('#tpc_vehicle_number').val() || '';
+                var driverName = $('#tpc_driver_name option:selected').text();
+                if (!driverName || driverName.indexOf('--Select--') > -1) driverName = $('#tpc_driver_name').val() || '';
+                var fromLoc = $('#tpc_from_location').val() || '';
+                var toLoc = $('#tpc_to_location').val() || '';
+
+                var row = `<tr class="table-warning font-weight-bold">
+                    <td><button type="button" class="btn btn-sm btn-warning select-trip-btn font-weight-bold" disabled>
+                        <i class="fas fa-check"></i> Selected
+                    </button></td>
+                    <td><strong>${currentJob}</strong></td>
+                    <td>${fromLoc} - ${toLoc}</td>
+                    <td>${customerName}</td>
+                    <td>${sourceName}</td>
+                    <td>${vehicleNo}</td>
+                    <td>${driverName}</td>
+                </tr>`;
+                tbody.append(row);
+            } else {
+                tbody.append('<tr><td colspan="7" class="text-center text-danger font-weight-bold">No trips found for this date.</td></tr>');
+            }
+
+            // Update title and toggle button
+            if (showOnlySelected && currentJob) {
+                $('#trip_table_title').html('<i class="fas fa-clipboard-check mr-2"></i> Selected Trip Details');
+                $('#trip_filter_toggle_container').html(`
+                    <button type="button" id="btn_toggle_trips_view" class="btn btn-sm btn-light font-weight-bold text-primary" style="font-size:0.75rem; border-radius:4px; padding:2px 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <i class="fas fa-list mr-1"></i> Show All Trips for Date (${tripDataList.length})
+                    </button>
+                `);
+            } else {
+                $('#trip_table_title').html('<i class="fas fa-truck mr-2"></i> Available Trips for Selected Date');
+                if (currentJob && isEditMode) {
+                    $('#trip_filter_toggle_container').html(`
+                        <button type="button" id="btn_toggle_trips_view" class="btn btn-sm btn-light font-weight-bold text-primary" style="font-size:0.75rem; border-radius:4px; padding:2px 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <i class="fas fa-filter mr-1"></i> Show Only Selected Trip
+                        </button>
+                    `);
+                } else {
+                    $('#trip_filter_toggle_container').empty();
+                }
+            }
+
+            $('#trip_table_container').show();
+        }
+
         // AJAX to fetch trips by date
         function loadTripsForDate() {
             var selectedDate = $('#tpc_trip_date').val();
@@ -357,42 +457,8 @@
                     data: { 'trip_date': selectedDate },
                     success: function(response) {
                         if (response.status === 'success') {
-                            var tbody = $('#trip_table tbody');
-                            tbody.empty();
-                            if (response.data.length > 0) {
-                                var currentJob = ($('#tpc_job_no').val() || '').trim().toUpperCase();
-                                response.data.forEach(function(trip) {
-                                    var tripCnote = (trip.cnote_no || '').trim().toUpperCase();
-                                    var isSelected = currentJob && (tripCnote === currentJob || String(trip.trip_id) === currentJob);
-                                    var rowClass = isSelected ? 'table-warning font-weight-bold' : '';
-                                    var btnClass = isSelected ? 'btn-warning' : 'btn-success';
-                                    var btnText = isSelected ? '<i class="fas fa-check"></i> Selected' : '<i class="fas fa-hand-pointer"></i> Select';
-
-                                    var row = `<tr class="${rowClass}">
-                                        <td><button type="button" class="btn btn-sm ${btnClass} select-trip-btn font-weight-bold" 
-                                            data-cnote="${trip.cnote_no}" 
-                                            data-customer="${trip.customer_id}" 
-                                            data-source="${trip.vehicle_source_id}" 
-                                            data-vehicle="${trip.vehicle_number}" 
-                                            data-driver="${trip.driver_name}"
-                                            data-from="${trip.from_location}"
-                                            data-to="${trip.to_location}">
-                                            ${btnText}
-                                        </button></td>
-                                        <td><strong>${trip.cnote_no}</strong></td>
-                                        <td>${trip.from_location} - ${trip.to_location}</td>
-                                        <td>${trip.customer_name}</td>
-                                        <td>${trip.vehicle_source_name}</td>
-                                        <td>${trip.vehicle_number}</td>
-                                        <td>${trip.driver_name}</td>
-                                    </tr>`;
-                                    tbody.append(row);
-                                });
-                                $('#trip_table_container').show();
-                            } else {
-                                tbody.append('<tr><td colspan="7" class="text-center text-danger font-weight-bold">No trips found for this date.</td></tr>');
-                                $('#trip_table_container').show();
-                            }
+                            cachedTripData = response.data || [];
+                            renderTripRows(cachedTripData);
                         }
                     },
                     error: function() {
@@ -404,7 +470,16 @@
             }
         }
 
-        $('#tpc_trip_date').change(loadTripsForDate);
+        $(document).on('click', '#btn_toggle_trips_view', function() {
+            showOnlySelected = !showOnlySelected;
+            renderTripRows(cachedTripData);
+        });
+
+        $('#tpc_trip_date').change(function() {
+            showOnlySelected = false; // When user explicitly changes date, show all available trips for that new date
+            loadTripsForDate();
+        });
+
         if ($('#tpc_trip_date').val()) {
             loadTripsForDate();
         }
