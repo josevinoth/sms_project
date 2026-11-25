@@ -49,6 +49,7 @@
                         <th>Payment</th>
                         <th>Edit</th>
                         <th>PDF</th>
+                        <th>Tally Excel</th>
                         <th>Next →</th>
                     </tr>
                 </thead>
@@ -84,16 +85,14 @@
                             </a>
                         </td>
                         <td>
+                            <a href="{% url 'pk_invoice_tally_excel' inv.id %}" class="btn-modern py-1 px-2" style="font-size:0.8rem;background:#107c41;color:white;text-decoration:none;" title="Download BMS Tally Excel">
+                                <i class="fas fa-file-excel"></i> Tally
+                            </a>
+                        </td>
+                        <td>
                             <a href="{% url 'packing_gate' %}?job_no={{ inv.inv_job_no }}" class="btn-modern py-1 px-2" style="font-size:0.8rem;background:var(--accent-blue);color:white;text-decoration:none;" title="Go to Gate Pass">
                                 <i class="fas fa-truck-moving"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="13" class="text-center py-5 text-muted">
-                            <i class="fas fa-file-invoice" style="font-size:3rem;opacity:0.3;"></i>
-                            <p class="mt-2">No invoices yet. Create your first invoice.</p>
                         </td>
                     </tr>
                     {% endfor %}
@@ -108,6 +107,9 @@ $(document).ready(function () {
     $('#inv_list_table').DataTable({
         order: [[0, 'desc']],
         pageLength: 25,
+        language: {
+            emptyTable: '<div class="py-5 text-muted"><i class="fas fa-file-invoice mb-2" style="font-size:2.5rem;opacity:0.3;"></i><p class="mt-2 font-weight-bold">No invoices yet. Click "+ New Invoice" above to create your first invoice.</p></div>'
+        },
         dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
              "<'row'<'col-sm-12'tr>>" +
              "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",

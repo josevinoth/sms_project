@@ -9,369 +9,520 @@
 
     <form method="POST" id="inv_form">
         {% csrf_token %}
-        <!-- Hidden FK ids populated by JS -->
-        <input type="hidden" name="inv_assessment_num_id" id="inv_assessment_num_id" value="{{ costing.cs_assessment_num_id|default:'' }}">
-        <input type="hidden" name="inv_customer_po_id"    id="inv_customer_po_id"    value="{{ costing.cs_customer_po_id|default:'' }}">
-        <input type="hidden" name="inv_customer_name_id"  id="inv_customer_name_id"  value="{{ costing.cs_customer_name_id|default:'' }}">
-        <input type="hidden" name="inv_base_amount"       id="inv_base_amount"       value="{{ base_amount|default:'0' }}">
-        <input type="hidden" name="use_igst"              id="use_igst"              value="0">
+        <input type="hidden" name="inv_customer_state" id="inv_customer_state" value="{{ invoice.inv_customer_state|default:'' }}">
+        <input type="hidden" name="inv_customer_pincode" id="inv_customer_pincode" value="{{ invoice.inv_customer_pincode|default:'' }}">
+        <input type="hidden" name="inv_customer_gstin" id="inv_customer_gstin" value="{{ invoice.inv_customer_gstin|default:'' }}">
 
         <!-- Page Header -->
-        <div class="modern-header d-flex justify-content-between align-items-center">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">
-                <i class="fas fa-file-invoice-dollar"></i>
-                {% if invoice %}Edit Invoice — {{ invoice.inv_number }}{% else %}New PMS Invoice{% endif %}
+                <i class="fas fa-file-invoice-dollar text-primary mr-2"></i>
+                {% if invoice %}Edit PMS Invoice — {{ invoice.inv_number }}{% else %}New PMS Invoice (Multi-Job Supported){% endif %}
             </h2>
-            <a href="{% url 'pk_invoice_list' %}" class="btn-modern btn-cancel py-2 px-4"
-               style="font-size:0.9rem;text-decoration:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white!important;">
-                <i class="fas fa-arrow-left"></i> BACK
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'pk_invoice_list' %}" class="btn-modern btn-cancel py-2 px-3"
+                   style="font-size:0.9rem;text-decoration:none;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Invoices
+                </a>
+                <button type="submit" class="btn-modern btn-submit py-2 px-4 shadow font-weight-bold" id="btn_save_invoice">
+                    <i class="fas fa-check-circle mr-1"></i> {% if invoice %}Update Invoice{% else %}Generate PMS Invoice{% endif %}
+                </button>
+            </div>
         </div>
 
-        <!-- ── SECTION 1 : HEADER ───────────────────────────────────────── -->
-        <div class="modern-card" style="padding:1rem!important;">
+        <!-- ── SECTION 1 : INVOICE HEADER & CUSTOMER ────────────────────── -->
+        <div class="modern-card mb-3" style="padding:1.25rem!important; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <div class="row row-compact">
 
                 <!-- Customer Selection -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-users"></i> Customer</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Select Customer</label>
-                            {% if invoice %}
-                                <input type="text" class="form-control form-control-modern" value="{{ invoice.inv_customer_name }}" readonly>
-                                <input type="hidden" name="inv_customer_name_id" value="{{ invoice.inv_customer_name_id }}">
-                            {% else %}
-                                <select name="inv_customer_name_id" id="inv_customer_id" class="form-control form-control-modern select2" required>
-                                    <option value="">-- Select Customer --</option>
-                                    {% for c in customers %}
-                                    <option value="{{ c.id }}" {% if c.id|stringformat:"s" == customer_id %}selected{% endif %}>{{ c.cu_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Invoice No -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-hashtag"></i> Invoice No</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Invoice Number (Auto)</label>
-                            <input type="text" name="inv_number" id="inv_number"
-                                   class="form-control form-control-modern"
-                                   value="{{ invoice.inv_number|default:next_inv_no }}" readonly
-                                   style="background:#f0f4ff;font-weight:700;color:#3b4cc0;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Invoice Date -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-calendar-alt"></i> Invoice Date</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Date</label>
-                            <input type="date" name="inv_date" id="inv_date"
-                                   class="form-control form-control-modern" required
-                                   value="{{ invoice.inv_date|date:'Y-m-d'|default:today }}">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Job No Display (Optional) -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-briefcase"></i> Job No</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Job Number</label>
-                            <input type="text" name="inv_job_no" id="inv_job_no" class="form-control form-control-modern"
-                                   value="{{ invoice.inv_job_no|default:'Multiple' }}">
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Row 2 -->
-            <div class="row row-compact mt-2">
-
-                <!-- PO No -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Purchase Order</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">PO Number</label>
-                            <input type="text" id="display_po" class="form-control form-control-modern"
-                                   readonly value="{{ invoice.inv_customer_po|default:po_num }}">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GST Rate -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-percent"></i> GST</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">GST Rate (%)</label>
-                            <input type="number" name="inv_gst_rate" id="inv_gst_rate" step="0.01"
-                                   class="form-control form-control-modern"
-                                   value="{{ invoice.inv_gst_rate|default:gst_rate }}"
-                                   oninput="recalcTotals()">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GST Type -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> GST Type</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Intra / Inter State</label>
-                            <select id="gst_type" class="form-control form-control-modern" onchange="setGstType()">
-                                <option value="intra">Intra-State (CGST + SGST)</option>
-                                <option value="inter">Inter-State (IGST)</option>
+                <div class="col-12 col-md-4 col-compact">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold"><i class="fas fa-building text-primary mr-1"></i> Select Customer</label>
+                        {% if invoice %}
+                            <input type="text" class="form-control form-control-modern font-weight-bold bg-light" value="{{ invoice.inv_customer_name.cu_name }}" readonly>
+                            <input type="hidden" name="inv_customer_name_id" id="inv_customer_id" value="{{ invoice.inv_customer_name_id }}">
+                        {% else %}
+                            <select name="inv_customer_name_id" id="inv_customer_id" class="form-control form-control-modern select2" required>
+                                <option value="">-- Choose Customer --</option>
+                                {% for c in customers %}
+                                <option value="{{ c.id }}" {% if c.id|stringformat:"s" == customer_id %}selected{% endif %}>{{ c.cu_name }} — {{ c.cu_nameshort|default:c.cu_name }}</option>
+                                {% endfor %}
                             </select>
-                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="cust_info_pills" class="d-flex flex-wrap gap-1 mt-1">
+                        <span class="badge badge-light border" id="badge_gstin"><i class="fas fa-id-card text-muted mr-1"></i> GSTIN: <b>{{ invoice.inv_customer_gstin|default:'—' }}</b></span>
+                        <span class="badge badge-light border" id="badge_state"><i class="fas fa-map-marker-alt text-muted mr-1"></i> State: <b>{{ invoice.inv_customer_state|default:'—' }}</b></span>
+                        <span class="badge badge-light border" id="badge_pincode"><i class="fas fa-mail-bulk text-muted mr-1"></i> PIN: <b>{{ invoice.inv_customer_pincode|default:'—' }}</b></span>
+                    </div>
+                </div>
+
+                <!-- Invoice No & Date -->
+                <div class="col-12 col-md-3 col-compact">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold"><i class="fas fa-hashtag text-primary mr-1"></i> Invoice Voucher No</label>
+                        <input type="text" name="inv_number" id="inv_number"
+                               class="form-control form-control-modern font-weight-bold"
+                               value="{% if invoice %}{{ invoice.inv_number }}{% else %}{{ next_inv_no }}{% endif %}" readonly
+                               style="background:#f0f7ff; color:#1d4ed8; font-size:1.05rem;">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2 col-compact">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold"><i class="fas fa-calendar-alt text-primary mr-1"></i> Invoice Date</label>
+                        <input type="date" name="inv_date" id="inv_date"
+                               class="form-control form-control-modern font-weight-bold" required
+                               value="{% if invoice and invoice.inv_date %}{{ invoice.inv_date|date:'Y-m-d' }}{% else %}{{ today }}{% endif %}">
+                    </div>
+                </div>
+
+                <!-- Default GST Rate -->
+                <div class="col-12 col-md-1 col-compact">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold"><i class="fas fa-percent text-primary mr-1"></i> GST %</label>
+                        <input type="number" name="inv_gst_rate" id="inv_gst_rate" step="0.01"
+                               class="form-control form-control-modern text-center font-weight-bold"
+                               value="{{ invoice.inv_gst_rate|default:'18.0' }}">
                     </div>
                 </div>
 
                 <!-- Payment Status -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-money-check-alt"></i> Payment</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Payment Status</label>
-                            <select name="inv_payment_status" class="form-control form-control-modern">
-                                <option value="Pending"  {% if invoice.inv_payment_status == 'Pending'  or not invoice %}selected{% endif %}>Pending</option>
-                                <option value="Partial"  {% if invoice.inv_payment_status == 'Partial'  %}selected{% endif %}>Partial</option>
-                                <option value="Paid"     {% if invoice.inv_payment_status == 'Paid'     %}selected{% endif %}>Paid</option>
-                            </select>
-                        </div>
+                <div class="col-12 col-md-2 col-compact">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold"><i class="fas fa-money-check-alt text-primary mr-1"></i> Payment Status</label>
+                        <select name="inv_payment_status" class="form-control form-control-modern font-weight-bold">
+                            <option value="Pending" {% if invoice.inv_payment_status == 'Pending' or not invoice %}selected{% endif %}>Pending</option>
+                            <option value="Partial" {% if invoice.inv_payment_status == 'Partial' %}selected{% endif %}>Partial</option>
+                            <option value="Paid"    {% if invoice.inv_payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                        </select>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- ── SECTION 2 : LINE ITEMS ──────────────────────────────────── -->
-        <div class="table-container-modern mt-3">
-            <div class="form-section-title d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-boxes"></i> Invoice Line Items (Per Box / Pallet)</span>
-                <small class="text-muted" style="font-weight:400;">Auto-loaded from PO Dimensions</small>
+        <!-- ── SECTION 2 : MULTI-JOB SELECTION & TALLY MAPPING TABLE ────── -->
+        <div class="table-container-modern shadow-sm" style="border-radius:14px; background:white; padding:1.25rem;">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                <div>
+                    <h5 class="font-weight-bold mb-0 text-dark">
+                        <i class="fas fa-layer-group text-primary mr-2"></i> Select Jobs to Invoice for this Customer
+                    </h5>
+                    <small class="text-muted">You can select multiple completed/WIP batch jobs and map PMS Tally ledgers.</small>
+                </div>
+                <div class="d-flex align-items-center mt-2 mt-md-0">
+                    <span class="badge badge-primary px-3 py-2 mr-2 font-weight-bold" id="selected_jobs_badge" style="font-size:0.9rem;">
+                        <i class="fas fa-check-double mr-1"></i> 0 Jobs Selected
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold" id="btn_reload_jobs" title="Refresh available jobs">
+                        <i class="fas fa-sync-alt"></i> Reload Jobs
+                    </button>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table modern-table text-center" id="items_table">
-                    <thead>
+
+            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+                <table class="table table-sm table-bordered text-center align-middle small mb-0" id="jobs_selection_table">
+                    <thead class="bg-light" style="position: sticky; top:0; z-index:3;">
                         <tr>
-                            <th style="width:50px;"><input type="checkbox" id="selectAllItems" onchange="toggleAllItems(this)"></th>
-                            <th>#</th>
-                            <th>Item Number</th>
-                            <th>Description</th>
-                            <th>L × W × H</th>
-                            <th>UOM</th>
-                            <th style="width:80px;">Qty</th>
-                            <th style="width:120px;">Unit Value (₹)</th>
-                            <th style="width:120px;">Total (₹)</th>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAllJobs" title="Select All Jobs"></th>
+                            <th style="min-width: 140px;">Job No</th>
+                            <th style="min-width: 100px;">PO No</th>
+                            <th class="text-left" style="min-width: 220px;">Item / Box Specification</th>
+                            <th style="width: 65px;">Qty</th>
+                            <th style="min-width: 170px;">Primary Cost Category</th>
+                            <th style="min-width: 110px;">Tax Type</th>
+                            <th style="min-width: 110px;">Base Value (₹)</th>
+                            <th style="min-width: 100px;">Breakdown</th>
+                            <th style="min-width: 110px;">Taxes (₹)</th>
+                            <th style="min-width: 120px;">Line Total (₹)</th>
                         </tr>
                     </thead>
-                    <tbody id="items_tbody">
-                        {% if invoice %}
+                    <tbody id="jobs_tbody">
+                        {% if invoice and items %}
                             {% for item in items %}
-                            <tr class="modern-tr">
-                                <input type="hidden" name="item_pod_id_{{ forloop.counter }}"      value="{{ item.inv_pod_dimension_id|default:'' }}">
-                                <input type="hidden" name="item_number_{{ forloop.counter }}"      value="{{ item.inv_item_number }}">
-                                <input type="hidden" name="item_description_{{ forloop.counter }}" value="{{ item.inv_description }}">
-                                <input type="hidden" name="item_length_{{ forloop.counter }}"      value="{{ item.inv_length }}">
-                                <input type="hidden" name="item_width_{{ forloop.counter }}"       value="{{ item.inv_width }}">
-                                <input type="hidden" name="item_height_{{ forloop.counter }}"      value="{{ item.inv_height }}">
-                                <input type="hidden" name="item_uom_{{ forloop.counter }}"         value="{{ item.inv_uom }}">
-                                <td class="align-middle"><input type="checkbox" name="item_checked_{{ forloop.counter }}" class="item-checkbox" checked onchange="recalcRow(this)"></td>
-                                <td class="align-middle font-weight-bold">{{ forloop.counter }}</td>
-                                <td class="text-left font-weight-bold" style="font-size:0.82rem;">{{ item.inv_item_number }}</td>
-                                <td>{{ item.inv_description|default:"—" }}</td>
-                                <td>{{ item.inv_length }}×{{ item.inv_width }}×{{ item.inv_height }}</td>
-                                <td>{{ item.inv_uom|default:"mm" }}</td>
+                            <tr class="job-row table-success" data-row-idx="{{ forloop.counter }}">
                                 <td>
-                                    <input type="number" name="item_qty_{{ forloop.counter }}" value="{{ item.inv_qty }}"
-                                           min="0" class="form-control form-control-sm text-center item-qty"
-                                           style="width:70px;margin:auto;" oninput="recalcRow(this)">
+                                    <input type="checkbox" name="job_checked_{{ forloop.counter }}" value="1" class="job-checkbox" checked>
+                                    <input type="hidden" name="job_no_{{ forloop.counter }}" value="{{ item.inv_job_no }}">
+                                    <input type="hidden" name="job_id_{{ forloop.counter }}" value="{{ item.inv_costing_summary_id|default:'' }}">
+                                    <input type="hidden" name="item_pod_id_{{ forloop.counter }}" value="{{ item.inv_pod_dimension_id|default:'' }}">
+                                    <input type="hidden" name="job_desc_{{ forloop.counter }}" value="{{ item.inv_description }}">
+                                    <input type="hidden" name="job_qty_{{ forloop.counter }}" value="{{ item.inv_qty }}">
+                                    <input type="hidden" name="job_date_{{ forloop.counter }}" value="{{ item.inv_job_date|date:'Y-m-d'|default:'' }}">
+                                    <!-- Hidden breakdown inputs -->
+                                    <input type="hidden" name="charge_handling_{{ forloop.counter }}" id="handling_{{ forloop.counter }}" value="{{ item.inv_handling_charges }}">
+                                    <input type="hidden" name="charge_loading_{{ forloop.counter }}" id="loading_{{ forloop.counter }}" value="{{ item.inv_loading_charges }}">
+                                    <input type="hidden" name="charge_unloading_{{ forloop.counter }}" id="unloading_{{ forloop.counter }}" value="{{ item.inv_unloading_charges }}">
+                                    <input type="hidden" name="charge_scrap_wood_{{ forloop.counter }}" id="scrap_wood_{{ forloop.counter }}" value="{{ item.inv_scrap_wood }}">
+                                    <input type="hidden" name="charge_repacking_{{ forloop.counter }}" id="repacking_{{ forloop.counter }}" value="{{ item.inv_repacking_charges }}">
+                                    <input type="hidden" name="charge_supply_mat_{{ forloop.counter }}" id="supply_mat_{{ forloop.counter }}" value="{{ item.inv_supply_packing_materials }}">
+                                </td>
+                                <td class="font-weight-bold text-primary">{{ item.inv_job_no }}</td>
+                                <td>{{ item.inv_costing_summary.cs_customer_po.po_num|default:'—' }}</td>
+                                <td class="text-left font-weight-bold text-dark">{% if item.inv_description %}{{ item.inv_description }}{% else %}{{ item.inv_item_number|default:'—' }}{% endif %}</td>
+                                <td class="font-weight-bold">{{ item.inv_qty }}</td>
+                                <td>
+                                    <select name="job_cat_{{ forloop.counter }}" class="form-control form-control-sm job-cat-select">
+                                        <option value="Packing Charges" {% if item.inv_primary_cost_category == 'Packing Charges' %}selected{% endif %}>Packing Charges</option>
+                                        <option value="Packing Charges Service" {% if item.inv_primary_cost_category == 'Packing Charges Service' %}selected{% endif %}>Packing Charges Service</option>
+                                        <option value="Supply of Packing Material" {% if item.inv_primary_cost_category == 'Supply of Packing Material' %}selected{% endif %}>Supply of Packing Material</option>
+                                        <option value="Forklift Handling Charges" {% if item.inv_primary_cost_category == 'Forklift Handling Charges' %}selected{% endif %}>Forklift Handling Charges</option>
+                                        <option value="Freight Charges" {% if item.inv_primary_cost_category == 'Freight Charges' %}selected{% endif %}>Freight Charges</option>
+                                        <option value="Handling Charges" {% if item.inv_primary_cost_category == 'Handling Charges' %}selected{% endif %}>Handling Charges</option>
+                                        <option value="Loading Charges" {% if item.inv_primary_cost_category == 'Loading Charges' %}selected{% endif %}>Loading Charges</option>
+                                        <option value="Unloading Charges" {% if item.inv_primary_cost_category == 'Unloading Charges' %}selected{% endif %}>Unloading Charges</option>
+                                        <option value="Repacking Charges" {% if item.inv_primary_cost_category == 'Repacking Charges' %}selected{% endif %}>Repacking Charges</option>
+                                    </select>
                                 </td>
                                 <td>
-                                    <input type="number" name="item_unit_value_{{ forloop.counter }}" value="{{ item.inv_unit_value }}"
-                                           min="0" step="0.01" class="form-control form-control-sm text-center item-uv"
-                                           style="width:110px;margin:auto;" oninput="recalcRow(this)">
+                                    <select name="job_tax_type_{{ forloop.counter }}" class="form-control form-control-sm job-tax-select">
+                                        <option value="18%" {% if item.inv_tax_type == '18%' %}selected{% endif %}>18%</option>
+                                        <option value="GST-5%" {% if item.inv_tax_type == 'GST-5%' %}selected{% endif %}>GST-5%</option>
+                                        <option value="IGST 18%" {% if item.inv_tax_type == 'IGST 18%' %}selected{% endif %}>IGST 18%</option>
+                                        <option value="LUT" {% if item.inv_tax_type == 'LUT' %}selected{% endif %}>LUT</option>
+                                        <option value="Nil tax" {% if item.inv_tax_type == 'Nil tax' %}selected{% endif %}>Nil tax</option>
+                                        <option value="SEZ" {% if item.inv_tax_type == 'SEZ' %}selected{% endif %}>SEZ</option>
+                                    </select>
                                 </td>
-                                <td class="font-weight-bold item-total">{{ item.inv_total_value|floatformat:2 }}</td>
+                                <td>
+                                    <input type="number" name="job_base_{{ forloop.counter }}" step="0.01" class="form-control form-control-sm font-weight-bold text-right job-base-input" value="{{ item.inv_total_value|floatformat:2 }}">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 font-weight-bold btn-breakdown" data-row="{{ forloop.counter }}" title="Edit specific charge ledgers">
+                                        <i class="fas fa-sliders-h"></i> Split
+                                    </button>
+                                </td>
+                                <td class="font-weight-bold text-muted job-tax-display">₹ 0.00</td>
+                                <td class="font-weight-bold text-dark job-line-total-display">₹ {{ item.inv_line_total|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}
                         {% else %}
-                            {% for pod in po_items %}
-                            <tr class="modern-tr">
-                                <input type="hidden" name="item_pod_id_{{ forloop.counter }}"      value="{{ pod.id }}">
-                                <input type="hidden" name="item_number_{{ forloop.counter }}"      value="{{ pod.pod_item }}">
-                                <input type="hidden" name="item_description_{{ forloop.counter }}" value="{{ pod.pod_type_of_req }}">
-                                <input type="hidden" name="item_length_{{ forloop.counter }}"      value="{{ pod.pod_length }}">
-                                <input type="hidden" name="item_width_{{ forloop.counter }}"       value="{{ pod.pod_width }}">
-                                <input type="hidden" name="item_height_{{ forloop.counter }}"      value="{{ pod.pod_height }}">
-                                <input type="hidden" name="item_uom_{{ forloop.counter }}"         value="{{ pod.pod_uom }}">
-                                <td class="align-middle"><input type="checkbox" name="item_checked_{{ forloop.counter }}" class="item-checkbox" onchange="recalcRow(this)"></td>
-                                <td class="align-middle font-weight-bold">{{ forloop.counter }}</td>
-                                <td class="text-left font-weight-bold" style="font-size:0.82rem;color:#3b4cc0;">{{ pod.pod_item }}</td>
-                                <td>{{ pod.pod_type_of_req }}</td>
-                                <td>{{ pod.pod_length }}×{{ pod.pod_width }}×{{ pod.pod_height }}</td>
-                                <td>{{ pod.pod_uom|default:"mm" }}</td>
-                                <td>
-                                    <input type="number" name="item_qty_{{ forloop.counter }}" value="{{ pod.pod_quantity }}"
-                                           min="0" class="form-control form-control-sm text-center item-qty"
-                                           style="width:70px;margin:auto;" oninput="recalcRow(this)">
-                                </td>
-                                <td>
-                                    <input type="number" name="item_unit_value_{{ forloop.counter }}" value="{{ pod.pod_value|default:0 }}"
-                                           min="0" step="0.01" class="form-control form-control-sm text-center item-uv"
-                                           style="width:110px;margin:auto;" oninput="recalcRow(this)">
-                                </td>
-                                <td class="font-weight-bold item-total">
-                                    {{ pod.pod_value|default:0 | floatformat:2 }}
+                            <tr>
+                                <td colspan="11" class="text-center py-4 text-muted" id="no_jobs_msg">
+                                    <i class="fas fa-info-circle mr-1"></i> Please select a customer above to load available jobs.
                                 </td>
                             </tr>
-                            {% endfor %}
-                        {% endif %}
-                        {% if not po_items and not invoice %}
-                        <tr id="empty_row">
-                            <td colspan="9" class="text-center py-4 text-muted">
-                                <i class="fas fa-info-circle"></i> Select a Customer to load pending PO items automatically.
-                            </td>
-                        </tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- ── SECTION 3 : TOTALS ──────────────────────────────────────── -->
-        <div class="modern-card mt-3" style="padding:1rem!important;">
-            <div class="row justify-content-end">
-                <div class="col-md-5">
-                    <table class="table" style="font-size:0.95rem;">
-                        <tr>
-                            <td class="text-right font-weight-bold">Base Amount (₹)</td>
-                            <td class="text-right font-weight-bold" id="disp_base">0.00</td>
-                        </tr>
-                        <tr id="cgst_row">
-                            <td class="text-right">CGST (<span id="cgst_pct">9</span>%)</td>
-                            <td class="text-right" id="disp_cgst">0.00</td>
-                        </tr>
-                        <tr id="sgst_row">
-                            <td class="text-right">SGST (<span id="sgst_pct">9</span>%)</td>
-                            <td class="text-right" id="disp_sgst">0.00</td>
-                        </tr>
-                        <tr id="igst_row" style="display:none;">
-                            <td class="text-right">IGST (<span id="igst_pct">18</span>%)</td>
-                            <td class="text-right" id="disp_igst">0.00</td>
-                        </tr>
-                        <tr style="border-top:2px solid #333;">
-                            <td class="text-right font-weight-bold" style="font-size:1.1rem;">Grand Total (₹)</td>
-                            <td class="text-right font-weight-bold" id="disp_total" style="font-size:1.1rem;color:#3b4cc0;">0.00</td>
-                        </tr>
-                    </table>
+            <!-- Summary Bar -->
+            <div class="row no-gutters mt-4 p-3 rounded bg-light border align-items-center">
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="small text-muted font-weight-bold">Total Base Amount:</div>
+                    <div class="h5 mb-0 font-weight-bold text-dark" id="display_total_base">₹ 0.00</div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="small text-muted font-weight-bold">Taxes (CGST / SGST / IGST):</div>
+                    <div class="h5 mb-0 font-weight-bold text-primary" id="display_total_tax">₹ 0.00</div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <div class="small text-muted font-weight-bold">Invoice Grand Total:</div>
+                    <div class="h4 mb-0 font-weight-bold text-success" id="display_grand_total">₹ 0.00</div>
+                </div>
+                <div class="col-md-3 text-md-right">
+                    <button type="submit" class="btn btn-success btn-lg px-4 font-weight-bold shadow">
+                        <i class="fas fa-file-invoice mr-1"></i> Save &amp; Generate Invoice
+                    </button>
                 </div>
             </div>
-
-            <!-- Remarks -->
-            <div class="form-group-modern mt-2">
-                <label class="form-label-modern"><i class="fas fa-sticky-note"></i> Remarks / Notes</label>
-                <textarea name="inv_remarks" class="form-control form-control-modern" rows="2"
-                          placeholder="Optional remarks...">{{ invoice.inv_remarks|default:'' }}</textarea>
-            </div>
-
-            <!-- Buttons -->
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <a href="{% url 'pk_invoice_list' %}" class="btn-modern btn-cancel px-4 py-2" style="text-decoration:none;">
-                    <i class="fas fa-times"></i> CANCEL
-                </a>
-                <button type="submit" class="btn-modern btn-submit px-5 py-2" style="font-size:1rem;">
-                    <i class="fas fa-save"></i> SAVE INVOICE
-                </button>
+            
+            <div class="mt-3">
+                <label class="font-weight-bold small text-muted"><i class="fas fa-comment-alt mr-1"></i> Invoice Remarks / Narration</label>
+                <input type="text" name="inv_remarks" class="form-control form-control-sm" placeholder="e.g. Invoiced against Sales Order / Batch releases" value="{{ invoice.inv_remarks|default:'' }}">
             </div>
         </div>
+
     </form>
 </div>
 
+<!-- Modal for Item Charges Breakdown (Tally Ledgers) -->
+<div class="modal fade" id="breakdownModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content" style="border-radius:14px;">
+            <div class="modal-header bg-light py-2">
+                <h6 class="modal-title font-weight-bold text-dark" id="breakdownModalTitle">
+                    <i class="fas fa-sliders-h mr-1 text-primary"></i> Charge Ledger Breakdown
+                </h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body py-2">
+                <p class="small text-muted mb-2">Assign portions of the job base value to specific revenue ledgers:</p>
+                <input type="hidden" id="modal_target_row">
+                
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Handling Charges:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_handling" value="0.00">
+                    </div>
+                </div>
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Loading Charges:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_loading" value="0.00">
+                    </div>
+                </div>
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Unloading Charges:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_unloading" value="0.00">
+                    </div>
+                </div>
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Supply of Packing Materials:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_supply_mat" value="0.00">
+                    </div>
+                </div>
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Repacking Charges:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_repacking" value="0.00">
+                    </div>
+                </div>
+                <div class="form-group row mb-1">
+                    <label class="col-6 col-form-label col-form-label-sm font-weight-bold">Scrap Wood:</label>
+                    <div class="col-6">
+                        <input type="number" step="0.01" class="form-control form-control-sm text-right modal-breakdown-input" id="m_scrap_wood" value="0.00">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary font-weight-bold" id="btn_apply_breakdown">Apply Breakdown</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// ── Reload page when Customer changes ──────────────────────────────
-$('#inv_customer_id').on('change', function () {
-    var customerId = $(this).val();
-    if (!customerId) return;
-    window.location.href = "?customer_id=" + customerId;
-});
-
-// ── Checkboxes ───────────────────────────────────────────────────────
-function toggleAllItems(masterCheckbox) {
-    $('.item-checkbox').prop('checked', $(masterCheckbox).prop('checked'));
-    $('.item-checkbox').each(function() {
-        recalcRow(this);
-    });
-}
-
-// ── Recalc a single row ──────────────────────────────────────────────
-function recalcRow(input) {
-    var row = $(input).closest('tr');
-    var isChecked = row.find('.item-checkbox').is(':checked');
-    if (!isChecked) {
-        row.find('.item-total').text('0.00');
-    } else {
-        var qty = parseFloat(row.find('.item-qty').val()) || 0;
-        var uv  = parseFloat(row.find('.item-uv').val())  || 0;
-        row.find('.item-total').text((qty * uv).toFixed(2));
-    }
-    recalcTotals();
-}
-
-// ── Recalc all totals ────────────────────────────────────────────────
-function recalcTotals() {
-    var base = 0;
-    $('.item-qty').each(function (i) {
-        var row = $(this).closest('tr');
-        var isChecked = row.find('.item-checkbox').is(':checked');
-        if (isChecked) {
-            var qty = parseFloat($(this).val()) || 0;
-            var uv  = parseFloat(row.find('.item-uv').val()) || 0;
-            base += qty * uv;
+$(document).ready(function() {
+    // When customer changes, load available jobs via AJAX
+    $('#inv_customer_id').on('change', function() {
+        let custId = $(this).val();
+        if (!custId) {
+            $('#jobs_tbody').html('<tr><td colspan="11" class="text-center py-4 text-muted"><i class="fas fa-info-circle mr-1"></i> Please select a customer above to load available jobs.</td></tr>');
+            recalcAllTotals();
+            return;
         }
+
+        $('#jobs_tbody').html('<tr><td colspan="11" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Loading available jobs for customer...</td></tr>');
+
+        $.ajax({
+            url: "{% url 'pk_invoice_get_customer_jobs' %}",
+            data: { 
+                customer_id: custId,
+                invoice_id: "{{ invoice.id|default:'' }}"
+            },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp.success) {
+                    $('#badge_gstin').html('<i class="fas fa-id-card text-muted mr-1"></i> GSTIN: <b>' + (resp.gstin || 'None') + '</b>');
+                    $('#badge_state').html('<i class="fas fa-map-marker-alt text-muted mr-1"></i> State: <b>' + (resp.state || 'Tamil Nadu') + '</b>');
+                    $('#badge_pincode').html('<i class="fas fa-mail-bulk text-muted mr-1"></i> PIN: <b>' + (resp.pincode || '—') + '</b>');
+
+                    $('#inv_customer_state').val(resp.state || 'Tamil Nadu');
+                    $('#inv_customer_pincode').val(resp.pincode || '');
+                    $('#inv_customer_gstin').val(resp.gstin || '');
+                    if (resp.default_gst_rate) {
+                        $('#inv_gst_rate').val(resp.default_gst_rate);
+                    }
+
+                    let jobs = resp.jobs || [];
+                    if (jobs.length === 0) {
+                        $('#jobs_tbody').html('<tr><td colspan="11" class="text-center py-4 text-warning font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i> No un-invoiced jobs found for this customer. All jobs may already be invoiced.</td></tr>');
+                        recalcAllTotals();
+                        return;
+                    }
+
+                    let rowsHtml = '';
+                    let isInterState = resp.state && resp.state.toLowerCase() !== 'tamil nadu';
+                    let defaultTax = isInterState ? 'IGST 18%' : '18%';
+
+                    jobs.forEach(function(j, idx) {
+                        let rowNum = idx + 1;
+                        let checkedAttr = (!j.is_invoiced) ? 'checked' : '';
+                        let rowClass = (!j.is_invoiced) ? 'table-success' : 'table-secondary text-muted';
+
+                        rowsHtml += '<tr class="job-row ' + rowClass + '" data-row-idx="' + rowNum + '">';
+                        rowsHtml += '  <td>';
+                        rowsHtml += '    <input type="checkbox" name="job_checked_' + rowNum + '" value="1" class="job-checkbox" ' + checkedAttr + '>';
+                        rowsHtml += '    <input type="hidden" name="job_no_' + rowNum + '" value="' + j.job_no + '">';
+                        rowsHtml += '    <input type="hidden" name="job_id_' + rowNum + '" value="' + j.job_id + '">';
+                        rowsHtml += '    <input type="hidden" name="item_pod_id_' + rowNum + '" value="' + (j.pod_id || '') + '">';
+                        rowsHtml += '    <input type="hidden" name="job_desc_' + rowNum + '" value="' + j.description + '">';
+                        rowsHtml += '    <input type="hidden" name="job_qty_' + rowNum + '" value="' + j.qty + '">';
+                        rowsHtml += '    <input type="hidden" name="job_rate_' + rowNum + '" value="' + j.unit_rate + '">';
+                        rowsHtml += '    <input type="hidden" name="job_date_' + rowNum + '" value="' + j.job_date + '">';
+                        rowsHtml += '    <input type="hidden" name="charge_handling_' + rowNum + '" id="handling_' + rowNum + '" value="0.00">';
+                        rowsHtml += '    <input type="hidden" name="charge_loading_' + rowNum + '" id="loading_' + rowNum + '" value="0.00">';
+                        rowsHtml += '    <input type="hidden" name="charge_unloading_' + rowNum + '" id="unloading_' + rowNum + '" value="0.00">';
+                        rowsHtml += '    <input type="hidden" name="charge_scrap_wood_' + rowNum + '" id="scrap_wood_' + rowNum + '" value="0.00">';
+                        rowsHtml += '    <input type="hidden" name="charge_repacking_' + rowNum + '" id="repacking_' + rowNum + '" value="0.00">';
+                        rowsHtml += '    <input type="hidden" name="charge_supply_mat_' + rowNum + '" id="supply_mat_' + rowNum + '" value="0.00">';
+                        rowsHtml += '  </td>';
+                        rowsHtml += '  <td class="font-weight-bold text-primary">' + j.job_no + '</td>';
+                        rowsHtml += '  <td>' + (j.po_num || '—') + '</td>';
+                        rowsHtml += '  <td class="text-left font-weight-bold text-dark">' + j.description + '</td>';
+                        rowsHtml += '  <td class="font-weight-bold">' + j.qty + '</td>';
+                        rowsHtml += '  <td>';
+                        rowsHtml += '    <select name="job_cat_' + rowNum + '" class="form-control form-control-sm job-cat-select">';
+                        rowsHtml += '      <option value="Packing Charges" selected>Packing Charges</option>';
+                        rowsHtml += '      <option value="Packing Charges Service">Packing Charges Service</option>';
+                        rowsHtml += '      <option value="Supply of Packing Material">Supply of Packing Material</option>';
+                        rowsHtml += '      <option value="Forklift Handling Charges">Forklift Handling Charges</option>';
+                        rowsHtml += '      <option value="Freight Charges">Freight Charges</option>';
+                        rowsHtml += '      <option value="Handling Charges">Handling Charges</option>';
+                        rowsHtml += '      <option value="Loading Charges">Loading Charges</option>';
+                        rowsHtml += '      <option value="Unloading Charges">Unloading Charges</option>';
+                        rowsHtml += '      <option value="Repacking Charges">Repacking Charges</option>';
+                        rowsHtml += '    </select>';
+                        rowsHtml += '  </td>';
+                        rowsHtml += '  <td>';
+                        rowsHtml += '    <select name="job_tax_type_' + rowNum + '" class="form-control form-control-sm job-tax-select">';
+                        rowsHtml += '      <option value="18%" ' + (defaultTax === '18%' ? 'selected' : '') + '>18%</option>';
+                        rowsHtml += '      <option value="GST-5%">GST-5%</option>';
+                        rowsHtml += '      <option value="IGST 18%" ' + (defaultTax === 'IGST 18%' ? 'selected' : '') + '>IGST 18%</option>';
+                        rowsHtml += '      <option value="LUT">LUT</option>';
+                        rowsHtml += '      <option value="Nil tax">Nil tax</option>';
+                        rowsHtml += '      <option value="SEZ">SEZ</option>';
+                        rowsHtml += '    </select>';
+                        rowsHtml += '  </td>';
+                        rowsHtml += '  <td>';
+                        rowsHtml += '    <input type="number" step="0.01" name="job_base_' + rowNum + '" class="form-control form-control-sm font-weight-bold text-right job-base-input" value="' + j.base_value.toFixed(2) + '">';
+                        rowsHtml += '  </td>';
+                        rowsHtml += '  <td>';
+                        rowsHtml += '    <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 font-weight-bold btn-breakdown" data-row="' + rowNum + '" title="Edit specific charge ledgers"><i class="fas fa-sliders-h"></i> Split</button>';
+                        rowsHtml += '  </td>';
+                        rowsHtml += '  <td class="font-weight-bold text-muted job-tax-display">₹ 0.00</td>';
+                        rowsHtml += '  <td class="font-weight-bold text-dark job-line-total-display">₹ 0.00</td>';
+                        rowsHtml += '</tr>';
+                    });
+
+                    $('#jobs_tbody').html(rowsHtml);
+                    recalcAllTotals();
+                } else {
+                    alert(resp.message || 'Error fetching jobs');
+                }
+            },
+            error: function() {
+                $('#jobs_tbody').html('<tr><td colspan="11" class="text-center py-4 text-danger font-weight-bold"><i class="fas fa-times mr-1"></i> Failed to communicate with server.</td></tr>');
+            }
+        });
     });
-    base = Math.round(base * 100) / 100;
-    $('#inv_base_amount').val(base);
-    $('#disp_base').text(base.toFixed(2));
 
-    var gstRate  = parseFloat($('#inv_gst_rate').val()) || 0;
-    var useIgst  = ($('#use_igst').val() === '1');
-    var gstTotal = Math.round(base * gstRate / 100 * 100) / 100;
+    // Select All Checkbox Handler
+    $(document).on('change', '#selectAllJobs', function() {
+        let isChecked = $(this).is(':checked');
+        $('.job-checkbox').prop('checked', isChecked).trigger('change');
+    });
 
-    if (useIgst) {
-        $('#igst_row').show(); $('#cgst_row').hide(); $('#sgst_row').hide();
-        $('#igst_pct').text(gstRate);
-        $('#disp_igst').text(gstTotal.toFixed(2));
-    } else {
-        $('#igst_row').hide(); $('#cgst_row').show(); $('#sgst_row').show();
-        var half = Math.round(gstRate / 2 * 100) / 100;
-        var halfAmt = Math.round(gstTotal / 2 * 100) / 100;
-        $('#cgst_pct').text(half); $('#sgst_pct').text(half);
-        $('#disp_cgst').text(halfAmt.toFixed(2));
-        $('#disp_sgst').text(halfAmt.toFixed(2));
+    // Checkbox toggle changes row color and triggers recalc
+    $(document).on('change', '.job-checkbox', function() {
+        let row = $(this).closest('tr');
+        if ($(this).is(':checked')) {
+            row.addClass('table-success').removeClass('table-secondary text-muted');
+        } else {
+            row.removeClass('table-success').addClass('table-secondary text-muted');
+        }
+        recalcAllTotals();
+    });
+
+    // When base value, tax type, or rate changes
+    $(document).on('input change', '.job-base-input, .job-tax-select, #inv_gst_rate', function() {
+        recalcAllTotals();
+    });
+
+    // Modal Charge Breakdown Button Click
+    $(document).on('click', '.btn-breakdown', function() {
+        let rowNum = $(this).data('row');
+        $('#modal_target_row').val(rowNum);
+        let jobNo = $('input[name="job_no_' + rowNum + '"]').val();
+        $('#breakdownModalTitle').html('<i class="fas fa-sliders-h mr-1 text-primary"></i> Charge Ledger Breakdown for <b>' + jobNo + '</b>');
+
+        $('#m_handling').val($('#handling_' + rowNum).val() || '0.00');
+        $('#m_loading').val($('#loading_' + rowNum).val() || '0.00');
+        $('#m_unloading').val($('#unloading_' + rowNum).val() || '0.00');
+        $('#m_supply_mat').val($('#supply_mat_' + rowNum).val() || '0.00');
+        $('#m_repacking').val($('#repacking_' + rowNum).val() || '0.00');
+        $('#m_scrap_wood').val($('#scrap_wood_' + rowNum).val() || '0.00');
+
+        $('#breakdownModal').modal('show');
+    });
+
+    // Apply Breakdown button inside modal
+    $('#btn_apply_breakdown').on('click', function() {
+        let rowNum = $('#modal_target_row').val();
+        if (rowNum) {
+            $('#handling_' + rowNum).val($('#m_handling').val() || '0.00');
+            $('#loading_' + rowNum).val($('#m_loading').val() || '0.00');
+            $('#unloading_' + rowNum).val($('#m_unloading').val() || '0.00');
+            $('#supply_mat_' + rowNum).val($('#m_supply_mat').val() || '0.00');
+            $('#repacking_' + rowNum).val($('#m_repacking').val() || '0.00');
+            $('#scrap_wood_' + rowNum).val($('#m_scrap_wood').val() || '0.00');
+        }
+        $('#breakdownModal').modal('hide');
+    });
+
+    // Master Recalculation Function
+    function recalcAllTotals() {
+        let selectedCount = 0;
+        let totalBase = 0.0;
+        let totalTax = 0.0;
+        let grandTotal = 0.0;
+        let customerState = ($('#inv_customer_state').val() || '').toLowerCase();
+        let isInterState = customerState && customerState !== 'tamil nadu';
+
+        $('.job-row').each(function() {
+            let row = $(this);
+            let isChecked = row.find('.job-checkbox').is(':checked');
+            let baseVal = parseFloat(row.find('.job-base-input').val()) || 0.0;
+            let taxType = row.find('.job-tax-select').val() || '18%';
+            let taxRate = 18.0;
+
+            if (taxType === 'GST-5%') taxRate = 5.0;
+            else if (taxType === '18%' || taxType === 'IGST 18%') taxRate = 18.0;
+            else if (taxType === 'LUT' || taxType === 'Nil tax' || taxType === 'SEZ') taxRate = 0.0;
+            else {
+                let parsed = parseFloat(taxType.replace(/[^0-9.]/g, ''));
+                if (!isNaN(parsed) && parsed > 0) taxRate = parsed;
+            }
+
+            let rowTax = round(baseVal * (taxRate / 100.0), 2);
+            let lineTotal = round(baseVal + rowTax, 2);
+
+            let taxLabel = (taxRate > 0) ? ('₹ ' + rowTax.toFixed(2) + ' (' + taxRate + '%)') : '₹ 0.00 (Nil)';
+            row.find('.job-tax-display').text(taxLabel);
+            row.find('.job-line-total-display').text('₹ ' + lineTotal.toFixed(2));
+
+            if (isChecked) {
+                selectedCount++;
+                totalBase += baseVal;
+                totalTax += rowTax;
+                grandTotal += lineTotal;
+            }
+        });
+
+        $('#selected_jobs_badge').html('<i class="fas fa-check-double mr-1"></i> ' + selectedCount + ' Job' + (selectedCount === 1 ? '' : 's') + ' Selected');
+        $('#display_total_base').text('₹ ' + totalBase.toFixed(2));
+        $('#display_total_tax').text('₹ ' + totalTax.toFixed(2));
+        $('#display_grand_total').text('₹ ' + grandTotal.toFixed(2));
     }
-    $('#disp_total').text((base + gstTotal).toFixed(2));
-}
 
-function setGstType() {
-    $('#use_igst').val($('#gst_type').val() === 'inter' ? '1' : '0');
-    recalcTotals();
-}
+    function round(val, decimals) {
+        return Number(Math.round(val + 'e' + decimals) + 'e-' + decimals);
+    }
 
-// On load
-$(document).ready(function () {
-    recalcTotals();
-    {% if job_no %}$('#inv_job_no').trigger('change');{% endif %}
+    // Trigger on initial page load if customer is preselected
+    if ($('#inv_customer_id').val() && $('.job-row').length === 0) {
+        $('#inv_customer_id').trigger('change');
+    } else {
+        recalcAllTotals();
+    }
 });
 </script>
 {% endblock %}
