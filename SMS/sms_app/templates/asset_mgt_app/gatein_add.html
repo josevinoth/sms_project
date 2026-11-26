@@ -449,7 +449,7 @@
         success: function (data) {
             var truck_numbers=data.truck_numbers;
             var truck_numbers_id=data.truck_numbers_id;
-            $('#gatein_truck_number_n').removeClass('disable_a_href');
+            $('#gatein_truck_number_n').removeClass('disable_a_href').removeAttr('tabindex');
             $('#gatein_truck_number_n').empty();
             $('#gatein_truck_number_n').empty().append("<option value='0'>--Select--</option>");
             var len = (truck_numbers).length;
@@ -554,10 +554,12 @@ $(document).ready(function () {
         if (customerText.includes("EIPL")) {
             $("#gatein_CHA, #gatein_customer_service_name, #gatein_date_mail_received")
                 .removeAttr("disabled")
+                .removeAttr("tabindex")
                 .removeClass("disable_a_href");
         } else {
             $("#gatein_CHA, #gatein_customer_service_name, #gatein_date_mail_received")
                 .attr("disabled", true)
+                .attr("tabindex", "-1")
                 .addClass("disable_a_href");
         }
     }
@@ -646,6 +648,13 @@ $(document).ready(function () {
 
 <script>
     $(document).ready(function() {
+        // Prevent Tab key navigation into read-only / disabled fields
+        $('.form-section .disable_a_href, .form-section [readonly], .form-section [disabled]').attr('tabindex', '-1');
+
+        $(document).on('focus', '.form-section .disable_a_href, .form-section select[readonly]', function () {
+            $(this).blur();
+        });
+
         $('#gatein_customer, #gatein_department, #gatein_comodity').select2({
             width: '100%',
             placeholder: '--Select--',

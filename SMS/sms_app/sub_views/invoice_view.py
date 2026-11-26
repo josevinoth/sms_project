@@ -1104,34 +1104,41 @@ def custom_serializer(obj):
 @login_required(login_url='login_page')
 def load_whrate_model(request):
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
-    customer_id = CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
-    # customer_type = CustomerInfo.objects.get(id=customer_id).cu_businessmodel
-    # customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-    # if customer_type_id > 1:
-    #     date_today = date.today()
-    #     year = date_today.year
-    #     month = date_today.month
-    #     min_check_in_time = date(year, month, 1)
-    #     if month == 12:
-    #         max_check_out_time = date(year, month, 31)
-    #     else:
-    #         max_check_out_time = date(year, month + 1, 1) + timedelta(days=-1)
-    #     max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
+    if not lm_customer_name_id or lm_customer_name_id.strip() == "" or lm_customer_name_id == "--Select--":
+        data = {
+            'customer_businessmodel_val': '',
+            'customer_short_name_val': '',
+            'customer_code_val': '',
+            'customer_GST_val': '',
+            'customer_person_val': '',
+            'customer_contact_val': '',
+            'customer_address_val': '',
+            'whrm_rate_val': 0.0,
+        }
+        return HttpResponse(json.dumps(data, default=custom_serializer))
 
-    customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
-    customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
-    customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
-    customer_GST = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_gst')
-    customer_person = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customerperson')
-    customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
-    customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
-    customer_businessmodel_val = customer_businessmodel[0]['cu_businessmodel']  # Get value from Queryset
-    customer_short_name_val = customer_short_name[0]['cu_nameshort']  # Get value from Queryset
-    customer_code_val = customer_code[0]['cu_customercode']  # Get value from Queryset
-    customer_GST_val = customer_GST[0]['cu_gst']  # Get value from Queryset
-    customer_person_val = customer_person[0]['cu_customerperson']  # Get value from Queryset
-    customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
-    customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
+    customer_obj = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).first()
+    if not customer_obj:
+        data = {
+            'customer_businessmodel_val': '',
+            'customer_short_name_val': '',
+            'customer_code_val': '',
+            'customer_GST_val': '',
+            'customer_person_val': '',
+            'customer_contact_val': '',
+            'customer_address_val': '',
+            'whrm_rate_val': 0.0,
+        }
+        return HttpResponse(json.dumps(data, default=custom_serializer))
+
+    customer_id = customer_obj.id
+    customer_businessmodel_val = customer_obj.cu_businessmodel.id if customer_obj.cu_businessmodel else (customer_obj.cu_businessmodel or '')
+    customer_short_name_val = customer_obj.cu_nameshort or ''
+    customer_code_val = customer_obj.cu_customercode or ''
+    customer_GST_val = customer_obj.cu_gst or ''
+    customer_person_val = customer_obj.cu_customerperson or ''
+    customer_contact_val = customer_obj.cu_contactno or ''
+    customer_address_val = customer_obj.cu_address or ''
 
     # Fetch whrm_rate from WhratemasterInfo ONLY for Dedicated customers (id=3)
     whrm_rate_val = 0.0

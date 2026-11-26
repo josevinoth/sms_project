@@ -376,8 +376,11 @@
 </script>
 <script>
 	function challan_damage_btn_active() {
-        var otl_check_val =document.getElementById("lb_otl_check").value;
-        var offload_acceptance_val=document.getElementById("lb_offload_acceptance").value;
+        var otlEl = document.getElementById("lb_otl_check");
+        var offloadEl = document.getElementById("lb_offload_acceptance");
+        if (!otlEl || !offloadEl) return;
+        var otl_check_val = otlEl.value;
+        var offload_acceptance_val = offloadEl.value;
         if ((otl_check_val==2)||(offload_acceptance_val==2))
          {
              document.getElementById("lb_status").value=6
@@ -490,15 +493,15 @@
 
 <script>
 	function change_pouch() {
-        var jn=document.getElementById("lb_packing_list").value
+        var jn=document.getElementById("lb_packing_list").value;
         if ( jn==1)
         {
-            $('#lb_pouch_yes').removeClass('disable_a_href');
+            $('#lb_pouch_yes').removeClass('disable_a_href').removeAttr('tabindex');
         }
         else
         {
-            $('#lb_pouch_yes').addClass('disable_a_href');
-            document.getElementById("lb_pouch_yes").value=3
+            $('#lb_pouch_yes').addClass('disable_a_href').attr('tabindex', '-1');
+            document.getElementById("lb_pouch_yes").value=3;
         }
     }
 </script>
@@ -547,6 +550,33 @@
 
         // Run when selection changes
         ewaySelect.addEventListener("change", toggleFields);
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        function syncReadonlyTabindex() {
+            $('.form-section .form-control-modern').each(function() {
+                var $el = $(this);
+                if ($el.hasClass('disable_a_href') || $el.is('[readonly]') || $el.is('[disabled]')) {
+                    $el.attr('tabindex', '-1');
+                } else {
+                    $el.removeAttr('tabindex');
+                }
+            });
+        }
+
+        // Initial sync and keep in sync after any field/select change or AJAX update
+        syncReadonlyTabindex();
+        $(document).on('change', '.form-section select, .form-section input', function() {
+            setTimeout(syncReadonlyTabindex, 50);
+        });
+        $(document).ajaxComplete(function() {
+            setTimeout(syncReadonlyTabindex, 50);
+        });
+
+        $(document).on('focus', '.form-section .disable_a_href, .form-section [readonly], .form-section select[readonly]', function () {
+            $(this).blur();
+        });
     });
 </script>
 {% endblock %}

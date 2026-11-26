@@ -372,14 +372,35 @@ def enquirynote_list(request):
         'tr_dock_out_time'
     )
 
-    # Find which trips already have a completed invoice
+    # Find which trips already have a completed invoice (and whether it has a submission date)
     all_page_trip_ids = [row[0] for row in trip_data]
-    invoiced_trip_ids = set(
-        TransInvoiceInfo.objects.filter(
-            ti_trip_id__in=all_page_trip_ids,
-            is_woh=True
-        ).values_list('ti_trip_id', flat=True)
-    )
+    invoiced_rows = TransInvoiceInfo.objects.filter(
+        ti_trip_id__in=all_page_trip_ids,
+        is_woh=True
+    ).values_list('ti_trip_id', 'ti_inv_no', 'ti_submission_date')
+
+    invoiced_trip_ids = set()
+    dispatched_trip_ids = set()
+    trip_inv_map = {}
+    all_inv_nos = set()
+    for t_id, inv_no, sub_date in invoiced_rows:
+        invoiced_trip_ids.add(t_id)
+        if sub_date:
+            dispatched_trip_ids.add(t_id)
+        elif inv_no:
+            trip_inv_map.setdefault(t_id, set()).add(inv_no)
+            all_inv_nos.add(inv_no)
+
+    if all_inv_nos:
+        dispatched_inv_nos = set(
+            TransInvoiceInfo.objects.filter(
+                ti_inv_no__in=all_inv_nos,
+                ti_submission_date__isnull=False
+            ).values_list('ti_inv_no', flat=True)
+        )
+        for t_id, inv_nos in trip_inv_map.items():
+            if inv_nos & dispatched_inv_nos:
+                dispatched_trip_ids.add(t_id)
     
     consignment_dict = {}
     for consignment in consignment_data:
@@ -548,6 +569,7 @@ def enquirynote_list(request):
 
         display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
         is_invoiced = trip_id in invoiced_trip_ids
+        is_dispatched = trip_id in dispatched_trip_ids
         pod_info = trip_pod_map.get(trip_id, None) if cat_lower in ["business", "bussiness"] else None
 
         # Display override: If trip status in DB is 8, keep status 8 if goods OR dock-out time exists
@@ -558,7 +580,7 @@ def enquirynote_list(request):
             final_status_id = 12
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", final_status_text, final_status_id, display_veh_num, is_invoiced, pod_info)
+            (display_text, trip_num or "No Trip", final_status_text, final_status_id, display_veh_num, is_invoiced, pod_info, is_dispatched)
         )
 
     # Build final data

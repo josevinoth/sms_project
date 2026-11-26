@@ -57,8 +57,14 @@ def task_add(request,task_id=0):
 @login_required(login_url='login_page')
 def task_list(request):
     first_name = request.session.get('first_name')
-    context = {'task_list' : task_Info.objects.all(),'first_name': first_name}
-    return render(request,"asset_mgt_app/task_list.html",context)
+    tasks = task_Info.objects.select_related(
+        'application',
+        't_updated_by',
+        't_requirement_id',
+        't_requirement_id__req_status',
+    ).order_by('-id')
+    context = {'task_list': tasks, 'first_name': first_name}
+    return render(request, "asset_mgt_app/task_list.html", context)
 
 #Delete task
 @login_required(login_url='login_page')

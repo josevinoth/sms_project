@@ -400,6 +400,9 @@
 	$("#bill_customer_name").change(function charge_change_fn() {
 		var url = $("#invoice_add").attr("data-load_customer_model-url");
 		var gatein_customer_id = $(this).find(":selected").text();
+		if (!gatein_customer_id || gatein_customer_id === "" || gatein_customer_id === "--Select--") {
+			return;
+		}
 		var total_weight = document.getElementById("bill_weight").value;
 		var no_of_pieces = document.getElementById("bill_no_of_pallets").value;
 		var voucher_num = document.getElementById("bill_invoice_ref").value;
@@ -485,6 +488,20 @@
 		document.getElementById("bill_total_pre_gst").value = total_pre_GST.toFixed(2);
 		document.getElementById("bill_total_post_gst").value = total_post_GST.toFixed(2);
 	}
+
+	$(document).ready(function() {
+		// Prevent Tab key navigation into read-only / disabled fields
+		$('.disable_a_href, [readonly], [disabled]').attr('tabindex', '-1');
+
+		$(document).on('focus', '.disable_a_href, select[readonly]', function () {
+			$(this).blur();
+		});
+
+		$(document).on('keydown', '.disable_a_href', function (e) {
+			e.preventDefault();
+			return false;
+		});
+	});
 </script>
 
 {% endblock content %}
