@@ -270,6 +270,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                         vehicle_type_id = VehicletypeInfo.objects.get(vt_vehicletype=vehicle_type).id
                         truck_num = sorted(
                             Warehouse_goods_info.objects.filter(
+                                wh_voucher_num=voucher_num,
                                 wh_gate_injob_no_id__gatein_pre_id=pgn
                             ).values_list('wh_gate_injob_no_id__gatein_truck_number', flat=True)
                             .distinct()
@@ -305,14 +306,15 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                                 ).values_list('id', flat=True)
                             )
 
-                            Warehouse_goods_info.objects.filter(pk=ids[0]).update(
-                                wh_storage_cost_per_day=round(warehouse_charge, 2),
-                                wh_storage_cost_total=storage_cost_total
-                            )
-                            Warehouse_goods_info.objects.filter(pk__in=ids[1:]).update(
-                                wh_storage_cost_per_day=0,
-                                wh_storage_cost_total=0
-                            )
+                            if ids:
+                                Warehouse_goods_info.objects.filter(pk=ids[0]).update(
+                                    wh_storage_cost_per_day=round(warehouse_charge, 2),
+                                    wh_storage_cost_total=storage_cost_total
+                                )
+                                Warehouse_goods_info.objects.filter(pk__in=ids[1:]).update(
+                                    wh_storage_cost_per_day=0,
+                                    wh_storage_cost_total=0
+                                )
 
                 elif btt == 2:
                     dispatch_ids = sorted(
@@ -330,6 +332,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
 
                         truck_num = sorted(
                             Warehouse_goods_info.objects.filter(
+                                wh_voucher_num=voucher_num,
                                 wh_dispatch_id=dis
                             ).values_list('wh_dispatch_id__dispatch_truck_number', flat=True)
                             .distinct()
@@ -365,14 +368,15 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                                 ).values_list('id', flat=True)
                             )
 
-                            Warehouse_goods_info.objects.filter(pk=ids[0]).update(
-                                wh_storage_cost_per_day=round(warehouse_charge, 2),
-                                wh_storage_cost_total=storage_cost_total
-                            )
-                            Warehouse_goods_info.objects.filter(pk__in=ids[1:]).update(
-                                wh_storage_cost_per_day=0,
-                                wh_storage_cost_total=0
-                            )
+                            if ids:
+                                Warehouse_goods_info.objects.filter(pk=ids[0]).update(
+                                    wh_storage_cost_per_day=round(warehouse_charge, 2),
+                                    wh_storage_cost_total=storage_cost_total
+                                )
+                                Warehouse_goods_info.objects.filter(pk__in=ids[1:]).update(
+                                    wh_storage_cost_per_day=0,
+                                    wh_storage_cost_total=0
+                                )
 
         # check Crane and forklift charges
         for k in wh_job_num:
@@ -385,10 +389,10 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                 manual_handling_status = 0
             if manual_handling_status == 1:
                 total_weight = \
-                Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))[
+                Warehouse_goods_info.objects.filter(wh_job_no=k, wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_weight'))[
                     'wh_goods_weight__sum']
                 no_of_pieces = \
-                Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))[
+                Warehouse_goods_info.objects.filter(wh_job_no=k, wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_pieces'))[
                     'wh_goods_pieces__sum']
                 try:
                     weight_per_piece = round((total_weight) / (no_of_pieces), 0)
@@ -605,6 +609,12 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
         invoice.bill_end_date = max_check_out_time if max_check_out_time else invoice.bill_end_date
         invoice.bill_no_of_days = max_storage_days
         invoice.save()
+
+        stock_ids = sorted(goods_qs.values_list('id', flat=True))
+        if stock_ids:
+            Warehouse_goods_info.objects.filter(pk=stock_ids[0]).update(wh_total_invoice_cost=total_pre_GST)
+            if len(stock_ids) > 1:
+                Warehouse_goods_info.objects.filter(pk__in=stock_ids[1:]).update(wh_total_invoice_cost=0)
 
         return {
             'weight_sum': weight_sum,
