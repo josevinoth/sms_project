@@ -791,8 +791,53 @@ def get_tms_trips_by_date(request):
         
     return JsonResponse({'status': 'success', 'data': trip_data})
 
+def _build_trip_route_map(job_nos):
+    """Preload first-matching trip route strings ('from-to') keyed by job/consignment number."""
+    unique_jobs = [j for j in set(job_nos) if j]
+    if not unique_jobs:
+        return {}
+
+    best_match = {}
+
+    def _record_matches(rows):
+        for trip_id, key, from_loc, to_loc in rows:
+            if not key:
+                continue
+            prev = best_match.get(key)
+            if prev is None or trip_id < prev[0]:
+                route = f"{from_loc or ''}-{to_loc or ''}" if (from_loc or to_loc) else ""
+                best_match[key] = (trip_id, route)
+
+    chunk_size = 1000
+    for i in range(0, len(unique_jobs), chunk_size):
+        chunk = unique_jobs[i:i + chunk_size]
+        _record_matches(
+            TripdetailInfo.objects.filter(tr_tripnumber__in=chunk)
+            .order_by('id')
+            .values_list(
+                'id',
+                'tr_tripnumber',
+                'tr_departedlocation__place_name',
+                'tr_reportedlocation__place_name',
+            )
+        )
+        _record_matches(
+            TripdetailInfo.objects.filter(tr_consignmentnumber__co_consignmentnumber__in=chunk)
+            .order_by('id')
+            .values_list(
+                'id',
+                'tr_consignmentnumber__co_consignmentnumber',
+                'tr_departedlocation__place_name',
+                'tr_reportedlocation__place_name',
+            )
+        )
+
+    return {k: v[1] for k, v in best_match.items() if v[1]}
+
+
 def tms_petty_cash_export_tally(request):
     from openpyxl import Workbook
+    from openpyxl.cell import WriteOnlyCell
     from openpyxl.styles import Font, PatternFill, Alignment
     from django.http import HttpResponse
     
@@ -840,42 +885,48 @@ def tms_petty_cash_export_tally(request):
         if search_user:
             filters &= Q(tpc_created_by_id=search_user)
         
-    tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
-        'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 
-        'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_vehicle_number__vm_ownership', 'tpc_driver_name', 'tpc_created_by'
+    tpc_list = list(
+        TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
+            'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer',
+            'tpc_vehicle_source', 'tpc_vehicle_number', 'tpc_vehicle_number__vm_ownership'
+        )
     )
-    
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Tally Export"
-    
+    trip_route_map = _build_trip_route_map(tpc.tpc_job_no for tpc in tpc_list if tpc.tpc_job_no)
+
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet(title="Tally Export")
+
     headers = [
-        "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY", 
+        "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY",
         "CUSTOMER", "JOB NO", "VEH.NO.", "AMOUNT",
         "TRN DATE", "REMARKS"
     ]
-    ws.append(headers)
-    
     # Style Header: Yellow Background (#FFFF00), Bold, Center alignment
     header_font = Font(bold=True)
     header_fill = PatternFill("solid", fgColor="FFFF00")
-    for cell in ws[1]:
+    header_alignment = Alignment(horizontal="center")
+    header_cells = []
+    for header in headers:
+        cell = WriteOnlyCell(ws, value=header)
         cell.font = header_font
         cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
-        
+        cell.alignment = header_alignment
+        header_cells.append(cell)
+    ws.append(header_cells)
+
+    TALLY_DEBIT_MAP = {
+        'supervisor cost': 'Handling',
+        'supervisor': 'Handling',
+        'handling cost': 'Handling',
+        'handling': 'Handling',
+    }
+
     # Process and append data rows
     for tpc in tpc_list:
         date_str = tpc.tpc_transaction_date.strftime("%d-%m-%Y") if tpc.tpc_transaction_date else ""
         vou_no = tpc.tpc_number or ""
         debit_raw = tpc.tpc_expense_type.tms_exp_type_name if tpc.tpc_expense_type else ""
         # Tally ledger mapping: Supervisor Cost & Handling Cost → "Handling"
-        TALLY_DEBIT_MAP = {
-            'supervisor cost': 'Handling',
-            'supervisor': 'Handling',
-            'handling cost': 'Handling',
-            'handling': 'Handling',
-        }
         debit = TALLY_DEBIT_MAP.get(debit_raw.lower().strip(), debit_raw)
         credit = tpc.tpc_credit_ledger.ledger_name if tpc.tpc_credit_ledger else ""
         
@@ -954,17 +1005,9 @@ def tms_petty_cash_export_tally(request):
         trn_date = tpc.tpc_trip_date.strftime("%d-%b") if tpc.tpc_trip_date else ""
         
         # Remarks: Route string from trip if available, else tpc_remarks
-        remarks = tpc.tpc_remarks or ""
-        if raw_job_no:
-            trip = TripdetailInfo.objects.filter(
-                Q(tr_consignmentnumber__co_consignmentnumber=raw_job_no) | 
-                Q(tr_tripnumber=raw_job_no)
-            ).first()
-            if trip:
-                from_loc = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
-                to_loc = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
-                if from_loc or to_loc:
-                    remarks = f"{from_loc}-{to_loc}"
+        remarks = trip_route_map.get(raw_job_no) if raw_job_no else None
+        if not remarks:
+            remarks = tpc.tpc_remarks or ""
                     
         ws.append([
             date_str, vou_no, debit, credit, primary_cost_cat,
