@@ -289,6 +289,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                             return redirect(request.META['HTTP_REFERER'])
 
                         max_storage_days = Warehouse_goods_info.objects.filter(
+                            wh_voucher_num=voucher_num,
                             wh_gate_injob_no_id__gatein_pre_id=pgn
                         ).values_list('wh_storage_time', flat=True).distinct().aggregate(
                             Max('wh_storage_time'))['wh_storage_time__max']
@@ -348,6 +349,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                             return redirect(request.META['HTTP_REFERER'])
 
                         max_storage_days = Warehouse_goods_info.objects.filter(
+                            wh_voucher_num=voucher_num,
                             wh_dispatch_id=dis
                         ).values_list('wh_storage_time', flat=True).distinct().aggregate(
                             Max('wh_storage_time'))['wh_storage_time__max']
