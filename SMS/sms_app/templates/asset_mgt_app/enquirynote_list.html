@@ -508,7 +508,7 @@
                         {% if data.trips %}
                                     {% for trip_cons,trip_num,trip_status,trip_status_id, display_veh_num, is_invoiced, pod_info, is_dispatched in data.trips %}
                                 {% if is_dispatched %}
-                                <span class="badge p-2 mb-1" style="font-size: 0.8rem; background: transparent; border: 1px solid #d946ef; color: #a21caf; font-weight: 600;"><i class="fas fa-paper-plane"></i> Invoice Dispatched <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span></span><br>
+                                <span class="badge p-2 mb-1" style="font-size: 0.8rem; background: transparent; border: 1px solid #d946ef; color: #a21caf; font-weight: 600;"><i class="fas fa-paper-plane"></i> Invoice Submitted <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span></span><br>
                                 {% elif is_invoiced %}
                                 <span class="badge p-2 mb-1" style="font-size: 0.8rem; background: rgba(20, 184, 166, 0.15); border: 1px solid #14b8a6; color: #0d9488; font-weight: 600;"><i class="fas fa-file-invoice"></i> Invoice Completed <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span></span><br>
                                 {% elif trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8 or trip_status_id == 11 %}
