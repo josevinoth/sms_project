@@ -44,7 +44,7 @@
     </div>
 
     <!-- ?? Main Form Area ?? -->
-    <form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
+    <form method="POST" id="gate_in" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" autocomplete="off">
         {% csrf_token %}
         <div class="row">
             
@@ -63,7 +63,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Gatein Time</label>
-                        {% render_field dispatch_form.dispatch_gatein_time type="datetime-local" class="form-control form-control-modern" %}
+                        {% render_field dispatch_form.dispatch_gatein_time type="datetime-local" class="form-control form-control-modern" autocomplete="off" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Truck Number</label>
@@ -103,11 +103,11 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Dockin Time</label>
-                        {% render_field dispatch_form.dispatch_dockin_time type="datetime-local" class="form-control form-control-modern" %}
+                        {% render_field dispatch_form.dispatch_dockin_time type="datetime-local" class="form-control form-control-modern" autocomplete="off" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Dockout Time</label>
-                        {% render_field dispatch_form.dispatch_dockout_time type="datetime-local" class="form-control form-control-modern" %}
+                        {% render_field dispatch_form.dispatch_dockout_time type="datetime-local" class="form-control form-control-modern" autocomplete="off" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Transporter</label>
@@ -127,7 +127,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Depature Date & Time</label>
-                        {% render_field dispatch_form.dispatch_depature_date type="datetime-local" class="form-control form-control-modern" %}
+                        {% render_field dispatch_form.dispatch_depature_date type="datetime-local" class="form-control form-control-modern" autocomplete="off" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Cargo Picked?</label>

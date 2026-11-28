@@ -100,7 +100,7 @@
 <!--	</a>-->
 <!--</div>-->
 
-<form method="POST" id="invoice_add" action="" data-load_customer_model-url="{% url 'load_whrate_model' %}">
+<form method="POST" id="invoice_add" action="" data-load_customer_model-url="{% url 'load_whrate_model' %}" autocomplete="off">
 	{% csrf_token %}
 	
 	{% if invoice_form.errors %}
@@ -141,7 +141,8 @@
 </div>
 								<div class="form-group-modern">
     <label class="form-label-modern">BVM Invoice Number</label>
-    {% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref" class="form-control" %}
+    {% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref" class="form-control" autocomplete="off" %}
+    <small id="invoice_ref_feedback" class="text-danger font-weight-bold" style="display:none;"></small>
 </div>
 								<div class="form-group-modern">
     <label class="form-label-modern">Customer Name</label>
@@ -399,6 +400,9 @@
 	$("#bill_customer_name").change(function charge_change_fn() {
 		var url = $("#invoice_add").attr("data-load_customer_model-url");
 		var gatein_customer_id = $(this).find(":selected").text();
+		if (!gatein_customer_id || gatein_customer_id === "" || gatein_customer_id === "--Select--") {
+			return;
+		}
 		var total_weight = document.getElementById("bill_weight").value;
 		var no_of_pieces = document.getElementById("bill_no_of_pallets").value;
 		var voucher_num = document.getElementById("bill_invoice_ref").value;
@@ -484,6 +488,20 @@
 		document.getElementById("bill_total_pre_gst").value = total_pre_GST.toFixed(2);
 		document.getElementById("bill_total_post_gst").value = total_post_GST.toFixed(2);
 	}
+
+	$(document).ready(function() {
+		// Prevent Tab key navigation into read-only / disabled fields
+		$('.disable_a_href, [readonly], [disabled]').attr('tabindex', '-1');
+
+		$(document).on('focus', '.disable_a_href, select[readonly]', function () {
+			$(this).blur();
+		});
+
+		$(document).on('keydown', '.disable_a_href', function (e) {
+			e.preventDefault();
+			return false;
+		});
+	});
 </script>
 
 {% endblock content %}

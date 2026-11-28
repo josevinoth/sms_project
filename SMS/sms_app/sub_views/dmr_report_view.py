@@ -22,6 +22,7 @@ from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.dmr_template_studio_mod import DmrTemplateMaster, DmrTemplateColumn
 from .dmr_field_catalog import extract_dmr_cell_value, is_dmr_column_mergeable
+from sms_app.sub_views.transport_reports_view import build_allotment_map, resolve_trip_allotment
 
 # Q expression defining cancelled trips (with or without billing)
 IS_CANCELLATION_Q = (
@@ -802,9 +803,10 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
     goods_map = {}
     for g in ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=trip_cons_nums):
         goods_map.setdefault(g.cg_consignmentnumber_id, []).append(g)
-    va_map = {v.va_enquirynumber_id: v for v in
-              Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enq_nums).select_related('va_vendor',
-                                                                                                         'va_driver')}
+    all_allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber_id__in=trip_enq_nums
+    ).select_related('va_vendor', 'va_driver', 'va_vehiclenumber')
+    va_map = build_allotment_map(all_allotments)
     cons_detail_map = {c.id: c for c in ConsignmentdetailInfo.objects.filter(id__in=trip_cons_nums)}
 
     # Determine should_merge based on template toggle or customer fallback
@@ -831,7 +833,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
             for idx, trip in enumerate(trips, start=start_idx):
                 cons_detail = cons_detail_map.get(trip.tr_consignmentnumber_id)
                 goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
-                va = va_map.get(trip.tr_enquirynumber_id)
+                va = resolve_trip_allotment(trip, va_map)
                 cancellation_val = safe_num(trip.tc_cancellation)
                 is_cancel_without_billing = (
                     getattr(trip, 'tc_financestatus_id', None) == 11 or
@@ -922,7 +924,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name, start_idx=1, retur
     for idx, trip in enumerate(trips, start=start_idx):
         cons_detail = cons_detail_map.get(trip.tr_consignmentnumber_id)
         goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
-        va = va_map.get(trip.tr_enquirynumber_id)
+        va = resolve_trip_allotment(trip, va_map)
 
         g_len = len(goods_list)
         if consolidate_merged and should_merge and g_len > 1:

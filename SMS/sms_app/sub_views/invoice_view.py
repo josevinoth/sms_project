@@ -17,24 +17,25 @@ from datetime import date, datetime
 from django.http import JsonResponse
 from django.db.models import Q
 
+
 def invoice_list_ajax_response(request, queryset):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
-    
+
     order_column_index = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'asc')
-    
+
     columns = [
         'wh_job_no', 'wh_voucher_num', 'wh_goods_invoice',
         'wh_customer_name__cu_name',
         'wh_customer_type__tb_trbusinesstype',
         'wh_checkin_time', 'wh_checkout_time', 'wh_total_invoice_cost'
     ]
-    
+
     recordsTotal = queryset.count()
-    
+
     if search_value:
         queryset = queryset.filter(
             Q(wh_job_no__icontains=search_value) |
@@ -42,28 +43,30 @@ def invoice_list_ajax_response(request, queryset):
             Q(wh_goods_invoice__icontains=search_value) |
             Q(wh_customer_name__cu_name__icontains=search_value)
         )
-        
+
     recordsFiltered = queryset.count()
-    
+
     if order_column_index < len(columns):
         order_col = columns[order_column_index]
         if order_dir == 'desc':
             order_col = '-' + order_col
         queryset = queryset.order_by(order_col)
-        
+
     data = []
-    for obj in queryset[start:start+length]:
+    for obj in queryset[start:start + length]:
         data.append({
             'wh_job_no': obj.wh_job_no or '',
             'wh_voucher_num': obj.wh_voucher_num or 'None',
             'wh_goods_invoice': obj.wh_goods_invoice or '',
             'wh_customer_name': str(obj.wh_customer_name) if obj.wh_customer_name else '',
             'wh_customer_type': str(obj.wh_customer_type) if obj.wh_customer_type else '',
-            'wh_checkin_time': timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkin_time else 'None',
-            'wh_checkout_time': timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkout_time else 'None',
+            'wh_checkin_time': timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0",
+                                                                                                               " ") if obj.wh_checkin_time else 'None',
+            'wh_checkout_time': timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0",
+                                                                                                                 " ") if obj.wh_checkout_time else 'None',
             'wh_total_invoice_cost': str(obj.wh_total_invoice_cost) if obj.wh_total_invoice_cost else '0.0',
         })
-        
+
     return JsonResponse({
         'draw': draw,
         'recordsTotal': recordsTotal,
@@ -71,14 +74,15 @@ def invoice_list_ajax_response(request, queryset):
         'data': data
     })
 
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from ..sub_models.locationmaster_mod import LocationmasterInfo
 
-
 # Invoicecity
 from django.http import HttpResponse
+
 
 def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
     try:
@@ -98,7 +102,7 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                 'forklift_cost_sum': invoice.bill_tot_forklift_charges or 0,
                 'customer_type_id': invoice.bill_customer_type.id if invoice.bill_customer_type else 0,
             }
-        
+
         voucher_num = invoice.bill_invoice_ref
         invoice_id = invoice.pk
 
@@ -134,8 +138,8 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
 
         # check total area limits
         total_area_val = \
-        Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_area'))[
-            'wh_goods_area__sum']
+            Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_area'))[
+                'wh_goods_area__sum']
         if total_area_val is not None:
             total_area = total_area_val
         else:
@@ -383,11 +387,11 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
                 manual_handling_status = 0
             if manual_handling_status == 1:
                 total_weight = \
-                Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))[
-                    'wh_goods_weight__sum']
+                    Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_weight'))[
+                        'wh_goods_weight__sum']
                 no_of_pieces = \
-                Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))[
-                    'wh_goods_pieces__sum']
+                    Warehouse_goods_info.objects.filter(wh_job_no=k).aggregate(Sum('wh_goods_pieces'))[
+                        'wh_goods_pieces__sum']
                 try:
                     weight_per_piece = round((total_weight) / (no_of_pieces), 0)
                 except ZeroDivisionError:
@@ -566,7 +570,6 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
             max_check_out_time = 0
             max_storage_days = ((max_check_out_time - min_check_in_time))
 
-
         # Calculate Final Invoice Totals
         fumigation_charges_val = float(invoice.bill_tot_fumigation_charges or 0)
         wh_storage_charges_val = float(wh_storage_cost_sum or 0)
@@ -577,9 +580,9 @@ def calculate_and_apply_invoice_totals(request, invoice, goods_qs):
         tot_crane_charges_val = float(crane_cost_sum or 0)
         tot_forklift_charges_val = float(forklift_cost_sum or 0)
 
-        total_pre_GST = (fumigation_charges_val + wh_storage_charges_val + wh_loading_charges_val + 
-                        wh_unloading_charges_val + handling_charges_val + packing_charges_val + 
-                        tot_crane_charges_val + tot_forklift_charges_val)
+        total_pre_GST = (fumigation_charges_val + wh_storage_charges_val + wh_loading_charges_val +
+                         wh_unloading_charges_val + handling_charges_val + packing_charges_val +
+                         tot_crane_charges_val + tot_forklift_charges_val)
 
         cgst = round(total_pre_GST * 0.09, 2)
         sgst = round(total_pre_GST * 0.09, 2)
@@ -676,7 +679,7 @@ def invoice_add(request, invoice_id=0):
                 result = calculate_and_apply_invoice_totals(request, invoice, goods_qs)
                 if isinstance(result, HttpResponse):
                     return result
-                
+
                 if result:
                     weight_sum = result.get('weight_sum')
                     max_storage_days = result.get('no_of_days')
@@ -691,10 +694,18 @@ def invoice_add(request, invoice_id=0):
                     forklift_cost_sum = result.get('forklift_cost_sum')
                     customer_type_id = result.get('customer_type_id', 0)
                 else:
-                    weight_sum = 0; max_storage_days = 0; no_of_pieces = 0
-                    crane_time = 0; forklift_time = 0; min_check_in_time = ''
-                    max_check_out_time = ''; total_loading_cost = 0; wh_storage_cost_sum = 0
-                    crane_cost_sum = 0; forklift_cost_sum = 0; customer_type_id = 0
+                    weight_sum = 0;
+                    max_storage_days = 0;
+                    no_of_pieces = 0
+                    crane_time = 0;
+                    forklift_time = 0;
+                    min_check_in_time = ''
+                    max_check_out_time = '';
+                    total_loading_cost = 0;
+                    wh_storage_cost_sum = 0
+                    crane_cost_sum = 0;
+                    forklift_cost_sum = 0;
+                    customer_type_id = 0
 
                 shipper_invoice_list = goods_qs
                 context = {
@@ -725,18 +736,20 @@ def invoice_add(request, invoice_id=0):
                 voucher_num_val = invoice.bill_invoice_ref
                 # Link goods by ID for reliable exports
                 Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
-                
+
                 # Automatically recalculate and save invoice totals
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
                 result = calculate_and_apply_invoice_totals(request, invoice, goods_qs)
-                
+
                 if isinstance(result, HttpResponse):
                     return result
 
                 messages.success(request, 'Record Added Successfully!')
                 return redirect('/SMS/invoice_list')
             else:
-                messages.error(request, 'Check all mandatory fields!')
+                for field, errors in invoice_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
                 context = {
                     'invoice_form': invoice_form,
                     'first_name': first_name,
@@ -751,11 +764,11 @@ def invoice_add(request, invoice_id=0):
                 voucher_num_val = invoice.bill_invoice_ref
                 # update total invoice cost and link by ID in warehouse goods table
                 Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
-                
+
                 # Automatically recalculate and save invoice totals
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
                 result = calculate_and_apply_invoice_totals(request, invoice, goods_qs)
-                
+
                 if isinstance(result, HttpResponse):
                     return result
 
@@ -772,7 +785,9 @@ def invoice_add(request, invoice_id=0):
                         Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
                 return redirect('/SMS/invoice_list')
             else:
-                messages.error(request, 'Check all mandatory fields!')
+                for field, errors in invoice_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
                 voucher_num = invoice.bill_invoice_ref
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)
                 context = {
@@ -800,7 +815,7 @@ def invoice_add(request, invoice_id=0):
 @login_required(login_url='login_page')
 def invoice_report(request):
     first_name = request.session.get('first_name')
-    
+
     # Handle DataTables AJAX
     if request.GET.get('draw'):
         import traceback
@@ -811,13 +826,13 @@ def invoice_report(request):
             start = int(request.GET.get('start', 0))
             length = int(request.GET.get('length', 10))
             search_value = request.GET.get('search[value]', '')
-            
+
             queryset = Warehouse_goods_info.objects.exclude(wh_voucher_num=None).select_related(
                 'wh_customer_name', 'wh_customer_type'
             )
-            
+
             recordsTotal = queryset.count()
-            
+
             if search_value:
                 queryset = queryset.filter(
                     Q(wh_job_no__icontains=search_value) |
@@ -826,20 +841,24 @@ def invoice_report(request):
                     Q(wh_customer_name__cu_name__icontains=search_value) |
                     Q(wh_qr_rand_num__icontains=search_value)
                 )
-                
+
             recordsFiltered = queryset.count()
             queryset = queryset.order_by('-id')
-            
+
             data = []
             if length == -1:
                 sliced_qs = queryset[start:]
             else:
-                sliced_qs = queryset[start:start+length]
+                sliced_qs = queryset[start:start + length]
 
             for obj in sliced_qs:
-                checkin = timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkin_time, 'strftime') else str(obj.wh_checkin_time or '')
-                checkout = timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkout_time, 'strftime') else str(obj.wh_checkout_time or '')
-                
+                checkin = timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0",
+                                                                                                          " ") if hasattr(
+                    obj.wh_checkin_time, 'strftime') else str(obj.wh_checkin_time or '')
+                checkout = timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0",
+                                                                                                            " ") if hasattr(
+                    obj.wh_checkout_time, 'strftime') else str(obj.wh_checkout_time or '')
+
                 data.append([
                     obj.wh_job_no or '',
                     obj.wh_goods_invoice or '',
@@ -868,7 +887,7 @@ def invoice_report(request):
                     str(obj.wh_check_in_out) if obj.wh_check_in_out else '',
                     f'<span class="badge" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.4rem 0.6rem; border-radius: 6px;">{obj.wh_total_invoice_cost}</span>'
                 ])
-                
+
             return JsonResponse({
                 'draw': draw,
                 'recordsTotal': recordsTotal,
@@ -892,7 +911,7 @@ def invoice_list_ajax(request):
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
 
-    order_column_index = int(request.GET.get('order[0][column]', 1))
+    order_column_index = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'desc')
 
     queryset = BilingInfo.objects.select_related('bill_customer_name', 'bill_customer_type', 'bill_updated_by').all()
@@ -930,26 +949,29 @@ def invoice_list_ajax(request):
 
     data = []
     from django.urls import reverse
-    
-    for invoiceinfo in queryset[start:start+length]:
+
+    for invoiceinfo in queryset[start:start + length]:
         excel_btn = f'<a href="{reverse("invoice_export_excel", args=[invoiceinfo.id])}" class="btn btn-sm btn-outline-success" style="border-radius: 6px;" title="Excel"><i class="fas fa-file-excel"></i></a>'
         tally_btn = f'<a href="{reverse("shipper_invoice_export_excel", args=[invoiceinfo.id])}" class="btn btn-sm btn-outline-info" style="border-radius: 6px;" title="Tally"><i class="fas fa-file-invoice"></i></a>'
         shipper_btn = f'<a class="btn btn-sm btn-outline-warning" href="{reverse("shipperinvoice_list", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Shipper Invoice List"><i class="fas fa-anchor"></i></a>'
         edit_btn = f'<a class="btn btn-sm btn-outline-primary" href="{reverse("invoice_update", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Edit"><i class="fas fa-edit"></i></a>'
         del_btn = f'<a class="btn btn-sm btn-outline-danger" href="{reverse("invoice_delete", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Delete" onclick="return confirm(\'Are you sure you want to delete this invoice?\');"><i class="fas fa-trash-alt"></i></a>'
-        
+
         amount_badge = f'<span class="badge" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.4rem 0.6rem; border-radius: 6px;">{invoiceinfo.bill_total_post_gst or 0.0}</span>'
-        
+
         data.append({
-            'bill_created_on': timezone.localtime(invoiceinfo.bill_created_on).strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_created_on else '',
+            'bill_created_on': timezone.localtime(invoiceinfo.bill_created_on).strftime(
+                '%b %d, %Y, %I:%M %p') if invoiceinfo.bill_created_on else '',
             'bill_invoice_ref': f'<span class="font-weight-bold">{invoiceinfo.bill_invoice_ref or ""}</span>',
-            'bill_invoice_date': invoiceinfo.bill_invoice_date.strftime('%b %d, %Y') if invoiceinfo.bill_invoice_date else '',
+            'bill_invoice_date': invoiceinfo.bill_invoice_date.strftime(
+                '%b %d, %Y') if invoiceinfo.bill_invoice_date else '',
             'bill_customer_name': f'<span class="font-weight-bold">{invoiceinfo.bill_customer_name.cu_name if invoiceinfo.bill_customer_name else ""}</span>',
             'bill_customer_type': str(invoiceinfo.bill_customer_type) if invoiceinfo.bill_customer_type else '',
             'bill_e_invoice': invoiceinfo.bill_e_invoice or 'None',
             'bill_total_post_gst': amount_badge,
             'bill_updated_by': invoiceinfo.bill_updated_by.username if invoiceinfo.bill_updated_by else '',
-            'bill_updated_at': timezone.localtime(invoiceinfo.bill_updated_at).strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_updated_at else '',
+            'bill_updated_at': timezone.localtime(invoiceinfo.bill_updated_at).strftime(
+                '%b %d, %Y, %I:%M %p') if invoiceinfo.bill_updated_at else '',
             'bill_status': str(invoiceinfo.bill_status) if invoiceinfo.bill_status else '',
             'excel_btn': excel_btn,
             'tally_btn': tally_btn,
@@ -964,6 +986,7 @@ def invoice_list_ajax(request):
         'recordsFiltered': recordsFiltered,
         'data': data
     })
+
 
 @login_required(login_url='login_page')
 def invoice_list(request):
@@ -1001,24 +1024,30 @@ def shipper_invoice_list(request, voucher_id):
     billing_end_date = invoice.bill_end_date
     request.session['ses_voucher_num_val'] = voucher_num_val
     request.session['ses_voucher_id'] = voucher_id
-    shipper_invoice_list = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=voucher_num_val)
+    shipper_invoice_list = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id',
+                                                                       'wh_customer_name', 'wh_customer_type').filter(
+        wh_voucher_num=voucher_num_val)
     if customer_type_id > 1:
         try:
-            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(
-                                                                      wh_customer_name=customer_name_val,
-                                                                      wh_checkin_time__gte=billing_start_date,
-                                                                      wh_check_in_out=2,
-                                                                      wh_checkin_time__lte=billing_end_date,
-                                                                      wh_voucher_num=None)
+            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id',
+                                                                              'wh_customer_name',
+                                                                              'wh_customer_type').filter(
+                wh_customer_name=customer_name_val,
+                wh_checkin_time__gte=billing_start_date,
+                wh_check_in_out=2,
+                wh_checkin_time__lte=billing_end_date,
+                wh_voucher_num=None)
             # invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,wh_checkin_time__gte=billing_start_date,wh_checkin_time__lte=billing_end_date,wh_voucher_num=None)
         except ValueError:
             messages.error(request, 'Check Billing Start & End Date!')
             return redirect(request.META['HTTP_REFERER'])
     else:
         try:
-            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(
-                                                                      wh_customer_name=customer_name_val,
-                                                                      wh_check_in_out=2, wh_voucher_num=None)
+            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id',
+                                                                              'wh_customer_name',
+                                                                              'wh_customer_type').filter(
+                wh_customer_name=customer_name_val,
+                wh_check_in_out=2, wh_voucher_num=None)
         except ValueError:
             messages.error(request, 'Check Billing Start & End Date!')
             return redirect(request.META['HTTP_REFERER'])
@@ -1048,7 +1077,7 @@ def shipper_invoice_goods_add(request):
             calculate_and_apply_invoice_totals(request, invoice, goods_qs)
         except Exception as e:
             print("Error recalculating invoice:", e)
-            
+
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 
     context = {
@@ -1078,7 +1107,7 @@ def shipper_invoice_goods_remove(request):
             calculate_and_apply_invoice_totals(request, invoice, goods_qs)
         except Exception as e:
             print("Error recalculating invoice:", e)
-            
+
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 
     context = {
@@ -1100,34 +1129,42 @@ def custom_serializer(obj):
 @login_required(login_url='login_page')
 def load_whrate_model(request):
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
-    customer_id = CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
-    # customer_type = CustomerInfo.objects.get(id=customer_id).cu_businessmodel
-    # customer_type_id = TrbusinesstypeInfo.objects.get(tb_trbusinesstype=customer_type).id
-    # if customer_type_id > 1:
-    #     date_today = date.today()
-    #     year = date_today.year
-    #     month = date_today.month
-    #     min_check_in_time = date(year, month, 1)
-    #     if month == 12:
-    #         max_check_out_time = date(year, month, 31)
-    #     else:
-    #         max_check_out_time = date(year, month + 1, 1) + timedelta(days=-1)
-    #     max_storage_days = ((max_check_out_time - min_check_in_time).days) + 1
+    if not lm_customer_name_id or lm_customer_name_id.strip() == "" or lm_customer_name_id == "--Select--":
+        data = {
+            'customer_businessmodel_val': '',
+            'customer_short_name_val': '',
+            'customer_code_val': '',
+            'customer_GST_val': '',
+            'customer_person_val': '',
+            'customer_contact_val': '',
+            'customer_address_val': '',
+            'whrm_rate_val': 0.0,
+        }
+        return HttpResponse(json.dumps(data, default=custom_serializer))
 
-    customer_businessmodel = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_businessmodel')
-    customer_short_name = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_nameshort')
-    customer_code = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customercode')
-    customer_GST = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_gst')
-    customer_person = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_customerperson')
-    customer_contact = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_contactno')
-    customer_address = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).values('cu_address')
-    customer_businessmodel_val = customer_businessmodel[0]['cu_businessmodel']  # Get value from Queryset
-    customer_short_name_val = customer_short_name[0]['cu_nameshort']  # Get value from Queryset
-    customer_code_val = customer_code[0]['cu_customercode']  # Get value from Queryset
-    customer_GST_val = customer_GST[0]['cu_gst']  # Get value from Queryset
-    customer_person_val = customer_person[0]['cu_customerperson']  # Get value from Queryset
-    customer_contact_val = customer_contact[0]['cu_contactno']  # Get value from Queryset
-    customer_address_val = customer_address[0]['cu_address']  # Get value from Queryset
+    customer_obj = CustomerInfo.objects.filter(cu_name=lm_customer_name_id).first()
+    if not customer_obj:
+        data = {
+            'customer_businessmodel_val': '',
+            'customer_short_name_val': '',
+            'customer_code_val': '',
+            'customer_GST_val': '',
+            'customer_person_val': '',
+            'customer_contact_val': '',
+            'customer_address_val': '',
+            'whrm_rate_val': 0.0,
+        }
+        return HttpResponse(json.dumps(data, default=custom_serializer))
+
+    customer_id = customer_obj.id
+    customer_businessmodel_val = customer_obj.cu_businessmodel.id if customer_obj.cu_businessmodel else (
+                customer_obj.cu_businessmodel or '')
+    customer_short_name_val = customer_obj.cu_nameshort or ''
+    customer_code_val = customer_obj.cu_customercode or ''
+    customer_GST_val = customer_obj.cu_gst or ''
+    customer_person_val = customer_obj.cu_customerperson or ''
+    customer_contact_val = customer_obj.cu_contactno or ''
+    customer_address_val = customer_obj.cu_address or ''
 
     # Fetch whrm_rate from WhratemasterInfo ONLY for Dedicated customers (id=3)
     whrm_rate_val = 0.0
@@ -1174,7 +1211,8 @@ def load_whrate_model(request):
 def case_to_case_invoice_list_open(request):
     first_name = request.session.get('first_name')
     case_to_case = str(TrbusinesstypeInfo.objects.get(id=1))
-    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=1)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(
+        wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=1)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
@@ -1189,7 +1227,8 @@ def case_to_case_invoice_list_open(request):
 def dedicated_invoice_list_open(request):
     first_name = request.session.get('first_name')
     dedicated = str(TrbusinesstypeInfo.objects.get(id=3))
-    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=3)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(
+        wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=3)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
@@ -1204,7 +1243,8 @@ def dedicated_invoice_list_open(request):
 def exclusive_invoice_list_open(request):
     first_name = request.session.get('first_name')
     exlcusive = str(TrbusinesstypeInfo.objects.get(id=2))
-    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=1, wh_customer_type=2)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(
+        wh_voucher_num=None, wh_check_in_out=1, wh_customer_type=2)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
@@ -1382,30 +1422,30 @@ def shipper_invoice_export_excel(request, invoice_id):
     storage_base = sum_storage if sum_storage > header_storage else header_storage
 
     fumigation_val = float(invoice.bill_tot_fumigation_charges if (
-                invoice.bill_tot_fumigation_charges is not None and invoice.bill_tot_fumigation_charges != 0) else (
-                job_totals['total_fumigation'] or 0))
+            invoice.bill_tot_fumigation_charges is not None and invoice.bill_tot_fumigation_charges != 0) else (
+            job_totals['total_fumigation'] or 0))
 
     # Merge storage and fumigation to avoid adding new columns while keeping totals correct
     storage_val = storage_base + fumigation_val
 
     loading_val = float(invoice.bill_loading_charge if (
-                invoice.bill_loading_charge is not None and invoice.bill_loading_charge != 0) else (
-                job_totals['total_loading'] or 0))
+            invoice.bill_loading_charge is not None and invoice.bill_loading_charge != 0) else (
+            job_totals['total_loading'] or 0))
 
     # If unloading is 0, default to loading_val as per UI behavior
     unloading_val = float(invoice.bill_unloading_charge if (
-                invoice.bill_unloading_charge is not None and invoice.bill_unloading_charge != 0) else loading_val)
+            invoice.bill_unloading_charge is not None and invoice.bill_unloading_charge != 0) else loading_val)
 
     handling_val = float(invoice.bill_handling_charges if (
-                invoice.bill_handling_charges is not None and invoice.bill_handling_charges != 0) else 0)
+            invoice.bill_handling_charges is not None and invoice.bill_handling_charges != 0) else 0)
     crane_val = float(invoice.bill_tot_crane_charges if (
-                invoice.bill_tot_crane_charges is not None and invoice.bill_tot_crane_charges != 0) else (
-                job_totals['total_crane'] or 0))
+            invoice.bill_tot_crane_charges is not None and invoice.bill_tot_crane_charges != 0) else (
+            job_totals['total_crane'] or 0))
     forklift_val = float(invoice.bill_tot_forklift_charges if (
-                invoice.bill_tot_forklift_charges is not None and invoice.bill_tot_forklift_charges != 0) else (
-                job_totals['total_forklift'] or 0))
+            invoice.bill_tot_forklift_charges is not None and invoice.bill_tot_forklift_charges != 0) else (
+            job_totals['total_forklift'] or 0))
     packing_val = float(invoice.bill_packing_charges if (
-                invoice.bill_packing_charges is not None and invoice.bill_packing_charges != 0) else 0)
+            invoice.bill_packing_charges is not None and invoice.bill_packing_charges != 0) else 0)
 
     # Calculate pre-gst total components for verification
     calc_pre_gst_total = round(storage_val + loading_val + unloading_val + handling_val +
@@ -1413,7 +1453,7 @@ def shipper_invoice_export_excel(request, invoice_id):
 
     # Match UI Total exactly or re-calculate
     pre_gst_total = float(invoice.bill_total_pre_gst if (
-                invoice.bill_total_pre_gst is not None and invoice.bill_total_pre_gst != 0) else calc_pre_gst_total)
+            invoice.bill_total_pre_gst is not None and invoice.bill_total_pre_gst != 0) else calc_pre_gst_total)
 
     # Use actual taxes from header or re-calculate
     cgst_val = float(
@@ -1625,14 +1665,14 @@ def invoice_export_excel(request, invoice_id):
 
         # Use header fields first (is not None to handle 0.0 correctly), fallback to job sums
         storage_val = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else (
-                    job_totals['total_storage'] or 0))
+                job_totals['total_storage'] or 0))
         loading_val = float(invoice.bill_loading_charge if invoice.bill_loading_charge is not None else (
-                    job_totals['total_loading'] or 0))
+                job_totals['total_loading'] or 0))
         unloading_val = float(invoice.bill_unloading_charge if invoice.bill_unloading_charge is not None else 0)
         crane_val = float(invoice.bill_tot_crane_charges if invoice.bill_tot_crane_charges is not None else (
-                    job_totals['total_crane'] or 0))
+                job_totals['total_crane'] or 0))
         forklift_val = float(invoice.bill_tot_forklift_charges if invoice.bill_tot_forklift_charges is not None else (
-                    job_totals['total_forklift'] or 0))
+                job_totals['total_forklift'] or 0))
 
         per_day_storage = invoice.bill_per_day_wh_charges or 0
         if not per_day_storage and invoice.bill_no_of_days and storage_val:
@@ -1754,14 +1794,14 @@ def invoice_export_excel(request, invoice_id):
 
             # Aggregate Handling row format specifically applied to Row 1
             row_handling = round((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (
-                        invoice.bill_packing_charges or 0), 2) if sl == 1 else 0
+                    invoice.bill_packing_charges or 0), 2) if sl == 1 else 0
 
             ws.append([
                 sl,
                 job_no,
                 shipper_name,
                 obj.wh_gate_injob_no_id.gatein_invoice if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_invoice else (
-                            obj.wh_goods_invoice or "Summary"),
+                        obj.wh_goods_invoice or "Summary"),
 
                 # W/H CHRGS VEHICLE TYPE: Show actual type instead of status
                 str(obj.wh_gate_injob_no_id.gatein_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type and "In" in str(
@@ -1810,4 +1850,4 @@ def invoice_export_excel(request, invoice_id):
     response["Content-Disposition"] = f"attachment; filename=INVOICE-{invoice_suffix}.xlsx"
     wb.save(response)
     return response
-    
+

@@ -11,7 +11,9 @@ from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from ..models import TripdetailInfo, ConsignmentgoodsInfo, ConsignmentdetailInfo, Vehicle_allotmentInfo
 from .dmr_field_catalog import DMR_PAGE_CATALOG, AVAILABLE_CHARGES, extract_dmr_cell_value, is_dmr_column_mergeable
-from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
+from sms_app.sub_views.transport_reports_view import (
+    get_tms_report_transport_charge, build_allotment_map, resolve_trip_allotment
+)
 
 
 @login_required(login_url='login_page')
@@ -251,11 +253,10 @@ def dmr_template_preview_ajax(request):
         for g in ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=trip_cons_nums):
             goods_map.setdefault(g.cg_consignmentnumber_id, []).append(g)
 
-        va_map = {
-            v.va_enquirynumber_id: v for v in Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber_id__in=trip_enq_nums
-            ).select_related('va_vendor', 'va_driver')
-        }
+        all_allotments = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id__in=trip_enq_nums
+        ).select_related('va_vendor', 'va_driver', 'va_vehiclenumber')
+        va_map = build_allotment_map(all_allotments)
         cons_detail_map = {c.id: c for c in ConsignmentdetailInfo.objects.filter(id__in=trip_cons_nums)}
 
         columns_meta = []
@@ -275,7 +276,7 @@ def dmr_template_preview_ajax(request):
         for trip_idx, trip in enumerate(sample_trips, start=1):
             cons_detail = cons_detail_map.get(trip.tr_consignmentnumber_id)
             goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
-            va = va_map.get(trip.tr_enquirynumber_id)
+            va = resolve_trip_allotment(trip, va_map)
             try:
                 cancellation_val = float(trip.tc_cancellation) if trip.tc_cancellation not in (None, "", "None") else 0.0
             except Exception:

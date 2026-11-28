@@ -6,6 +6,7 @@ from django.db.models import Q, Sum
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime
 from openpyxl import Workbook
+from openpyxl.cell import WriteOnlyCell
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo, WMSPettyCashAttachment
@@ -675,9 +676,7 @@ def wms_petty_cash_export_tally(request):
             filters &= Q(wpc_created_by_id=search_user)
 
     wpc_list = WMSPettyCashInfo.objects.filter(filters).select_related(
-        'wpc_business', 'wpc_branch', 'wpc_category', 'wpc_expense_type',
-        'wpc_credit_ledger', 'wpc_to', 'wpc_customer', 'wpc_business_model',
-        'wpc_created_by'
+        'wpc_expense_type', 'wpc_credit_ledger', 'wpc_to', 'wpc_customer',
     ).order_by('-id')
 
     # Batch lookup vehicle numbers for jobs
@@ -729,22 +728,24 @@ def wms_petty_cash_export_tally(request):
                     if w_key not in vehicle_map:
                         vehicle_map[w_key] = w_truck.strip()
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Tally Export"
+    wb = Workbook(write_only=True)
+    ws = wb.create_sheet(title="Tally Export")
 
     headers = [
-        "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY", 
+        "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY",
         "CUSTOMER", "JOB NO", "VEH.NO.", "AMOUNT", "TO", "TRN DATE", "REMARKS"
     ]
-    ws.append(headers)
-
     header_font = Font(bold=True)
     header_fill = PatternFill("solid", fgColor="FFFF00")
-    for cell in ws[1]:
+    header_alignment = Alignment(horizontal="center")
+    header_cells = []
+    for header in headers:
+        cell = WriteOnlyCell(ws, value=header)
         cell.font = header_font
         cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
+        cell.alignment = header_alignment
+        header_cells.append(cell)
+    ws.append(header_cells)
 
     for wpc in wpc_list:
         tally_date = wpc.wpc_date
