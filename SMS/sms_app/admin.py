@@ -41,6 +41,14 @@ admin.site.register(Salestatus)
 admin.site.register(Busnotwon)
 admin.site.register(CustomertypeInfo)
 admin.site.register(CustomerInfo)
+
+from .sub_models.user_ext_mod import User_extInfo
+
+@admin.register(User_extInfo)
+class UserExtInfoAdmin(admin.ModelAdmin):
+    list_display = ('user', 'linked_customer', 'portal_role', 'agent_account', 'assigned_plant', 'is_approved')
+    list_filter = ('portal_role', 'is_approved')
+    search_fields = ('user__username', 'linked_customer__cu_name', 'agent_account', 'assigned_plant')
 admin.site.register(manpowerrequirementinfo)
 admin.site.register(faciltiyrequirementinfo)
 admin.site.register(YesNoInfo)

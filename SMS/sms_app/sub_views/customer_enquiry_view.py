@@ -65,6 +65,179 @@ def get_customer_context(request):
         
     return customer, department, is_lp, agent_name
 
+
+def get_portal_role_context(request):
+    """Return Parent-Child, Agent Account, and Brandix Dual-Login role metadata for the current portal user."""
+    portal_role = 'STANDARD'
+    agent_account = ''
+    assigned_plant = ''
+    linked_customer = None
+    bill_to_customer = None
+
+    try:
+        user_ext = User_extInfo.objects.select_related('linked_customer', 'linked_customer__cu_parent_customer').get(user=request.user)
+        portal_role = user_ext.portal_role or 'STANDARD'
+        agent_account = user_ext.agent_account or ''
+        assigned_plant = user_ext.assigned_plant or ''
+        linked_customer = user_ext.linked_customer
+        if linked_customer:
+            bill_to_customer = linked_customer.cu_parent_customer or linked_customer
+    except User_extInfo.DoesNotExist:
+        pass
+
+    return {
+        'portal_role': portal_role,
+        'agent_account': agent_account,
+        'assigned_plant': assigned_plant,
+        'linked_customer': linked_customer,
+        'bill_to_customer': bill_to_customer,
+        'is_factory': portal_role == 'FACTORY',
+        'is_logistics': portal_role == 'LOGISTICS',
+        'is_parent': portal_role == 'PARENT',
+        'hide_commercials': portal_role == 'FACTORY',
+    }
+
+
+def get_portal_enquiry_queryset(customer, portal_ctx):
+    """Return the scoped EnquirynoteInfo queryset based on Parent/Child/Agent/Factory/Logistics role."""
+    role = portal_ctx.get('portal_role', 'STANDARD')
+    agent_account = portal_ctx.get('agent_account', '')
+    if role == 'PARENT':
+        return EnquirynoteInfo.objects.filter(
+            Q(en_customername=customer) | Q(en_sub_customer__cu_parent_customer=customer)
+        )
+    if role in ('FACTORY', 'LOGISTICS'):
+        qs = EnquirynoteInfo.objects.filter(
+            Q(en_sub_customer=customer) | Q(en_customername=customer)
+        )
+        if agent_account:
+            qs = qs.filter(en_agent_name__iexact=agent_account)
+        if role == 'FACTORY' and portal_ctx.get('assigned_plant'):
+            qs = qs.filter(en_plant_code__iexact=portal_ctx['assigned_plant'])
+        return qs
+    return EnquirynoteInfo.objects.filter(en_customername=customer)
+
+
+def get_portal_trip_queryset(customer, portal_ctx):
+    """Return the scoped TripdetailInfo queryset based on Parent/Child/Agent/Factory/Logistics role."""
+    role = portal_ctx.get('portal_role', 'STANDARD')
+    agent_account = portal_ctx.get('agent_account', '')
+    if role == 'PARENT':
+        return TripdetailInfo.objects.filter(
+            Q(tr_enquirynumber__en_customername=customer) |
+            Q(tr_enquirynumber__en_sub_customer__cu_parent_customer=customer)
+        )
+    if role in ('FACTORY', 'LOGISTICS'):
+        qs = TripdetailInfo.objects.filter(
+            Q(tr_enquirynumber__en_sub_customer=customer) |
+            Q(tr_enquirynumber__en_customername=customer)
+        )
+        if agent_account:
+            qs = qs.filter(tr_enquirynumber__en_agent_name__iexact=agent_account)
+        if role == 'FACTORY' and portal_ctx.get('assigned_plant'):
+            qs = qs.filter(tr_enquirynumber__en_plant_code__iexact=portal_ctx['assigned_plant'])
+        return qs
+    return TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
+
+
+def _ensure_aware(dt):
+    if dt and timezone.is_naive(dt):
+        return timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
+def compute_brandix_kpis(enq, trip=None):
+    """
+    Auto-calculate Brandix SLA & Turnaround KPIs from enquiry & trip timestamps:
+    - Late Booking (48-hr rule)
+    - Placement Status, On-Time Placement (OTP), On-Time Delivery (OTD), Same Day Delivery
+    - Spent at PP Hrs / %, Spent at DP Hrs / %, Transit Time Hrs / %
+    """
+    kpis = {
+        'late_booking': '-',
+        'placement_status': 'Not Placed',
+        'on_time_placement': '-',
+        'on_time_delivery': '-',
+        'same_day_delivery': '-',
+        'spent_at_pp_hrs': None,
+        'spent_at_dp_hrs': None,
+        'transit_time_hrs': None,
+        'spent_at_pp_pct': None,
+        'spent_at_dp_pct': None,
+        'transit_time_pct': None,
+    }
+    if not enq:
+        return kpis
+
+    req_arr = _ensure_aware(enq.en_requested_arrival_time)
+    req_del = _ensure_aware(enq.en_requested_delivery_time)
+    created_at = _ensure_aware(enq.en_created_at)
+
+    # 1. Late Booking (< 48 hours prior to requested arrival time)
+    if req_arr and created_at:
+        try:
+            diff_hrs = (req_arr - created_at).total_seconds() / 3600.0
+            kpis['late_booking'] = 'Yes' if diff_hrs < 48.0 else 'No'
+        except Exception:
+            pass
+
+    if not trip:
+        return kpis
+
+    # 2. Placement Status
+    arrived_pp = _ensure_aware(trip.tr_reporteddate_pickup or trip.tr_dock_in_time)
+    departed_pp = _ensure_aware(trip.tr_departeddate_pickup or trip.tr_dock_out_time)
+    arrived_dp = _ensure_aware(trip.tr_reporteddate_delivery)
+    departed_dp = _ensure_aware(trip.tr_departeddate_delivery)
+
+    if arrived_pp or (trip.tr_vehiclenumber and trip.tr_vehiclenumber != '-'):
+        kpis['placement_status'] = 'Placed'
+
+    # 3. On-Time Placement (OTP)
+    if arrived_pp and req_arr:
+        try:
+            kpis['on_time_placement'] = 'Yes' if arrived_pp <= req_arr else 'No'
+        except Exception:
+            pass
+
+    # 4. On-Time Delivery (OTD)
+    if arrived_dp and req_del:
+        try:
+            kpis['on_time_delivery'] = 'Yes' if arrived_dp <= req_del else 'No'
+        except Exception:
+            pass
+
+    # 5. Same Day Delivery
+    if arrived_pp and arrived_dp:
+        try:
+            kpis['same_day_delivery'] = 'Yes' if arrived_dp.date() == arrived_pp.date() else 'No'
+        except Exception:
+            pass
+
+    # 6. Dwell & Transit Hours
+    pp_hrs = dp_hrs = transit_hrs = None
+    if arrived_pp and departed_pp and departed_pp >= arrived_pp:
+        pp_hrs = round((departed_pp - arrived_pp).total_seconds() / 3600.0, 2)
+    if arrived_dp and departed_dp and departed_dp >= arrived_dp:
+        dp_hrs = round((departed_dp - arrived_dp).total_seconds() / 3600.0, 2)
+    if departed_pp and arrived_dp and arrived_dp >= departed_pp:
+        transit_hrs = round((arrived_dp - departed_pp).total_seconds() / 3600.0, 2)
+
+    kpis['spent_at_pp_hrs'] = pp_hrs
+    kpis['spent_at_dp_hrs'] = dp_hrs
+    kpis['transit_time_hrs'] = transit_hrs
+
+    total_hrs = sum(h for h in (pp_hrs, dp_hrs, transit_hrs) if h is not None)
+    if total_hrs > 0:
+        if pp_hrs is not None:
+            kpis['spent_at_pp_pct'] = round((pp_hrs / total_hrs) * 100.0, 1)
+        if dp_hrs is not None:
+            kpis['spent_at_dp_pct'] = round((dp_hrs / total_hrs) * 100.0, 1)
+        if transit_hrs is not None:
+            kpis['transit_time_pct'] = round((transit_hrs / total_hrs) * 100.0, 1)
+
+    return kpis
+
 @login_required
 def ajax_get_vehicle_types(request):
     """AJAX view to return all vehicle types (unfiltered)."""
@@ -118,6 +291,9 @@ def compute_shipment_flow(enq=None, trip=None, va=None, is_delivered=False, pod_
     elif va and (va.va_drivername or va.va_drivernumber):
         driver_name = va.va_drivername or ''
         driver_phone = va.va_drivernumber or ''
+    if driver_name:
+        import re as _re
+        driver_name = _re.sub(r'\s*\(\d+\)\s*$', '', str(driver_name)).strip()
 
     # Check delivery status
     if not is_delivered and trip:
@@ -177,7 +353,13 @@ def compute_shipment_flow(enq=None, trip=None, va=None, is_delivered=False, pod_
     t12_time = (trip.tr_reporteddate_delivery or trip.tr_unloading_time or trip.tr_reporteddate or trip.tr_updated_at) if (trip and is_delivered) else None
 
     # Determine current step (1 to 12)
-    if t12_done:
+    if enq and enq.en_status_id == 8:
+        current_step = 1
+        stage_label = 'Cancelled'
+        stage_class = 'cancelled'
+        stage_color = '#ef4444'
+        stage_icon = 'fa-ban'
+    elif t12_done:
         current_step = 12
         stage_label = 'Trip Completed & POD Verified'
         stage_class = 'completed'
@@ -245,10 +427,16 @@ def compute_shipment_flow(enq=None, trip=None, va=None, is_delivered=False, pod_
         stage_icon = 'fa-truck-front'
     else:
         current_step = 1
-        stage_label = 'Indent Placed'
-        stage_class = 'indent'
-        stage_color = '#38bdf8'
-        stage_icon = 'fa-file-invoice'
+        if enq and not enq.en_is_approved:
+            stage_label = 'Pending Logistics Approval'
+            stage_class = 'indent'
+            stage_color = '#f59e0b'
+            stage_icon = 'fa-hourglass-half'
+        else:
+            stage_label = 'Indent Placed'
+            stage_class = 'indent'
+            stage_color = '#38bdf8'
+            stage_icon = 'fa-file-invoice'
 
     def get_step_status(step_num):
         if t12_done:
@@ -267,7 +455,7 @@ def compute_shipment_flow(enq=None, trip=None, va=None, is_delivered=False, pod_
             'phase_icon': 'fa-clipboard-check',
             'phase_color': '#38bdf8',
             'title': 'Indent Placed',
-            'desc': f"Booking #{enq.en_enquirynumber}" if enq else "Indent Placed",
+            'desc': f"Movement Request ({from_loc_name} -> {to_loc_name})" if enq else "Indent Placed",
             'sub': f"Route: {from_loc_name} → {to_loc_name}",
             'time': t1_time,
             'status': get_step_status(1),
@@ -451,13 +639,15 @@ def customer_dashboard(request):
             return redirect('home_page')
         return redirect('login_page')
 
+    portal_ctx = get_portal_role_context(request)
+
     # Base queryset for enquiries
-    enquiry_qs = EnquirynoteInfo.objects.filter(en_customername=customer)
+    enquiry_qs = get_portal_enquiry_queryset(customer, portal_ctx)
     if department:
         enquiry_qs = enquiry_qs.filter(en_customerdepartment=department)
 
     # All trips for this customer
-    all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
+    all_trips = get_portal_trip_queryset(customer, portal_ctx)
     if department:
         all_trips = all_trips.filter(tr_enquirynumber__en_customerdepartment=department)
 
@@ -477,7 +667,9 @@ def customer_dashboard(request):
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
     in_transit = enquiry_qs.filter(id__in=in_transit_enq_ids).count()
     from sms_app.models import Trip_closure_files_Info
-    closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
+    closed_trip_numbers = Trip_closure_files_Info.objects.exclude(
+        Q(tcf_pod__isnull=True) | Q(tcf_pod='')
+    ).values_list('tcf_tripnumber', flat=True)
     
     active_trip_enq_ids = list(business_trips.filter(
         tc_financestatus_id__in=[1, 8]
@@ -518,7 +710,7 @@ def customer_dashboard(request):
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
     allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__en_customername=customer,
+        va_enquirynumber__in=enquiry_qs,
         va_enquirynumber__en_created_at__gte=first_day_of_month
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
@@ -526,8 +718,8 @@ def customer_dashboard(request):
 
     allotted_all_ids = list(set(list(allotted_trip_enq_ids) + list(allotted_va_ids)))
 
-    # Exclude explicitly dead/cancelled/completed enquiries (status 5 = Cancelled/Dead)
-    dead_enq_ids = list(enquiry_qs.filter(en_status_id__in=[5]).values_list('id', flat=True))
+    # Exclude explicitly dead/cancelled/completed enquiries (status 5 = Completed, 8 = Cancelled)
+    dead_enq_ids = list(enquiry_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
     cancelled_trip_enq_ids = list(all_trips.filter(
         Q(tc_financestatus_id__in=[10, 11]) |
         Q(tc_financestatus__status__icontains='Cancellation') |
@@ -541,8 +733,8 @@ def customer_dashboard(request):
     any_trip_enq_ids = all_trips.values_list('tr_enquirynumber_id', flat=True).distinct()
     fully_closed_enq_ids = list(set(any_trip_enq_ids) - set(active_trips_enq_ids))
 
-    # Allotted: has vehicle, created in current month, but no business trip running or closed yet
-    allotted = enquiry_qs.filter(
+    # Allotted: count total allotted vehicles on enquiries created in current month with no active/closed trip
+    allotted_enq_ids = list(enquiry_qs.filter(
         id__in=allotted_all_ids,
         en_created_at__gte=first_day_of_month
     ).exclude(
@@ -553,7 +745,15 @@ def customer_dashboard(request):
         id__in=dead_enq_ids
     ).exclude(
         id__in=fully_closed_enq_ids
-    ).count()
+    ).values_list('id', flat=True))
+
+    allotted = 0
+    for eid in allotted_enq_ids:
+        va_count = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id=eid).filter(
+            ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
+        ).count()
+        tr_count = business_trips.filter(tr_enquirynumber_id=eid, tr_vehiclenumber__isnull=False).exclude(tr_vehiclenumber='').count()
+        allotted += max(va_count, tr_count, 1)
 
     # Active = enquiries with NO vehicle allotted yet (recent 3 days)
     recent_limit = timezone.now() - timedelta(days=3)
@@ -577,6 +777,8 @@ def customer_dashboard(request):
         track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={trip.tr_vehiclenumber}&trip_id={trip.id}' if trip.tr_vehiclenumber and not is_deliv else ''
         trip.flow = compute_shipment_flow(trip.tr_enquirynumber, trip, is_delivered=is_deliv, track_link=track_link)
 
+    pending_approvals_count = enquiry_qs.filter(en_is_approved=False).count()
+
     return render(request, 'asset_mgt_app/customer_portal_dashboard.html', {
         'customer': customer,
         'department': department,
@@ -584,15 +786,22 @@ def customer_dashboard(request):
         'in_transit': in_transit,
         'delivered': delivered,
         'allotted': allotted,
-        'recent_shipments': recent_shipments
+        'recent_shipments': recent_shipments,
+        'portal_ctx': portal_ctx,
+        'pending_approvals_count': pending_approvals_count,
     })
 
 @login_required(login_url='/SMS/customer_login/2/')
 def customer_enquiry_add(request):
     """
     Simplified enquiry submission form for logged-in customers.
+    Supports Standard, Parent, Brandix Factory (request without vehicle sizing),
+    and Brandix Logistics (full booking) roles.
     """
     customer, department, is_lp, agent_name = get_customer_context(request)
+    portal_ctx = get_portal_role_context(request)
+    is_factory = portal_ctx['is_factory']
+    is_logistics = portal_ctx['is_logistics']
     
     from ..sub_models.tr_triptype_mod import Tr_triptype_Info
     places = Places.objects.all().order_by('place_name')
@@ -609,6 +818,10 @@ def customer_enquiry_add(request):
         cargo_details = request.POST.get('cargo_details', '')
         
         pickup_datetime_str = request.POST.get('pickup_datetime', '')
+        req_arrival_str = request.POST.get('requested_arrival_time', '')
+        if is_factory and not pickup_datetime_str and req_arrival_str:
+            pickup_datetime_str = req_arrival_str
+
         pickup_date = None
         req_time = None
         if pickup_datetime_str:
@@ -626,7 +839,7 @@ def customer_enquiry_add(request):
         
         dept_id = request.POST.get('customer_department')
         trip_type_id = request.POST.get('trip_type')
-        agent_name = request.POST.get('agent_name', agent_name)
+        agent_name = request.POST.get('agent_name') or portal_ctx.get('agent_account') or agent_name
         no_of_veh = request.POST.get('no_of_veh', '')
         no_of_pcs = request.POST.get('no_of_pcs', 0)
         weight = request.POST.get('weight')
@@ -637,6 +850,18 @@ def customer_enquiry_add(request):
         pickup_contact_mobile = request.POST.get('pickup_contact_mobile')
         delivery_contact_name = request.POST.get('delivery_contact_name')
         delivery_contact_mobile = request.POST.get('delivery_contact_mobile')
+
+        # Brandix / Child Portal fields
+        plant_code = request.POST.get('plant_code') or portal_ctx.get('assigned_plant') or ''
+        buyer_name = request.POST.get('buyer_name') or ''
+        po_numbers = request.POST.get('po_numbers') or ''
+        req_delivery_str = request.POST.get('requested_delivery_time') or None
+        otd_cutoff_str = request.POST.get('otd_cutoff') or None
+        shipment_type = request.POST.get('shipment_type') or ''
+        vessel_name = request.POST.get('vessel_name') or ''
+        voyage_no = request.POST.get('voyage_no') or ''
+        bl_cutoff_str = request.POST.get('bl_cutoff') or None
+        special_instructions = request.POST.get('special_instructions') or ''
         
         if not customer:
             messages.error(request, 'Account link missing.')
@@ -651,30 +876,31 @@ def customer_enquiry_add(request):
             vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
             vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
 
-            # Validate 8 mandatory fields:
-            # 1. Department, 2. Trip Type, 3. Vehicle Required Date & Time, 4. Origin,
-            # 5. Destination, 6. Vehicle Category, 7. Vehicle Type, 8. No. of Vehicles
+            # Validate mandatory fields
             errors = []
             if not selected_dept:
                 errors.append('Please select a Department.')
             if not trip_type_obj:
                 errors.append('Please select a Trip Type.')
             if not pickup_datetime_str and not pickup_date:
-                errors.append('Please select Vehicle Required Date & Time.')
+                errors.append('Please select Requested Arrival Date & Time.' if is_factory else 'Please select Vehicle Required Date & Time.')
             if not from_loc:
                 errors.append('Please select an Origin.')
             if not to_loc:
                 errors.append('Please select a Destination.')
-            if not vc_obj:
-                errors.append('Please select a Vehicle Category.')
-            if not vt_obj:
-                errors.append('Please select a Vehicle Type.')
-            try:
-                veh_count = int(no_of_veh)
-                if veh_count < 1:
+
+            veh_count = 0
+            if not is_factory:
+                if not vc_obj:
+                    errors.append('Please select a Vehicle Category.')
+                if not vt_obj:
+                    errors.append('Please select a Vehicle Type.')
+                try:
+                    veh_count = int(no_of_veh)
+                    if veh_count < 1:
+                        errors.append('Please enter Number of Vehicles (minimum 1).')
+                except (ValueError, TypeError):
                     errors.append('Please enter Number of Vehicles (minimum 1).')
-            except (ValueError, TypeError):
-                errors.append('Please enter Number of Vehicles (minimum 1).')
 
             if errors:
                 for err in errors:
@@ -688,7 +914,8 @@ def customer_enquiry_add(request):
                     'types': types,
                     'trip_types': trip_types,
                     'is_lp': is_lp,
-                    'default_agent_name': agent_name
+                    'default_agent_name': agent_name,
+                    'portal_ctx': portal_ctx,
                 })
 
             category_name = vc_obj.vc_vehiclecategory if vc_obj else ""
@@ -703,8 +930,18 @@ def customer_enquiry_add(request):
                 if ajay_user:
                     assigned_user = ajay_user
 
+            # Parent-Child billing binding
+            bill_to_cust = portal_ctx['bill_to_customer'] or customer
+            sub_cust = customer if (customer != bill_to_cust or is_factory or is_logistics) else None
+
+            # Strict Approval Gate: Factory indents require Logistics approval before BVM dispatch
+            is_approved_flag = False if is_factory else True
+            approved_by_val = (request.user.get_full_name() or request.user.username) if is_logistics else None
+            approved_date_val = timezone.now() if is_logistics else None
+
             enquiry = EnquirynoteInfo(
-                en_customername=customer,
+                en_customername=bill_to_cust,
+                en_sub_customer=sub_cust,
                 en_customerdepartment=selected_dept,
                 en_assignedto=assigned_user,
                 en_status=StatusList.objects.filter(id=6).first(),
@@ -725,7 +962,22 @@ def customer_enquiry_add(request):
                 en_pickup_contact_name=pickup_contact_name,
                 en_pickup_contact_mobile=pickup_contact_mobile,
                 en_delivery_contact_name=delivery_contact_name,
-                en_delivery_contact_mobile=delivery_contact_mobile
+                en_delivery_contact_mobile=delivery_contact_mobile,
+                en_plant_code=plant_code or None,
+                en_is_approved=is_approved_flag,
+                en_approved_by=approved_by_val,
+                en_approved_date=approved_date_val,
+                en_requested_arrival_time=req_arrival_str or (pickup_datetime_str if is_factory else None),
+                en_requested_delivery_time=req_delivery_str,
+                en_otd_cutoff=otd_cutoff_str,
+                en_buyer_name=buyer_name or None,
+                en_po_numbers=po_numbers or None,
+                en_shipment_type=shipment_type or None,
+                en_vessel_name=vessel_name or None,
+                en_voyage_no=voyage_no or None,
+                en_bl_cutoff=bl_cutoff_str,
+                en_special_instructions=special_instructions or None,
+                en_requestor=request.user.get_full_name() or request.user.username,
             )
             enquiry.save()
             
@@ -734,7 +986,7 @@ def customer_enquiry_add(request):
             enquiry.en_enquirynumber = generate_next_number(EnquirynoteInfo, 'en_enquirynumber', prefix, 6)
             enquiry.save(update_fields=['en_enquirynumber'])
             
-            if vc_obj and vt_obj:
+            if vc_obj and vt_obj and veh_count > 0:
                 try:
                     Enquirynotevehicle.objects.create(
                         env_enquirynumber=enquiry,
@@ -746,18 +998,14 @@ def customer_enquiry_add(request):
                 except Exception as inner_e:
                      print(f"Failed to create vehicle detail: {inner_e}")
             
-            messages.success(request, f'Booking {enquiry.en_enquirynumber} submitted successfully!')
+            if is_factory:
+                messages.success(request, f'Movement request ({from_loc.place_name} → {to_loc.place_name}) submitted to Logistics for vehicle sizing & approval!')
+            else:
+                messages.success(request, f'Booking ({from_loc.place_name} → {to_loc.place_name}) submitted successfully!')
             return redirect('customer_enquiry_list')
             
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
-            
-    from ..sub_models.tr_triptype_mod import Tr_triptype_Info
-    places = Places.objects.all().order_by('place_name')
-    categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
-    types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
-    departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
-    trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
 
     return render(request, 'asset_mgt_app/customer_enquiry_add.html', {
         'customer': customer,
@@ -768,7 +1016,113 @@ def customer_enquiry_add(request):
         'types': types,
         'trip_types': trip_types,
         'is_lp': is_lp,
-        'default_agent_name': agent_name
+        'default_agent_name': agent_name,
+        'portal_ctx': portal_ctx,
+    })
+
+
+@login_required(login_url='/SMS/customer_login/2/')
+def customer_enquiry_approve(request, enquiry_id):
+    """
+    Brandix Logistics Approval & Vehicle Sizing view.
+    Reviews a Factory indent, assigns Vehicle Category/Type/Count + Export Shipping details,
+    and unlocks the booking for BVM Dispatch.
+    """
+    customer, department, is_lp, agent_name = get_customer_context(request)
+    portal_ctx = get_portal_role_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+
+    if not portal_ctx['is_logistics'] and not request.user.is_superuser:
+        messages.error(request, 'Only Logistics Officers can approve and size vehicle requests.')
+        return redirect('customer_enquiry_list')
+
+    enquiry = get_object_or_404(
+        get_portal_enquiry_queryset(customer, portal_ctx),
+        id=enquiry_id
+    )
+
+    if enquiry.en_status_id == 8:
+        messages.error(request, 'Cancelled bookings cannot be approved.')
+        return redirect('customer_enquiry_list')
+
+    categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
+    types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
+
+    if request.method == 'POST':
+        category_id = request.POST.get('vehicle_category')
+        type_id = request.POST.get('vehicle_type')
+        no_of_veh = request.POST.get('no_of_veh', '')
+
+        vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
+        vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
+
+        errors = []
+        if not vc_obj:
+            errors.append('Please select a Vehicle Category.')
+        if not vt_obj:
+            errors.append('Please select a Vehicle Type.')
+        try:
+            veh_count = int(no_of_veh)
+            if veh_count < 1:
+                errors.append('Please enter Number of Vehicles (minimum 1).')
+        except (ValueError, TypeError):
+            veh_count = 0
+            errors.append('Please enter Number of Vehicles (minimum 1).')
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return render(request, 'asset_mgt_app/customer_enquiry_approve.html', {
+                'customer': customer,
+                'enquiry': enquiry,
+                'categories': categories,
+                'types': types,
+                'portal_ctx': portal_ctx,
+            })
+
+        enquiry.en_vehicledetails = vc_obj.vc_vehiclecategory
+        enquiry.en_no_of_vehicles = veh_count
+        if not enquiry.en_consignmentdetails and vt_obj:
+            enquiry.en_consignmentdetails = vt_obj.vt_vehicletype
+
+        enquiry.en_shipment_type = request.POST.get('shipment_type') or enquiry.en_shipment_type
+        enquiry.en_vessel_name = request.POST.get('vessel_name') or enquiry.en_vessel_name
+        enquiry.en_voyage_no = request.POST.get('voyage_no') or enquiry.en_voyage_no
+        bl_cutoff_val = request.POST.get('bl_cutoff')
+        if bl_cutoff_val:
+            enquiry.en_bl_cutoff = bl_cutoff_val
+        special_instr = request.POST.get('special_instructions')
+        if special_instr is not None:
+            enquiry.en_special_instructions = special_instr
+
+        enquiry.en_is_approved = True
+        enquiry.en_approved_by = request.user.get_full_name() or request.user.username
+        enquiry.en_approved_date = timezone.now()
+        enquiry.save()
+
+        Enquirynotevehicle.objects.update_or_create(
+            env_enquirynumber=enquiry,
+            defaults={
+                'env_vehiclecategory': vc_obj,
+                'env_vehicletype': vt_obj,
+                'env_quantity': veh_count,
+                'env_updated_by': request.user,
+            }
+        )
+
+        route_label = f"{enquiry.en_fromlocaion.place_name} → {enquiry.en_tolocation.place_name}" if enquiry.en_fromlocaion and enquiry.en_tolocation else "Shipment"
+        messages.success(request, f'{route_label} approved and sent to BVM Dispatch!')
+        return redirect('customer_enquiry_list')
+
+    env = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
+    return render(request, 'asset_mgt_app/customer_enquiry_approve.html', {
+        'customer': customer,
+        'enquiry': enquiry,
+        'env': env,
+        'categories': categories,
+        'types': types,
+        'portal_ctx': portal_ctx,
     })
 
 @login_required(login_url='/SMS/customer_login/2/')
@@ -779,7 +1133,23 @@ def customer_enquiry_edit(request, enquiry_id):
     if not customer:
         return redirect('customer_dashboard')
 
-    enquiry = get_object_or_404(EnquirynoteInfo, id=enquiry_id, en_customername=customer)
+    portal_ctx = get_portal_role_context(request)
+    is_factory = portal_ctx['is_factory']
+    is_logistics = portal_ctx['is_logistics']
+
+    enquiry = get_object_or_404(get_portal_enquiry_queryset(customer, portal_ctx), id=enquiry_id)
+
+    if enquiry.en_status_id == 8:
+        messages.error(request, 'Cancelled bookings cannot be edited.')
+        return redirect('customer_enquiry_list')
+
+    if is_factory and enquiry.en_is_approved:
+        messages.error(request, 'Approved bookings cannot be edited by Factory. Please contact Logistics.')
+        return redirect('customer_enquiry_list')
+
+    # If Logistics clicks edit on an unapproved Factory request, send them to the Approval & Sizing screen
+    if is_logistics and not enquiry.en_is_approved:
+        return redirect('customer_enquiry_approve', enquiry_id=enquiry.id)
 
     if request.method == 'POST':
         from_loc_id = request.POST.get('from_location')
@@ -789,6 +1159,10 @@ def customer_enquiry_edit(request, enquiry_id):
         cargo_details = request.POST.get('cargo_details', '')
         
         pickup_datetime_str = request.POST.get('pickup_datetime', '')
+        req_arrival_str = request.POST.get('requested_arrival_time', '')
+        if is_factory and not pickup_datetime_str and req_arrival_str:
+            pickup_datetime_str = req_arrival_str
+
         req_time = None
         if pickup_datetime_str:
             try:
@@ -809,32 +1183,33 @@ def customer_enquiry_edit(request, enquiry_id):
         vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
         vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
 
-        # Check vehicle count
-        try:
-            veh_count = int(no_veh_val)
-            if veh_count < 1:
+        veh_count = enquiry.en_no_of_vehicles or 0
+        if not is_factory:
+            try:
+                veh_count = int(no_veh_val)
+                if veh_count < 1:
+                    veh_count = None
+            except (ValueError, TypeError):
                 veh_count = None
-        except (ValueError, TypeError):
-            veh_count = None
 
-        # Validate 8 mandatory fields
         errors = []
         if not selected_dept:
             errors.append('Please select a Department.')
         if not tt_obj:
             errors.append('Please select a Trip Type.')
         if not pickup_datetime_str and not enquiry.en_pickupdatetime:
-            errors.append('Please select Vehicle Required Date & Time.')
+            errors.append('Please select Requested Arrival Date & Time.' if is_factory else 'Please select Vehicle Required Date & Time.')
         if not from_loc:
             errors.append('Please select an Origin.')
         if not to_loc:
             errors.append('Please select a Destination.')
-        if not vc_obj:
-            errors.append('Please select a Vehicle Category.')
-        if not vt_obj:
-            errors.append('Please select a Vehicle Type.')
-        if not veh_count:
-            errors.append('Please enter Number of Vehicles (minimum 1).')
+        if not is_factory:
+            if not vc_obj:
+                errors.append('Please select a Vehicle Category.')
+            if not vt_obj:
+                errors.append('Please select a Vehicle Type.')
+            if not veh_count:
+                errors.append('Please enter Number of Vehicles (minimum 1).')
 
         if errors:
             for err in errors:
@@ -857,7 +1232,8 @@ def customer_enquiry_edit(request, enquiry_id):
                 'enquiry': enquiry,
                 'env': env,
                 'edit_mode': True,
-                'default_agent_name': agent_name
+                'default_agent_name': agent_name,
+                'portal_ctx': portal_ctx,
             })
 
         # Update enquiry fields
@@ -865,7 +1241,8 @@ def customer_enquiry_edit(request, enquiry_id):
         enquiry.en_customerdepartment = selected_dept
         enquiry.en_fromlocaion = from_loc
         enquiry.en_tolocation = to_loc
-        enquiry.en_vehicledetails = vc_obj.vc_vehiclecategory if vc_obj else enquiry.en_vehicledetails
+        if vc_obj:
+            enquiry.en_vehicledetails = vc_obj.vc_vehiclecategory
 
         if pickup_datetime_str:
             enquiry.en_pickupdatetime = pickup_datetime_str
@@ -877,8 +1254,30 @@ def customer_enquiry_edit(request, enquiry_id):
         elif vt_obj:
             enquiry.en_consignmentdetails = vt_obj.vt_vehicletype
 
-        enquiry.en_agent_name = request.POST.get('agent_name', enquiry.en_agent_name)
-        enquiry.en_no_of_vehicles = veh_count
+        enquiry.en_agent_name = request.POST.get('agent_name') or portal_ctx.get('agent_account') or enquiry.en_agent_name
+        if not is_factory and veh_count is not None:
+            enquiry.en_no_of_vehicles = veh_count
+
+        if is_factory or is_logistics:
+            enquiry.en_plant_code = request.POST.get('plant_code') or enquiry.en_plant_code
+            enquiry.en_buyer_name = request.POST.get('buyer_name') or enquiry.en_buyer_name
+            enquiry.en_po_numbers = request.POST.get('po_numbers') or enquiry.en_po_numbers
+            if req_arrival_str:
+                enquiry.en_requested_arrival_time = req_arrival_str
+            req_del_str = request.POST.get('requested_delivery_time')
+            if req_del_str:
+                enquiry.en_requested_delivery_time = req_del_str
+            otd_str = request.POST.get('otd_cutoff')
+            if otd_str:
+                enquiry.en_otd_cutoff = otd_str
+
+        if is_logistics:
+            enquiry.en_shipment_type = request.POST.get('shipment_type') or enquiry.en_shipment_type
+            enquiry.en_vessel_name = request.POST.get('vessel_name') or enquiry.en_vessel_name
+            enquiry.en_voyage_no = request.POST.get('voyage_no') or enquiry.en_voyage_no
+            bl_str = request.POST.get('bl_cutoff')
+            if bl_str:
+                enquiry.en_bl_cutoff = bl_str
 
         no_pcs_val = request.POST.get('no_of_pcs')
         if no_pcs_val not in (None, ''):
@@ -897,8 +1296,7 @@ def customer_enquiry_edit(request, enquiry_id):
 
         enquiry.save()
 
-        # Update structured vehicle detail
-        if vc_obj and vt_obj:
+        if not is_factory and vc_obj and vt_obj:
             Enquirynotevehicle.objects.update_or_create(
                 env_enquirynumber=enquiry,
                 defaults={
@@ -909,7 +1307,7 @@ def customer_enquiry_edit(request, enquiry_id):
                 }
             )
 
-        messages.success(request, f'Booking {enquiry.en_enquirynumber} updated successfully!')
+        messages.success(request, f'Booking ({from_loc.place_name} → {to_loc.place_name}) updated successfully!')
         return redirect('customer_enquiry_list')
 
     places = Places.objects.all().order_by('place_name')
@@ -933,7 +1331,8 @@ def customer_enquiry_edit(request, enquiry_id):
         'enquiry': enquiry,
         'env': env,
         'edit_mode': True,
-        'default_agent_name': enquiry.en_agent_name or agent_name
+        'default_agent_name': enquiry.en_agent_name or agent_name,
+        'portal_ctx': portal_ctx,
     })
 
 @login_required(login_url='/SMS/customer_login/2/')
@@ -945,13 +1344,17 @@ def customer_enquiry_list(request):
     if not customer:
         return redirect('customer_dashboard')
 
+    portal_ctx = get_portal_role_context(request)
     search_query = request.GET.get('q', '')
+    approval_filter = request.GET.get('approval', '')
     
-    # Get enquiries with optimized queries using select_related
-    enquiries_qs = EnquirynoteInfo.objects.filter(
-        en_customername=customer
-    ).select_related(
+    # Get enquiries scoped by role (Standard, Parent, Factory, Logistics)
+    base_qs = get_portal_enquiry_queryset(customer, portal_ctx)
+    pending_approvals_count = base_qs.filter(en_is_approved=False).count()
+
+    enquiries_qs = base_qs.select_related(
         'en_customername',
+        'en_sub_customer',
         'en_fromlocaion',
         'en_tolocation',
         'en_customerdepartment'
@@ -960,6 +1363,9 @@ def customer_enquiry_list(request):
         'vehicle_allotmentinfo_set',
         'consignmentdetailinfo_set'
     )
+
+    if approval_filter == 'pending':
+        enquiries_qs = enquiries_qs.filter(en_is_approved=False)
     
     if search_query:
         enquiries_qs = enquiries_qs.filter(
@@ -1012,7 +1418,9 @@ def customer_enquiry_list(request):
     ).values_list('tr_enquirynumber_id', flat=True).distinct())
 
     from sms_app.models import Trip_closure_files_Info
-    _closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
+    _closed_trip_numbers = Trip_closure_files_Info.objects.exclude(
+        Q(tcf_pod__isnull=True) | Q(tcf_pod='')
+    ).values_list('tcf_tripnumber', flat=True)
     _all_closed_via_closure_enq_ids = _business_trips.filter(
         tr_tripnumber__in=_closed_trip_numbers
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
@@ -1040,7 +1448,7 @@ def customer_enquiry_list(request):
 
     # Exclusions for dead/closed/cancelled enquiries
     _all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
-    _dead_enq_ids = list(enquiries_qs.filter(en_status_id__in=[5]).values_list('id', flat=True))
+    _dead_enq_ids = list(enquiries_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
     _cancelled_trip_enq_ids = list(_all_trips.filter(
         Q(tc_financestatus_id__in=[10, 11]) |
         Q(tc_financestatus__status__icontains='Cancellation') |
@@ -1071,6 +1479,8 @@ def customer_enquiry_list(request):
     elif status_filter == 'delivered':
         # Delivered = business trips with status 2 or 7 (closed/settled)
         enquiries_qs = enquiries_qs.filter(id__in=_delivered_enq_ids)
+    elif status_filter == 'cancelled':
+        enquiries_qs = enquiries_qs.filter(id__in=_dead_enq_ids)
     elif status_filter == 'allotted':
         # Allotted = has vehicle, created or allotted in current month, but NOT yet in-transit or delivered, and NOT dead
         enquiries_qs = enquiries_qs.filter(
@@ -1105,145 +1515,215 @@ def customer_enquiry_list(request):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Build enriched data for template
+    # Build enriched data for template (1 row per enquiry, with per-vehicle flows & modals)
     enquiry_list = []
-    for enq in page_obj:
-        # When status filter is active, pick the matching trip
+    flow_modals = []
+    for row_idx, enq in enumerate(page_obj, start=1):
+        cn = enq.consignmentdetailinfo_set.first()
+
         if status_filter == 'transit':
-            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=1, tr_category_id=1).first()
+            trips_qs = list(enq.tripdetailinfo_set.filter(tc_financestatus_id=1, tr_category_id=1))
+            vas_qs = []
         elif status_filter == 'delivered':
-            trip = enq.tripdetailinfo_set.filter(
+            trips_qs = list(enq.tripdetailinfo_set.filter(
                 Q(tc_financestatus_id__in=[2, 7, 9]) | Q(tr_tripnumber__in=_closed_trip_numbers),
                 tr_category_id=1
-            ).first()
+            ))
+            vas_qs = []
         elif status_filter == 'allotted':
-            # Allotted: business trip exists but not in-transit or delivered
-            trip = enq.tripdetailinfo_set.filter(tr_category_id=1).exclude(
+            trips_qs = list(enq.tripdetailinfo_set.filter(tr_category_id=1).exclude(
                 tc_financestatus_id__in=[1, 2, 3, 7, 9]
             ).exclude(
                 tr_tripnumber__in=_closed_trip_numbers
-            ).first()
+            ))
+            vas_qs = list(enq.vehicle_allotmentinfo_set.all())
         elif status_filter == 'active':
-            trip = None  # Active enquiries have no trips yet
+            trips_qs = []
+            vas_qs = []
         else:
-            trip = enq.tripdetailinfo_set.filter(tr_category_id=1).first()
-        va = enq.vehicle_allotmentinfo_set.first()
-        cn = enq.consignmentdetailinfo_set.first()
+            trips_qs = list(enq.tripdetailinfo_set.filter(tr_category_id=1))
+            vas_qs = list(enq.vehicle_allotmentinfo_set.all())
 
-        # If a search query is active, try to find a trip that matches it to display relevant info
-        if search_query:
-            matched_trip = enq.tripdetailinfo_set.filter(
-                Q(tr_vehiclenumber__icontains=search_query) | Q(tr_tripnumber__icontains=search_query)
-            ).first()
-            if matched_trip:
-                trip = matched_trip
+        pairs = []
+        covered_vehicles = set()
+        for t in trips_qs:
+            t_veh = (t.tr_vehiclenumber or '').strip().upper()
+            if t_veh:
+                covered_vehicles.add(t_veh)
+            matched_va = None
+            for v in vas_qs:
+                v_veh = (str(v.va_vehiclenumber) if v.va_vehiclenumber else (v.va_vehiclenumber_mkt or '')).strip().upper()
+                if v_veh and v_veh == t_veh:
+                    matched_va = v
+                    break
+            pairs.append((t, matched_va))
 
-        # Vehicle number: trip > allotment (own) > allotment (market)
-        vehicle_no = '-'
-        if trip and trip.tr_vehiclenumber:
-            vehicle_no = trip.tr_vehiclenumber
-        elif va:
-            if va.va_vehiclenumber:
-                vehicle_no = str(va.va_vehiclenumber)
-            elif va.va_vehiclenumber_mkt:
-                vehicle_no = va.va_vehiclenumber_mkt
-        
-        # If the search query matched a secondary allotment not captured above, display it
-        if search_query and search_query.upper() not in vehicle_no.upper():
-            matched_va = enq.vehicle_allotmentinfo_set.filter(
-                Q(va_vehiclenumber__vm_registrationnumber__icontains=search_query) |
-                Q(va_vehiclenumber_mkt__icontains=search_query)
-            ).first()
-            if matched_va:
-                if matched_va.va_vehiclenumber:
-                    vehicle_no = str(matched_va.va_vehiclenumber)
-                elif matched_va.va_vehiclenumber_mkt:
-                    vehicle_no = matched_va.va_vehiclenumber_mkt
+        for v in vas_qs:
+            v_veh = (str(v.va_vehiclenumber) if v.va_vehiclenumber else (v.va_vehiclenumber_mkt or '')).strip().upper()
+            if v_veh and v_veh in covered_vehicles:
+                continue
+            if v_veh:
+                covered_vehicles.add(v_veh)
+            pairs.append((None, v))
 
-        # Customer reference
+        import re
+        vehicles = []
+        for trip, va in pairs:
+            vehicle_no = '-'
+            if trip and trip.tr_vehiclenumber:
+                vehicle_no = trip.tr_vehiclenumber
+            elif va:
+                if va.va_vehiclenumber:
+                    vehicle_no = str(va.va_vehiclenumber)
+                elif va.va_vehiclenumber_mkt:
+                    vehicle_no = va.va_vehiclenumber_mkt
+
+            driver_name = None
+            if trip and trip.tr_drivername:
+                driver_name = trip.tr_drivername
+            elif va and va.va_drivername:
+                driver_name = va.va_drivername
+            if driver_name:
+                driver_name = re.sub(r'\s*\(\d+\)\s*$', '', str(driver_name)).strip()
+
+            driver_number = None
+            if trip and trip.tr_drivernumber:
+                driver_number = trip.tr_drivernumber
+            elif va and va.va_drivernumber:
+                driver_number = va.va_drivernumber
+
+            is_delivered = False
+            if trip and (trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11] or (trip.tr_tripnumber and trip.tr_tripnumber in _closed_trip_numbers)):
+                is_delivered = True
+
+            track_link = ''
+            if not is_delivered and vehicle_no and vehicle_no != '-':
+                track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={vehicle_no}'
+                if trip:
+                    track_link += f'&trip_id={trip.id}'
+
+            pod_trip_id = None
+            if trip and is_delivered:
+                closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+                if closure and closure.tcf_pod:
+                    pod_trip_id = trip.id
+                if not pod_trip_id and trip.tc_pod_attachment:
+                    pod_trip_id = trip.id
+
+            if vehicle_no != '-' or driver_name or driver_number:
+                v_flow = compute_shipment_flow(
+                    enq=enq,
+                    trip=trip,
+                    va=va,
+                    is_delivered=is_delivered,
+                    pod_trip_id=pod_trip_id,
+                    track_link=track_link
+                )
+                v_cn = trip.tr_consignmentnumber if (trip and trip.tr_consignmentnumber) else cn
+                seal_no = (
+                    (v_cn.co_seal_number if v_cn else None)
+                    or (trip.tr_seal_number if trip else None)
+                    or ''
+                ).strip()
+                has_seals = bool(
+                    seal_no
+                    or (v_cn and (v_cn.co_eseal_number or v_cn.co_dan_aod_no or v_cn.co_client_invoice_no))
+                    or (trip and (trip.tr_eseal_number or trip.tr_dan_aod_no or trip.tr_client_invoice_no or trip.tr_return_job))
+                )
+                vehicles.append({
+                    'trip_id': trip.id if trip else None,
+                    'vehicle_no': vehicle_no,
+                    'driver_name': driver_name,
+                    'driver_number': driver_number,
+                    'track_link': track_link,
+                    'pod_trip_id': pod_trip_id,
+                    'is_delivered': is_delivered,
+                    'has_seals': has_seals,
+                    'seal_no': seal_no,
+                    'flow': v_flow,
+                })
+
+        # Primary trip / va for enquiry-level summary & flow modal
+        primary_trip, primary_va = pairs[0] if pairs else (None, None)
+        primary_veh = vehicles[0]['vehicle_no'] if vehicles else '-'
+        primary_driver_name = vehicles[0]['driver_name'] if vehicles else None
+        primary_driver_number = vehicles[0]['driver_number'] if vehicles else None
+        primary_track_link = vehicles[0]['track_link'] if vehicles else ''
+        primary_pod_trip_id = vehicles[0]['pod_trip_id'] if vehicles else None
+        primary_is_delivered = vehicles[0]['is_delivered'] if vehicles else False
+
         customer_ref = enq.en_enquirynumber
-        if trip and trip.tr_customerref:
-            customer_ref = trip.tr_customerref
+        if primary_trip and primary_trip.tr_customerref:
+            customer_ref = primary_trip.tr_customerref
 
-        # Consignment number: trip > direct consignment > trip number
         cnote = '-'
-        if trip and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber:
-            cnote = trip.tr_consignmentnumber.co_consignmentnumber
+        if primary_trip and primary_trip.tr_consignmentnumber and primary_trip.tr_consignmentnumber.co_consignmentnumber:
+            cnote = primary_trip.tr_consignmentnumber.co_consignmentnumber
         elif cn and cn.co_consignmentnumber:
             cnote = cn.co_consignmentnumber
-        elif trip and trip.tr_tripnumber:
-            cnote = trip.tr_tripnumber
+        elif primary_trip and primary_trip.tr_tripnumber:
+            cnote = primary_trip.tr_tripnumber
 
-        # Is Delivered?
-        is_delivered = False
-        if trip and (trip.tc_financestatus_id in [2, 3, 4, 5, 6, 7, 9, 10, 11] or (trip.tr_tripnumber and trip.tr_tripnumber in _closed_trip_numbers)):
-            is_delivered = True
-
-        # Tracking link - generate from vehicle number using Trans GPS (only if NOT delivered)
-        track_link = ''
-        if not is_delivered and vehicle_no and vehicle_no != '-':
-            track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={vehicle_no}'
-            if trip:
-                track_link += f'&trip_id={trip.id}'
-
-        # POD download - only show if file actually exists
-        import os
-        from django.conf import settings
-        pod_trip_id = None
-        if trip and is_delivered:
-            # Check closure files
-            closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
-            if closure and closure.tcf_pod:
-                pod_trip_id = trip.id
-            
-            # Check trip attachment
-            if not pod_trip_id and trip.tc_pod_attachment:
-                pod_trip_id = trip.id
-
-        # Consignment ID for PDF link
         consignment_id = None
         cus_ref_num = None
-        if trip and trip.tr_consignmentnumber:
-            consignment_id = trip.tr_consignmentnumber.id
-            cus_ref_num = trip.tr_consignmentnumber.co_cusrefnum
+        if primary_trip and primary_trip.tr_consignmentnumber:
+            consignment_id = primary_trip.tr_consignmentnumber.id
+            cus_ref_num = primary_trip.tr_consignmentnumber.co_cusrefnum
         elif cn:
             consignment_id = cn.id
             cus_ref_num = cn.co_cusrefnum
 
-        # Driver number
-        driver_number = None
-        if trip and trip.tr_drivernumber:
-            driver_number = trip.tr_drivernumber
-
-        # Compute status flow
         flow = compute_shipment_flow(
             enq=enq,
-            trip=trip,
-            va=va,
-            is_delivered=is_delivered,
-            pod_trip_id=pod_trip_id,
-            track_link=track_link
+            trip=primary_trip,
+            va=primary_va,
+            is_delivered=primary_is_delivered,
+            pod_trip_id=primary_pod_trip_id,
+            track_link=primary_track_link
+        )
+
+        if vehicles:
+            for v_idx, v in enumerate(vehicles, start=1):
+                m_id = f"flow-modal-{row_idx}-{v_idx}"
+                v['modal_id'] = m_id
+                flow_modals.append({'modal_id': m_id, 'enq': enq, 'flow': v['flow']})
+        elif flow:
+            m_id = f"flow-modal-{row_idx}"
+            flow_modals.append({'modal_id': m_id, 'enq': enq, 'flow': flow})
+
+        has_gate_or_beyond = any(v['flow'].get('current_stage', 1) >= 3 for v in vehicles)
+        can_cancel = (
+            enq.en_status_id not in (5, 8)
+            and not has_gate_or_beyond
+            and not portal_ctx.get('is_parent')
         )
 
         enquiry_list.append({
             'enq': enq,
-            'vehicle_no': vehicle_no,
+            'vehicles': vehicles,
+            'can_cancel': can_cancel,
+            'vehicle_no': primary_veh,
             'customer_ref': customer_ref,
             'cnote': cnote,
-            'track_link': track_link,
-            'pod_trip_id': pod_trip_id,
+            'track_link': primary_track_link,
+            'pod_trip_id': primary_pod_trip_id,
             'consignment_id': consignment_id,
             'cus_ref_num': cus_ref_num,
-            'driver_number': driver_number,
-            'is_delivered': is_delivered,
+            'driver_name': primary_driver_name,
+            'driver_number': primary_driver_number,
+            'is_delivered': primary_is_delivered,
             'flow': flow,
         })
     
     return render(request, 'asset_mgt_app/customer_enquiry_list.html', {
         'enquiry_list': enquiry_list,
+        'flow_modals': flow_modals,
         'search_query': search_query,
         'page_obj': page_obj,
         'status_filter': status_filter,
+        'approval_filter': approval_filter,
+        'pending_approvals_count': pending_approvals_count,
+        'portal_ctx': portal_ctx,
     })
 
 @login_required
@@ -1424,6 +1904,8 @@ def customer_documents(request):
     customer, department, is_lp, agent_name = get_customer_context(request)
     if not customer:
         return redirect('customer_dashboard')
+
+    portal_ctx = get_portal_role_context(request)
     
     from django.core.paginator import Paginator
     from django.db.models import Prefetch
@@ -1435,10 +1917,8 @@ def customer_documents(request):
         tcf_pod=''
     ).values_list('tcf_tripnumber', flat=True))
 
-    # Get all trips for this customer that have a POD
-    trips_qs = TripdetailInfo.objects.filter(
-        tr_enquirynumber__en_customername=customer
-    ).filter(
+    # Get all trips scoped by role (Factory / Logistics / Parent / Standard) that have a POD
+    trips_qs = get_portal_trip_queryset(customer, portal_ctx).filter(
         Q(tc_pod_attachment__isnull=False, tc_pod_attachment__gt='') |
         Q(tr_tripnumber__in=closure_trip_numbers)
     ).select_related(
@@ -1531,15 +2011,231 @@ def customer_support(request):
 
 
 @login_required(login_url='/SMS/customer_login/2/')
+def customer_gate_update(request, enquiry_id):
+    """
+    Allows Brandix Factory / Logistics (or Customer Portal users) to update Gate Sealing,
+    Export Invoice, DAN/AOD, Demurrage Reason, and Return Job fields.
+    """
+    customer, _, _, _ = get_customer_context(request)
+    portal_ctx = get_portal_role_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+
+    if not portal_ctx['is_factory'] and not request.user.is_superuser:
+        messages.error(request, 'Only Factory users can update Gate & Sealing details.')
+        return redirect('customer_enquiry_list')
+
+    enquiry = get_object_or_404(get_portal_enquiry_queryset(customer, portal_ctx), id=enquiry_id)
+    vehicle_no = (request.GET.get('vehicle') or request.POST.get('vehicle') or '').strip()
+    trip_id = (request.GET.get('trip_id') or request.POST.get('trip_id') or '').strip()
+
+    if trip_id and trip_id.isdigit():
+        trip = enquiry.tripdetailinfo_set.filter(id=int(trip_id)).first()
+    elif vehicle_no:
+        trip = enquiry.tripdetailinfo_set.filter(tr_vehiclenumber__iexact=vehicle_no).first()
+    else:
+        trip = enquiry.tripdetailinfo_set.first()
+
+    if trip and trip.tr_consignmentnumber:
+        cn = trip.tr_consignmentnumber
+    elif vehicle_no:
+        cn = enquiry.consignmentdetailinfo_set.filter(co_vehicelnumber__iexact=vehicle_no).first() or enquiry.consignmentdetailinfo_set.first()
+    else:
+        cn = enquiry.consignmentdetailinfo_set.first()
+
+    target_vehicle = vehicle_no or (trip.tr_vehiclenumber if trip else '')
+
+    if not trip:
+        messages.warning(request, 'Gate & Seals are available once a trip is created and the vehicle reports at the loading gate.')
+        return redirect('customer_enquiry_list')
+
+    gate_flow = compute_shipment_flow(enq=enquiry, trip=trip)
+    if gate_flow.get('current_stage', 1) < 3:
+        messages.warning(request, f'Vehicle {target_vehicle or ""} is still en route. Gate & Seals unlock once it reports at the loading gate.')
+        return redirect('customer_enquiry_list')
+
+    if request.method == 'POST':
+        seal_no = request.POST.get('co_seal_number', '').strip()
+        eseal_no = request.POST.get('co_eseal_number', '').strip()
+        dan_no = request.POST.get('co_dan_aod_no', '').strip()
+        inv_no = request.POST.get('co_client_invoice_no', '').strip()
+        inv_date = request.POST.get('co_client_invoice_date') or None
+
+        trip.tr_seal_number = seal_no or None
+        trip.tr_eseal_number = eseal_no or None
+        trip.tr_dan_aod_no = dan_no or None
+        trip.tr_client_invoice_no = inv_no or None
+        if inv_date:
+            trip.tr_client_invoice_date = inv_date
+        trip.tr_demurrage_reason = request.POST.get('tr_demurrage_reason', trip.tr_demurrage_reason)
+        trip.tr_return_job = (request.POST.get('tr_return_job') == 'on')
+        trip.save()
+
+        if cn:
+            cn.co_seal_number = seal_no or cn.co_seal_number
+            cn.co_eseal_number = eseal_no or cn.co_eseal_number
+            cn.co_smart_lock_number = eseal_no or cn.co_smart_lock_number
+            cn.co_dan_aod_no = dan_no or cn.co_dan_aod_no
+            cn.co_client_invoice_no = inv_no or cn.co_client_invoice_no
+            if inv_date:
+                cn.co_client_invoice_date = inv_date
+            cn.save()
+
+        label = f"Vehicle {target_vehicle}" if target_vehicle else "Shipment"
+        messages.success(request, f'Gate & Sealing details updated for {label}.')
+        return redirect('customer_enquiry_list')
+
+    return render(request, 'asset_mgt_app/customer_gate_update.html', {
+        'customer': customer,
+        'enquiry': enquiry,
+        'cn': cn,
+        'trip': trip,
+        'vehicle_no': target_vehicle,
+        'trip_id': trip.id,
+        'portal_ctx': portal_ctx,
+    })
+
+
+@login_required(login_url='/SMS/customer_login/2/')
+def customer_enquiry_cancel(request, enquiry_id):
+    """Cancel a booking before any vehicle reaches the loading gate (Stage < 3)."""
+    customer, _, _, _ = get_customer_context(request)
+    portal_ctx = get_portal_role_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+
+    if portal_ctx['is_parent']:
+        messages.error(request, 'Parent account has read-only access.')
+        return redirect('customer_enquiry_list')
+
+    enquiry = get_portal_enquiry_queryset(customer, portal_ctx).filter(id=enquiry_id).first()
+    if not enquiry:
+        messages.error(request, 'Booking not found or access denied.')
+        return redirect('customer_enquiry_list')
+
+    if enquiry.en_status_id == 8:
+        messages.info(request, 'Booking is already cancelled.')
+        return redirect('customer_enquiry_list')
+
+    trips = enquiry.tripdetailinfo_set.filter(tr_category_id=1)
+    for t in trips:
+        if compute_shipment_flow(enq=enquiry, trip=t).get('current_stage', 1) >= 3:
+            messages.warning(request, 'Cannot cancel after a vehicle has reached the loading gate. Use Gate & Seals -> Return The Job instead.')
+            return redirect('customer_enquiry_list')
+
+    if request.method == 'POST':
+        reason = (request.POST.get('cancel_reason') or '').strip()
+        note = f"[CANCELLED by {request.user.username}]" + (f" {reason}" if reason else "")
+        existing_req = (enquiry.en_special_instructions or '').strip()
+        enquiry.en_special_instructions = f"{existing_req}\n{note}".strip() if existing_req else note
+        enquiry.en_status_id = 8
+        enquiry.save(update_fields=['en_status', 'en_special_instructions'])
+        route_label = f"{enquiry.en_fromlocaion.place_name} → {enquiry.en_tolocation.place_name}" if enquiry.en_fromlocaion and enquiry.en_tolocation else "Shipment"
+        messages.success(request, f'Booking ({route_label}) has been cancelled.')
+
+    return redirect('customer_enquiry_list')
+
+
+def build_brandix_dmr_data(trips, hide_commercials=False):
+    """
+    Build Brandix OKI/DOKI DMR headers and rows with auto-calculated SLA & Turnaround KPIs.
+    Masks commercial charges when hide_commercials=True (Factory Login).
+    """
+    headers = [
+        'S.No', 'Request Id', 'Job No', 'Plant / Shipper', 'Created By', 'Created Date',
+        'Approved By', 'Approved Date', 'Vehicle No', 'Driver', 'Attended By',
+        'Pickup', 'Delivery', 'Requested Arrival', 'Arrived at Pickup', 'Departed Pickup',
+        'Requested Delivery', 'Arrived at Delivery', 'Departed Delivery',
+        'Late Booking', 'Placement Status', 'OTP (On-Time Placement)', 'OTD (On-Time Delivery)',
+        'Same Day Delivery', 'Spent at PP (Hrs)', 'Spent at DP (Hrs)', 'Transit Time (Hrs)',
+        'Buyer', 'Reference PO No', 'Shipment Type', 'Vessel', 'Voyage', 'BL Cutoff',
+        'Security Seal', 'E-Seal No', 'DAN/AOD No', 'Export Invoice No',
+        'Demurrage Reason', 'Demurrage Hrs', 'Return Job', 'Current Status'
+    ]
+    if not hide_commercials:
+        headers.extend(['Transport Charge', 'Demurrage Charge', 'Total Charge'])
+
+    rows = []
+    for idx, trip in enumerate(trips, start=1):
+        enq = trip.tr_enquirynumber
+        cn = trip.tr_consignmentnumber or (enq.consignmentdetailinfo_set.first() if enq else None)
+        kpis = compute_brandix_kpis(enq, trip)
+
+        arrived_pp = trip.tr_reporteddate_pickup or trip.tr_dock_in_time
+        departed_pp = trip.tr_departeddate_pickup or trip.tr_dock_out_time
+
+        cg_inv = None
+        if cn:
+            from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+            cg_first = ConsignmentgoodsInfo.objects.filter(
+                cg_consignmentnumber=cn.id,
+                cg_consignerinvoice__isnull=False
+            ).exclude(cg_consignerinvoice='').first()
+            if cg_first:
+                cg_inv = cg_first.cg_consignerinvoice
+        row = [
+            idx,
+            enq.en_enquirynumber if enq else '-',
+            (cn.co_consignmentnumber if cn else None) or trip.tr_tripnumber or '-',
+            (enq.en_plant_code if enq and enq.en_plant_code else None) or (enq.en_sub_customer.cu_name if enq and enq.en_sub_customer else '-'),
+            (enq.en_requestor if enq else None) or '-',
+            enq.en_created_at.strftime('%d-%m-%Y %H:%M') if enq and enq.en_created_at else '-',
+            (enq.en_approved_by if enq else None) or '-',
+            enq.en_approved_date.strftime('%d-%m-%Y %H:%M') if enq and enq.en_approved_date else '-',
+            trip.tr_vehiclenumber or '-',
+            trip.tr_drivername or '-',
+            trip.tr_attended_by or '-',
+            enq.en_fromlocaion.place_name if enq and enq.en_fromlocaion else '-',
+            enq.en_tolocation.place_name if enq and enq.en_tolocation else '-',
+            enq.en_requested_arrival_time.strftime('%d-%m-%Y %H:%M') if enq and enq.en_requested_arrival_time else '-',
+            arrived_pp.strftime('%d-%m-%Y %H:%M') if arrived_pp else '-',
+            departed_pp.strftime('%d-%m-%Y %H:%M') if departed_pp else '-',
+            enq.en_requested_delivery_time.strftime('%d-%m-%Y %H:%M') if enq and enq.en_requested_delivery_time else '-',
+            trip.tr_reporteddate_delivery.strftime('%d-%m-%Y %H:%M') if trip.tr_reporteddate_delivery else '-',
+            trip.tr_departeddate_delivery.strftime('%d-%m-%Y %H:%M') if trip.tr_departeddate_delivery else '-',
+            kpis['late_booking'],
+            kpis['placement_status'],
+            kpis['on_time_placement'],
+            kpis['on_time_delivery'],
+            kpis['same_day_delivery'],
+            kpis['spent_at_pp_hrs'] if kpis['spent_at_pp_hrs'] is not None else '-',
+            kpis['spent_at_dp_hrs'] if kpis['spent_at_dp_hrs'] is not None else '-',
+            kpis['transit_time_hrs'] if kpis['transit_time_hrs'] is not None else '-',
+            (enq.en_buyer_name if enq else None) or '-',
+            (enq.en_po_numbers if enq else None) or '-',
+            (enq.en_shipment_type if enq else None) or '-',
+            (enq.en_vessel_name if enq else None) or '-',
+            (enq.en_voyage_no if enq else None) or '-',
+            enq.en_bl_cutoff.strftime('%d-%m-%Y %H:%M') if enq and enq.en_bl_cutoff else '-',
+            (cn.co_seal_number if cn else None) or trip.tr_seal_number or '-',
+            (cn.co_smart_lock_number if cn else None) or (cn.co_eseal_number if cn else None) or trip.tr_eseal_number or '-',
+            (cn.co_dan_aod_no if cn else None) or trip.tr_dan_aod_no or '-',
+            cg_inv or (cn.co_client_invoice_no if cn else None) or trip.tr_client_invoice_no or '-',
+            trip.tr_demurrage_reason or '-',
+            str(trip.tr_demurrage_hours) if trip.tr_demurrage_hours else '0',
+            'Yes' if trip.tr_return_job else 'No',
+            trip.tc_financestatus.status if trip.tc_financestatus else 'Active',
+        ]
+        if not hide_commercials:
+            t_cost = float(trip.tc_tripcost or 0)
+            d_cost = float(trip.tc_total_halting_cost or trip.tc_haltingcost or 0)
+            row.extend([t_cost, d_cost, t_cost + d_cost])
+        rows.append(row)
+    return headers, rows
+
+
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_dmr_report(request):
     """
     Daily Movement Report (DMR) strictly scoped to the logged-in customer.
-    Supports Date Range, Month/Year, Department filters, Search, and Excel Export.
+    Supports Date Range, Month/Year, Department filters, Search, Brandix SLA KPIs, and Excel Export.
     """
     customer, department, is_lp, agent_name = get_customer_context(request)
     if not customer:
         messages.error(request, 'Your account is not linked to a Customer Profile. Please contact support.')
         return redirect('customer_dashboard')
+
+    portal_ctx = get_portal_role_context(request)
 
     from .dmr_report_view import (
         BASE_DMR_Q, apply_dmr_date_filter, build_dmr_search_filter,
@@ -1555,13 +2251,13 @@ def customer_dmr_report(request):
     search_query = request.GET.get('q', '').strip()
     dept_id = request.GET.get('customer_department', '')
 
-    # Base trips for this customer
-    trips = TripdetailInfo.objects.filter(
-        BASE_DMR_Q,
-        tr_enquirynumber__en_customername=customer
+    # Base trips scoped by Parent/Child/Factory/Logistics role
+    trips = get_portal_trip_queryset(customer, portal_ctx).filter(
+        BASE_DMR_Q
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_sub_customer',
         'tr_enquirynumber__en_customerdepartment',
         'tr_enquirynumber__en_fromlocaion',
         'tr_enquirynumber__en_tolocation',
@@ -1605,15 +2301,19 @@ def customer_dmr_report(request):
     page_obj = paginator.get_page(page_number)
 
     # Headers & dynamic rows
-    headers, template_key = get_dmr_headers(
-        customer.cu_name, dept_name, None, None,
-        customer_id=customer.id, dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None
-    )
-    data_rows = get_dmr_rows(page_obj, headers, template_key, customer.cu_name, start_idx=page_obj.start_index())
+    use_brandix_dmr = portal_ctx['is_factory'] or portal_ctx['is_logistics'] or ('brandix' in (customer.cu_name or '').lower())
+    if use_brandix_dmr:
+        headers, data_rows = build_brandix_dmr_data(page_obj, hide_commercials=portal_ctx['hide_commercials'])
+    else:
+        headers, template_key = get_dmr_headers(
+            customer.cu_name, dept_name, None, None,
+            customer_id=customer.id, dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None
+        )
+        data_rows = get_dmr_rows(page_obj, headers, template_key, customer.cu_name, start_idx=page_obj.start_index())
 
     # Available departments for filter dropdown
     available_departments = CustomerdepartmentInfo.objects.filter(
-        enquirynoteinfo__en_customername=customer
+        enquirynoteinfo__in=get_portal_enquiry_queryset(customer, portal_ctx)
     ).distinct().order_by('ct_customerdepartment')
 
     current_year = today_dt.year
@@ -1636,6 +2336,7 @@ def customer_dmr_report(request):
         'selected_year': int(selected_year) if (selected_year and str(selected_year).isdigit()) else current_year,
         'years': range(current_year - 5, current_year + 1),
         'search_query': search_query,
+        'portal_ctx': portal_ctx,
     })
 
 
@@ -1646,6 +2347,8 @@ def customer_dmr_export_excel(request):
     if not customer:
         messages.error(request, 'Customer context not found.')
         return redirect('customer_dashboard')
+
+    portal_ctx = get_portal_role_context(request)
 
     from .dmr_report_view import (
         BASE_DMR_Q, apply_dmr_date_filter, build_dmr_search_filter,
@@ -1660,12 +2363,12 @@ def customer_dmr_export_excel(request):
     search_query = request.GET.get('q', '').strip()
     dept_id = request.GET.get('customer_department', '')
 
-    trips = TripdetailInfo.objects.filter(
-        BASE_DMR_Q,
-        tr_enquirynumber__en_customername=customer
+    trips = get_portal_trip_queryset(customer, portal_ctx).filter(
+        BASE_DMR_Q
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_sub_customer',
         'tr_enquirynumber__en_customerdepartment',
         'tr_enquirynumber__en_fromlocaion',
         'tr_enquirynumber__en_tolocation',
@@ -1693,14 +2396,31 @@ def customer_dmr_export_excel(request):
 
     trips = trips.order_by('-effective_dmr_date', '-id').distinct()
 
-    wb, _ = build_dmr_excel_workbook(
-        customer_obj=customer,
-        dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None,
-        dept_name=dept_name or "Logistics",
-        from_loc=None,
-        to_loc=None,
-        trips=list(trips)
-    )
+    use_brandix_dmr = portal_ctx['is_factory'] or portal_ctx['is_logistics'] or ('brandix' in (customer.cu_name or '').lower())
+    if use_brandix_dmr:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Brandix DMR"
+        headers, rows = build_brandix_dmr_data(list(trips), hide_commercials=portal_ctx['hide_commercials'])
+        ws.append(headers)
+        header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+        for r in rows:
+            ws.append(r)
+    else:
+        wb, _ = build_dmr_excel_workbook(
+            customer_obj=customer,
+            dept_id=int(dept_id) if dept_id and str(dept_id).isdigit() else None,
+            dept_name=dept_name or "Logistics",
+            from_loc=None,
+            to_loc=None,
+            trips=list(trips)
+        )
 
     output = BytesIO()
     wb.save(output)

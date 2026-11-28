@@ -666,6 +666,17 @@ def tripdetail_add(request, tripdetail_id=0):
                 ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at')
             context['is_trip_frozen_closed'] = is_replaced_closed
 
+        brandix_enq = (trip_det_form.instance.tr_enquirynumber if tripdetail_id != 0 else None) or EnquirynoteInfo.objects.select_related('en_customername').filter(pk=enquiry_num_id).first()
+        is_brandix = bool(
+            brandix_enq and (
+                brandix_enq.en_agent_name == 'Brandix'
+                or brandix_enq.en_plant_code
+                or (brandix_enq.en_customername and 'EXPO FREIGHT' in (brandix_enq.en_customername.cu_name or '').upper())
+            )
+        )
+        context['is_brandix'] = is_brandix
+        context['brandix_enq'] = brandix_enq
+
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
     else:
@@ -962,6 +973,27 @@ def tripdetail_add(request, tripdetail_id=0):
                     if is_closed and not trip.tr_trip_closed_mail_sent:
                         trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
+                if request.POST.get('brandix_gate_present') == '1':
+                    trip.tr_seal_number = request.POST.get('tr_seal_number', '').strip() or None
+                    trip.tr_eseal_number = request.POST.get('tr_eseal_number', '').strip() or None
+                    trip.tr_dan_aod_no = request.POST.get('tr_dan_aod_no', '').strip() or None
+                    trip.tr_client_invoice_no = request.POST.get('tr_client_invoice_no', '').strip() or None
+                    inv_dt = request.POST.get('tr_client_invoice_date') or None
+                    if inv_dt:
+                        trip.tr_client_invoice_date = inv_dt
+                    trip.tr_demurrage_reason = request.POST.get('tr_demurrage_reason', '').strip() or None
+                    trip.tr_return_job = (request.POST.get('tr_return_job') == 'on')
+                    trip.save()
+                    if trip.tr_consignmentnumber:
+                        cn_obj = trip.tr_consignmentnumber
+                        cn_obj.co_seal_number = trip.tr_seal_number or cn_obj.co_seal_number
+                        cn_obj.co_eseal_number = trip.tr_eseal_number or cn_obj.co_eseal_number
+                        cn_obj.co_dan_aod_no = trip.tr_dan_aod_no or cn_obj.co_dan_aod_no
+                        cn_obj.co_client_invoice_no = trip.tr_client_invoice_no or cn_obj.co_client_invoice_no
+                        if trip.tr_client_invoice_date:
+                            cn_obj.co_client_invoice_date = trip.tr_client_invoice_date
+                        cn_obj.save()
+
                 print("Main Form is Valid")
                 last_id = TripdetailInfo.objects.latest('id').id
                 last_id_files = Trip_closure_files_Info.objects.latest('id').id
@@ -1250,6 +1282,27 @@ def tripdetail_add(request, tripdetail_id=0):
                     # 4. Trip Closed - requires both status 2 AND actual unloading details
                     if is_closed and not trip.tr_trip_closed_mail_sent:
                         trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
+
+                if request.POST.get('brandix_gate_present') == '1':
+                    trip.tr_seal_number = request.POST.get('tr_seal_number', '').strip() or None
+                    trip.tr_eseal_number = request.POST.get('tr_eseal_number', '').strip() or None
+                    trip.tr_dan_aod_no = request.POST.get('tr_dan_aod_no', '').strip() or None
+                    trip.tr_client_invoice_no = request.POST.get('tr_client_invoice_no', '').strip() or None
+                    inv_dt = request.POST.get('tr_client_invoice_date') or None
+                    if inv_dt:
+                        trip.tr_client_invoice_date = inv_dt
+                    trip.tr_demurrage_reason = request.POST.get('tr_demurrage_reason', '').strip() or None
+                    trip.tr_return_job = (request.POST.get('tr_return_job') == 'on')
+                    trip.save()
+                    if trip.tr_consignmentnumber:
+                        cn_obj = trip.tr_consignmentnumber
+                        cn_obj.co_seal_number = trip.tr_seal_number or cn_obj.co_seal_number
+                        cn_obj.co_eseal_number = trip.tr_eseal_number or cn_obj.co_eseal_number
+                        cn_obj.co_dan_aod_no = trip.tr_dan_aod_no or cn_obj.co_dan_aod_no
+                        cn_obj.co_client_invoice_no = trip.tr_client_invoice_no or cn_obj.co_client_invoice_no
+                        if trip.tr_client_invoice_date:
+                            cn_obj.co_client_invoice_date = trip.tr_client_invoice_date
+                        cn_obj.save()
 
                 print("Main Form is Valid")
                 tripdetail_list = TripdetailInfo.objects.filter(

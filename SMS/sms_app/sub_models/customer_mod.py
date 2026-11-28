@@ -33,6 +33,8 @@ class CustomerInfo(models.Model):
     cu_business_sol = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,blank=True,null=True)
     cu_industry_type = models.ForeignKey(Industrytype, blank=True, null=True, on_delete=models.CASCADE, default='')
     cu_automatic_email = models.CharField(max_length=3, choices=(('YES', 'YES'), ('NO', 'NO')), default='NO')
+    # Parent-Child Hierarchy (e.g. Expo Freight as Parent/Bill-To -> Brandix as Child/Ship-To)
+    cu_parent_customer = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_customers')
     class Meta:
         ordering = ["cu_name"]
 

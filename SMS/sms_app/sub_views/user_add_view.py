@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from ..models import (
     User_extInfo, RoleInfo, Location_info, DesignationInfo, 
-    Business_Sol_info, Department_info
+    Business_Sol_info, Department_info, CustomerInfo
 )
 from .send_department_email import send_department_email_html
 
@@ -70,6 +70,7 @@ def user_add(request, user_id=0):
     departments = Department_info.objects.all().order_by('dept_name')
     designations = DesignationInfo.objects.all().order_by('des_designation_name')
     organisations = Business_Sol_info.objects.all().order_by('bvm_business')
+    customers = CustomerInfo.objects.all().order_by('cu_name')
 
     is_create = (user_id == 0)
     user_obj = None
@@ -105,6 +106,10 @@ def user_add(request, user_id=0):
                 'emp_uan': user_ext.emp_uan or '',
                 'emp_esi': user_ext.emp_esi or '',
                 'emp_aadhar': user_ext.emp_aadhar or '',
+                'linked_customer': str(user_ext.linked_customer_id) if user_ext.linked_customer_id else '',
+                'portal_role': user_ext.portal_role or 'STANDARD',
+                'agent_account': user_ext.agent_account or '',
+                'assigned_plant': user_ext.assigned_plant or '',
             }
 
         context = {
@@ -117,6 +122,7 @@ def user_add(request, user_id=0):
             'departments': departments,
             'designations': designations,
             'organisations': organisations,
+            'customers': customers,
             'first_name': first_name_session,
         }
         return render(request, "asset_mgt_app/emp_add.html", context)
@@ -142,6 +148,10 @@ def user_add(request, user_id=0):
     emp_esi = request.POST.get('emp_esi', '').strip() or None
     emp_aadhar = request.POST.get('emp_aadhar', '').strip() or None
     send_welcome_email = True if request.POST.get('send_welcome_email') in ['on', 'true', 'True', '1', True] else False
+    linked_customer_id = request.POST.get('linked_customer') or None
+    portal_role = request.POST.get('portal_role', 'STANDARD').strip() or 'STANDARD'
+    agent_account = request.POST.get('agent_account', '').strip() or None
+    assigned_plant = request.POST.get('assigned_plant', '').strip() or None
 
     form_data = {
         'username': username,
@@ -162,6 +172,10 @@ def user_add(request, user_id=0):
         'emp_esi': emp_esi or '',
         'emp_aadhar': emp_aadhar or '',
         'send_welcome_email': send_welcome_email,
+        'linked_customer': str(linked_customer_id or ''),
+        'portal_role': portal_role,
+        'agent_account': agent_account or '',
+        'assigned_plant': assigned_plant or '',
     }
 
     errors = []
@@ -226,6 +240,7 @@ def user_add(request, user_id=0):
             'departments': departments,
             'designations': designations,
             'organisations': organisations,
+            'customers': customers,
             'first_name': first_name_session,
         }
         return render(request, "asset_mgt_app/emp_add.html", context)
@@ -256,6 +271,10 @@ def user_add(request, user_id=0):
             emp_uan=emp_uan,
             emp_esi=emp_esi,
             emp_aadhar=emp_aadhar,
+            linked_customer_id=linked_customer_id,
+            portal_role=portal_role,
+            agent_account=agent_account,
+            assigned_plant=assigned_plant,
             is_approved=True,  # Pre-approved by Admin
         )
 
@@ -310,6 +329,10 @@ def user_add(request, user_id=0):
         user_ext.emp_uan = emp_uan
         user_ext.emp_esi = emp_esi
         user_ext.emp_aadhar = emp_aadhar
+        user_ext.linked_customer_id = linked_customer_id
+        user_ext.portal_role = portal_role
+        user_ext.agent_account = agent_account
+        user_ext.assigned_plant = assigned_plant
         user_ext.is_approved = True
         user_ext.save()
 

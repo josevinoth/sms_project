@@ -24,6 +24,17 @@ class User_extInfo(models.Model):
     # Registration Approval Status
     is_approved = models.BooleanField(default=True)
 
+    # Customer Portal Role & Plant Assignment
+    PORTAL_ROLE_CHOICES = (
+        ('STANDARD', 'Standard Customer'),
+        ('PARENT', 'Parent / 3PL Account (e.g. Expo Freight)'),
+        ('FACTORY', 'Child Factory / Inplant (e.g. Brandix Plant)'),
+        ('LOGISTICS', 'Child Central Logistics Officer (e.g. Brandix Logistics)'),
+    )
+    portal_role = models.CharField(max_length=20, choices=PORTAL_ROLE_CHOICES, default='STANDARD')
+    agent_account = models.CharField(max_length=150, null=True, blank=True, help_text="e.g. Brandix (when acting as an Agent/Sub-Account under a Parent Customer like Expo Freight)")
+    assigned_plant = models.CharField(max_length=100, null=True, blank=True, help_text="e.g. Brandix B1, B2, etc.")
+
 
     def __str__(self):
         return self.user.username

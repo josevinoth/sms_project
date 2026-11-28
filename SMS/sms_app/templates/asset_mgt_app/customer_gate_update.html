@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gate &amp; Sealing Update | BVM Booking Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; min-height: 100vh; }
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem; background: var(--glass); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;
+        }
+        .brand { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .container { max-width: 820px; margin: 2rem auto; padding: 0 1.25rem; }
+        .card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem; }
+        .card-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.75rem 0.9rem; border-radius: 10px; background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--glass-border); color: #fff; font-size: 0.95rem; outline: none;
+        }
+        .btn-save {
+            width: 100%; padding: 1rem; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #0f172a; font-size: 1rem; font-weight: 700; cursor: pointer;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="{% url 'customer_dashboard' %}" class="brand">BVM BOOKING PORTAL</a>
+        <a href="{% url 'customer_enquiry_list' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">
+            <i class="fas fa-arrow-left"></i> Back to Shipments
+        </a>
+    </nav>
+
+    <div class="container">
+        <h1 style="font-size: 1.5rem; color: var(--primary); margin-bottom: 0.25rem;">Gate Sealing &amp; Export Details</h1>
+        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem;">
+            {% if vehicle_no %}Vehicle <strong>{{ vehicle_no }}</strong> &bull; {% endif %}
+            {{ enquiry.en_fromlocaion.place_name }} &rarr; {{ enquiry.en_tolocation.place_name }}
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="vehicle" value="{{ vehicle_no|default:'' }}">
+            <input type="hidden" name="trip_id" value="{{ trip_id|default:'' }}">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-lock"></i> Container Seals &amp; Export Invoice</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Security / Bolt Seal No</label>
+                        <input type="text" name="co_seal_number" value="{{ cn.co_seal_number|default:trip.tr_seal_number|default:'' }}" placeholder="e.g. 712741">
+                    </div>
+                    <div class="form-group">
+                        <label>Second Seal No (E-Seal)</label>
+                        <input type="text" name="co_eseal_number" value="{{ cn.co_eseal_number|default:trip.tr_eseal_number|default:'' }}" placeholder="RFID / E-Seal No">
+                    </div>
+                    <div class="form-group">
+                        <label>DAN / AOD No</label>
+                        <input type="text" name="co_dan_aod_no" value="{{ cn.co_dan_aod_no|default:trip.tr_dan_aod_no|default:'' }}" placeholder="e.g. 75345">
+                    </div>
+                    <div class="form-group">
+                        <label>Brandix Export Invoice No</label>
+                        <input type="text" name="co_client_invoice_no" value="{{ cn.co_client_invoice_no|default:trip.tr_client_invoice_no|default:'' }}" placeholder="Export Invoice No">
+                    </div>
+                    <div class="form-group">
+                        <label>Brandix Export Invoice Date</label>
+                        <input type="date" name="co_client_invoice_date" value="{% if cn.co_client_invoice_date %}{{ cn.co_client_invoice_date|date:'Y-m-d' }}{% elif trip.tr_client_invoice_date %}{{ trip.tr_client_invoice_date|date:'Y-m-d' }}{% endif %}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-exclamation-triangle"></i> Detention &amp; Return Job</div>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Demurrage / Detention Reason (if any)</label>
+                        <input type="text" name="tr_demurrage_reason" value="{{ trip.tr_demurrage_reason|default:'' }}" placeholder="e.g. Due to production delay">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; padding-top: 8px;">
+                        <input type="checkbox" id="tr_return_job" name="tr_return_job" style="width: 18px; height: 18px;" {% if trip.tr_return_job %}checked{% endif %}>
+                        <label for="tr_return_job" style="margin: 0;">Return The Job (Vehicle not utilized by factory &amp; returning empty)</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save Gate &amp; Sealing Details</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

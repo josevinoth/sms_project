@@ -228,6 +228,14 @@
                             <label class="form-label-modern">Smart Lock No</label>
                             {% render_field con_det_form.co_smart_lock_number id="co_smart_lock_number" class="form-control form-control-modern" %}
                         </div>
+
+                        {% if is_brandix %}
+                        <input type="hidden" name="brandix_gate_present" value="1">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">DAN / AOD No</label>
+                            <input type="text" name="co_dan_aod_no" class="form-control form-control-modern" value="{% if con_det_form.instance.co_dan_aod_no %}{{ con_det_form.instance.co_dan_aod_no }}{% elif brandix_trip and brandix_trip.tr_dan_aod_no %}{{ brandix_trip.tr_dan_aod_no }}{% endif %}">
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 

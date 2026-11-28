@@ -580,17 +580,40 @@
     <div class="container">
         <header>
             <div class="welcome">
-                <h1>Welcome back, {{ customer.cu_nameshort|default:customer.cu_name|default:request.user.username }}</h1>
+                <h1>
+                    Welcome back,
+                    {% if portal_ctx.agent_account %}
+                        {{ portal_ctx.agent_account }}{% if portal_ctx.is_factory and portal_ctx.assigned_plant %} ({{ portal_ctx.assigned_plant }}){% elif portal_ctx.is_logistics %} Logistics{% endif %}
+                    {% else %}
+                        {{ customer.cu_nameshort|default:customer.cu_name|default:request.user.username }}
+                    {% endif %}
+                </h1>
                 {% if department %}
                 <p
                     style="font-size: 1.1rem; color: #4facfe; margin-top: -0.5rem; margin-bottom: 0.5rem; font-weight: 600;">
                     {{ department.ct_customerdepartment }} Department</p>
                 {% endif %}
-                <p>Real-time visibility of your logistics ecosystem.</p>
+                <p>
+                    {% if portal_ctx.is_factory %}
+                        Plant Movement Request &amp; Gate Operations Portal.
+                    {% elif portal_ctx.is_logistics %}
+                        Central Logistics Vehicle Sizing, Approvals &amp; SLA Portal.
+                    {% else %}
+                        Real-time visibility of your logistics ecosystem.
+                    {% endif %}
+                </p>
             </div>
-            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary">
-                <i class="fas fa-plus"></i> New Booking
-            </a>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                {% if portal_ctx.is_logistics and pending_approvals_count > 0 %}
+                <a href="{% url 'customer_enquiry_list' %}?approval=pending"
+                   style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.2rem; border-radius: 12px; background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; text-decoration: none; font-weight: 700;">
+                    <i class="fas fa-clock"></i> Pending Approvals ({{ pending_approvals_count }})
+                </a>
+                {% endif %}
+                <a href="{% url 'customer_enquiry_add' %}" class="btn-primary">
+                    <i class="fas fa-plus"></i> {% if portal_ctx.is_factory %}Request Movement{% else %}New Booking{% endif %}
+                </a>
+            </div>
         </header>
 
         {% if messages %}

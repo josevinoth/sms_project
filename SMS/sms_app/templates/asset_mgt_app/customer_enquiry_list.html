@@ -844,6 +844,393 @@
             color: #ffffff;
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
         }
+
+        /* Modern Shipment Cards & Filter Toolbar */
+        .toolbar-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .toolbar-row .search-box {
+            margin-bottom: 0;
+            flex: 1 1 280px;
+            max-width: 400px;
+        }
+
+        .filter-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.95rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.83rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .filter-pill:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-pill.active {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(79, 172, 254, 0.2));
+            border-color: #00f2fe;
+            color: #00f2fe;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.18);
+        }
+
+        .filter-pill.filter-pill-amber {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #fbbf24;
+        }
+
+        .filter-pill.filter-pill-amber.active {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: #f59e0b;
+            color: #fde68a;
+        }
+
+        .shipment-cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .shipment-card {
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.05) 0%, rgba(15, 23, 42, 0.78) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-left: 4px solid #38bdf8;
+            border-radius: 14px;
+            padding: 0;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.3);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .shipment-card:hover {
+            border-color: rgba(56, 189, 248, 0.32);
+            box-shadow: 0 12px 30px rgba(2, 6, 23, 0.42);
+        }
+
+        .shipment-card.is-pending {
+            border-left-color: #f59e0b;
+        }
+
+        .shipment-card.is-cancelled {
+            border-left-color: #ef4444;
+            opacity: 0.85;
+        }
+
+        .sc-pending-bar.is-cancelled {
+            background: rgba(239, 68, 68, 0.08);
+            border-top-color: rgba(239, 68, 68, 0.22);
+        }
+
+        .shipment-card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            padding: 0.9rem 1.25rem;
+        }
+
+        .sc-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .sc-sub-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.45rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.055);
+        }
+
+        .sc-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .sc-customer-block {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 105px;
+        }
+
+        .sc-customer-name {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #f8fafc;
+            letter-spacing: 0.2px;
+        }
+
+        .sc-plant-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #38bdf8;
+        }
+
+        .sc-route-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.42rem 0.85rem;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sc-route-place {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .sc-route-arrow {
+            color: #00f2fe;
+            font-size: 0.82rem;
+        }
+
+        .sc-dept-badge {
+            padding: 0.28rem 0.65rem;
+            border-radius: 7px;
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #cbd5e1;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .sc-inline-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .sc-info-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.26rem 0.6rem;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 0.75rem;
+            color: #cbd5e1;
+        }
+
+        .sc-info-chip i {
+            color: #38bdf8;
+            font-size: 0.72rem;
+        }
+
+        .sc-trucks-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.32rem 0.78rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sc-trucks-toggle:hover {
+            background: rgba(56, 189, 248, 0.24);
+        }
+
+        .sc-right {
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            flex-wrap: wrap;
+        }
+
+        .sc-meta-date {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            text-align: right;
+        }
+
+        .sc-meta-label {
+            font-size: 0.64rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .sc-meta-value {
+            font-size: 0.82rem;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .sc-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sc-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.38rem;
+            padding: 0.38rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sc-btn-approve {
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid #10b981;
+            color: #34d399;
+        }
+
+        .sc-btn-approve:hover {
+            background: #10b981;
+            color: #06281e;
+        }
+
+        .sc-btn-edit {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.32);
+            color: #00f2fe;
+        }
+
+        .sc-btn-edit:hover {
+            background: rgba(0, 242, 254, 0.22);
+        }
+
+        .sc-btn-seals {
+            background: rgba(251, 191, 36, 0.14);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+        }
+
+        .sc-btn-seals:hover {
+            background: rgba(251, 191, 36, 0.26);
+        }
+
+        .sc-btn-cancel {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            cursor: pointer;
+        }
+
+        .sc-btn-cancel:hover {
+            background: rgba(239, 68, 68, 0.22);
+            color: #ffffff;
+        }
+
+        .sc-single-vehicle-bar {
+            display: grid;
+            grid-template-columns: minmax(140px, 1.1fr) minmax(170px, 1.3fr) minmax(140px, 1fr) auto auto auto;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.72rem 1.25rem;
+            background: rgba(15, 23, 42, 0.52);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .sc-pending-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 0.68rem 1.25rem;
+            background: rgba(245, 158, 11, 0.06);
+            border-top: 1px solid rgba(245, 158, 11, 0.18);
+        }
+
+        .sc-vehicles-table-wrap {
+            background: rgba(15, 23, 42, 0.52);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            overflow-x: auto;
+        }
+
+        .sc-vehicles-table {
+            width: 100%;
+            min-width: 780px;
+            border-collapse: collapse;
+        }
+
+        .sc-vehicles-table th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.58rem 1.1rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sc-vehicles-table td {
+            padding: 0.65rem 1.1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+        }
+
+        .sc-vehicles-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        @media (max-width: 960px) {
+            .sc-single-vehicle-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sc-meta-date {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sc-single-vehicle-bar {
+                grid-template-columns: 1fr;
+            }
+            .shipment-card-header {
+                padding: 0.85rem 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -907,20 +1294,27 @@
                     <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Back to Dashboard
                 </a>
                 <h1>
-                    {% if status_filter == 'transit' %}In-Transit Shipments
+                    {% if approval_filter == 'pending' %}Pending Logistics Approvals
+                    {% elif status_filter == 'transit' %}In-Transit Shipments
                     {% elif status_filter == 'delivered' %}Delivered Shipments
                     {% elif status_filter == 'cancelled' %}Cancelled Shipments
                     {% else %}Shipment Summary{% endif %}
                 </h1>
-                {% if status_filter %}
+                {% if status_filter or approval_filter %}
                 <a href="{% url 'customer_enquiry_list' %}"
                     style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.8rem; border-radius: 20px; background: rgba(0, 242, 254, 0.15); color: var(--primary); text-decoration: none; font-size: 0.8rem; margin-top: 0.5rem;">
                     <i class="fas fa-times"></i> Clear Filter
                 </a>
                 {% endif %}
             </div>
-            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary"><i class="fas fa-plus"></i> Book
-                Shipment</a>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                {% if portal_ctx.is_logistics and pending_approvals_count > 0 and approval_filter != 'pending' %}
+                <a href="?approval=pending" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.1rem; border-radius: 12px; background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fbbf24; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                    <i class="fas fa-clock"></i> Pending Approvals ({{ pending_approvals_count }})
+                </a>
+                {% endif %}
+                <a href="{% url 'customer_enquiry_add' %}" class="btn-primary"><i class="fas fa-plus"></i> {% if portal_ctx.is_factory %}Request Movement{% else %}Book Shipment{% endif %}</a>
+            </div>
         </header>
 
         {% if messages %}
@@ -932,106 +1326,360 @@
         {% endfor %}
         {% endif %}
 
-        <div class="search-box">
-            <form method="GET" action="{% url 'customer_enquiry_list' %}">
-                <i class="fas fa-search"></i>
-                <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Trip # or Location...">
-            </form>
+        <div class="toolbar-row">
+            <div class="search-box">
+                <form method="GET" action="{% url 'customer_enquiry_list' %}">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Trip #, Vehicle, or Location...">
+                </form>
+            </div>
+            <div class="filter-pills">
+                <a href="{% url 'customer_enquiry_list' %}" class="filter-pill {% if not status_filter and not approval_filter %}active{% endif %}">
+                    <i class="fas fa-layer-group"></i> All
+                </a>
+                {% if portal_ctx.is_logistics and pending_approvals_count > 0 %}
+                <a href="?approval=pending" class="filter-pill filter-pill-amber {% if approval_filter == 'pending' %}active{% endif %}">
+                    <i class="fas fa-clock"></i> Pending ({{ pending_approvals_count }})
+                </a>
+                {% endif %}
+                <a href="?status=allotted" class="filter-pill {% if status_filter == 'allotted' %}active{% endif %}">
+                    <i class="fas fa-truck"></i> Allotted
+                </a>
+                <a href="?status=transit" class="filter-pill {% if status_filter == 'transit' %}active{% endif %}">
+                    <i class="fas fa-route"></i> In-Transit
+                </a>
+                <a href="?status=delivered" class="filter-pill {% if status_filter == 'delivered' %}active{% endif %}">
+                    <i class="fas fa-check-circle"></i> Delivered
+                </a>
+                <a href="?status=cancelled" class="filter-pill {% if status_filter == 'cancelled' %}active{% endif %}">
+                    <i class="fas fa-ban"></i> Cancelled
+                </a>
+            </div>
         </div>
 
-        <div class="glass-card">
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Customer Name</th>
-                            <th>Vehicle No</th>
-                            <th>Driver No</th>
-                            <th>Goods Status Flow</th>
-                            <th>Track / POD</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Dept</th>
-                            <th>Cnote</th>
-
-                            <th>Booking Date</th>
-                            <th>Veh Req Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in enquiry_list %}
-                        <tr>
-                            <td>{{ item.enq.en_customername.cu_nameshort|default:item.enq.en_customername.cu_name }}</td>
-                            <td>{{ item.vehicle_no }}</td>
-                            <td>{{ item.driver_number|default:"-" }}</td>
-                            <td>
-                                {% if item.flow %}
-                                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
-                                    <span class="flow-pill-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ item.flow.stage_color }}; color: {{ item.flow.stage_color }}; white-space: nowrap;">
-                                        <i class="fas {{ item.flow.stage_icon }}"></i> {{ item.flow.stage_label }}
-                                    </span>
-                                    <button type="button" class="btn-view-flow" onclick="openFlowModal('flow-modal-{{ forloop.counter }}')">
-                                        <i class="fas fa-route"></i> Track Flow ({{ item.flow.current_stage }}/12)
-                                    </button>
-                                </div>
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.pod_trip_id %}
-                                {# POD available — show POD button, hide Track #}
-                                <a href="{% url 'download_pod' item.pod_trip_id %}"
-                                    style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.3rem 0.7rem; border-radius:6px; background:rgba(239,68,68,0.15); color:#fca5a5; text-decoration:none; font-size:0.82rem; font-weight:600;"
-                                    title="View POD">
-                                    <i class="fas fa-file-pdf"></i> POD
-                                </a>
-                                {% elif item.is_delivered %}
-                                {# Trip is closed but POD file not found #}
-                                <span style="display:inline-flex; align-items:center; gap:0.3rem; color:#10b981; font-size:0.85rem; font-weight:600;" title="Delivered - POD Pending">
-                                    <i class="fas fa-check-circle"></i> Delivered
+        <div class="shipment-cards-list">
+            {% for item in enquiry_list %}
+            <div class="shipment-card {% if item.enq.en_status_id == 8 %}is-cancelled{% elif not item.enq.en_is_approved %}is-pending{% endif %}">
+                <!-- Card Header -->
+                <div class="shipment-card-header">
+                    <div class="sc-top-row">
+                        <div class="sc-left">
+                            <div class="sc-customer-block">
+                                <span class="sc-customer-name">
+                                    {% if item.enq.en_agent_name %}
+                                        {{ item.enq.en_agent_name }}
+                                    {% elif item.enq.en_sub_customer %}
+                                        {{ item.enq.en_sub_customer.cu_nameshort|default:item.enq.en_sub_customer.cu_name }}
+                                    {% else %}
+                                        {{ item.enq.en_customername.cu_nameshort|default:item.enq.en_customername.cu_name }}
+                                    {% endif %}
                                 </span>
-                                {% elif item.track_link %}
-                                {# Active trip — show Track button #}
-                                <a href="{{ item.track_link }}" target="_blank"
-                                    style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.7rem; border-radius:6px; background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; text-decoration:none; font-size:0.82rem; font-weight:600;"
-                                    title="Live GPS Track Vehicle">
-                                    <i class="fas fa-satellite-dish"></i> Track
+                                {% if item.enq.en_plant_code %}
+                                <span class="sc-plant-tag"><i class="fas fa-industry"></i> {{ item.enq.en_plant_code }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="sc-route-pill">
+                                <span class="sc-route-place">{{ item.enq.en_fromlocaion.place_name }}</span>
+                                <i class="fas fa-long-arrow-alt-right sc-route-arrow"></i>
+                                <span class="sc-route-place">{{ item.enq.en_tolocation.place_name }}</span>
+                            </div>
+
+                            {% if item.enq.en_customerdepartment.ct_customerdepartment %}
+                            <span class="sc-dept-badge">{{ item.enq.en_customerdepartment.ct_customerdepartment }}</span>
+                            {% endif %}
+
+                            {% if item.vehicles|length > 1 %}
+                            <button type="button" class="sc-trucks-toggle" onclick="toggleTrucks('trucks-row-{{ forloop.counter }}', this)">
+                                <i class="fas fa-truck"></i>
+                                <span>{{ item.vehicles|length }}{% if item.enq.en_no_of_vehicles > 1 %}/{{ item.enq.en_no_of_vehicles }}{% endif %} Trucks</span>
+                                <i class="fas fa-chevron-down toggle-chevron" style="font-size: 0.7rem; transition: transform 0.2s; transform: rotate(180deg);"></i>
+                            </button>
+                            {% elif item.vehicles|length > 0 and item.enq.en_no_of_vehicles > 1 %}
+                            <span class="sc-trucks-toggle" style="cursor: default;">
+                                <i class="fas fa-truck"></i> {{ item.vehicles|length }}/{{ item.enq.en_no_of_vehicles }} Trucks
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="sc-right">
+                            <div class="sc-meta-date">
+                                <span class="sc-meta-label">Booked</span>
+                                <span class="sc-meta-value">{{ item.enq.en_created_at|date:"d M Y" }}</span>
+                            </div>
+                            <div class="sc-meta-date">
+                                <span class="sc-meta-label">Veh Req</span>
+                                <span class="sc-meta-value">{{ item.enq.en_pickupdatetime|date:"d M Y, H:i"|default:"-" }}</span>
+                            </div>
+                            <div class="sc-meta-date">
+                                <span class="sc-meta-label">Req Delivery</span>
+                                <span class="sc-meta-value" style="color: #38bdf8;">{{ item.enq.en_requested_delivery_time|date:"d M Y, H:i"|default:"-" }}</span>
+                            </div>
+                            {% if item.enq.en_otd_cutoff %}
+                            <div class="sc-meta-date">
+                                <span class="sc-meta-label">OTD Cutoff</span>
+                                <span class="sc-meta-value" style="color: #fbbf24;">{{ item.enq.en_otd_cutoff|date:"d M Y, H:i" }}</span>
+                            </div>
+                            {% endif %}
+                            {% if item.enq.en_bl_cutoff %}
+                            <div class="sc-meta-date">
+                                <span class="sc-meta-label">BL Cutoff</span>
+                                <span class="sc-meta-value" style="color: #f472b6;">{{ item.enq.en_bl_cutoff|date:"d M Y, H:i" }}</span>
+                            </div>
+                            {% endif %}
+                            {% if item.consignment_id %}
+                            <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank" class="sc-action-btn" style="background: rgba(0,242,254,0.1); border: 1px solid rgba(0,242,254,0.3); color: var(--primary);" title="View Consignment Note">
+                                <i class="fas fa-file-pdf"></i> {{ item.cnote }}
+                            </a>
+                            {% elif item.cnote and item.cnote != '-' %}
+                            <span class="sc-dept-badge">{{ item.cnote }}</span>
+                            {% endif %}
+
+                            <div class="sc-actions">
+                                {% if item.enq.en_status_id != 8 %}
+                                    {% if not item.enq.en_is_approved and portal_ctx.is_logistics %}
+                                    <a href="{% url 'customer_enquiry_approve' item.enq.id %}" class="sc-action-btn sc-btn-approve" title="Approve &amp; Assign Vehicle">
+                                        <i class="fas fa-check"></i> Approve &amp; Size
+                                    </a>
+                                    {% elif not portal_ctx.is_factory or not item.enq.en_is_approved %}
+                                    <a href="/SMS/SMS/customer_enquiry_edit/{{ item.enq.id }}/" class="sc-action-btn sc-btn-edit" title="Edit Booking">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    {% endif %}
+                                    {% if item.can_cancel %}
+                                    <button type="button" class="sc-action-btn sc-btn-cancel"
+                                        onclick="openCancelModal('{% url 'customer_enquiry_cancel' item.enq.id %}', '{{ item.enq.en_fromlocaion.place_name|escapejs }} → {{ item.enq.en_tolocation.place_name|escapejs }}')"
+                                        title="Cancel Booking">
+                                        <i class="fas fa-times-circle"></i> Cancel
+                                    </button>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if item.enq.en_buyer_name or item.enq.en_po_numbers or item.enq.en_no_of_pcs or item.enq.en_weight or item.enq.en_cbm or item.enq.en_consignmentdetails or item.enq.en_vehicledetails or item.enq.en_shipment_type or item.enq.en_vessel_name %}
+                    <div class="sc-sub-meta-row">
+                        {% if item.enq.en_buyer_name or item.enq.en_po_numbers %}
+                        <span class="sc-info-chip">
+                            <i class="fas fa-tag"></i>
+                            <span>
+                                {% if item.enq.en_buyer_name %}<strong>{{ item.enq.en_buyer_name }}</strong>{% endif %}
+                                {% if item.enq.en_po_numbers %} &bull; PO: {{ item.enq.en_po_numbers }}{% endif %}
+                            </span>
+                        </span>
+                        {% endif %}
+
+                        {% if item.enq.en_no_of_pcs or item.enq.en_weight or item.enq.en_cbm %}
+                        <span class="sc-info-chip">
+                            <i class="fas fa-boxes"></i>
+                            <span>
+                                {% if item.enq.en_no_of_pcs %}{{ item.enq.en_no_of_pcs }} Pkgs{% endif %}
+                                {% if item.enq.en_weight %}{% if item.enq.en_no_of_pcs %} &bull; {% endif %}{{ item.enq.en_weight }} Kg{% endif %}
+                                {% if item.enq.en_cbm %}{% if item.enq.en_no_of_pcs or item.enq.en_weight %} &bull; {% endif %}{{ item.enq.en_cbm }} CBM{% endif %}
+                            </span>
+                        </span>
+                        {% endif %}
+
+                        {% if item.enq.en_consignmentdetails or item.enq.en_vehicledetails %}
+                        <span class="sc-info-chip">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>{{ item.enq.en_consignmentdetails|default:item.enq.en_vehicledetails }}</span>
+                        </span>
+                        {% endif %}
+
+                        {% if item.enq.en_shipment_type or item.enq.en_vessel_name %}
+                        <span class="sc-info-chip">
+                            <i class="fas fa-ship"></i>
+                            <span>{{ item.enq.en_shipment_type|default:"" }}{% if item.enq.en_shipment_type and item.enq.en_vessel_name %} &bull; {% endif %}{{ item.enq.en_vessel_name|default:"" }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Body: Vehicles / Status (flush, zero dead space when collapsed) -->
+                {% if item.vehicles|length > 1 %}
+                    <div id="trucks-row-{{ forloop.counter }}" class="sc-vehicles-table-wrap" style="display: block;">
+                        <table class="sc-vehicles-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Vehicle No</th>
+                                    <th>Driver &amp; Mobile</th>
+                                    <th>Status</th>
+                                    <th>Movement Flow</th>
+                                    <th>Live Track / POD</th>
+                                    {% if portal_ctx.is_factory %}
+                                    <th>Gate &amp; Seals</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in item.vehicles %}
+                                <tr>
+                                    <td style="color: #64748b; font-weight: 700;">{{ forloop.counter }}</td>
+                                    <td style="font-weight: 700; color: #f8fafc;">{{ v.vehicle_no }}</td>
+                                    <td>
+                                        {% if v.driver_name %}
+                                        <span style="font-weight: 600; color: #f8fafc;">{{ v.driver_name }}</span>
+                                        <span style="color: #94a3b8; font-size: 0.8rem; margin-left: 6px;">{{ v.driver_number|default:"" }}</span>
+                                        {% else %}
+                                        <span style="color: #94a3b8;">{{ v.driver_number|default:"-" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="flow-pill-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ v.flow.stage_color }}; color: {{ v.flow.stage_color }}; white-space: nowrap;">
+                                            <i class="fas {{ v.flow.stage_icon }}"></i> {{ v.flow.stage_label }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn-view-flow" style="margin-top: 0;" onclick="openFlowModal('{{ v.modal_id }}')">
+                                            <i class="fas fa-route"></i> Track Flow ({{ v.flow.current_stage }}/12)
+                                        </button>
+                                    </td>
+                                    <td>
+                                        {% if v.pod_trip_id %}
+                                        <a href="{% url 'download_pod' v.pod_trip_id %}" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.7rem; border-radius:8px; background:rgba(239,68,68,0.15); color:#fca5a5; text-decoration:none; font-size:0.78rem; font-weight:600;">
+                                            <i class="fas fa-file-pdf"></i> POD
+                                        </a>
+                                        {% elif v.is_delivered %}
+                                        <span style="color:#10b981; font-size:0.82rem; font-weight:600;"><i class="fas fa-check-circle"></i> Delivered</span>
+                                        {% elif v.track_link %}
+                                        <a href="{{ v.track_link }}" target="_blank" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.7rem; border-radius:8px; background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; text-decoration:none; font-size:0.78rem; font-weight:600;">
+                                            <i class="fas fa-satellite-dish"></i> Track
+                                        </a>
+                                        {% else %}
+                                        <span style="color: #64748b;">-</span>
+                                        {% endif %}
+                                    </td>
+                                    {% if portal_ctx.is_factory %}
+                                    <td>
+                                        {% if v.trip_id and v.flow.current_stage >= 3 %}
+                                            {% if v.has_seals %}
+                                            <a href="{% url 'customer_gate_update' item.enq.id %}?vehicle={{ v.vehicle_no|urlencode }}&trip_id={{ v.trip_id }}"
+                                               title="Seal: {{ v.seal_no|default:'Saved' }} (Click to view/edit)"
+                                               class="sc-action-btn" style="padding: 0.28rem 0.65rem; font-size: 0.78rem; background: rgba(16,185,129,0.16); border: 1px solid rgba(16,185,129,0.45); color: #34d399;">
+                                                <i class="fas fa-check-circle"></i> Sealed{% if v.seal_no %} ({{ v.seal_no }}){% endif %}
+                                            </a>
+                                            {% else %}
+                                            <a href="{% url 'customer_gate_update' item.enq.id %}?vehicle={{ v.vehicle_no|urlencode }}&trip_id={{ v.trip_id }}"
+                                               class="sc-action-btn sc-btn-seals" style="padding: 0.28rem 0.65rem; font-size: 0.78rem;">
+                                                <i class="fas fa-lock"></i> Gate &amp; Seals
+                                            </a>
+                                            {% endif %}
+                                        {% else %}
+                                        <span title="Unlocks once trip is created and vehicle reports at loading gate"
+                                              style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.6rem; border-radius:7px; background:rgba(148,163,184,0.08); border:1px solid rgba(148,163,184,0.2); color:#64748b; font-size:0.75rem; font-weight:600; cursor:not-allowed;">
+                                            <i class="fas fa-clock"></i> Awaiting Gate
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% elif item.vehicles|length == 1 %}
+                    <div class="sc-single-vehicle-bar">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <i class="fas fa-truck" style="color: #38bdf8;"></i>
+                            <span style="font-weight: 700; color: #f8fafc; font-size: 0.92rem;">{{ item.vehicles.0.vehicle_no }}</span>
+                        </div>
+                        <div>
+                            {% if item.vehicles.0.driver_name %}
+                            <span style="font-weight: 600; color: #f8fafc;">{{ item.vehicles.0.driver_name }}</span>
+                            <span style="color: #94a3b8; font-size: 0.8rem; margin-left: 6px;">{{ item.vehicles.0.driver_number|default:"" }}</span>
+                            {% else %}
+                            <span style="color: #94a3b8;">{{ item.vehicles.0.driver_number|default:"-" }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="flow-pill-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ item.vehicles.0.flow.stage_color }}; color: {{ item.vehicles.0.flow.stage_color }}; white-space: nowrap;">
+                                <i class="fas {{ item.vehicles.0.flow.stage_icon }}"></i> {{ item.vehicles.0.flow.stage_label }}
+                            </span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-view-flow" style="margin-top: 0;" onclick="openFlowModal('{{ item.vehicles.0.modal_id }}')">
+                                <i class="fas fa-route"></i> Track Flow ({{ item.vehicles.0.flow.current_stage }}/12)
+                            </button>
+                        </div>
+                        <div>
+                            {% if item.vehicles.0.pod_trip_id %}
+                            <a href="{% url 'download_pod' item.vehicles.0.pod_trip_id %}" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.32rem 0.75rem; border-radius:8px; background:rgba(239,68,68,0.15); color:#fca5a5; text-decoration:none; font-size:0.8rem; font-weight:600;">
+                                <i class="fas fa-file-pdf"></i> POD
+                            </a>
+                            {% elif item.vehicles.0.is_delivered %}
+                            <span style="color:#10b981; font-size:0.84rem; font-weight:600;"><i class="fas fa-check-circle"></i> Delivered</span>
+                            {% elif item.vehicles.0.track_link %}
+                            <a href="{{ item.vehicles.0.track_link }}" target="_blank" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.32rem 0.75rem; border-radius:8px; background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#10b981; text-decoration:none; font-size:0.8rem; font-weight:600;">
+                                <i class="fas fa-satellite-dish"></i> Track
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% if portal_ctx.is_factory and item.enq.en_is_approved %}
+                        <div>
+                            {% if item.vehicles.0.trip_id and item.vehicles.0.flow.current_stage >= 3 %}
+                                {% if item.vehicles.0.has_seals %}
+                                <a href="{% url 'customer_gate_update' item.enq.id %}?vehicle={{ item.vehicles.0.vehicle_no|urlencode }}&trip_id={{ item.vehicles.0.trip_id }}"
+                                   title="Seal: {{ item.vehicles.0.seal_no|default:'Saved' }} (Click to view/edit)"
+                                   class="sc-action-btn" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; background: rgba(16,185,129,0.16); border: 1px solid rgba(16,185,129,0.45); color: #34d399;">
+                                    <i class="fas fa-check-circle"></i> Sealed{% if item.vehicles.0.seal_no %} ({{ item.vehicles.0.seal_no }}){% endif %}
                                 </a>
                                 {% else %}
-                                -
+                                <a href="{% url 'customer_gate_update' item.enq.id %}?vehicle={{ item.vehicles.0.vehicle_no|urlencode }}&trip_id={{ item.vehicles.0.trip_id }}"
+                                   class="sc-action-btn sc-btn-seals" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">
+                                    <i class="fas fa-lock"></i> Gate &amp; Seals
+                                </a>
                                 {% endif %}
-                            </td>
-                            <td>{{ item.enq.en_fromlocaion.place_name }}</td>
-                            <td>{{ item.enq.en_tolocation.place_name }}</td>
-                            <td>{{ item.enq.en_customerdepartment.ct_customerdepartment|default:"-" }}</td>
-                            <td style="white-space: nowrap;">
-                                {% if item.consignment_id %}
-                                    <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500; white-space: nowrap;" title="View Consignment Note">
-                                        <i class="fas fa-file-pdf" style="margin-right: 4px;"></i>{{ item.cnote }}
-                                    </a>
-                                {% else %}
-                                    {{ item.cnote }}
-                                {% endif %}
-                            </td>
+                            {% else %}
+                            <span title="Unlocks once trip is created and vehicle reports at loading gate"
+                                  style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.28rem 0.65rem; border-radius:7px; background:rgba(148,163,184,0.08); border:1px solid rgba(148,163,184,0.2); color:#64748b; font-size:0.76rem; font-weight:600; cursor:not-allowed;">
+                                <i class="fas fa-clock"></i> Awaiting Gate
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
 
-                            <td>{{ item.enq.en_created_at|date:"d M Y" }}</td>
-                            <td>{{ item.enq.en_pickupdatetime|date:"d M Y H:i"|default:"-" }}</td>
-                            <td>
-                                <a href="/SMS/SMS/customer_enquiry_edit/{{ item.enq.id }}/"
-                                    style="color: var(--primary);" title="Edit"><i class="fas fa-edit"></i></a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="12" style="text-align: center; padding: 4rem; color: #94a3b8;">No shipments or
-                                enquiries found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                    <div class="sc-pending-bar {% if item.enq.en_status_id == 8 %}is-cancelled{% endif %}">
+                        <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
+                            {% if item.enq.en_status_id == 8 %}
+                            <span class="flow-pill-badge" style="background: rgba(239,68,68,0.14); border: 1px solid #ef4444; color: #fca5a5; white-space: nowrap;">
+                                <i class="fas fa-ban"></i> Cancelled
+                            </span>
+                            {% elif item.flow %}
+                            <span class="flow-pill-badge" style="background: rgba(255,255,255,0.06); border: 1px solid {{ item.flow.stage_color }}; color: {{ item.flow.stage_color }}; white-space: nowrap;">
+                                <i class="fas {{ item.flow.stage_icon }}"></i> {{ item.flow.stage_label }}
+                            </span>
+                            <button type="button" class="btn-view-flow" style="margin-top: 0;" onclick="openFlowModal('flow-modal-{{ forloop.counter }}')">
+                                <i class="fas fa-route"></i> Track Flow ({{ item.flow.current_stage }}/12)
+                            </button>
+                            {% else %}
+                            <span class="status-badge badge-pending">Awaiting Assignment</span>
+                            {% endif %}
+                        </div>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">
+                            {% if item.enq.en_status_id == 8 %}
+                            <i class="fas fa-ban" style="color: #f87171; margin-right: 5px;"></i> Cancelled — booking is closed
+                            {% elif not item.enq.en_is_approved %}
+                            <i class="fas fa-hourglass-half" style="color: #fbbf24; margin-right: 5px;"></i> Waiting for Logistics vehicle sizing &amp; approval
+                            {% else %}
+                            <i class="fas fa-info-circle" style="color: #38bdf8; margin-right: 5px;"></i> Approved — awaiting vehicle allotment
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
             </div>
+            {% empty %}
+            <div class="glass-card" style="text-align: center; padding: 4rem; color: #94a3b8;">
+                <i class="fas fa-box-open" style="font-size: 2.2rem; color: #475569; margin-bottom: 0.75rem; display: block;"></i>
+                No shipments or enquiries found.
+            </div>
+            {% endfor %}
         </div>
 
         <!-- Pagination -->
@@ -1055,51 +1703,50 @@
         {% endif %}
     </div>
 
-    <!-- Flow Modals for each shipment item -->
-    {% for item in enquiry_list %}
-    {% if item.flow %}
-    <div class="modal-overlay" id="flow-modal-{{ forloop.counter }}" onclick="if(event.target === this) closeFlowModal('flow-modal-{{ forloop.counter }}')">
+    <!-- Flow Modals for each vehicle / shipment -->
+    {% for modal in flow_modals %}
+    <div class="modal-overlay" id="{{ modal.modal_id }}" onclick="if(event.target === this) closeFlowModal('{{ modal.modal_id }}')">
         <div class="modal-dialog">
             <div class="modal-header">
                 <h3><i class="fas fa-route" style="color: #00f2fe;"></i> Shipment Lifecycle & Goods Movement Flow</h3>
-                <span class="modal-close" onclick="closeFlowModal('flow-modal-{{ forloop.counter }}')" title="Close"><i class="fas fa-times"></i></span>
+                <span class="modal-close" onclick="closeFlowModal('{{ modal.modal_id }}')" title="Close"><i class="fas fa-times"></i></span>
             </div>
             <div class="modal-body">
                 <!-- Progress Header -->
                 <div class="flow-progress-wrapper">
                     <div class="flow-progress-meta">
                         <span style="color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Overall Movement Progress</span>
-                        <span style="color: #00f2fe; font-weight: 700; font-family: 'Orbitron', sans-serif;">{{ item.flow.progress_percent }}% &bull; Step {{ item.flow.current_stage }} of {{ item.flow.total_stages }}</span>
+                        <span style="color: #00f2fe; font-weight: 700; font-family: 'Orbitron', sans-serif;">{{ modal.flow.progress_percent }}% &bull; Step {{ modal.flow.current_stage }} of {{ modal.flow.total_stages }}</span>
                     </div>
                     <div class="flow-progress-track">
-                        <div class="flow-progress-fill" style="width: {{ item.flow.progress_percent }}%;"></div>
+                        <div class="flow-progress-fill" style="width: {{ modal.flow.progress_percent }}%;"></div>
                     </div>
                 </div>
 
                 <!-- Shipment Summary Box -->
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 1.1rem 1.3rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
-                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">Booking Reference & Route</div>
+                        <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;">Route &amp; Vehicle Details</div>
                         <div style="font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-top: 3px;">
-                            #{{ item.enq.en_enquirynumber }} &bull; {{ item.flow.from_loc }} &rarr; {{ item.flow.to_loc }}
+                            {{ modal.flow.from_loc }} &rarr; {{ modal.flow.to_loc }}
                         </div>
                         <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap;">
-                            <span><i class="fas fa-truck" style="color: var(--primary);"></i> <b>{{ item.flow.vehicle_no }}</b></span>
-                            {% if item.flow.driver_name %}
-                            <span><i class="fas fa-user" style="color: var(--secondary);"></i> {{ item.flow.driver_name }} {% if item.flow.driver_phone %}({{ item.flow.driver_phone }}){% endif %}</span>
+                            <span><i class="fas fa-truck" style="color: var(--primary);"></i> <b>{{ modal.flow.vehicle_no }}</b></span>
+                            {% if modal.flow.driver_name %}
+                            <span><i class="fas fa-user" style="color: var(--secondary);"></i> {{ modal.flow.driver_name }} {% if modal.flow.driver_phone %}({{ modal.flow.driver_phone }}){% endif %}</span>
                             {% endif %}
                         </div>
                     </div>
                     <div>
-                        <span class="flow-pill-badge" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid {{ item.flow.stage_color }}; color: {{ item.flow.stage_color }}; font-weight: 700;">
-                            <i class="fas {{ item.flow.stage_icon }}"></i> {{ item.flow.stage_label }} (Step {{ item.flow.current_stage }}/{{ item.flow.total_stages }})
+                        <span class="flow-pill-badge" style="font-size: 0.82rem; padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid {{ modal.flow.stage_color }}; color: {{ modal.flow.stage_color }}; font-weight: 700;">
+                            <i class="fas {{ modal.flow.stage_icon }}"></i> {{ modal.flow.stage_label }} (Step {{ modal.flow.current_stage }}/{{ modal.flow.total_stages }})
                         </span>
                     </div>
                 </div>
 
                 <!-- 12-Step Granular Lifecycle Stepper -->
                 <div class="flow-stepper">
-                    {% for step in item.flow.steps %}
+                    {% for step in modal.flow.steps %}
                     
                     {% ifchanged step.phase_group %}
                     <div class="flow-phase-block">
@@ -1169,10 +1816,62 @@
             </div>
         </div>
     </div>
-    {% endif %}
     {% endfor %}
 
+    <!-- Cancel Booking Modal -->
+    <div class="modal-overlay" id="cancelBookingModal" onclick="if(event.target === this) closeCancelModal()">
+        <div class="modal-dialog" style="max-width: 460px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #f87171;"></i> Cancel Booking</h3>
+                <span class="modal-close" onclick="closeCancelModal()" title="Close"><i class="fas fa-times"></i></span>
+            </div>
+            <form id="cancelBookingForm" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 1rem;">
+                        Are you sure you want to cancel <strong id="cancelRouteLabel" style="color: #f8fafc;">this booking</strong>?
+                    </p>
+                    <label style="display: block; font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">Reason (Optional)</label>
+                    <input type="text" name="cancel_reason" placeholder="e.g. Production plan changed"
+                        style="width: 100%; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 0.65rem 0.85rem; color: #f8fafc; font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: flex-end; gap: 0.7rem;">
+                        <button type="button" onclick="closeCancelModal()" class="sc-action-btn"
+                            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; cursor: pointer;">
+                            Keep Booking
+                        </button>
+                        <button type="submit" class="sc-action-btn"
+                            style="background: #ef4444; border: 1px solid #ef4444; color: #ffffff; cursor: pointer;">
+                            <i class="fas fa-times-circle"></i> Yes, Cancel Booking
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        function openCancelModal(actionUrl, routeLabel) {
+            document.getElementById('cancelBookingForm').action = actionUrl;
+            document.getElementById('cancelRouteLabel').textContent = routeLabel;
+            document.getElementById('cancelBookingModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancelBookingModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        function toggleTrucks(rowId, btn) {
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const isHidden = (row.style.display === 'none');
+            row.style.display = isHidden ? 'block' : 'none';
+            const icon = btn ? btn.querySelector('.toggle-chevron') : null;
+            if (icon) {
+                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+
         function openFlowModal(modalId) {
             const m = document.getElementById(modalId);
             if (m) m.classList.add('active');

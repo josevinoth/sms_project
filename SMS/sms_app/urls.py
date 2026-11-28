@@ -1211,6 +1211,9 @@ urlpatterns = [
     # Customer Enquiry URLs
     path('SMS/customer_enquiry_add/', views.customer_enquiry_add, name='customer_enquiry_add'),
     path('SMS/customer_enquiry_edit/<int:enquiry_id>/', views.customer_enquiry_edit, name='customer_enquiry_edit'),
+    path('SMS/customer_enquiry_approve/<int:enquiry_id>/', views.customer_enquiry_approve, name='customer_enquiry_approve'),
+    path('SMS/customer_enquiry_cancel/<int:enquiry_id>/', views.customer_enquiry_cancel, name='customer_enquiry_cancel'),
+    path('SMS/customer_gate_update/<int:enquiry_id>/', views.customer_gate_update, name='customer_gate_update'),
     path('SMS/customer_enquiry_list/', views.customer_enquiry_list, name='customer_enquiry_list'),
     path('SMS/customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle'),
     path('customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle_direct'),

@@ -159,16 +159,64 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     if request.method == "GET":
         existing_cancellation_charge = 0.0
         if consignmentdetail_id == 0:
-            con_det_form = ConsignmentdetailaddForm(
-                initial={'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id})
-            form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': 0})
+            initial_data = {'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id}
+            cg_initial = {'cg_consignmentnumber': 0}
+            if enquiry:
+                if enquiry.en_no_of_pcs:
+                    cg_initial['cg_qty'] = enquiry.en_no_of_pcs
+                if enquiry.en_weight:
+                    try:
+                        cg_initial['cg_weight'] = float(enquiry.en_weight)
+                    except (ValueError, TypeError):
+                        pass
+                if enquiry.en_cbm:
+                    try:
+                        cg_initial['cg_cbm'] = float(enquiry.en_cbm)
+                    except (ValueError, TypeError):
+                        pass
+            if selected_trip_id:
+                pre_trip = TripdetailInfo.objects.filter(id=selected_trip_id).first()
+                if pre_trip:
+                    if pre_trip.tr_seal_number:
+                        initial_data['co_seal_number'] = pre_trip.tr_seal_number
+                    if pre_trip.tr_eseal_number:
+                        initial_data['co_smart_lock_number'] = pre_trip.tr_eseal_number
+                    if pre_trip.tr_client_invoice_no:
+                        cg_initial['cg_consignerinvoice'] = pre_trip.tr_client_invoice_no
+                    if pre_trip.tr_client_invoice_date:
+                        cg_initial['cg_consignerinvoice_date'] = pre_trip.tr_client_invoice_date
+            con_det_form = ConsignmentdetailaddForm(initial=initial_data)
+            form = ConsignmentgoodsaddForm(initial=cg_initial)
             vehicle_type = ""
         else:
             request.session['ses_consignment_detail_id'] = consignmentdetail_id
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
+            if not consignmentdetail.co_smart_lock_number and consignmentdetail.co_eseal_number:
+                consignmentdetail.co_smart_lock_number = consignmentdetail.co_eseal_number
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-            form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignmentdetail_id})
+            cg_initial = {'cg_consignmentnumber': consignmentdetail_id}
+            if enquiry:
+                if enquiry.en_no_of_pcs:
+                    cg_initial['cg_qty'] = enquiry.en_no_of_pcs
+                if enquiry.en_weight:
+                    try:
+                        cg_initial['cg_weight'] = float(enquiry.en_weight)
+                    except (ValueError, TypeError):
+                        pass
+                if enquiry.en_cbm:
+                    try:
+                        cg_initial['cg_cbm'] = float(enquiry.en_cbm)
+                    except (ValueError, TypeError):
+                        pass
+            upd_trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignmentdetail_id).first()
+            inv_no = consignmentdetail.co_client_invoice_no or (upd_trip.tr_client_invoice_no if upd_trip else None)
+            inv_dt = consignmentdetail.co_client_invoice_date or (upd_trip.tr_client_invoice_date if upd_trip else None)
+            if inv_no:
+                cg_initial['cg_consignerinvoice'] = inv_no
+            if inv_dt:
+                cg_initial['cg_consignerinvoice_date'] = inv_dt
+            form = ConsignmentgoodsaddForm(initial=cg_initial)
             vehicle_type = consignmentdetail.co_vehicletype
 
             existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignmentdetail).first()
@@ -210,6 +258,16 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         user_ext = User_extInfo.objects.filter(user_id=user_id).first()
         user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
 
+        brandix_enq = EnquirynoteInfo.objects.select_related('en_customername').filter(pk=enquiry_num_id).first()
+        is_brandix = bool(
+            brandix_enq and (
+                brandix_enq.en_agent_name == 'Brandix'
+                or brandix_enq.en_plant_code
+                or (brandix_enq.en_customername and 'EXPO FREIGHT' in (brandix_enq.en_customername.cu_name or '').upper())
+            )
+        )
+        brandix_trip = (TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignmentdetail_id).first() if consignmentdetail_id != 0 else None) or (TripdetailInfo.objects.filter(id=selected_trip_id).first() if selected_trip_id else None)
+
         context = {
             'first_name': first_name,
             'user_id': user_id,
@@ -234,6 +292,9 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'eligible_trips': eligible_trips,
             'selected_trip_id': selected_trip_id,
             'selected_vehicle_num': selected_vehicle_num,
+            'is_brandix': is_brandix,
+            'brandix_enq': brandix_enq,
+            'brandix_trip': brandix_trip,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -337,11 +398,30 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_createdby = request.user
                 if target_vehicle:
                     consignment_detail.co_vehicelnumber = target_vehicle
+                if trip_obj:
+                    if not consignment_detail.co_seal_number and trip_obj.tr_seal_number:
+                        consignment_detail.co_seal_number = trip_obj.tr_seal_number
+                    if not consignment_detail.co_eseal_number and trip_obj.tr_eseal_number:
+                        consignment_detail.co_eseal_number = trip_obj.tr_eseal_number
+                    if not consignment_detail.co_dan_aod_no and trip_obj.tr_dan_aod_no:
+                        consignment_detail.co_dan_aod_no = trip_obj.tr_dan_aod_no
+                    if not consignment_detail.co_client_invoice_no and trip_obj.tr_client_invoice_no:
+                        consignment_detail.co_client_invoice_no = trip_obj.tr_client_invoice_no
+                    if not consignment_detail.co_client_invoice_date and trip_obj.tr_client_invoice_date:
+                        consignment_detail.co_client_invoice_date = trip_obj.tr_client_invoice_date
+                if request.POST.get('brandix_gate_present') == '1':
+                    consignment_detail.co_dan_aod_no = request.POST.get('co_dan_aod_no', '').strip() or consignment_detail.co_dan_aod_no
+                    if consignment_detail.co_smart_lock_number:
+                        consignment_detail.co_eseal_number = consignment_detail.co_smart_lock_number
                 consignment_detail.save()
 
                 # Link selected Trip to this consignment and inherit vehicle number
                 if trip_obj:
                     trip_obj.tr_consignmentnumber = consignment_detail
+                    if request.POST.get('brandix_gate_present') == '1':
+                        trip_obj.tr_seal_number = consignment_detail.co_seal_number or trip_obj.tr_seal_number
+                        trip_obj.tr_eseal_number = consignment_detail.co_smart_lock_number or consignment_detail.co_eseal_number or trip_obj.tr_eseal_number
+                        trip_obj.tr_dan_aod_no = consignment_detail.co_dan_aod_no or trip_obj.tr_dan_aod_no
                     trip_obj.save()
 
                 # --- NEW LOGIC: Handle Cancellation without Trip ---
@@ -444,12 +524,20 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     consignment_detail.co_vehicletype = vehicle_type
                     if target_vehicle:
                         consignment_detail.co_vehicelnumber = target_vehicle
+                    if request.POST.get('brandix_gate_present') == '1':
+                        consignment_detail.co_dan_aod_no = request.POST.get('co_dan_aod_no', '').strip() or None
+                        if consignment_detail.co_smart_lock_number:
+                            consignment_detail.co_eseal_number = consignment_detail.co_smart_lock_number
                     consignment_detail.save()
 
                     # Unlink any previous trip if trip changed, and link the new trip
                     if trip_obj:
                         TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).exclude(id=trip_obj.id).update(tr_consignmentnumber=None)
                         trip_obj.tr_consignmentnumber = consignment_detail
+                        if request.POST.get('brandix_gate_present') == '1':
+                            trip_obj.tr_seal_number = consignment_detail.co_seal_number or trip_obj.tr_seal_number
+                            trip_obj.tr_eseal_number = consignment_detail.co_smart_lock_number or consignment_detail.co_eseal_number or trip_obj.tr_eseal_number
+                            trip_obj.tr_dan_aod_no = consignment_detail.co_dan_aod_no or trip_obj.tr_dan_aod_no
                         trip_obj.save()
                     status_id = int(request.POST.get('co_status') or 0)
                     if status_id in [9, 10]:

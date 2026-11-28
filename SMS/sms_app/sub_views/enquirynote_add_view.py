@@ -123,6 +123,14 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
             user_ext = User_extInfo.objects.filter(user_id=user_id).first()
             user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
 
+            is_brandix = bool(
+                enquirynote and (
+                    enquirynote.en_agent_name == 'Brandix'
+                    or enquirynote.en_plant_code
+                    or (enquirynote.en_customername and 'EXPO FREIGHT' in (enquirynote.en_customername.cu_name or '').upper())
+                )
+            )
+
             context = {
                 'user_id': user_id,
                 'form': form,
@@ -133,6 +141,8 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                 'enquiry_num_id': enquiry_num_id,
                 'is_invoiced': is_invoiced,
                 'user_role': user_role,
+                'is_brandix': is_brandix,
+                'brandix_enq': enquirynote,
             }
         return render(request, "asset_mgt_app/enquirynote_add.html", context)
     else:
@@ -245,7 +255,8 @@ def enquirynote_list(request):
     select_all = request.GET.get('select_all', '')
 
     # Use select_related for foreign keys to reduce queries
-    enquirynote_queryset = EnquirynoteInfo.objects.select_related(
+    # Strict Approval Gate: exclude unapproved Child Factory requests until Logistics approves
+    enquirynote_queryset = EnquirynoteInfo.objects.filter(en_is_approved=True).select_related(
         'en_customername', 'en_fromlocaion', 'en_tolocation', 'en_assignedto', 'en_status'
     )
 

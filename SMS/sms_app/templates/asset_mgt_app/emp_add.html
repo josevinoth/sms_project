@@ -410,6 +410,56 @@
             </div>
         </div>
 
+        <!-- SECTION 5: Customer Portal & Agent Access (Optional) -->
+        <div class="form-card-section">
+            <div class="form-section-title">
+                <i class="fas fa-user-shield"></i> Customer Portal &amp; Agent / Brandix Access (Optional)
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Linked Billing Customer</label>
+                        <select name="linked_customer" class="form-control form-control-modern select2">
+                            <option value="">-- Internal Staff (Not Customer) --</option>
+                            {% for cust in customers %}
+                            <option value="{{ cust.id }}" {% if form_data.linked_customer == cust.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cust.cu_name }} {% if cust.cu_nameshort %}({{ cust.cu_nameshort }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Customer Portal Role</label>
+                        <select name="portal_role" class="form-control form-control-modern">
+                            <option value="STANDARD" {% if form_data.portal_role == 'STANDARD' %}selected{% endif %}>Standard Customer</option>
+                            <option value="PARENT" {% if form_data.portal_role == 'PARENT' %}selected{% endif %}>Parent / 3PL (e.g. Expo Freight)</option>
+                            <option value="FACTORY" {% if form_data.portal_role == 'FACTORY' %}selected{% endif %}>Factory / Inplant (e.g. Brandix Plant)</option>
+                            <option value="LOGISTICS" {% if form_data.portal_role == 'LOGISTICS' %}selected{% endif %}>Central Logistics Officer (e.g. Brandix Logistics)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Agent / Sub-Account Name</label>
+                        <input type="text" name="agent_account" class="form-control form-control-modern"
+                               placeholder="e.g. Brandix" value="{{ form_data.agent_account|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <div class="form-group-modern mb-3">
+                        <label class="form-label-modern">Assigned Plant (Factory Only)</label>
+                        <input type="text" name="assigned_plant" class="form-control form-control-modern"
+                               placeholder="e.g. Brandix B2" value="{{ form_data.assigned_plant|default:'' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ══ Form Action Buttons ══ -->
         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
             <button type="submit" class="btn btn-submit" style="padding: 0.6rem 2rem; font-size: 0.95rem; border-radius: 10px;">

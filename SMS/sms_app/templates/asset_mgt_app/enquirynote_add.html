@@ -50,6 +50,17 @@
                             <label class="form-label-modern">Customer Email</label>
                             {% render_field form.en_email id="en_email" class="form-control form-control-modern disable_a_href" %}
                         </div>
+
+                        {% if is_brandix and brandix_enq %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Shipper / Plant</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ brandix_enq.en_plant_code|default:'-' }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Logistics Approval</label>
+                            <input type="text" class="form-control form-control-modern" value="{% if brandix_enq.en_is_approved %}Approved{% if brandix_enq.en_approved_by %} ({{ brandix_enq.en_approved_by }}){% endif %}{% else %}Pending Logistics Approval{% endif %}" readonly>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -88,6 +99,17 @@
                             {% render_field form.en_trip_type id="en_trip_type" class="form-control form-control-modern" required="required" %}
                             <small id="trip_type_error" style="color:#e74c3c;display:none;">Please select a Trip Type.</small>
                         </div>
+
+                        {% if is_brandix and brandix_enq %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Buyer / PO Numbers</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ brandix_enq.en_buyer_name|default:'-' }} / {{ brandix_enq.en_po_numbers|default:'-' }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Cargo (Pkgs / Wt / CBM)</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ brandix_enq.en_no_of_pcs|default:'0' }} Pkgs / {{ brandix_enq.en_weight|default:'-' }} Kg / {{ brandix_enq.en_cbm|default:'-' }} CBM" readonly>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -121,6 +143,17 @@
                             <label class="form-label-modern">Status</label>
                             {% render_field form.en_status class="form-control form-control-modern" %}
                         </div>
+
+                        {% if is_brandix and brandix_enq %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Req Delivery / OTD Cut-Off</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ brandix_enq.en_requested_delivery_time|date:'d-m-Y H:i'|default:'-' }} / {{ brandix_enq.en_otd_cutoff|date:'d-m-Y H:i'|default:'-' }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Export / Vessel / BL Cut-Off</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ brandix_enq.en_shipment_type|default:'-' }} / {{ brandix_enq.en_vessel_name|default:'-' }} / {{ brandix_enq.en_bl_cutoff|date:'d-m-Y H:i'|default:'-' }}" readonly>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 

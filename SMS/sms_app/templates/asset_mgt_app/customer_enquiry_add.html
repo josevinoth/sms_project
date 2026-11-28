@@ -592,7 +592,7 @@
             <div class="page-header-left">
                 <a href="{% url 'customer_dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
                 <div>
-                    <div class="page-title">{% if edit_mode %}Edit Shipment{% else %}Book Shipment{% endif %}</div>
+                    <div class="page-title">{% if edit_mode %}Edit {% if portal_ctx.is_factory %}Movement Request{% else %}Shipment{% endif %}{% else %}{% if portal_ctx.is_factory %}Request Movement{% else %}Book Shipment{% endif %}{% endif %}</div>
                     <div class="page-subtitle">{% if edit_mode %}Update the details below{% else %}Fill in the details
                         to create a new movement request{% endif %}</div>
                 </div>
@@ -613,7 +613,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Customer Name</label>
-                        <input type="text" value="{% if customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}{{ request.user.username }}{% endif %}" disabled>
+                        <input type="text" value="{% if portal_ctx.agent_account %}{{ portal_ctx.agent_account }}{% if portal_ctx.assigned_plant %} ({{ portal_ctx.assigned_plant }}){% endif %}{% elif customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}{{ request.user.username }}{% endif %}" disabled>
                     </div>
                     <div class="form-group">
                         <label>Department <span style="color: #ef4444;">*</span></label>
@@ -640,16 +640,49 @@
                             value="{{ enquiry.en_agent_name|default:agent_name }}" required>
                     </div>
                     {% endif %}
+                    {% if portal_ctx.is_factory or portal_ctx.is_logistics %}
+                    <div class="form-group">
+                        <label>Plant / Cost Center</label>
+                        <input type="text" name="plant_code" placeholder="e.g. Brandix B2"
+                            value="{{ enquiry.en_plant_code|default:portal_ctx.assigned_plant }}"
+                            {% if portal_ctx.is_factory and portal_ctx.assigned_plant %}readonly{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label>Buyer Name</label>
+                        <input type="text" name="buyer_name" placeholder="e.g. PVH, GAP"
+                            value="{{ enquiry.en_buyer_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Reference PO No</label>
+                        <input type="text" name="po_numbers" placeholder="e.g. 2356/2345/2346"
+                            value="{{ enquiry.en_po_numbers|default:'' }}">
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Section 2: Schedule -->
             <div class="form-section">
                 <div class="form-grid">
+                    {% if portal_ctx.is_factory %}
+                    <div class="form-group">
+                        <label>Requested Arrival Time (At Factory) <span style="color: #ef4444;">*</span></label>
+                        <input type="datetime-local" name="requested_arrival_time" id="requested_arrival_time" value="{% if enquiry.en_requested_arrival_time %}{{ enquiry.en_requested_arrival_time|date:'Y-m-d\TH:i' }}{% endif %}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Requested Delivery Time (At CFS/Port)</label>
+                        <input type="datetime-local" name="requested_delivery_time" id="requested_delivery_time" value="{% if enquiry.en_requested_delivery_time %}{{ enquiry.en_requested_delivery_time|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label>OTD Cut-Off Date</label>
+                        <input type="datetime-local" name="otd_cutoff" id="otd_cutoff" value="{% if enquiry.en_otd_cutoff %}{{ enquiry.en_otd_cutoff|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                    {% else %}
                     <div class="form-group">
                         <label>Vehicle Required Date & Time <span style="color: #ef4444;">*</span></label>
                         <input type="datetime-local" name="pickup_datetime" id="pickup_datetime" value="{% if enquiry.en_pickupdatetime %}{{ enquiry.en_pickupdatetime|date:'Y-m-d\TH:i' }}{% endif %}" required>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -707,6 +740,12 @@
 
             <!-- Section 4: Vehicle -->
             <div class="form-section">
+                {% if portal_ctx.is_factory %}
+                <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #93c5fd; padding: 12px 14px; border-radius: 10px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                    <strong>Vehicle Sizing:</strong> Vehicle Type &amp; Vehicle Count will be assigned by your <strong>Brandix Logistics Team</strong> during approval before dispatching to BVM.
+                </div>
+                {% else %}
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Vehicle Category <span style="color: #ef4444;">*</span></label>
@@ -732,6 +771,32 @@
                             min="1" required>
                     </div>
                 </div>
+                {% endif %}
+                {% if portal_ctx.is_logistics %}
+                <div class="form-grid" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--glass-border);">
+                    <div class="form-group">
+                        <label>Shipment Type</label>
+                        <select name="shipment_type">
+                            <option value="">Select Shipment Type</option>
+                            <option value="Export LCL" {% if enquiry.en_shipment_type == 'Export LCL' %}selected{% endif %}>Export LCL</option>
+                            <option value="Export FCL" {% if enquiry.en_shipment_type == 'Export FCL' %}selected{% endif %}>Export FCL</option>
+                            <option value="Air Export" {% if enquiry.en_shipment_type == 'Air Export' %}selected{% endif %}>Air Export</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vessel Name</label>
+                        <input type="text" name="vessel_name" placeholder="Vessel Name" value="{{ enquiry.en_vessel_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Voyage No</label>
+                        <input type="text" name="voyage_no" placeholder="Voyage No" value="{{ enquiry.en_voyage_no|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>BL Cutoff</label>
+                        <input type="datetime-local" name="bl_cutoff" value="{% if enquiry.en_bl_cutoff %}{{ enquiry.en_bl_cutoff|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                </div>
+                {% endif %}
                 <div class="form-grid-3" style="margin-top: 1rem;">
                     <div class="form-group">
                         <label>Pieces</label>
@@ -782,20 +847,27 @@
         // Pre-fill datetime-local in edit mode
         var pickupDate = "{{ enquiry.en_pickupdatetime|date:'Y-m-d'|default:'' }}";
         var pickupTime = "{{ enquiry.en_vehicle_req_time|time:'H:i'|default:'' }}";
-        if (pickupDate && pickupTime) {
-            document.getElementById('pickup_datetime').value = pickupDate + 'T' + pickupTime;
-        } else if (pickupDate) {
-            document.getElementById('pickup_datetime').value = pickupDate + 'T00:00';
+        var pickupEl = document.getElementById('pickup_datetime');
+        if (pickupEl) {
+            if (pickupDate && pickupTime) {
+                pickupEl.value = pickupDate + 'T' + pickupTime;
+            } else if (pickupDate) {
+                pickupEl.value = pickupDate + 'T00:00';
+            }
         }
         // Pre-select dropdowns in edit mode
         var fromId = "{{ enquiry.en_fromlocaion_id|default:'' }}";
         var toId = "{{ enquiry.en_tolocation_id|default:'' }}";
         var catId = "{{ env.env_vehiclecategory_id|default:'' }}";
         var typeId = "{{ env.env_vehicletype_id|default:'' }}";
-        if (fromId) document.getElementById('from_location').value = fromId;
-        if (toId) document.getElementById('to_location').value = toId;
-        if (catId) document.getElementById('vehicle_category').value = catId;
-        if (typeId) document.getElementById('vehicle_type').value = typeId;
+        var fromEl = document.getElementById('from_location');
+        var toEl = document.getElementById('to_location');
+        var catEl = document.getElementById('vehicle_category');
+        var typeEl = document.getElementById('vehicle_type');
+        if (fromId && fromEl) fromEl.value = fromId;
+        if (toId && toEl) toEl.value = toId;
+        if (catId && catEl) catEl.value = catId;
+        if (typeId && typeEl) typeEl.value = typeId;
 
         // Sidebar
         function openSidebar() {

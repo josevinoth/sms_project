@@ -46,5 +46,24 @@ class EnquirynoteInfo(models.Model):
     en_delivery_contact_name = models.CharField(max_length=150, null=True, blank=True)
     en_delivery_contact_mobile = models.CharField(max_length=20, null=True, blank=True)
 
+    # Sub-Customer / Ship-To & Approval Workflow Fields
+    en_sub_customer = models.ForeignKey(CustomerInfo, on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_customer_enquiries')
+    en_plant_code = models.CharField(max_length=100, null=True, blank=True)
+    en_is_approved = models.BooleanField(default=True, help_text="False when awaiting Child Logistics approval before BVM dispatch")
+    en_approved_by = models.CharField(max_length=150, null=True, blank=True)
+    en_approved_date = models.DateTimeField(null=True, blank=True)
+
+    # Requested SLA & Export Planning Fields
+    en_requested_arrival_time = models.DateTimeField(null=True, blank=True)
+    en_requested_delivery_time = models.DateTimeField(null=True, blank=True)
+    en_otd_cutoff = models.DateTimeField(null=True, blank=True)
+    en_buyer_name = models.CharField(max_length=150, null=True, blank=True)
+    en_po_numbers = models.TextField(null=True, blank=True)
+    en_shipment_type = models.CharField(max_length=50, null=True, blank=True)
+    en_vessel_name = models.CharField(max_length=150, null=True, blank=True)
+    en_voyage_no = models.CharField(max_length=100, null=True, blank=True)
+    en_bl_cutoff = models.DateTimeField(null=True, blank=True)
+    en_special_instructions = models.TextField(null=True, blank=True)
+
     def __str__(self):
         return str(self.en_enquirynumber) if self.en_enquirynumber else "N/A"

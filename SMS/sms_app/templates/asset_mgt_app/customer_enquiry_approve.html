@@ -1,0 +1,183 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Approve &amp; Size Vehicle | BVM Booking Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; min-height: 100vh; }
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem; background: var(--glass); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;
+        }
+        .brand { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 1.25rem; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .back-btn { width: 40px; height: 40px; border-radius: 10px; background: var(--glass); border: 1px solid var(--glass-border); color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem; }
+        .card-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .info-item label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; }
+        .info-item span { font-size: 0.95rem; font-weight: 600; color: #f8fafc; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.75rem 0.9rem; border-radius: 10px; background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--glass-border); color: #fff; font-size: 0.95rem; outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+        .btn-approve {
+            width: 100%; padding: 1rem; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem;
+        }
+        .btn-approve:hover { opacity: 0.92; }
+        .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 0.8rem 1rem; border-radius: 10px; margin-bottom: 1rem; }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="{% url 'customer_dashboard' %}" class="brand">BVM BOOKING PORTAL</a>
+        <a href="{% url 'customer_enquiry_list' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">
+            <i class="fas fa-arrow-left"></i> Back to Shipments
+        </a>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'customer_enquiry_list' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <h1 style="font-size: 1.5rem; color: var(--primary);">Logistics Approval &amp; Vehicle Sizing</h1>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Assign Vehicle Type, Count &amp; Export Details for <strong>{{ enquiry.en_enquirynumber }}</strong></p>
+            </div>
+        </div>
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="alert-error">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Factory Request Summary -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-industry"></i> Factory Request Summary</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Plant / Cost Center</label>
+                    <span>{{ enquiry.en_plant_code|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Requested By</label>
+                    <span>{{ enquiry.en_requestor|default:"Factory Inplant" }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Route</label>
+                    <span>{{ enquiry.en_fromlocaion.place_name }} &rarr; {{ enquiry.en_tolocation.place_name }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Buyer / PO No</label>
+                    <span>{{ enquiry.en_buyer_name|default:"-" }} / {{ enquiry.en_po_numbers|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Cargo (Pkgs / Weight / CBM)</label>
+                    <span>{{ enquiry.en_no_of_pcs|default:"0" }} Pkgs | {{ enquiry.en_weight|default:"-" }} Kg | {{ enquiry.en_cbm|default:"-" }} CBM</span>
+                </div>
+                <div class="info-item">
+                    <label>Requested Arrival</label>
+                    <span>{{ enquiry.en_requested_arrival_time|date:"d M Y, H:i"|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Requested Delivery</label>
+                    <span>{{ enquiry.en_requested_delivery_time|date:"d M Y, H:i"|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <label>OTD Cut-Off</label>
+                    <span>{{ enquiry.en_otd_cutoff|date:"d M Y, H:i"|default:"-" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logistics Vehicle Sizing & Approval Form -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-title"><i class="fas fa-truck"></i> Vehicle Sizing (Required for BVM Dispatch)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Vehicle Category <span style="color: #ef4444;">*</span></label>
+                        <select name="vehicle_category" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if env.env_vehiclecategory_id == cat.id %}selected{% endif %}>{{ cat.vc_vehiclecategory }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Type <span style="color: #ef4444;">*</span></label>
+                        <select name="vehicle_type" required>
+                            <option value="">Select Type</option>
+                            {% for vt in types %}
+                            <option value="{{ vt.id }}" {% if env.env_vehicletype_id == vt.id %}selected{% endif %}>{{ vt.vt_vehicletype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>No. of Vehicles <span style="color: #ef4444;">*</span></label>
+                        <input type="number" name="no_of_veh" value="{{ enquiry.en_no_of_vehicles|default:'1' }}" min="1" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-ship"></i> Export &amp; Shipping Line Details</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Shipment Type</label>
+                        <select name="shipment_type">
+                            <option value="">Select Shipment Type</option>
+                            <option value="Export LCL" {% if enquiry.en_shipment_type == 'Export LCL' %}selected{% endif %}>Export LCL</option>
+                            <option value="Export FCL" {% if enquiry.en_shipment_type == 'Export FCL' %}selected{% endif %}>Export FCL</option>
+                            <option value="Air Export" {% if enquiry.en_shipment_type == 'Air Export' %}selected{% endif %}>Air Export</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vessel Name</label>
+                        <input type="text" name="vessel_name" placeholder="e.g. MSC OSCAR" value="{{ enquiry.en_vessel_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Voyage No</label>
+                        <input type="text" name="voyage_no" placeholder="e.g. VOY123" value="{{ enquiry.en_voyage_no|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>BL Cutoff</label>
+                        <input type="datetime-local" name="bl_cutoff" value="{% if enquiry.en_bl_cutoff %}{{ enquiry.en_bl_cutoff|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Other Requests / Instructions</label>
+                        <input type="text" name="special_instructions" placeholder="Any special instructions for BVM Dispatch" value="{{ enquiry.en_special_instructions|default:'' }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn-approve">
+                    <i class="fas fa-check-circle"></i> Approve &amp; Transmit to BVM Dispatch
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

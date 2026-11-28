@@ -169,6 +169,12 @@
 									</div>
 									{% render_field form.cu_pincode class="form-control" maxlength="6" pattern="\d{6}" title="Please enter exactly 6 digits" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Parent Customer</span>
+									</div>
+									{% render_field form.cu_parent_customer class="form-control" %}
+								</div>
 							</div>
 						</div>
 						<div class="row">

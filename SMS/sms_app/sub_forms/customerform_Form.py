@@ -22,3 +22,6 @@ class CustomeraddForm(forms.ModelForm):
         self.fields['cu_businessmodel'].empty_label = "--Select--"
         self.fields['cu_business_sol'].empty_label = "--Select--"
         self.fields['cu_industry_type'].empty_label = "--Select--"
+        if 'cu_parent_customer' in self.fields:
+            self.fields['cu_parent_customer'].empty_label = "--None (Parent / Direct)--"
+            self.fields['cu_parent_customer'].required = False

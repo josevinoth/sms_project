@@ -116,6 +116,17 @@ class TripdetailInfo(models.Model):
     tr_trip_started_mail_sent = models.BooleanField(default=False)
     tr_unloading_report_mail_sent = models.BooleanField(default=False)
     tr_trip_closed_mail_sent = models.BooleanField(default=False)
+
+    # Gate Coordination, Demurrage & Return Tracking
+    tr_attended_by = models.CharField(max_length=150, null=True, blank=True)
+    tr_demurrage_reason = models.CharField(max_length=250, null=True, blank=True)
+    tr_demurrage_hours = models.DecimalField(max_digits=6, decimal_places=2, default=0.00, null=True, blank=True)
+    tr_return_job = models.BooleanField(default=False)
+    tr_seal_number = models.CharField(max_length=100, null=True, blank=True)
+    tr_eseal_number = models.CharField(max_length=100, null=True, blank=True)
+    tr_dan_aod_no = models.CharField(max_length=100, null=True, blank=True)
+    tr_client_invoice_no = models.CharField(max_length=150, null=True, blank=True)
+    tr_client_invoice_date = models.DateField(null=True, blank=True)
     @property
     def tc_no_of_pod(self):
         return self.tc_no_of_pods
